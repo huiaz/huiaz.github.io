@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="什么是 ICMP 协议？ICMP (Internet Control Message Protocol)，即互联网控制消息协议，是 IP 协议的辅助协议，是 TCP&#x2F;IP 协议族中的一个核心组成部分。ICMP 通常被认为是网络层的协议（与 IP 协议同层），因为它处理 IP 数据包的错误和控制信息。 核心特点：  控制和错误报告： ICMP 的主要作用是报告 IP 数据包传输过程中的错误">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ICMP">
+<meta property="og:url" content="http://example.com/2025/09/11/ICMP/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="什么是 ICMP 协议？ICMP (Internet Control Message Protocol)，即互联网控制消息协议，是 IP 协议的辅助协议，是 TCP&#x2F;IP 协议族中的一个核心组成部分。ICMP 通常被认为是网络层的协议（与 IP 协议同层），因为它处理 IP 数据包的错误和控制信息。 核心特点：  控制和错误报告： ICMP 的主要作用是报告 IP 数据包传输过程中的错误">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:39:42.685Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Network">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/ICMP/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>ICMP | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/ICMP/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          ICMP
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:39:42" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/" itemprop="url" rel="index"><span itemprop="name">WEB</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/Http/" itemprop="url" rel="index"><span itemprop="name">Http</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="什么是-ICMP-协议？"><a href="#什么是-ICMP-协议？" class="headerlink" title="什么是 ICMP 协议？"></a>什么是 ICMP 协议？</h3><p><strong>ICMP (Internet Control Message Protocol)<strong>，即</strong>互联网控制消息协议</strong>，是 <strong>IP 协议</strong>的<strong>辅助协议</strong>，是 TCP&#x2F;IP 协议族中的一个核心组成部分。ICMP 通常被认为是网络层的协议（与 IP 协议同层），因为它处理 IP 数据包的错误和控制信息。</p>
+<p><strong>核心特点：</strong></p>
+<ul>
+<li><strong>控制和错误报告：</strong> ICMP 的主要作用是报告 IP 数据包传输过程中的错误以及提供网络诊断信息。它不传输用户数据，而是传输网络层面的控制和错误消息。</li>
+<li><strong>不可靠性：</strong> ICMP 报文本身不提供可靠传输机制。如果一个 ICMP 报文在传输过程中丢失，IP 层不会重传它。</li>
+<li><strong>承载于 IP：</strong> ICMP 报文是“封装”在 IP 数据包中的。换句话说，一个 ICMP 报文会作为 IP 数据包的有效载荷（payload）进行传输。</li>
+</ul>
+<h3 id="ICMP-的主要作用："><a href="#ICMP-的主要作用：" class="headerlink" title="ICMP 的主要作用："></a>ICMP 的主要作用：</h3><p>ICMP 的主要作用可以归纳为以下几点，主要围绕<strong>错误报告</strong>和<strong>网络诊断</strong>：</p>
+<ol>
+<li><p><strong>报告差错信息 (Error Reporting):</strong><br>当 IP 数据包在传输过程中遇到问题时，ICMP 被用来向数据包的源主机报告这些错误。常见的 ICMP 差错报文类型包括：</p>
+<ul>
+<li><p><strong>目标不可达 (Destination Unreachable):</strong></p>
+<ul>
+<li>当路由器无法将数据包送达目的地时生成。</li>
+<li><strong>示例场景：</strong><ul>
+<li><strong>网络不可达：</strong> 路由器没有到达目标网络的路由。</li>
+<li><strong>主机不可达：</strong> 目标网络存在，但目标主机不响应（可能已关机或地址错误）。</li>
+<li><strong>协议不可达：</strong> 目标主机不支持数据包指定的上层协议（如 TCP 或 UDP）。</li>
+<li><strong>端口不可达：</strong> 目标主机上没有应用程序在监听数据包指定的端口。</li>
+<li><strong>需要分片但禁止分片 (Fragmentation Needed and Don’t Fragment Bit Set):</strong> 当数据包太大需要分片，但设置了“不分片”标志位时。常用于 <strong>MTU (Maximum Transmission Unit) 路径发现</strong>。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>源抑制 (Source Quench):</strong></p>
+<ul>
+<li>当路由器或目标主机缓冲区已满，无法处理更多传入数据包时，它会向源主机发送源抑制消息，请求降低发送速率。</li>
+<li><strong>注意：</strong> 现代网络中，这种机制已很少使用，更多地依赖于 TCP 的流量控制来管理拥塞。</li>
+</ul>
+</li>
+<li><p><strong>时间超时 (Time Exceeded):</strong></p>
+<ul>
+<li>当数据包的<strong>生存时间 (TTL - Time To Live)</strong> 字段减到 0 时，路由器会丢弃该数据包并向源主机发送时间超时消息。TTL 字段用于防止数据包在网络中无限循环。</li>
+<li><strong>示例场景：</strong> 路由循环、网络拥塞导致数据包长时间滞留。</li>
+<li><strong>应用：</strong> <strong><code>traceroute</code> (Windows 下 <code>tracert</code>)</strong> 命令就利用了 ICMP 的时间超时报文来发现数据包从源到目的地的路径上的所有路由器。</li>
+</ul>
+</li>
+<li><p><strong>参数问题 (Parameter Problem):</strong></p>
+<ul>
+<li>当 IP 数据包头部中的字段不正确或缺失时，会生成此消息。</li>
+<li><strong>示例场景：</strong> IP 头部字段值非法，导致无法正确处理数据包。</li>
+</ul>
+</li>
+<li><p><strong>重定向 (Redirect):</strong></p>
+<ul>
+<li>路由器可能会发送重定向消息，告诉源主机有更优的路由路径可以到达特定的目的地。这通常发生在主机连接到多个路由器，但使用了次优路由的情况下。</li>
+<li><strong>示例场景：</strong> 主机通过路由器A发送数据包到目的地X，但路由器A知道路由器B有一条更短或更直接的路径到X，于是路由器A会发送重定向消息给主机，让主机下次直接通过路由器B发送。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>提供网络诊断和查询功能 (Diagnostic and Query Functions):</strong></p>
+<p>ICMP 不仅仅用于报告错误，还用于查询网络状态、测试连通性等。</p>
+<ul>
+<li><p><strong>回送请求&#x2F;回送应答 (Echo Request &#x2F; Echo Reply):</strong></p>
+<ul>
+<li>这是 ICMP 最广为人知和常用的功能。源主机发送一个<strong>回送请求</strong>报文到目标主机，目标主机接收到后回复一个<strong>回送应答</strong>报文。</li>
+<li><strong>应用：</strong><ul>
+<li><strong><code>ping</code> 命令：</strong> <code>ping</code> 命令就是基于 ICMP Echo Request&#x2F;Reply 来测试两台主机之间的网络连通性、统计丢包率和往返时间 (RTT)。</li>
+<li><strong>网络故障排查：</strong> 验证主机是否在线、网络路径是否正常。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>时间戳请求&#x2F;时间戳应答 (Timestamp Request &#x2F; Timestamp Reply):</strong></p>
+<ul>
+<li>请求和应答报文中包含发送和接收报文时的时间戳信息，用于测量网络的延迟。</li>
+<li><strong>应用：</strong> 测量精细的网络延时。</li>
+</ul>
+</li>
+<li><p><strong>信息请求&#x2F;信息应答 (Information Request &#x2F; Information Reply):</strong></p>
+<ul>
+<li>早期用于无盘工作站获取其网络信息（如网络掩码）。</li>
+<li><strong>注意：</strong> 已废弃，被 DHCP 等协议取代。</li>
+</ul>
+</li>
+<li><p><strong>地址掩码请求&#x2F;地址掩码应答 (Address Mask Request &#x2F; Address Mask Reply):</strong></p>
+<ul>
+<li>用于获取已知 IP 地址的网络掩码。</li>
+<li><strong>注意：</strong> 已废弃，被 DHCP 等协议取代。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<h3 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h3><p>ICMP 协议虽然不直接承载用户数据，但它在 IP 网络中扮演着至关重要的角色，就像交通警察和路标一样。它负责：</p>
+<ul>
+<li><strong>通知发送方网络中出现的问题</strong> (如目标不可达、流量过载、数据包超时等)。</li>
+<li><strong>提供诊断工具</strong> (如 <code>ping</code> 命令测试连通性，<code>traceroute</code> 命令跟踪路由路径)。</li>
+</ul>
+<p>因此，尽管它只是 IP 协议的辅助，但却是网络错误处理和故障排查中不可或缺的一部分。由于其诊断功能，ICMP 也常常被攻击者利用进行扫描探测，或者被防火墙作为攻击防护的目标。</p>
+<h3 id="ICMP-重定向-ICMP-Redirect-的作用及工作原理"><a href="#ICMP-重定向-ICMP-Redirect-的作用及工作原理" class="headerlink" title="ICMP 重定向 (ICMP Redirect) 的作用及工作原理"></a>ICMP 重定向 (ICMP Redirect) 的作用及工作原理</h3><p>ICMP 重定向是 <strong>ICMP 协议</strong>的一种消息类型，它的主要作用是<strong>优化本地网络中的路由路径</strong>，帮助主机发现更优（通常是更直接的）出站路由器。它不是为了告诉主机整个网络的最佳路径，而是为了在主机最初选择的路由是“次优”时，提供一种纠正机制。</p>
+<p><strong>作用：</strong></p>
+<p>当路由器检测到某个连接到其本地局域网（LAN）的主机，正在通过它发送数据包到某个目的地，但实际上有另一个路由器在同一个局域网内，可以为这个目的地提供更直接或更优的路由路径时，会向发送数据包的主机发送 <strong>ICMP 重定向消息</strong>。</p>
+<p><strong>核心目标：</strong></p>
+<ul>
+<li><strong>避免多余的跳 (Hop):</strong> 减少主机到最终目的地之间的跳数。</li>
+<li><strong>优化路由效率:</strong> 提高数据包的转发效率，减少延迟和路由器负载。</li>
+</ul>
+<p><strong>工作原理：</strong></p>
+<p>假设一个主机 (Host A) 和两个路由器 (Router X 和 Router Y) 都连接在同一个局域网 (LAN) 上。Host A 的默认网关设置为 Router X。Router X 可以通往互联网，Router Y 也可以通往互联网的某些部分。</p>
+<ol>
+<li><p><strong>初始状态：</strong></p>
+<ul>
+<li>Host A 的路由表配置了默认网关：指向 Router X 的 IP 地址。</li>
+<li>Router X 知道如何到达整个互联网 (或至少大部分网络)。</li>
+<li>Router Y 也连接到相同的 LAN，并且可能知道一些 Router X 不知道的，或者通过 Router Y 连接更优的特定网络路径 (例如，Router Y 是到达特定子网的更直接路径)。</li>
+</ul>
+</li>
+<li><p><strong>次优路由发生：</strong></p>
+<ul>
+<li>Host A 需要向目的地 D 发送一个数据包。</li>
+<li>根据其默认网关设置，Host A 将数据包发送给 Router X。</li>
+<li>Router X 接收到 Host A 发来的数据包后，<strong>检查其自身的路由表</strong>。</li>
+<li>Router X 发现：<ul>
+<li>它确实可以到达目的地 D。</li>
+<li><strong>更重要的是，它发现到达目的地 D 的“下一跳”实际上是 LAN 上的另一个路由器——Router Y。</strong> 也就是说，如果 Host A 直接将数据包发送给 Router Y，而不是先发送给自己，再由自己转发给 Router Y，那么数据包可以少走一段路径（即少了一个跳：Host A -&gt; Router X 这一跳）。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>发送 ICMP 重定向消息：</strong></p>
+<ul>
+<li>Router X 在它将数据包转发给 Router Y 的同时，会向 Host A 发送一个 <strong>ICMP 重定向 (Type 5)</strong> 消息。</li>
+<li>这个 ICMP 重定向消息会告诉 Host A：<ul>
+<li>“嘿，下次你要去目的地 (或目的地所在的网络) D 时，不要再发给我了。”</li>
+<li>“你应该直接把数据包发给 **Router Y (给出 Router Y 的 IP 地址)**，那条路径更直接。”</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>主机更新路由表：</strong></p>
+<ul>
+<li>Host A 收到 ICMP 重定向消息后，会<strong>更新自己的路由表</strong>。</li>
+<li>具体来说，Host A 会为目的地 D（或目的地所在的网络）添加一条新的路由条目，将下一跳设置为 Router Y 的 IP 地址。此条目通常是临时性的，并且优先级低于静态配置或动态路由协议学习到的路由。</li>
+</ul>
+</li>
+<li><p><strong>后续流量优化：</strong></p>
+<ul>
+<li>当 Host A 再次需要向目的地 D 发送数据包时，它会首先查询更新后的路由表。</li>
+<li>由于有了新的路由条目，Host A 会直接将数据包发送给 Router Y，从而绕过不必要的 Router X。这减少了网络延迟和 Router X 的处理负担。</li>
+</ul>
+</li>
+</ol>
+<p><strong>ICMP 重定向的报文结构简要说明：</strong></p>
+<p>ICMP 重定向报文是一个 ICMP Type 5 的消息。它包含以下关键信息：</p>
+<ul>
+<li><strong>Type:</strong> 5 (表示重定向)</li>
+<li><strong>Code:</strong> 指示重定向的类型（例如，0 表示重定向到网络，1 表示重定向到主机）。</li>
+<li><strong>Gateway Internet Address:</strong> 告知发送方应将数据包发送给的“更优”路由器的 IP 地址 (即 Router Y 的 IP)。</li>
+<li><strong>Internet Header + First 64 bits of Original Data:</strong> 包含触发重定向的原始 IP 数据包的头部以及原始数据的前 64 位。这有助于主机识别是哪个数据包触发了重定向，从而知道为哪个目的地更新路由。</li>
+</ul>
+<p><strong>需要注意的事项：</strong></p>
+<ul>
+<li><strong>本地网络限制：</strong> ICMP 重定向只能在同一物理网络（或广播域）中的路由器和主机之间进行。路由器不能向来自另一个网络的流量发送重定向消息。</li>
+<li><strong>安全性考量：</strong> 由于 ICMP 重定向消息可以修改主机的路由表，它可能被恶意攻击者利用进行重定向攻击，将流量重定向到攻击者控制的设备上。因此，大多数生产环境的路由器和防火墙会配置为：<ul>
+<li><strong>忽略 ICMP 重定向消息</strong>（对于主机）。</li>
+<li><strong>不发送 ICMP 重定向消息</strong>（对于路由器），除非确实需要且网络管理者完全理解其影响。</li>
+<li><strong>防火墙策略：</strong> 经常配置防火墙（例如 Linux 的 <code>iptables</code>）来限制或完全阻止 ICMP 重定向报文的传入和传出，以增强安全性。</li>
+</ul>
+</li>
+</ul>
+<p><strong>总结：</strong></p>
+<p>ICMP 重定向是一种在路由器发现其转发的流量可以由同一局域网内更直接的路由器处理时，用于通知源主机的一种机制。它的目标是优化本地网络内的路由路径，但鉴于其潜在的安全风险，在生产环境中对其的使用通常受到严格控制。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Network/" rel="tag"># Network</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Ingress/" rel="prev" title="Ingress">
+      <i class="fa fa-chevron-left"></i> Ingress
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/HTTP%20%E8%AF%B7%E6%B1%82%E5%8C%85%E5%90%AB%E5%93%AA%E4%BA%9B%E5%86%85%E5%AE%B9/" rel="next" title="HTTP 请求包含哪些内容">
+      HTTP 请求包含哪些内容 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF-ICMP-%E5%8D%8F%E8%AE%AE%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">什么是 ICMP 协议？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ICMP-%E7%9A%84%E4%B8%BB%E8%A6%81%E4%BD%9C%E7%94%A8%EF%BC%9A"><span class="nav-number">2.</span> <span class="nav-text">ICMP 的主要作用：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%EF%BC%9A"><span class="nav-number">3.</span> <span class="nav-text">总结：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ICMP-%E9%87%8D%E5%AE%9A%E5%90%91-ICMP-Redirect-%E7%9A%84%E4%BD%9C%E7%94%A8%E5%8F%8A%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86"><span class="nav-number">4.</span> <span class="nav-text">ICMP 重定向 (ICMP Redirect) 的作用及工作原理</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

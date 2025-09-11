@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="云原生数据管理平台 KubeBlocksKubeBlocks 是基于 Kubernetes 的云原生数据基础设施，将顶级云服务提供商的大规模生产经验与增强的可用性和稳定性改进相结合，帮助用户轻松构建容器化、声明式的关系型、NoSQL、流计算和向量型数据库服务。  为什么需要 KubeBlocks？Kubernetes 已经成为容器编排的事实标准。它利用 ReplicaSet 提供的可扩展性和可用性">
+<meta property="og:type" content="article">
+<meta property="og:title" content="数据管理平台 KubeBlocks">
+<meta property="og:url" content="http://example.com/2025/09/11/%E6%95%B0%E6%8D%AE%E7%AE%A1%E7%90%86%E5%B9%B3%E5%8F%B0%20KubeBlocks/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="云原生数据管理平台 KubeBlocksKubeBlocks 是基于 Kubernetes 的云原生数据基础设施，将顶级云服务提供商的大规模生产经验与增强的可用性和稳定性改进相结合，帮助用户轻松构建容器化、声明式的关系型、NoSQL、流计算和向量型数据库服务。  为什么需要 KubeBlocks？Kubernetes 已经成为容器编排的事实标准。它利用 ReplicaSet 提供的可扩展性和可用性">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/51we93.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/kxr3me.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/nthr9d.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/pn5gj2.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/a2vknn.png">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:16:20.258Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://mudutestmenu.mudu.tv/upload/51we93.png">
+
+<link rel="canonical" href="http://example.com/2025/09/11/%E6%95%B0%E6%8D%AE%E7%AE%A1%E7%90%86%E5%B9%B3%E5%8F%B0%20KubeBlocks/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>数据管理平台 KubeBlocks | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/%E6%95%B0%E6%8D%AE%E7%AE%A1%E7%90%86%E5%B9%B3%E5%8F%B0%20KubeBlocks/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          数据管理平台 KubeBlocks
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:16:20" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E9%9B%86%E7%BE%A4%E7%AE%A1%E7%90%86/" itemprop="url" rel="index"><span itemprop="name">集群管理</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>29k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>26 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="云原生数据管理平台-KubeBlocks"><a href="#云原生数据管理平台-KubeBlocks" class="headerlink" title="云原生数据管理平台 KubeBlocks"></a>云原生数据管理平台 KubeBlocks</h1><p><a target="_blank" rel="noopener" href="https://kubeblocks.io/">KubeBlocks</a> 是基于 Kubernetes 的云原生数据基础设施，将顶级云服务提供商的大规模生产经验与增强的可用性和稳定性改进相结合，帮助用户轻松构建容器化、声明式的关系型、NoSQL、流计算和向量型数据库服务。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/51we93.png" alt="KubeBlocks"></p>
+<h2 id="为什么需要-KubeBlocks？"><a href="#为什么需要-KubeBlocks？" class="headerlink" title="为什么需要 KubeBlocks？"></a>为什么需要 KubeBlocks？</h2><p>Kubernetes 已经成为容器编排的事实标准。它利用 ReplicaSet 提供的可扩展性和可用性以及 Deployment 提供的发布和回滚功能来管理日益增加的无状态工作负载。然而，管理有状态工作负载给 Kubernetes 带来了巨大的挑战，尽管 StatefulSet 提供了稳定的持久存储和唯一的网络标识符，但这些功能对于复杂的有状态工作负载来说远远不够。</p>
+<p>为了应对这些挑战，并解决复杂性问题，KubeBlocks 引入了 <code>ReplicationSet</code> 和 <code>ConsensusSet</code>，具备以下能力：</p>
+<ul>
+<li>基于角色的更新顺序可减少因升级版本、缩放和重新启动而导致的停机时间。</li>
+<li>维护数据复制的状态，并自动修复复制错误或延迟。</li>
+</ul>
+<p>KubeBlocks 具有以下特点：</p>
+<ul>
+<li>支持多云，与 AWS、GCP、Azure、阿里云等云平台兼容。</li>
+<li>支持 MySQL、PostgreSQL、Redis、MongoDB、Kafka 等 32 个主流数据库和流计算引擎。</li>
+<li>提供生产级性能、弹性、可扩展性和可观察性。</li>
+<li>简化 day-2 操作，例如升级、扩展、监控、备份和恢复。</li>
+<li>包含强大且直观的命令行工具。</li>
+<li>仅需几分钟，即可建立一个适用于生产环境的完整数据基础设施。</li>
+</ul>
+<p>KubeBlocks 集成生态丰富，已经接入多种主流数据库，包括：</p>
+<ul>
+<li>关系型数据库：ApeCloud-MySQL（MySQL 集群版）、PostgreSQL（PostgreSQL 主备版）；</li>
+<li>NoSQL 数据库：MongoDB、Redis；</li>
+<li>图数据库：Nebula（来自社区贡献者）；</li>
+<li>时序数据库：TDengine、Greptime（来自社区贡献者）；</li>
+<li>向量数据库：Milvus、Qdrant、Weaviate 等；</li>
+<li>流数据库：Kafka、Pulsar。</li>
+</ul>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/kxr3me.png" alt="架构"></p>
+<h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><p>要安装 KubeBlocks 可以使用 Helm 安装，也可以使用 KubeBlocks 提供的 CLI 工具安装，由于 CLI 工具不只是安装，还提供了很多功能，所以我们选择使用 CLI 工具来安装。</p>
+<p>直接执行以下命令即可安装 CLI 工具：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">$ curl -fsSL https://kubeblocks.io/installer/install_cli.sh | bash</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Your system is darwin_arm64</span><br><span class="line">Installing kbcli ...</span><br><span class="line"></span><br><span class="line">Getting the latest kbcli ...</span><br><span class="line">Downloading ...</span><br><span class="line">  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current</span><br><span class="line">                                 Dload  Upload   Total   Spent    Left  Speed</span><br><span class="line">100 33.3M  100 33.3M    0     0  24.4M      0  0:00:01  0:00:01 --:--:-- 24.5M</span><br><span class="line">Password:</span><br><span class="line">kbcli installed successfully.</span><br><span class="line">kbcli: 0.8.2</span><br><span class="line">Make sure your docker service is running and begin your journey with kbcli:</span><br><span class="line"></span><br><span class="line">        kbcli playground init</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">For more information on how to get started, please visit:</span><br><span class="line">  https://kubeblocks.io</span><br><span class="line">$ kbcli version</span><br><span class="line">kbcli: 0.8.2</span><br></pre></td></tr></table></figure>
+
+<p>需要注意的是 <code>kbcli</code> 默认安装最新版本，在安装 KubeBlocks 时，kbcli 会安装与之匹配的版本。请确保 kbcli 和 KubeBlocks 的主版本号相匹配。例如，你可以安装 kbcli v0.6.1 和 KubeBlocks v0.6.3。但是，如果安装的是 kbcli v0.5.0 和 KubeBlocks v0.6.0，就可能会报错，因为版本不匹配。</p>
+<p><code>kbcli</code> 安装完成后，可以使用 <code>kbcli</code> 命令来安装 KubeBlocks。如果你目前没有一个可用的 Kubernetes 集群，那么可以使用 <code>kbcli</code> 提供的 Playground 功能来快速创建一个演示环境。直接使用 <code>kbcli playground init</code> 命令即可初始化 Playground，该命令会在的容器中创建一个 Kubernetes 集群，然后在 K3d 集群中部署 KubeBlocks 并创建一个 MySQL 单机版集群，演示环境安装完成后就可以尝试 KubeBlocks 的基本功能，包括查看 MySQL 集群、访问 MySQL 集群、观测 MySQL 集群和 MySQL 的高可用性等等。</p>
+<p>使用 Playground 创建一个新的 Kubernetes 集群并安装 KubeBlocks，是快速上手的一种方法。然而，在实际生产环境中，情况会复杂得多，应用程序在不同的命名空间中运行，还存在资源或权限限制。所以我们这里将介绍如何在现有的 Kubernetes 集群上部署 KubeBlocks。</p>
+<p>当然首先需要准备一个可访问的 Kubernetes 集群，版本要求 1.22 及以上。</p>
+<p>环境准备好后，可以使用 <code>kbcli</code> 安装 KubeBlocks，执行 <code>kbcli kubeblocks install</code> 命令即可安装 KubeBlocks，<code>kbcli</code> 默认会将 KubeBlocks 安装在 <code>kb-system</code> 命名空间中，如果需要安装到其他命名空间，可以使用 <code>--namespace</code> 参数指定。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kbcli kubeblocks install</span><br></pre></td></tr></table></figure>
+
+<p>kbcli 默认安装最新版本，如果想安装 KubeBlocks 的指定版本，可以首先查看可用的版本。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">$ kbcli kubeblocks list-versions</span><br><span class="line">VERSION   RELEASE-NOTES</span><br><span class="line">0.8.3     https://github.com/apecloud/kubeblocks/releases/tag/v0.8.3</span><br><span class="line">0.8.2     https://github.com/apecloud/kubeblocks/releases/tag/v0.8.2</span><br><span class="line">0.8.1     https://github.com/apecloud/kubeblocks/releases/tag/v0.8.1</span><br><span class="line">0.8.0     https://github.com/apecloud/kubeblocks/releases/tag/v0.8.0</span><br><span class="line">0.7.5     https://github.com/apecloud/kubeblocks/releases/tag/v0.7.5</span><br><span class="line">0.7.4     https://github.com/apecloud/kubeblocks/releases/tag/v0.7.4</span><br><span class="line">0.7.3     https://github.com/apecloud/kubeblocks/releases/tag/v0.7.3</span><br><span class="line">0.7.2     https://github.com/apecloud/kubeblocks/releases/tag/v0.7.2</span><br><span class="line">0.7.1     https://github.com/apecloud/kubeblocks/releases/tag/v0.7.1</span><br><span class="line">0.7.0     https://github.com/apecloud/kubeblocks/releases/tag/v0.7.0</span><br></pre></td></tr></table></figure>
+
+<p>然后在安装时使用 <code>--version</code> 指定版本：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kbcli kubeblocks install --version=xxxx</span><br></pre></td></tr></table></figure>
+
+<p>正常情况下，安装完成后会出现如下所示的一些提示信息：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">$ kbcli kubeblocks install</span><br><span class="line">KubeBlocks will be installed to namespace <span class="string">&quot;kb-system&quot;</span></span><br><span class="line">Kubernetes version 1.28.7</span><br><span class="line">kbcli version 0.8.2</span><br><span class="line">Collecting data from cluster                       OK</span><br><span class="line">Kubernetes cluster preflight                       OK</span><br><span class="line">  Warn</span><br><span class="line">  - The default storage class was not found. You can use option --<span class="built_in">set</span> storageClass=&lt;storageClassName&gt; when creating cluster</span><br><span class="line">Create CRDs                                        OK</span><br><span class="line">Add and update repo kubeblocks                     OK</span><br><span class="line">Install KubeBlocks 0.8.2                           OK</span><br><span class="line">Wait <span class="keyword">for</span> addons to be enabled</span><br><span class="line">  apecloud-mysql                                   OK</span><br><span class="line">  clickhouse                                       OK</span><br><span class="line">  kafka                                            OK</span><br><span class="line">  mongodb                                          OK</span><br><span class="line">  postgresql                                       OK</span><br><span class="line">  pulsar                                           OK</span><br><span class="line">  redis                                            OK</span><br><span class="line">  snapshot-controller                              OK</span><br><span class="line"></span><br><span class="line">KubeBlocks 0.8.2 installed to namespace kb-system SUCCESSFULLY!</span><br><span class="line"></span><br><span class="line">-&gt; Basic commands <span class="keyword">for</span> cluster:</span><br><span class="line">    kbcli cluster create -h     <span class="comment"># help information about creating a database cluster</span></span><br><span class="line">    kbcli cluster list          <span class="comment"># list all database clusters</span></span><br><span class="line">    kbcli cluster describe &lt;cluster name&gt;  <span class="comment"># get cluster information</span></span><br><span class="line"></span><br><span class="line">-&gt; Uninstall KubeBlocks:</span><br><span class="line">    kbcli kubeblocks uninstall</span><br></pre></td></tr></table></figure>
+
+<p>安装完成后我们可以使用如下命令来验证 KubeBlocks 是否安装成功：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line">$ kbcli kubeblocks status</span><br><span class="line">KubeBlocks is deployed <span class="keyword">in</span> namespace: kb-system,version: 0.8.2</span><br><span class="line"></span><br><span class="line">KubeBlocks Workloads:</span><br><span class="line">NAMESPACE   KIND         NAME                           READY PODS   CPU(CORES)   MEMORY(BYTES)   CREATED-AT</span><br><span class="line">kb-system   Deployment   kb-addon-snapshot-controller   1/1          N/A          N/A             May 10,2024 10:12 UTC+0800</span><br><span class="line">kb-system   Deployment   kubeblocks                     1/1          N/A          N/A             May 10,2024 10:11 UTC+0800</span><br><span class="line">kb-system   Deployment   kubeblocks-dataprotection      1/1          N/A          N/A             May 10,2024 10:11 UTC+0800</span><br><span class="line"></span><br><span class="line">KubeBlocks Addons:</span><br><span class="line">NAME                           STATUS     TYPE   PROVIDER</span><br><span class="line">alertmanager-webhook-adaptor   Disabled   Helm   N/A</span><br><span class="line">apecloud-mysql                 Enabled    Helm   N/A</span><br><span class="line">apecloud-otel-collector        Disabled   Helm   N/A</span><br><span class="line">aws-load-balancer-controller   Disabled   Helm   N/A</span><br><span class="line">bytebase                       Disabled   Helm   N/A</span><br><span class="line">clickhouse                     Enabled    Helm   N/A</span><br><span class="line">csi-driver-nfs                 Disabled   Helm   N/A</span><br><span class="line">csi-hostpath-driver            Disabled   Helm   N/A</span><br><span class="line">csi-s3                         Disabled   Helm   N/A</span><br><span class="line">elasticsearch                  Disabled   Helm   N/A</span><br><span class="line">external-dns                   Disabled   Helm   N/A</span><br><span class="line">fault-chaos-mesh               Disabled   Helm   N/A</span><br><span class="line">foxlake                        Disabled   Helm   N/A</span><br><span class="line">grafana                        Disabled   Helm   N/A</span><br><span class="line">jupyter-hub                    Disabled   Helm   N/A</span><br><span class="line">jupyter-notebook               Disabled   Helm   N/A</span><br><span class="line">kafka                          Enabled    Helm   N/A</span><br><span class="line">kubebench                      Disabled   Helm   N/A</span><br><span class="line">kubeblocks-csi-driver          Disabled   Helm   N/A</span><br><span class="line">llm                            Disabled   Helm   N/A</span><br><span class="line">loki                           Disabled   Helm   N/A</span><br><span class="line">migration                      Disabled   Helm   N/A</span><br><span class="line">milvus                         Disabled   Helm   N/A</span><br><span class="line">minio                          Disabled   Helm   N/A</span><br><span class="line">mongodb                        Enabled    Helm   N/A</span><br><span class="line">mysql                          Disabled   Helm   N/A</span><br><span class="line">nvidia-gpu-exporter            Disabled   Helm   N/A</span><br><span class="line">nyancat                        Disabled   Helm   N/A</span><br><span class="line">oceanbase                      Disabled   Helm   N/A</span><br><span class="line">opensearch                     Disabled   Helm   N/A</span><br><span class="line">polardbx                       Disabled   Helm   N/A</span><br><span class="line">postgresql                     Enabled    Helm   N/A</span><br><span class="line">prometheus                     Disabled   Helm   N/A</span><br><span class="line">pulsar                         Enabled    Helm   N/A</span><br><span class="line">pyroscope-server               Disabled   Helm   N/A</span><br><span class="line">qdrant                         Disabled   Helm   N/A</span><br><span class="line">redis                          Enabled    Helm   N/A</span><br><span class="line">snapshot-controller            Enabled    Helm   N/A</span><br><span class="line">victoria-metrics-agent         Disabled   Helm   N/A</span><br><span class="line">weaviate                       Disabled   Helm   N/A</span><br><span class="line">xinference                     Disabled   Helm   N/A</span><br></pre></td></tr></table></figure>
+
+<p>状态查询结果中的 KubeBlocks Workloads 显示了 KubeBlocks 的工作负载，如果都显示已准备就绪，则表明已成功安装了 KubeBlocks。当然我们也可以在 <code>kb-system</code> 命名空间中查看 KubeBlocks 的 Pod 资源状态：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl get pods -n kb-system</span><br><span class="line">NAME                                            READY   STATUS    RESTARTS      AGE</span><br><span class="line">kb-addon-snapshot-controller-7bc7cf9dbf-kpmgv   1/1     Running   7 (94m ago)   3h52m</span><br><span class="line">kubeblocks-85ddddddd4-r2gqz                     1/1     Running   2 (96m ago)   3h53m</span><br><span class="line">kubeblocks-dataprotection-7f9c76fb8f-vh7v8      1/1     Running   2 (96m ago)   3h53m</span><br></pre></td></tr></table></figure>
+
+<p>到这里 KubeBlocks 就安装完成了，接下来我们就可以使用 KubeBlocks 来创建数据库集群了，例如 MySQL、PostgreSQL、Redis、MongoDB、Kafka 等。</p>
+<h2 id="管理数据库集群"><a href="#管理数据库集群" class="headerlink" title="管理数据库集群"></a>管理数据库集群</h2><p>KubeBlocks 部署完成后，我们就可以使用 <code>kbcli</code> 来创建数据库集群了，数据库在 Kubernetes 上以 Pod 的形式运行。比如我们这里以 MySQL 为例，创建一个 MySQL 集群。</p>
+<h3 id="创建-MySQL-集群"><a href="#创建-MySQL-集群" class="headerlink" title="创建 MySQL 集群"></a>创建 MySQL 集群</h3><p>为保持隔离，这里我们创建一个名为 <code>demo</code> 的独立命名空间。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl create namespace demo</span><br></pre></td></tr></table></figure>
+
+<p>KubeBlocks 支持创建两种类型的 MySQL 集群：单机版（Standalone）和集群版（RaftGroup）。单机版仅支持一个副本，适用于对可用性要求较低的场景。集群版包含三个副本，适用于对高可用性要求较高的场景。为了确保高可用性，所有的副本都默认分布在不同的节点上。</p>
+<p>直接使用下面的命令即可创建一个 MySQL 单机版集群：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ kbcli cluster create mysql demo --namespace demo</span><br><span class="line">Info: --version is not specified, ac-mysql-8.0.30 is applied by default.</span><br><span class="line">Cluster demo created</span><br></pre></td></tr></table></figure>
+
+<p>创建后可以使用 <code>kbcli cluster list</code> 命令查看创建的数据库集群列表：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ kbcli cluster list -n demo</span><br><span class="line">NAME   NAMESPACE   CLUSTER-DEFINITION   VERSION           TERMINATION-POLICY   STATUS     CREATED-TIME</span><br><span class="line">demo   demo        apecloud-mysql       ac-mysql-8.0.30   Delete               Creating   May 11,2024 20:15 UTC+0800</span><br></pre></td></tr></table></figure>
+
+<p>从上面的输出可以看到，我们创建的 MySQL 集群名称为 <code>demo</code>，所属命名空间为 <code>demo</code>，使用的集群定义为 <code>apecloud-mysql</code>，版本为 <code>ac-mysql-8.0.30</code>，状态为 <code>Creating</code>。当然我们也可以查看 Pod 的状态：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl get cluster -n demo</span><br><span class="line">NAME   CLUSTER-DEFINITION   VERSION           TERMINATION-POLICY   STATUS     AGE</span><br><span class="line">demo   apecloud-mysql       ac-mysql-8.0.30   Delete               Creating   2m24s</span><br><span class="line">$ kubectl get sts -n demo</span><br><span class="line">NAME         READY   AGE</span><br><span class="line">demo-mysql   0/1     2m</span><br><span class="line">$ kubectl get pods -n demo</span><br><span class="line">NAME           READY   STATUS    RESTARTS   AGE</span><br><span class="line">demo-mysql-0   0/5     Pending   0          79s</span><br></pre></td></tr></table></figure>
+
+<p>由于我们并没有配置存储类，所以 Pod 一直处于 Pending 状态，我们可以设置一个默认的 StorageClass 来解决这个问题。</p>
+<p>上面创建单机版的 MySQL 集群是 kbcli 内置的集群定义，如果需要创建集群版的 MySQL 集群，可以使用 <code>--cluster-definition</code> 参数指定集群定义，比如创建一个 MySQL 集群版，设置副本数为 3，</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ kbcli cluster create mycluster --cluster-definition=apecloud-mysql --<span class="built_in">set</span> cpu=0.5,memory=512Mi,storage=10Gi,replicas=3 --<span class="built_in">set</span> storageClass=nfs-client --namespace demo</span><br><span class="line">Info: --cluster-version is not specified, ClusterVersion ac-mysql-8.0.30 is applied by default</span><br><span class="line">Cluster mycluster created</span><br></pre></td></tr></table></figure>
+
+<p>创建后可以使用 <code>kbcli cluster list</code> 命令查看创建的数据库集群列表：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ kbcli cluster list -n demo</span><br><span class="line">NAME        NAMESPACE   CLUSTER-DEFINITION   VERSION           TERMINATION-POLICY   STATUS     CREATED-TIME</span><br><span class="line">mycluster   demo        apecloud-mysql       ac-mysql-8.0.30   Delete               Creating   May 11,2024 20:34 UTC+0800</span><br></pre></td></tr></table></figure>
+
+<p>此外还可以使用 <code>kbcli cluster describe</code> 命令查看集群的详细信息：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">$ kbcli cluster  describe mycluster -n demo</span><br><span class="line">Name: mycluster  Created Time: May 11,2024 20:39 UTC+0800</span><br><span class="line">NAMESPACE   CLUSTER-DEFINITION   VERSION           STATUS    TERMINATION-POLICY</span><br><span class="line">demo        apecloud-mysql       ac-mysql-8.0.30   Running   Delete</span><br><span class="line"></span><br><span class="line">Endpoints:</span><br><span class="line">COMPONENT   MODE        INTERNAL                                      EXTERNAL</span><br><span class="line">mysql       ReadWrite   mycluster-mysql.demo.svc.cluster.local:3306   &lt;none&gt;</span><br><span class="line"></span><br><span class="line">Topology:</span><br><span class="line">COMPONENT   INSTANCE            ROLE       STATUS    AZ       NODE                  CREATED-TIME</span><br><span class="line">mysql       mycluster-mysql-0   follower   Running   &lt;none&gt;   node2/192.168.0.118   May 11,2024 20:39 UTC+0800</span><br><span class="line">mysql       mycluster-mysql-1   follower   Running   &lt;none&gt;   node1/192.168.0.116   May 11,2024 20:39 UTC+0800</span><br><span class="line">mysql       mycluster-mysql-2   leader     Running   &lt;none&gt;   node1/192.168.0.116   May 11,2024 20:39 UTC+0800</span><br><span class="line"></span><br><span class="line">Resources Allocation:</span><br><span class="line">COMPONENT   DEDICATED   CPU(REQUEST/LIMIT)   MEMORY(REQUEST/LIMIT)   STORAGE-SIZE   STORAGE-CLASS</span><br><span class="line">mysql       <span class="literal">false</span>       500m / 500m          512Mi / 512Mi           data:10Gi      nfs-client</span><br><span class="line"></span><br><span class="line">Images:</span><br><span class="line">COMPONENT   TYPE    IMAGE</span><br><span class="line">mysql       mysql   infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/apecloud-mysql-server:8.0.30-5.beta3.20231215.ge77d836.13</span><br><span class="line"></span><br><span class="line">Data Protection:</span><br><span class="line">BACKUP-REPO   AUTO-BACKUP   BACKUP-SCHEDULE   BACKUP-METHOD   BACKUP-RETENTION</span><br><span class="line"></span><br><span class="line">Show cluster events: kbcli cluster list-events -n demo mycluster</span><br></pre></td></tr></table></figure>
+
+<p>从上面的输出可以看到我们创建的 MySQL 集群的详细信息，包括状态、集群的访问地址等，Topology 显示了集群的拓扑结构，Resources Allocation 显示了集群的资源分配情况，Images 显示了集群使用的镜像，Data Protection 显示了集群的数据保护情况。</p>
+<p>此外还可以使用 <code>kbcli cluster list-events</code> 命令查看集群的 Events 事件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">$ kbcli cluster list-events -n demo mycluster</span><br><span class="line"><span class="comment"># ......</span></span><br><span class="line">demo        May 11,2024 20:42 UTC+0800   Normal    Pulled                     Instance/mycluster-mysql-1   Successfully pulled image <span class="string">&quot;infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/apecloud-mysql-scale:0.2.6&quot;</span> <span class="keyword">in</span> 725ms (1m42.223s including waiting)</span><br><span class="line">demo        May 11,2024 20:42 UTC+0800   Normal    Started                    Instance/mycluster-mysql-1   Started container config-manager</span><br><span class="line">demo        May 11,2024 20:42 UTC+0800   Normal    Pulled                     Instance/mycluster-mysql-1   Container image <span class="string">&quot;infracreate-registry.cn-zhangjiakou.cr.aliyuncs.com/apecloud/kubeblocks-tools:0.8.2&quot;</span> already present on machine</span><br><span class="line">demo        May 11,2024 20:42 UTC+0800   Normal    Started                    Instance/mycluster-mysql-1   Started container lorry</span><br><span class="line">demo        May 11,2024 20:42 UTC+0800   Normal    checkRole                  Instance/mycluster-mysql-0   &#123;<span class="string">&quot;event&quot;</span>:<span class="string">&quot;Success&quot;</span>,<span class="string">&quot;operation&quot;</span>:<span class="string">&quot;checkRole&quot;</span>,<span class="string">&quot;originalRole&quot;</span>:<span class="string">&quot;&quot;</span>,<span class="string">&quot;role&quot;</span>:<span class="string">&quot;Follower&quot;</span>&#125;</span><br><span class="line">demo        May 11,2024 20:42 UTC+0800   Normal    checkRole                  Instance/mycluster-mysql-2   &#123;<span class="string">&quot;event&quot;</span>:<span class="string">&quot;Success&quot;</span>,<span class="string">&quot;operation&quot;</span>:<span class="string">&quot;checkRole&quot;</span>,<span class="string">&quot;originalRole&quot;</span>:<span class="string">&quot;&quot;</span>,<span class="string">&quot;role&quot;</span>:<span class="string">&quot;Leader&quot;</span>&#125;</span><br><span class="line">demo        May 11,2024 20:42 UTC+0800   Normal    checkRole                  Instance/mycluster-mysql-1   &#123;<span class="string">&quot;event&quot;</span>:<span class="string">&quot;Success&quot;</span>,<span class="string">&quot;operation&quot;</span>:<span class="string">&quot;checkRole&quot;</span>,<span class="string">&quot;originalRole&quot;</span>:<span class="string">&quot;&quot;</span>,<span class="string">&quot;role&quot;</span>:<span class="string">&quot;Follower&quot;</span>&#125;</span><br><span class="line">demo        May 11,2024 20:42 UTC+0800   Normal    ComponentPhaseTransition   Cluster/mycluster            component is Running</span><br><span class="line">demo        May 11,2024 20:42 UTC+0800   Normal    AllReplicasReady           Cluster/mycluster            all pods of components are ready, waiting <span class="keyword">for</span> the probe detection successful</span><br><span class="line">demo        May 11,2024 20:42 UTC+0800   Normal    ClusterReady               Cluster/mycluster            Cluster: mycluster is ready, current phase is Running</span><br><span class="line">demo        May 11,2024 20:42 UTC+0800   Normal    Running                    Cluster/mycluster            Cluster: mycluster is ready, current phase is Running</span><br></pre></td></tr></table></figure>
+
+<p>通过这些 Events 事件可以查看集群的创建过程，以及集群的状态变化，如果有问题也可以根据 Events 事件来排查问题。从上面的输出可以看到我们的 MySQL 集群已经创建成功，状态为 Running。</p>
+<p>我们也可以查看集群的 Pod 状态：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl get pods -n demo</span><br><span class="line">NAME                READY   STATUS    RESTARTS   AGE</span><br><span class="line">mycluster-mysql-0   5/5     Running   0          7m44s</span><br><span class="line">mycluster-mysql-1   5/5     Running   0          7m44s</span><br><span class="line">mycluster-mysql-2   5/5     Running   0          7m44s</span><br></pre></td></tr></table></figure>
+
+<h3 id="连接-MySQL-集群"><a href="#连接-MySQL-集群" class="headerlink" title="连接 MySQL 集群"></a>连接 MySQL 集群</h3><p>接下来我们就可以连接到 MySQL 集群中，进行一些操作了。我们这里可以使用 <code>kbcli</code> 提供的 <code>cluster connect</code> 命令来连接到 MySQL 集群中：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">$ kbcli cluster connect mycluster  --namespace demo</span><br><span class="line">Connect to instance mycluster-mysql-2: out of mycluster-mysql-2(leader), mycluster-mysql-0(follower), mycluster-mysql-1(follower)</span><br><span class="line">Defaulted container <span class="string">&quot;mysql&quot;</span> out of: mysql, metrics, vttablet, lorry, config-manager</span><br><span class="line">mysql: [Warning] Using a password on the <span class="built_in">command</span> line interface can be insecure.</span><br><span class="line">Welcome to the MySQL monitor.  Commands end with ; or \g.</span><br><span class="line">Your MySQL connection <span class="built_in">id</span> is 46</span><br><span class="line">Server version: 8.0.30 WeSQL Server - GPL, Release 5, Revision e77d836</span><br><span class="line"></span><br><span class="line">Copyright (c) 2000, 2022, Oracle and/or its affiliates.</span><br><span class="line"></span><br><span class="line">Oracle is a registered trademark of Oracle Corporation and/or its</span><br><span class="line">affiliates. Other names may be trademarks of their respective</span><br><span class="line">owners.</span><br><span class="line"></span><br><span class="line">Type <span class="string">&#x27;help;&#x27;</span> or <span class="string">&#x27;\h&#x27;</span> <span class="keyword">for</span> <span class="built_in">help</span>. Type <span class="string">&#x27;\c&#x27;</span> to clear the current input statement.</span><br><span class="line"></span><br><span class="line">mysql&gt;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><code>cluster connect</code> 的底层命令是 <code>kubectl exec</code>，只要能够访问 K8s APIServer，就可以使用该命令。</p>
+</blockquote>
+<p>比如现在我们在 MySQL 集群中创建一个数据库：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; USE mydb</span><br><span class="line">Database changed</span><br><span class="line">mysql&gt; CREATE TABLE students (</span><br><span class="line">    student_id INT PRIMARY KEY,</span><br><span class="line">    name VARCHAR(50) NOT NULL,</span><br><span class="line">    gender VARCHAR(10) NOT NULL,</span><br><span class="line">    birthday DATE NOT NULL,</span><br><span class="line">    major VARCHAR(50) NOT NULL,</span><br><span class="line">    grade INT NOT NULL</span><br><span class="line">);</span><br><span class="line">Query OK, 0 rows affected (0.06 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt; INSERT INTO</span><br><span class="line">    students (student_id, name, gender, birthday, major, grade)</span><br><span class="line">    VALUES</span><br><span class="line">    (1, <span class="string">&#x27;John Smith&#x27;</span>, <span class="string">&#x27;Male&#x27;</span>, <span class="string">&#x27;2001-01-01&#x27;</span>, <span class="string">&#x27;Computer Science and Technology&#x27;</span>, 2020),</span><br><span class="line">    (2, <span class="string">&#x27;Emily Brown&#x27;</span>, <span class="string">&#x27;Female&#x27;</span>, <span class="string">&#x27;2002-02-15&#x27;</span>, <span class="string">&#x27;Software Engineering&#x27;</span>, 2021),</span><br><span class="line">    (3, <span class="string">&#x27;Michael Johnson&#x27;</span>, <span class="string">&#x27;Male&#x27;</span>, <span class="string">&#x27;2003-03-26&#x27;</span>, <span class="string">&#x27;Information Security&#x27;</span>, 2022);</span><br><span class="line">Query OK, 3 rows affected (0.08 sec)</span><br><span class="line">Records: 3  Duplicates: 0  Warnings: 0</span><br><span class="line"></span><br><span class="line">mysql&gt; SELECT * FROM students;</span><br><span class="line">+------------+-----------------+--------+------------+---------------------------------+-------+</span><br><span class="line">| student_id | name            | gender | birthday   | major                           | grade |</span><br><span class="line">+------------+-----------------+--------+------------+---------------------------------+-------+</span><br><span class="line">|          1 | John Smith      | Male   | 2001-01-01 | Computer Science and Technology |  2020 |</span><br><span class="line">|          2 | Emily Brown     | Female | 2002-02-15 | Software Engineering            |  2021 |</span><br><span class="line">|          3 | Michael Johnson | Male   | 2003-03-26 | Information Security            |  2022 |</span><br><span class="line">+------------+-----------------+--------+------------+---------------------------------+-------+</span><br><span class="line">3 rows <span class="keyword">in</span> <span class="built_in">set</span> (0.00 sec)</span><br><span class="line">mysql&gt; <span class="built_in">exit</span></span><br></pre></td></tr></table></figure>
+
+<p>到这里我们就成功创建了一个 MySQL 集群，并在集群中创建了一个数据库，插入了一些数据。</p>
+<p>当然除了使用 <code>kbcli cluster connect</code> 命令连接到 MySQL 集群，我们也可以使用 <code>kubectl exec</code> 命令进入 Pod 并连接到数据库。KubeBlocks operator 会创建一个名为 <code>mycluster-conn-credential</code> 的新的 Secret 来存储 MySQL 集群的连接凭证。该 Secret 包含以下 key：</p>
+<ul>
+<li>username：MySQL 集群的根用户名。</li>
+<li>password：根用户的密码。</li>
+<li>port：MySQL 集群的端口。</li>
+<li>host：MySQL 集群的主机。</li>
+<li>endpoint：MySQL 集群的终端节点，与 <code>host:port</code> 相同。</li>
+</ul>
+<p>我们可以使用下面的命令获取用于 <code>kubectl exec</code> 命令的 <code>username</code> 和 <code>password</code>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl get secrets -n demo mycluster-conn-credential -o jsonpath=<span class="string">&#x27;&#123;.data.username&#125;&#x27;</span> | <span class="built_in">base64</span> -d</span><br><span class="line">root</span><br><span class="line">$ kubectl get secrets -n demo mycluster-conn-credential -o jsonpath=<span class="string">&#x27;&#123;.data.password&#125;&#x27;</span> | <span class="built_in">base64</span> -d</span><br><span class="line">zcw4p54l</span><br></pre></td></tr></table></figure>
+
+<p>然后就可以使用用户名和密码，进入 Pod 并连接到数据库。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl <span class="built_in">exec</span> -ti -n demo mycluster-mysql-0 -- bash</span><br><span class="line">Defaulted container <span class="string">&quot;mysql&quot;</span> out of: mysql, metrics, vttablet, lorry, config-manager</span><br><span class="line">[root@mycluster-mysql-0 /]# mysql -uroot -pzcw4p54l</span><br><span class="line">mysql: [Warning] Using a password on the <span class="built_in">command</span> line interface can be insecure.</span><br><span class="line">Welcome to the MySQL monitor.  Commands end with ; or \g.</span><br><span class="line">Your MySQL connection <span class="built_in">id</span> is 2625</span><br><span class="line">Server version: 8.0.30 WeSQL Server - GPL, Release 5, Revision e77d836</span><br><span class="line"></span><br><span class="line">Copyright (c) 2000, 2022, Oracle and/or its affiliates.</span><br><span class="line"></span><br><span class="line">Oracle is a registered trademark of Oracle Corporation and/or its</span><br><span class="line">affiliates. Other names may be trademarks of their respective</span><br><span class="line">owners.</span><br><span class="line"></span><br><span class="line">Type <span class="string">&#x27;help;&#x27;</span> or <span class="string">&#x27;\h&#x27;</span> <span class="keyword">for</span> <span class="built_in">help</span>. Type <span class="string">&#x27;\c&#x27;</span> to clear the current input statement.</span><br><span class="line"></span><br><span class="line">mysql&gt; use mydb;</span><br><span class="line">Reading table information <span class="keyword">for</span> completion of table and column names</span><br><span class="line">You can turn off this feature to get a quicker startup with -A</span><br><span class="line"></span><br><span class="line">Database changed</span><br><span class="line">mysql&gt; SELECT * FROM students;</span><br><span class="line">+------------+-----------------+--------+------------+---------------------------------+-------+</span><br><span class="line">| student_id | name            | gender | birthday   | major                           | grade |</span><br><span class="line">+------------+-----------------+--------+------------+---------------------------------+-------+</span><br><span class="line">|          1 | John Smith      | Male   | 2001-01-01 | Computer Science and Technology |  2020 |</span><br><span class="line">|          2 | Emily Brown     | Female | 2002-02-15 | Software Engineering            |  2021 |</span><br><span class="line">|          3 | Michael Johnson | Male   | 2003-03-26 | Information Security            |  2022 |</span><br><span class="line">+------------+-----------------+--------+------------+---------------------------------+-------+</span><br><span class="line">3 rows <span class="keyword">in</span> <span class="built_in">set</span> (0.00 sec)</span><br><span class="line"></span><br><span class="line">mysql&gt;</span><br></pre></td></tr></table></figure>
+
+<p>如果在本地计算机上安装了 MySQL 客户端，我们同样可以使用 <code>kubectl port-forward</code> 来进行端口转发，然后连接到数据库，当然也可以通过一些网关服务（比如 higress）来暴露数据库服务。</p>
+<h3 id="扩展"><a href="#扩展" class="headerlink" title="扩展"></a>扩展</h3><p>前面我们创建的 MySQL 集群配置了集群的 CPU、内存、存储等，当资源不足的时候，我们还可以使用 <code>kbcli cluster vscale</code> 命令来进行垂直扩展，比如我们将 MySQL 集群的 CPU 和内存都扩展为 1 核 1GB，使用如下命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ kkbcli cluster vscale mycluster --components=mysql --cpu 1000m --memory 1Gi -n demo</span><br><span class="line">Please <span class="built_in">type</span> the name again(separate with white space when more than one): mycluster</span><br><span class="line">OpsRequest mycluster-verticalscaling-7zhf2 created successfully, you can view the progress:</span><br><span class="line">        kbcli cluster describe-ops mycluster-verticalscaling-7zhf2 -n demo</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>在垂直扩容时，所有的 Pod 将按照 <code>Learner -&gt; Follower -&gt; Leader</code> 的顺序重启。重启后，主节点可能会发生变化。</p>
+</blockquote>
+<p>然后可以使用上面提示的 <code>kbcli cluster describe-ops</code> 命令查看垂直扩展的进度：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">$ kbcli cluster describe-ops mycluster-verticalscaling-7zhf2 -n demo</span><br><span class="line">Spec:</span><br><span class="line">  Name: mycluster-verticalscaling-7zhf2 NameSpace: demo Cluster: mycluster      Type: VerticalScaling</span><br><span class="line"></span><br><span class="line">Command:</span><br><span class="line">  kbcli cluster vscale mycluster --components=mysql --cpu=1 --memory=1Gi --namespace=demo</span><br><span class="line"></span><br><span class="line">Last Configuration:</span><br><span class="line">COMPONENT   REQUEST-CPU   REQUEST-MEMORY   LIMIT-CPU   LIMIT-MEMORY</span><br><span class="line">mysql       500m          512Mi            500m        512Mi</span><br><span class="line"></span><br><span class="line">Status:</span><br><span class="line">  Start Time:         May 12,2024 07:26 UTC+0800</span><br><span class="line">  Duration:           45s</span><br><span class="line">  Status:             Running</span><br><span class="line">  Progress:           0/3</span><br><span class="line">                      OBJECT-KEY              STATUS       DURATION    MESSAGE</span><br><span class="line">                      Pod/mycluster-mysql-0   Processing   45s         Start to vertical scale: Pod/mycluster-mysql-0 <span class="keyword">in</span> Component: mysql</span><br><span class="line">                      Pod/mycluster-mysql-2   Pending      &lt;Unknown&gt;</span><br><span class="line">                      Pod/mycluster-mysql-1   Pending      &lt;Unknown&gt;</span><br><span class="line"></span><br><span class="line">Conditions:</span><br><span class="line">LAST-TRANSITION-TIME         TYPE                 REASON                     STATUS   MESSAGE</span><br><span class="line">May 12,2024 07:26 UTC+0800   WaitForProgressing   WaitForProgressing         True     <span class="built_in">wait</span> <span class="keyword">for</span> the controller to process the OpsRequest: mycluster-verticalscaling-7zhf2 <span class="keyword">in</span> Cluster: mycluster</span><br><span class="line">May 12,2024 07:26 UTC+0800   Validated            ValidateOpsRequestPassed   True     OpsRequest: mycluster-verticalscaling-7zhf2 is validated</span><br><span class="line">May 12,2024 07:26 UTC+0800   VerticalScaling      VerticalScalingStarted     True     Start to vertical scale resources <span class="keyword">in</span> Cluster: mycluster</span><br><span class="line"></span><br><span class="line">Warning Events: &lt;none&gt;</span><br></pre></td></tr></table></figure>
+
+<p>我们还可以使用 <code>cluster list-ops</code> 命令查看这些运维操作的状态：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ kbcli cluster list-ops --status all -n demo</span><br><span class="line">NAME                              NAMESPACE   TYPE              CLUSTER     COMPONENT   STATUS    PROGRESS   CREATED-TIME</span><br><span class="line">mycluster-verticalscaling-7zhf2   demo        VerticalScaling   mycluster   mysql       Succeed   3/3        May 12,2024 07:26 UTC+0800</span><br></pre></td></tr></table></figure>
+
+<p>从上面的输出可以看到垂直扩展操作已经成功完成，我们也可以从 <code>kbcli cluster describe</code> 命令中查看集群的资源分配情况：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ kbcli cluster describe mycluster -n demo</span><br><span class="line"><span class="comment"># ......</span></span><br><span class="line">Resources Allocation:</span><br><span class="line">COMPONENT   DEDICATED   CPU(REQUEST/LIMIT)   MEMORY(REQUEST/LIMIT)   STORAGE-SIZE   STORAGE-CLASS</span><br><span class="line">mysql       <span class="literal">false</span>       1 / 1                1Gi / 1Gi               data:10Gi      nfs-client</span><br><span class="line"></span><br><span class="line"><span class="comment"># ......</span></span><br></pre></td></tr></table></figure>
+
+<p>同样除了可以使用 <code>kbcli cluster vscale</code> 命令进行垂直扩展，我们还可以创建一个 <code>OpsRequest</code> 的 CRD 对象来实现该运维操作，如下所示：</p>
+<blockquote>
+<p><code>OpsRequest</code> 是 KubeBlocks 提供的一种资源对象，用于描述运维操作，比如垂直扩展、水平扩展、配置更新等。</p>
+</blockquote>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps.kubeblocks.io/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">OpsRequest</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">ops-vertical-scaling</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">demo</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">clusterRef:</span> <span class="string">mycluster</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">VerticalScaling</span></span><br><span class="line">  <span class="attr">verticalScaling:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">componentName:</span> <span class="string">mysql</span></span><br><span class="line">      <span class="attr">requests:</span></span><br><span class="line">        <span class="attr">memory:</span> <span class="string">&quot;1Gi&quot;</span></span><br><span class="line">        <span class="attr">cpu:</span> <span class="string">&quot;1000m&quot;</span></span><br><span class="line">      <span class="attr">limits:</span></span><br><span class="line">        <span class="attr">memory:</span> <span class="string">&quot;2Gi&quot;</span></span><br><span class="line">        <span class="attr">cpu:</span> <span class="string">&quot;2000m&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>另外我还可以直接修改 <code>Cluster</code> 对象的 <code>spec.componentSpecs.resources</code> 字段来实现垂直扩展，如下所示：</p>
+<blockquote>
+<p><code>spec.componentSpecs.resources</code> 控制资源需求和相关限制，更改配置将触发垂直扩容。</p>
+</blockquote>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps.kubeblocks.io/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Cluster</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">mysql-cluster</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">demo</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">clusterDefinitionRef:</span> <span class="string">apecloud-mysql</span></span><br><span class="line">  <span class="attr">clusterVersionRef:</span> <span class="string">ac-mysql-8.0.30</span></span><br><span class="line">  <span class="attr">componentSpecs:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">mysql</span></span><br><span class="line">      <span class="attr">componentDefRef:</span> <span class="string">mysql</span></span><br><span class="line">      <span class="attr">replicas:</span> <span class="number">3</span></span><br><span class="line">      <span class="attr">resources:</span> <span class="comment"># 修改资源值</span></span><br><span class="line">        <span class="attr">requests:</span></span><br><span class="line">          <span class="attr">memory:</span> <span class="string">&quot;1Gi&quot;</span></span><br><span class="line">          <span class="attr">cpu:</span> <span class="string">&quot;1&quot;</span></span><br><span class="line">        <span class="attr">limits:</span></span><br><span class="line">          <span class="attr">memory:</span> <span class="string">&quot;1Gi&quot;</span></span><br><span class="line">          <span class="attr">cpu:</span> <span class="string">&quot;1&quot;</span></span><br><span class="line">      <span class="attr">volumeClaimTemplates:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">data</span></span><br><span class="line">          <span class="attr">spec:</span></span><br><span class="line">            <span class="attr">accessModes:</span></span><br><span class="line">              <span class="bullet">-</span> <span class="string">ReadWriteOnce</span></span><br><span class="line">            <span class="attr">resources:</span></span><br><span class="line">              <span class="attr">requests:</span></span><br><span class="line">                <span class="attr">storage:</span> <span class="string">1Gi</span></span><br><span class="line">            <span class="attr">storageClassName:</span> <span class="string">nfs-client</span></span><br><span class="line">  <span class="attr">terminationPolicy:</span> <span class="string">Delete</span></span><br></pre></td></tr></table></figure>
+
+<p>当然除了垂直扩展，我们还可以使用 <code>kbcli cluster hscale</code> 命令来进行水平扩展，比如我们将 MySQL 集群的副本数从 3 扩展到 5，扩容过程包括数据的备份和恢复。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kbcli cluster hscale mycluster --components=<span class="string">&quot;mysql&quot;</span> --replicas=5 -n demo</span><br></pre></td></tr></table></figure>
+
+<p>同样可以使用 <code>OpsRequest</code> 对象或者编辑 <code>Cluster</code> 对象来实现水平扩展操作，如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps.kubeblocks.io/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">OpsRequest</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">ops-horizontal-scaling</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">demo</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">clusterRef:</span> <span class="string">mycluster</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">HorizontalScaling</span></span><br><span class="line">  <span class="attr">horizontalScaling:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">componentName:</span> <span class="string">mysql</span></span><br><span class="line">      <span class="attr">replicas:</span> <span class="number">3</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="配置更新"><a href="#配置更新" class="headerlink" title="配置更新"></a>配置更新</h3><p>我们知道 MySQL 集群本身有很多配置参数，比如 <code>max_connections</code>、<code>innodb_buffer_pool_size</code>、<code>innodb_log_file_size</code> 等等，在实际应用中，我们可能需要根据业务需求来调整这些配置参数。KubeBlocks 中同样提供了一些命令来更新集群的配置参数，比如我们需要将 <code>max_connections</code> 参数修改为 2000。</p>
+<p>首先可以使用 <code>kbcli cluster describe-config</code> 命令查看集群的配置参数：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ kbcli cluster describe-config mycluster --show-detail -n demo | grep max_connections=</span><br><span class="line">max_connections=83</span><br></pre></td></tr></table></figure>
+
+<p>可以看到默认的 <code>max_connections</code> 参数为 83，然后我们可以使用 <code>kbcli cluster configure</code> 命令来更新集群的配置参数：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">$ kbcli cluster configure mycluster --<span class="built_in">set</span> max_connections=2000 -n demo</span><br><span class="line">Will updated configure file meta:</span><br><span class="line">  ConfigSpec: mysql-consensusset-config   ConfigFile: my.cnf    ComponentName:  ClusterName: mycluster</span><br><span class="line">OpsRequest mycluster-reconfiguring-bb6l8 created successfully, you can view the progress:</span><br><span class="line">        kbcli cluster describe-ops mycluster-reconfiguring-bb6l8 -n demo</span><br><span class="line">$ kbcli cluster describe-ops mycluster-reconfiguring-bb6l8 -n demo</span><br><span class="line">Spec:</span><br><span class="line">  Name: mycluster-reconfiguring-bb6l8   NameSpace: demo Cluster: mycluster      Type: Reconfiguring</span><br><span class="line"></span><br><span class="line">Command:</span><br><span class="line">  kbcli cluster configure mycluster --components=mysql --config-spec=mysql-consensusset-config --config-file=my.cnf --<span class="built_in">set</span> max_connections=2000 --namespace=demo</span><br><span class="line"></span><br><span class="line">Status:</span><br><span class="line">  Start Time:         May 12,2024 07:44 UTC+0800</span><br><span class="line">  Completion Time:    May 12,2024 07:44 UTC+0800</span><br><span class="line">  Duration:           30s</span><br><span class="line">  Status:             Succeed</span><br><span class="line">  Progress:           3/3</span><br><span class="line">                      OBJECT-KEY   STATUS   DURATION   MESSAGE</span><br><span class="line"></span><br><span class="line">Conditions:</span><br><span class="line">LAST-TRANSITION-TIME         TYPE                 REASON                            STATUS   MESSAGE</span><br><span class="line">May 12,2024 07:44 UTC+0800   WaitForProgressing   WaitForProgressing                True     <span class="built_in">wait</span> <span class="keyword">for</span> the controller to process the OpsRequest: mycluster-reconfiguring-bb6l8 <span class="keyword">in</span> Cluster: mycluster</span><br><span class="line">May 12,2024 07:44 UTC+0800   Validated            ValidateOpsRequestPassed          True     OpsRequest: mycluster-reconfiguring-bb6l8 is validated</span><br><span class="line">May 12,2024 07:44 UTC+0800   Reconfigure          ReconfigureStarted                True     Start to reconfigure <span class="keyword">in</span> Cluster: mycluster, Component: mysql</span><br><span class="line">May 12,2024 07:44 UTC+0800   Succeed              OpsRequestProcessedSuccessfully   True     Successfully processed the OpsRequest: mycluster-reconfiguring-bb6l8 <span class="keyword">in</span> Cluster: mycluster</span><br><span class="line"></span><br><span class="line">Warning Events: &lt;none&gt;</span><br></pre></td></tr></table></figure>
+
+<p>配置更新操作已经成功完成，我们再次查看集群的配置参数正常就可以看到 <code>max_connections</code> 参数已经更新为 2000：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ kbcli cluster describe-config mycluster --show-detail -n demo | grep max_connections=</span><br><span class="line">max_connections=2000</span><br></pre></td></tr></table></figure>
+
+<h3 id="备份"><a href="#备份" class="headerlink" title="备份"></a>备份</h3><p>KubeBlocks 还提供备份恢复功能，以确保数据的安全性和可靠性。KubeBlocks 采用物理备份的方式，将数据库中的物理文件作为备份对象。你可以根据实际需求，选择对应的方式按需或定时备份集群数据。</p>
+<ul>
+<li>按需备份：根据不同的备份选项，按需备份可以进一步分为备份工具备份和快照备份两种。<ul>
+<li>备份工具备份：可使用数据库产品的备份工具，如 MySQL XtraBackup 和 PostgreSQL pg_basebackup。KubeBlocks 支持为不同的数据产品配置备份工具。</li>
+<li>快照备份：如果你的数据存储在支持快照的云盘中，你可以通过快照创建数据备份。快照备份通常比备份工具备份更快，因此推荐使用。</li>
+</ul>
+</li>
+<li>定时备份：可指定保留时间、备份方法、时间等参数来自定义备份设置。</li>
+</ul>
+<p>KubeBlocks 的备份恢复功能依赖于 <code>BackupRepo</code>，在使用完整的备份恢复功能之前，首先需要配置 <code>BackupRepo</code>。<code>BackupRepo</code> 是备份数据的存储仓库，支持配置 OSS（阿里云对象存储）、S3（亚马逊对象存储）、COS（腾讯云对象存储）、GCS（谷歌云对象存储）、OBS（华为云对象存储）、MinIO 等兼容 S3 协议的对象存储作为备份仓库，同时支持 K8s 原生的 PVC 作为备份仓库。</p>
+<p>用户可以创建多个 <code>BackupRepo</code> 以适应不同的场景。例如，根据不同的业务需求，可以把业务 A 的数据存储在 A 仓库，把业务 B 的数据存储在 B 仓库，或者可以按地区配置多个仓库以实现异地容灾。在创建备份时，你需要指定备份仓库。你也可以创建一个默认的备份仓库，如果在创建备份时未指定具体的仓库，KubeBlocks 将使用此默认仓库来存储备份数据。</p>
+<p>如果你没有使用云厂商的对象存储，可在 Kubernetes 中部署开源服务 MinIO，用它来配置 BackupRepo。如果你正在使用云厂商提供的对象存储服务，可以直接使用。我们这里可以使用 MinIO 来配置一个 BackupRepo，先在 <code>kb-system</code> 命名空间中安装 MinIO。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">helm repo add kubeblocks-apps https://jihulab.com/api/v4/projects/152630/packages/helm/stable</span><br><span class="line">helm upgrade --install minio kubeblocks-apps/minio --namespace kb-system --create-namespace --<span class="built_in">set</span> <span class="string">&quot;extraEnvVars[0].name=MINIO_BROWSER_LOGIN_ANIMATION&quot;</span> --<span class="built_in">set</span> <span class="string">&quot;extraEnvVars[0].value=off&quot;</span> --<span class="built_in">set</span> persistence.storageClass=nfs-client --<span class="built_in">set</span> replicas=1 --<span class="built_in">set</span> resources.requests.memory=1Gi --<span class="built_in">set</span> rootUser=root --<span class="built_in">set</span> rootPassword=12345678 --<span class="built_in">set</span> mode=standalone</span><br></pre></td></tr></table></figure>
+
+<p>安装完成后然后执行 <code>kubectl port-forward --namespace kb-system svc/minio-console 9001:9001</code> 命令暴露 MinIO 服务，访问 <code>127.0.0.1:9001</code> 进入登录页面，使用上面的 <code>root:12345678</code> 进行登录，登录到仪表盘后，生成 <code>access key</code> 和 <code>secret key</code>。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/nthr9d.png" alt="生成 AK"></p>
+<p>然后在 MinIO 仪表盘上创建一个名为 <code>test-minio</code> 的存储桶。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/pn5gj2.png" alt="创建 Bucket"></p>
+<blockquote>
+<p>安装的 MinIO 的访问地址为 <code>http://minio.kb-system.svc.cluster.local:9000</code>，用于配置 <code>BackupRepo</code>。</p>
+</blockquote>
+<p>准备好对象存储服务后，就可以配置 <code>BackupRepo</code> 了。KubeBlocks 提供两种配置方式：</p>
+<ul>
+<li>安装 KubeBlocks 时自动配置 <code>BackupRepo</code>；</li>
+<li>按需手动配置 BackupRepo。</li>
+</ul>
+<p>由于我们在安装 KubeBlocks 时没有配置 <code>BackupRepo</code> 信息，所以这里我们使用手动配置的方式。我们可以使用 <code>kbcli backuprepo create</code> 命令来创建一个名为 <code>my-repo</code> 的 <code>BackupRepo</code>，如下所示：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">kbcli backuprepo create myrepo \</span><br><span class="line">  --provider minio \</span><br><span class="line">  --endpoint http://minio.kb-system.svc.cluster.local:9000 \</span><br><span class="line">  --bucket test-minio \</span><br><span class="line">  --access-key-id &lt;ACCESS KEY&gt; \  <span class="comment"># 上面创建的</span></span><br><span class="line">  --secret-access-key &lt;SECRET KEY&gt; \</span><br><span class="line">  --access-method Tool \</span><br><span class="line">  --default</span><br></pre></td></tr></table></figure>
+
+<p>以上命令会创建了一个名为 <code>myrepo</code> 的默认备份仓库。<code>--default</code> 表示该仓库是默认仓库，全局只能有一个默认仓库，如果系统中存在多个默认仓库，KubeBlocks 无法选出应该使用哪个仓库，会导致备份失败。<code>--provider</code> 参数对应后端存储类型，即 <code>storageProvider</code>，可选值为 <code>s3</code>、<code>cos</code>、<code>gcs-s3comp</code>、<code>obs</code>、<code>oss</code>、<code>minio</code>、<code>ftp</code>、<code>nfs</code>。不同存储所需的命令行参数不同，可以通过 <code>kbcli backuprepo create --provider STORAGE-PROVIDER-NAME -h</code> 命令查看参数信息（注意 <code>--provider</code> 参数是必需的），其他参数就是对应的存储配置信息。</p>
+<p><code>kbcli backuprepo create</code> 命令执行成功后，就会在系统中创建一个类型为 <code>BackupRepo</code> 的 K8s 资源，查看 <code>BackupRepo</code> 及其状态。 如果 STATUS 为 Ready，说明 <code>BackupRepo</code> 已经准备就绪。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ kbcli backuprepo list</span><br><span class="line">NAME     STATUS   STORAGE-PROVIDER   ACCESS-METHOD   DEFAULT   BACKUPS   TOTAL-SIZE</span><br><span class="line">myrepo   Ready    minio              Tool            <span class="literal">true</span>      0         0 B</span><br></pre></td></tr></table></figure>
+
+<p>使用 kubectl 同样可以配置 <code>BackupRepo</code>，但相比使用 kbcli，会缺少参数校验和默认仓库检查，推荐使用 kbcli。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建 secret，保存 MinIO 的访问 AK</span></span><br><span class="line">kubectl create secret generic minio-credential-for-backuprepo \</span><br><span class="line">  -n kb-system \</span><br><span class="line">  --from-literal=accessKeyId=&lt;ACCESS KEY&gt; \</span><br><span class="line">  --from-literal=secretAccessKey=&lt;SECRET KEY&gt;</span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建 BackupRepo 资源</span></span><br><span class="line">kubectl apply -f - &lt;&lt;-<span class="string">&#x27;EOF&#x27;</span></span><br><span class="line">apiVersion: dataprotection.kubeblocks.io/v1alpha1</span><br><span class="line">kind: BackupRepo</span><br><span class="line">metadata:</span><br><span class="line">  name: myrepo</span><br><span class="line">  annotations:</span><br><span class="line">    dataprotection.kubeblocks.io/is-default-repo: <span class="string">&quot;true&quot;</span></span><br><span class="line">spec:</span><br><span class="line">  storageProviderRef: minio</span><br><span class="line">  accessMethod: Tool</span><br><span class="line">  pvReclaimPolicy: Retain</span><br><span class="line">  volumeCapacity: 100Gi</span><br><span class="line">  config:</span><br><span class="line">    bucket: test-kb-backup</span><br><span class="line">    mountOptions: <span class="string">&quot;&quot;</span></span><br><span class="line">    endpoint: &lt;ip:port&gt;</span><br><span class="line">  credential:</span><br><span class="line">    name: minio-credential-for-backuprepo</span><br><span class="line">    namespace: kb-system</span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
+
+<p>使用 KubeBlocks 创建数据库集群后，对于支持备份的数据库，会自动为其创建一个备份策略（BackupPolicy），可以执行如下命令查看集群的备份策略：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ kbcli cluster list-backup-policy mycluster -n demo</span><br><span class="line">NAME                                   NAMESPACE   DEFAULT   CLUSTER     CREATE-TIME                  STATUS</span><br><span class="line">mycluster-mysql-backup-policy          demo        <span class="literal">true</span>      mycluster   May 11,2024 20:39 UTC+0800   Available</span><br><span class="line">mycluster-mysql-backup-policy-hscale   demo        <span class="literal">false</span>     mycluster   May 11,2024 20:39 UTC+0800   Available</span><br></pre></td></tr></table></figure>
+
+<p>备份策略中包含了该集群支持的备份方法，执行以下命令进行查看备份方法：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">$ kbcli cluster describe-backup-policy mycluster -n demo</span><br><span class="line">Summary:</span><br><span class="line">  Name:               mycluster-mysql-backup-policy</span><br><span class="line">  Cluster:            mycluster</span><br><span class="line">  Namespace:          demo</span><br><span class="line">  Default:            <span class="literal">true</span></span><br><span class="line"></span><br><span class="line">Backup Methods:</span><br><span class="line">NAME              ACTIONSET                           SNAPSHOT-VOLUMES</span><br><span class="line">xtrabackup        xtrabackup-for-apecloud-mysql       <span class="literal">false</span></span><br><span class="line">volume-snapshot   volumesnapshot-for-apecloud-mysql   <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p>对于 MySQL 集群而言，默认支持两种备份方法：<code>xtrabackup</code> 和 <code>volume-snapshot</code>，前者使用备份工具 <code>xtrabackup</code> 将 MySQL 数据备份至对象存储中；后者则使用云存储的卷快照能力，通过快照方式对数据进行备份。创建备份时，可以指定要使用哪种备份方法进行备份。</p>
+<p>比如我们要使用 <code>xtrabackup</code> 备份方法，则可以使用 <code>kbcli cluster backup</code> 命令来备份 MySQL 集群：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ kbcli cluster backup mycluster --name mybackup --method xtrabackup -n demo</span><br><span class="line">Backup mybackup created successfully, you can view the progress:</span><br><span class="line">        kbcli cluster list-backups --name=mybackup -n demo</span><br></pre></td></tr></table></figure>
+
+<p>备份完成后，可以使用 <code>kbcli cluster list-backups</code> 命令查看备份的状态：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ kbcli cluster list-backups --name=mybackup -n demo</span><br><span class="line">NAME       NAMESPACE   SOURCE-CLUSTER   METHOD       STATUS      TOTAL-SIZE   DURATION   CREATE-TIME                  COMPLETION-TIME              EXPIRATION</span><br><span class="line">mybackup   demo        mycluster        xtrabackup   Completed   4645133      59s        May 12,2024 08:55 UTC+0800   May 12,2024 08:56 UTC+0800</span><br></pre></td></tr></table></figure>
+
+<p>备份完成后我们就可以在 MinIO 仪表盘上看到备份的数据。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/a2vknn.png" alt="备份数据"></p>
+<p>如果想要使用云存储的卷快照能力，只需将 kbcli 命令中的 <code>--method</code> 参数设置为 <code>volume-snapshot</code> 即可。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ kbcli cluster backup mycluster --name mybackup2 --method volume-snapshot -n demo</span><br><span class="line">Backup mybackup2 created successfully, you can view the progress:</span><br><span class="line">        kbcli cluster list-backups --name=mybackup2 -n demo</span><br><span class="line">$ kbcli cluster list-backups --name=mybackup2 -n demo</span><br><span class="line">NAME        NAMESPACE   SOURCE-CLUSTER   METHOD            STATUS   TOTAL-SIZE   DURATION   CREATE-TIME                  COMPLETION-TIME   EXPIRATION</span><br><span class="line">mybackup2   demo        mycluster        volume-snapshot   Failed                           May 12,2024 08:56 UTC+0800</span><br></pre></td></tr></table></figure>
+
+<p>但是需要注意使用云盘快照创建备份时，请确保使用的存储支持快照功能，否则会导致备份失败。</p>
+<p>上面我们是按需进行手动备份的，此外 KubeBlocks 还支持为集群配置自动备份。我们可以使用下面的 kbcli 命令配置集群自动备份：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">kbcli cluster update mycluster --backup-enabled=<span class="literal">true</span> \</span><br><span class="line">--backup-method=xtrabackup --backup-repo-name=myrepo \</span><br><span class="line">--backup-retention-period=7d --backup-cron-expression=<span class="string">&quot;0 18 * * *&quot;</span> -n demo</span><br></pre></td></tr></table></figure>
+
+<p>上面的命令中，我们使用了 <code>kbcli cluster update</code> 命令来更新集群的配置，其中的参数含义如下：</p>
+<ul>
+<li><code>--backup-enabled</code> 表示是否开启自动备份。</li>
+<li><code>--backup-method</code> 指定备份方法。支持的备份方法可以执行 <code>kbcli cluster describe-backup-policy mycluster -n demo</code> 命令查看。</li>
+<li><code>--backup-repo-name</code> 指定备份仓库的名称。</li>
+<li><code>--backup-retention-period</code> 指定备份保留时长，以上示例中为 7 天。</li>
+<li><code>--backup-cron-expression</code> 指定自动备份的备份周期。表达式格式与 linux 系统中的定时任务保持一致，时区为 UTC。</li>
+</ul>
+<p>开启自动备份后，可以执行如下命令查看是否有 CronJob 对象被创建：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl get cronjob -n demo</span><br><span class="line">NAME                                 SCHEDULE     SUSPEND   ACTIVE   LAST SCHEDULE   AGE</span><br><span class="line">d665381d-mycluster-demo-xtrabackup   0 18 * * *   False     0        &lt;none&gt;          9s</span><br></pre></td></tr></table></figure>
+
+<p>也可以执行如下命令，查看集群信息，其中 <code>Data Protection:</code> 部分会显示自动备份的配置信息。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ kbcli cluster describe mycluster -n demo</span><br><span class="line"><span class="comment"># ......</span></span><br><span class="line"></span><br><span class="line">Data Protection:</span><br><span class="line">BACKUP-REPO   AUTO-BACKUP   BACKUP-SCHEDULE   BACKUP-METHOD   BACKUP-RETENTION</span><br><span class="line">myrepo        Enabled       0 18 * * *        xtrabackup      7d</span><br><span class="line"></span><br><span class="line">Show cluster events: kbcli cluster list-events -n demo mycluster</span><br></pre></td></tr></table></figure>
+
+<h3 id="恢复"><a href="#恢复" class="headerlink" title="恢复"></a>恢复</h3><p>上面我们已经介绍了如何备份 MySQL 集群，接下来我们就可以使用备份数据来恢复集群。</p>
+<p>首先我们可以使用 <code>kbcli cluster restore</code> 命令从 Backup 中恢复一个新的集群，如下所示：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ kbcli cluster list-backups -n demo</span><br><span class="line">NAME       NAMESPACE   SOURCE-CLUSTER   METHOD       STATUS      TOTAL-SIZE   DURATION   CREATE-TIME                  COMPLETION-TIME              EXPIRATION</span><br><span class="line">mybackup   demo        mycluster        xtrabackup   Completed   4645133      59s        May 12,2024 08:55 UTC+0800   May 12,2024 08:56 UTC+0800</span><br><span class="line">$ kbcli cluster restore new-cluster --backup mybackup -n demo</span><br><span class="line">Cluster new-cluster created</span><br></pre></td></tr></table></figure>
+
+<p>恢复后我们可以校验新集群的数据是否和原集群一致，如果一致则说明恢复成功。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">$ kbcli cluster connect new-cluster -n demo</span><br><span class="line">Connect to instance new-cluster-mysql-1: out of new-cluster-mysql-1(leader), new-cluster-mysql-0(follower), new-cluster-mysql-2(follower)</span><br><span class="line">mysql: [Warning] Using a password on the <span class="built_in">command</span> line interface can be insecure.</span><br><span class="line">Welcome to the MySQL monitor.  Commands end with ; or g.</span><br><span class="line">Your MySQL connection <span class="built_in">id</span> is 9961</span><br><span class="line">Server version: 8.0.30 WeSQL Server - GPL, Release 5, Revision 28f261a</span><br><span class="line"></span><br><span class="line">Copyright (c) 2000, 2022, Oracle and/or its affiliates.</span><br><span class="line"></span><br><span class="line">Oracle is a registered trademark of Oracle Corporation and/or its</span><br><span class="line">affiliates. Other names may be trademarks of their respective</span><br><span class="line">owners.</span><br><span class="line"></span><br><span class="line">Type <span class="string">&#x27;help;&#x27;</span> or <span class="string">&#x27;h&#x27;</span> <span class="keyword">for</span> <span class="built_in">help</span>. Type <span class="string">&#x27;c&#x27;</span> to clear the current input statement.</span><br><span class="line">mysql&gt; USE mydb</span><br><span class="line">mysql&gt; SELECT * FROM students;</span><br><span class="line">+------------+-----------------+--------+------------+---------------------------------+-------+</span><br><span class="line">| student_id | name            | gender | birthday   | major                           | grade |</span><br><span class="line">+------------+-----------------+--------+------------+---------------------------------+-------+</span><br><span class="line">|          1 | John Smith      | Male   | 2001-01-01 | Computer Science and Technology |  2020 |</span><br><span class="line">|          2 | Emily Brown     | Female | 2002-02-15 | Software Engineering            |  2021 |</span><br><span class="line">|          3 | Michael Johnson | Male   | 2003-03-26 | Information Security            |  2022 |</span><br><span class="line">+------------+-----------------+--------+------------+---------------------------------+-------+</span><br><span class="line">3 rows <span class="keyword">in</span> <span class="built_in">set</span> (0.00 sec)</span><br><span class="line">mysql&gt; <span class="built_in">exit</span></span><br><span class="line">Bye</span><br></pre></td></tr></table></figure>
+
+<p>到这里我们就完成了 MySQL 集群的备份和恢复操作。</p>
+<p>除此之外 KubeBlocks 还提供了强大的可观测性能力，你可以实时观察数据库的健康状态，及时跟踪数据库，并优化数据库性能。KubeBlocks 以引擎形式集成了许多开源监控组件，如 Prometheus、AlertManager 和 Grafana，并采用定制的 <code>apecloud-otel-collector</code> 组件收集数据库和宿主机的监控指标。</p>
+<blockquote>
+<p>参考链接：<a target="_blank" rel="noopener" href="https://kubeblocks.io/docs/preview/user_docs/overview/introduction">https://kubeblocks.io/docs/preview/user_docs/overview/introduction</a></p>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E6%96%B0%E4%B8%80%E4%BB%A3%E4%BA%91%E5%8E%9F%E7%94%9F%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F%20CubeFS/" rel="prev" title="新一代云原生存储系统 CubeFS">
+      <i class="fa fa-chevron-left"></i> 新一代云原生存储系统 CubeFS
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E6%95%B0%E7%BB%84%E5%92%8C%E5%88%87%E7%89%87/" rel="next" title="数组和切片">
+      数组和切片 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%91%E5%8E%9F%E7%94%9F%E6%95%B0%E6%8D%AE%E7%AE%A1%E7%90%86%E5%B9%B3%E5%8F%B0-KubeBlocks"><span class="nav-number">1.</span> <span class="nav-text">云原生数据管理平台 KubeBlocks</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81-KubeBlocks%EF%BC%9F"><span class="nav-number">1.1.</span> <span class="nav-text">为什么需要 KubeBlocks？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85"><span class="nav-number">1.2.</span> <span class="nav-text">安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AE%A1%E7%90%86%E6%95%B0%E6%8D%AE%E5%BA%93%E9%9B%86%E7%BE%A4"><span class="nav-number">1.3.</span> <span class="nav-text">管理数据库集群</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA-MySQL-%E9%9B%86%E7%BE%A4"><span class="nav-number">1.3.1.</span> <span class="nav-text">创建 MySQL 集群</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%9E%E6%8E%A5-MySQL-%E9%9B%86%E7%BE%A4"><span class="nav-number">1.3.2.</span> <span class="nav-text">连接 MySQL 集群</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%89%A9%E5%B1%95"><span class="nav-number">1.3.3.</span> <span class="nav-text">扩展</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E6%9B%B4%E6%96%B0"><span class="nav-number">1.3.4.</span> <span class="nav-text">配置更新</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%87%E4%BB%BD"><span class="nav-number">1.3.5.</span> <span class="nav-text">备份</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%81%A2%E5%A4%8D"><span class="nav-number">1.3.6.</span> <span class="nav-text">恢复</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

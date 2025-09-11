@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="什么是网络地址转换（NAT）？NAT (Network Address Translation)，即网络地址转换，是一种在 IP 网络中改变数据包的 IP 地址信息的技术。它的主要目的是解决 IPv4 地址枯竭的问题，同时也能提供一定程度的网络安全隔离。 简单来说，NAT 允许一个拥有私有 IP 地址的网络（如家庭网络或企业内部网络）连接到使用公共 IP 地址的外部网络（如互联网），而无需为内部的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="NAT">
+<meta property="og:url" content="http://example.com/2025/09/11/NAT/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="什么是网络地址转换（NAT）？NAT (Network Address Translation)，即网络地址转换，是一种在 IP 网络中改变数据包的 IP 地址信息的技术。它的主要目的是解决 IPv4 地址枯竭的问题，同时也能提供一定程度的网络安全隔离。 简单来说，NAT 允许一个拥有私有 IP 地址的网络（如家庭网络或企业内部网络）连接到使用公共 IP 地址的外部网络（如互联网），而无需为内部的">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:50:08.076Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Network">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/NAT/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>NAT | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/NAT/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          NAT
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:50:08" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/" itemprop="url" rel="index"><span itemprop="name">WEB</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/Http/" itemprop="url" rel="index"><span itemprop="name">Http</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.9k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="什么是网络地址转换（NAT）？"><a href="#什么是网络地址转换（NAT）？" class="headerlink" title="什么是网络地址转换（NAT）？"></a>什么是网络地址转换（NAT）？</h3><p><strong>NAT (Network Address Translation)<strong>，即</strong>网络地址转换</strong>，是一种在 IP 网络中改变数据包的 IP 地址信息的<strong>技术</strong>。它的主要目的是解决 IPv4 地址枯竭的问题，同时也能提供一定程度的网络安全隔离。</p>
+<p>简单来说，NAT 允许一个拥有<strong>私有 IP 地址</strong>的网络（如家庭网络或企业内部网络）连接到使用<strong>公共 IP 地址</strong>的外部网络（如互联网），而无需为内部的每台设备都分配一个唯一的公共 IP 地址。</p>
+<p><strong>核心概念：</strong></p>
+<ul>
+<li><strong>私有 IP 地址：</strong> 在私有网络内部使用的 IP 地址，它们不能直接在公共互联网上路由。RFC 1918 定义了以下私有 IP 地址范围：<ul>
+<li><code>10.0.0.0</code> 到 <code>10.255.255.255</code> (10&#x2F;8)</li>
+<li><code>172.16.0.0</code> 到 <code>172.31.255.255</code> (172.16&#x2F;12)</li>
+<li><code>192.168.0.0</code> 到 <code>192.168.255.255</code> (192.168&#x2F;16)</li>
+</ul>
+</li>
+<li><strong>公共 IP 地址：</strong> 在公共互联网上可寻址的全球唯一的 IP 地址。</li>
+<li><strong>NAT 设备：</strong> 通常是路由器或防火墙，负责执行 IP 地址的转换。</li>
+</ul>
+<h3 id="NAT-的工作原理："><a href="#NAT-的工作原理：" class="headerlink" title="NAT 的工作原理："></a>NAT 的工作原理：</h3><p>NAT 的工作原理是当数据包在私有网络和公共网络之间传输时，修改其源 IP 地址或目的 IP 地址。具体的工作方式取决于 NAT 的类型。</p>
+<p>让我们以最常见的<strong>端口地址转换 (PAT)<strong>，也称为</strong>网络地址端口转换 (NAPT)</strong> 或**多对一 NAT (Many-to-One NAT)**为例来描述其工作原理。这是家庭和小型办公室路由器最常用的 NAT 类型。</p>
+<p><strong>场景描述：</strong></p>
+<p>假设你家里有两个设备（PC1 和 PC2），它们都连接到同一个路由器，路由器有一个公共 IP 地址。</p>
+<ul>
+<li><strong>PC1：</strong> 私有 IP <code>192.168.1.10</code>，源端口 <code>1000</code></li>
+<li><strong>PC2：</strong> 私有 IP <code>192.168.1.11</code>，源端口 <code>2000</code></li>
+<li><strong>路由器：</strong> 私有接口 IP <code>192.168.1.1</code>，公共接口 IP <code>203.0.113.50</code> (你的公共 IP)</li>
+<li><strong>外部服务器：</strong> IP <code>198.51.100.20</code>，端口 <code>80</code> (Web 服务器)</li>
+</ul>
+<hr>
+<h4 id="1-私有网络到公共网络-出站流量-："><a href="#1-私有网络到公共网络-出站流量-：" class="headerlink" title="1. 私有网络到公共网络 (出站流量)："></a><strong>1. 私有网络到公共网络 (出站流量)：</strong></h4><ol>
+<li><p><strong>PC1 发送请求：</strong></p>
+<ul>
+<li>PC1 想要访问外部服务器 <code>198.51.100.20</code> 的网页。</li>
+<li>它生成一个 IP 数据包：<ul>
+<li><strong>源 IP：</strong> <code>192.168.1.10</code></li>
+<li><strong>源端口：</strong> <code>1000</code></li>
+<li><strong>目的 IP：</strong> <code>198.51.100.20</code></li>
+<li><strong>目的端口：</strong> <code>80</code></li>
+</ul>
+</li>
+<li>这个数据包被发送到路由器。</li>
+</ul>
+</li>
+<li><p><strong>路由器进行 NAT (地址和端口转换)：</strong></p>
+<ul>
+<li>路由器收到数据包后，检查其 NAT 表（也称为转换表或映射表）。</li>
+<li>因为这是来自内部的连接请求第一次经过，路由器会：<ul>
+<li><strong>记录：</strong> 在 NAT 表中创建一个新条目，记录 <code>192.168.1.10:1000</code> 将被转换为 <code>203.0.113.50:端口X</code>。</li>
+<li><strong>选择公共端口：</strong> 路由器会选择一个自己公共 IP 地址上未被占用的端口（例如 <code>50000</code>）来代表 PC1 的请求。</li>
+<li><strong>修改数据包头部：</strong><ul>
+<li><strong>源 IP：</strong> 从 <code>192.168.1.10</code> 修改为 <code>203.0.113.50</code> (路由器的公共 IP)。</li>
+<li><strong>源端口：</strong> 从 <code>1000</code> 修改为 <code>50000</code>。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>转换后的数据包：<ul>
+<li><strong>源 IP：</strong> <code>203.0.113.50</code></li>
+<li><strong>源端口：</strong> <code>50000</code></li>
+<li><strong>目的 IP：</strong> <code>198.51.100.20</code></li>
+<li><strong>目的端口：</strong> <code>80</code></li>
+</ul>
+</li>
+<li>路由器将这个新的数据包发送到公共互联网。</li>
+</ul>
+</li>
+<li><p><strong>PC2 发送类似请求：</strong></p>
+<ul>
+<li>如果 PC2 同时访问外部服务器：<ul>
+<li>数据包：源 IP <code>192.168.1.11</code>，源端口 <code>2000</code>。</li>
+<li>路由器将它转换为：源 IP <code>203.0.113.50</code>，源端口 <code>50001</code> (例如)。</li>
+</ul>
+</li>
+<li>路由器会为每个内部连接使用其公共 IP 上的不同源端口，以此来区分不同的内部主机。</li>
+</ul>
+</li>
+</ol>
+<h4 id="2-公共网络到私有网络-入站响应-："><a href="#2-公共网络到私有网络-入站响应-：" class="headerlink" title="2. 公共网络到私有网络 (入站响应)："></a><strong>2. 公共网络到私有网络 (入站响应)：</strong></h4><ol>
+<li><p><strong>外部服务器发送响应：</strong></p>
+<ul>
+<li>外部服务器处理完 PC1 的请求后，发送响应数据包。</li>
+<li>响应数据包的目的地是它收到的请求的源 IP 和源端口：<ul>
+<li><strong>源 IP：</strong> <code>198.51.100.20</code></li>
+<li><strong>源端口：</strong> <code>80</code></li>
+<li><strong>目的 IP：</strong> <code>203.0.113.50</code> (路由器的公共 IP)</li>
+<li><strong>目的端口：</strong> <code>50000</code> (路由器为 PC1 分配的端口)</li>
+</ul>
+</li>
+<li>这个数据包被发送到互联网，最终到达你的路由器。</li>
+</ul>
+</li>
+<li><p><strong>路由器进行反向 NAT (反向地址和端口转换)：</strong></p>
+<ul>
+<li>路由器收到响应数据包。</li>
+<li>它根据响应数据包的<strong>目的端口 (<code>50000</code>)</strong> 以及<strong>源 IP (<code>198.51.100.20</code>)</strong> 到其 NAT 表中查找对应的内部映射。</li>
+<li>它找到之前为 PC1 (<code>192.168.1.10:1000</code>) 创建的条目。</li>
+<li><strong>修改数据包头部：</strong><ul>
+<li><strong>目的 IP：</strong> 从 <code>203.0.113.50</code> 修改为 <code>192.168.1.10</code>。</li>
+<li><strong>目的端口：</strong> 从 <code>50000</code> 修改为 <code>1000</code>。</li>
+</ul>
+</li>
+<li>转换后的数据包：<ul>
+<li><strong>源 IP：</strong> <code>198.51.100.20</code></li>
+<li><strong>源端口：</strong> <code>80</code></li>
+<li><strong>目的 IP：</strong> <code>192.168.1.10</code></li>
+<li><strong>目的端口：</strong> <code>1000</code></li>
+</ul>
+</li>
+<li>路由器将这个数据包发送到私有网络中的 PC1。</li>
+</ul>
+</li>
+<li><p><strong>PC1 接收响应：</strong></p>
+<ul>
+<li>PC1 收到响应，其源和目的 IP&#x2F;端口都“看起来”是正常的，因为它不知道中间发生了 NAT 转换。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3 id="NAT-的主要类型："><a href="#NAT-的主要类型：" class="headerlink" title="NAT 的主要类型："></a>NAT 的主要类型：</h3><p>虽然上述描述的是最常见的 PAT，但 NAT 还有其他几种类型，各有其应用场景：</p>
+<ol>
+<li><p><strong>静态 NAT (Static NAT &#x2F; One-to-One NAT)：</strong></p>
+<ul>
+<li><strong>原理：</strong> 将<strong>一个内部私有 IP 地址</strong>永久映射到<strong>一个外部公共 IP 地址</strong>。</li>
+<li><strong>用途：</strong> 当内部服务器（如 Web 服务器、FTP 服务器）需要从外部互联网访问时使用。每个内部服务器都需要一个专用的公共 IP 地址。</li>
+<li><strong>特点：</strong> 外部设备可以直接通过公共 IP 地址访问内部映射的服务器。</li>
+</ul>
+</li>
+<li><p><strong>动态 NAT (Dynamic NAT)：</strong></p>
+<ul>
+<li><strong>原理：</strong> 维护一个<strong>公共 IP 地址池</strong>。当内部设备需要访问外部网络时，动态地从这个池中分配一个公共 IP 地址进行一对一转换。当连接结束或超时时，该公共 IP 地址被释放回池中。</li>
+<li><strong>用途：</strong> 当有多个内部设备，但公共 IP 地址数量有限（但比内部设备数量多）时。</li>
+<li><strong>特点：</strong> 仍然是“一对一”的转换，但映射是动态的。</li>
+</ul>
+</li>
+<li><p><strong>端口地址转换 (PAT &#x2F; NAT Overload &#x2F; NAPT)：</strong></p>
+<ul>
+<li><strong>原理：</strong> 这是最常见的类型。允许<strong>多个私有 IP 地址</strong>共享<strong>同一个公共 IP 地址</strong>。通过使用不同的<strong>源端口号</strong>来区分不同的内部连接。</li>
+<li><strong>用途：</strong> 家庭路由器、小型办公室网络，是解决 IPv4 地址枯竭的最有效措施。</li>
+<li><strong>特点：</strong> 高效利用公共 IP 地址，安全性较高（外部无法直接发起连接到内部）。</li>
+</ul>
+</li>
+</ol>
+<h3 id="NAT-的优点："><a href="#NAT-的优点：" class="headerlink" title="NAT 的优点："></a>NAT 的优点：</h3><ul>
+<li><strong>缓解 IPv4 地址枯竭：</strong> 允许多个设备共享少数公共 IP 地址，极大地扩展了 IPv4 地址的使用寿命。</li>
+<li><strong>提高安全性：</strong> 默认情况下，内部网络（私有 IP）对外部网络是不可见的，外部设备无法直接发起与内部设备的连接，提供了一层基本的防火墙功能。</li>
+<li><strong>网络隐藏性：</strong> 隐藏了内部网络的结构和拓扑细节。</li>
+<li><strong>灵活性：</strong> 内部网络可以自由使用私有 IP 地址，无需担心与外部网络的冲突。</li>
+</ul>
+<h3 id="NAT-的缺点："><a href="#NAT-的缺点：" class="headerlink" title="NAT 的缺点："></a>NAT 的缺点：</h3><ul>
+<li><strong>增加了复杂性：</strong> 对网络管理员维护和排除故障带来一定的复杂性。</li>
+<li><strong>点对点应用限制：</strong> 某些点对点应用（如 VoIP、在线游戏、P2P 文件共享）可能难以在 NAT 后面工作，因为它们可能需要直接的端到端通信。这通常需要<strong>端口转发 (Port Forwarding)</strong> 来解决。</li>
+<li><strong>端到端连接中断：</strong> 从理论上打破了 IP 协议的端到端透明性（数据包的源和目的 IP 地址不再保持不变），这可能对某些高级网络协议和安全机制（如 IPSec）造成影响。</li>
+<li><strong>调试困难：</strong> 在日志或错误报告中，所有来自内部私有网络的流量都显示为来自同一个公共 IP 地址，这使得追踪具体是哪个内部设备导致的问题变得困难。</li>
+</ul>
+<p>尽管存在缺点，但在 IPv4 环境下，NAT 仍然是一种不可或缺且广泛使用的技术。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Network/" rel="tag"># Network</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/NFS%20%E5%85%B1%E4%BA%AB%E5%AD%98%E5%82%A8/" rel="prev" title="NFS 共享存储">
+      <i class="fa fa-chevron-left"></i> NFS 共享存储
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/LocalDNS/" rel="next" title="LocalDNS">
+      LocalDNS <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E7%BD%91%E7%BB%9C%E5%9C%B0%E5%9D%80%E8%BD%AC%E6%8D%A2%EF%BC%88NAT%EF%BC%89%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">什么是网络地址转换（NAT）？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#NAT-%E7%9A%84%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86%EF%BC%9A"><span class="nav-number">2.</span> <span class="nav-text">NAT 的工作原理：</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E7%A7%81%E6%9C%89%E7%BD%91%E7%BB%9C%E5%88%B0%E5%85%AC%E5%85%B1%E7%BD%91%E7%BB%9C-%E5%87%BA%E7%AB%99%E6%B5%81%E9%87%8F-%EF%BC%9A"><span class="nav-number">2.1.</span> <span class="nav-text">1. 私有网络到公共网络 (出站流量)：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E5%85%AC%E5%85%B1%E7%BD%91%E7%BB%9C%E5%88%B0%E7%A7%81%E6%9C%89%E7%BD%91%E7%BB%9C-%E5%85%A5%E7%AB%99%E5%93%8D%E5%BA%94-%EF%BC%9A"><span class="nav-number">2.2.</span> <span class="nav-text">2. 公共网络到私有网络 (入站响应)：</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#NAT-%E7%9A%84%E4%B8%BB%E8%A6%81%E7%B1%BB%E5%9E%8B%EF%BC%9A"><span class="nav-number">3.</span> <span class="nav-text">NAT 的主要类型：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#NAT-%E7%9A%84%E4%BC%98%E7%82%B9%EF%BC%9A"><span class="nav-number">4.</span> <span class="nav-text">NAT 的优点：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#NAT-%E7%9A%84%E7%BC%BA%E7%82%B9%EF%BC%9A"><span class="nav-number">5.</span> <span class="nav-text">NAT 的缺点：</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

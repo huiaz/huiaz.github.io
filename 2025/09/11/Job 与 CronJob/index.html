@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Job 与 CronJob接下来给大家介绍另外一类资源对象：Job，我们在日常的工作中经常都会遇到一些需要进行批量数据处理和分析的需求，当然也会有按时间来进行调度的工作，在我们的 Kubernetes 集群中为我们提供了 Job 和 CronJob 两种资源对象来应对我们的这种需求。 Job 负责处理任务，即仅执行一次的任务，它保证批处理任务的一个或多个 Pod 成功结束。而CronJob 则就是">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Job 与 CronJob">
+<meta property="og:url" content="http://example.com/2025/09/11/Job%20%E4%B8%8E%20CronJob/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="Job 与 CronJob接下来给大家介绍另外一类资源对象：Job，我们在日常的工作中经常都会遇到一些需要进行批量数据处理和分析的需求，当然也会有按时间来进行调度的工作，在我们的 Kubernetes 集群中为我们提供了 Job 和 CronJob 两种资源对象来应对我们的这种需求。 Job 负责处理任务，即仅执行一次的任务，它保证批处理任务的一个或多个 Pod 成功结束。而CronJob 则就是">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:43:14.910Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/Job%20%E4%B8%8E%20CronJob/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Job 与 CronJob | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Job%20%E4%B8%8E%20CronJob/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Job 与 CronJob
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:43:14" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/Job/" itemprop="url" rel="index"><span itemprop="name">Job</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>6.2k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>6 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Job-与-CronJob"><a href="#Job-与-CronJob" class="headerlink" title="Job 与 CronJob"></a>Job 与 CronJob</h1><p>接下来给大家介绍另外一类资源对象：<code>Job</code>，我们在日常的工作中经常都会遇到一些需要进行批量数据处理和分析的需求，当然也会有按时间来进行调度的工作，在我们的 Kubernetes 集群中为我们提供了 <code>Job</code> 和 <code>CronJob</code> 两种资源对象来应对我们的这种需求。</p>
+<p><code>Job</code> 负责处理任务，即仅执行一次的任务，它保证批处理任务的一个或多个 Pod 成功结束。而<code>CronJob</code> 则就是在 <code>Job</code> 上加上了时间调度。</p>
+<h2 id="Job"><a href="#Job" class="headerlink" title="Job"></a>Job</h2><p>我们用 <code>Job</code> 这个资源对象来创建一个任务，我们定义一个 <code>Job</code> 来执行一个倒计时的任务，对应的资源清单如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># job-demo.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">batch/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Job</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">job-demo</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">restartPolicy:</span> <span class="string">Never</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">counter</span></span><br><span class="line">        <span class="attr">image:</span> <span class="string">busybox</span></span><br><span class="line">        <span class="attr">command:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">&quot;bin/sh&quot;</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">&quot;-c&quot;</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">&quot;for i in 9 8 7 6 5 4 3 2 1; do echo $i; done&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>我们可以看到 <code>Job</code> 中也是一个 Pod 模板，和之前的 Deployment、StatefulSet 之类的是一致的，只是 Pod 中的容器要求是一个任务，而不是一个常驻前台的进程了，因为需要退出，另外值得注意的是 <code>Job</code> 的 <code>RestartPolicy</code> 仅支持 <code>Never</code> 和 <code>OnFailure</code> 两种，不支持 <code>Always</code>，我们知道 <code>Job</code> 就相当于来执行一个批处理任务，执行完就结束了，如果支持 <code>Always</code> 的话是不是就陷入了死循环了？</p>
+<p>直接创建这个 Job 对象：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl apply -f job-demo.yaml</span><br><span class="line">job.batch/job-demo created</span><br><span class="line">➜  ~  kubectl get job</span><br><span class="line">NAME       COMPLETIONS   DURATION   AGE</span><br><span class="line">job-demo   1/1           19s        42s</span><br><span class="line">➜  ~ kubectl get pods</span><br><span class="line">NAME                READY   STATUS      RESTARTS   AGE</span><br><span class="line">job-demo--1-p9s5r   0/1     Completed   0          52s</span><br></pre></td></tr></table></figure>
+
+<p><code>Job</code> 对象创建成功后，我们可以查看下对象的详细描述信息：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl describe job job-demo</span><br><span class="line">Name:             job-demo</span><br><span class="line">Namespace:        default</span><br><span class="line">Selector:         controller-uid=10618fc6-5610-41c6-bdeb-531167716179</span><br><span class="line">Labels:           controller-uid=10618fc6-5610-41c6-bdeb-531167716179</span><br><span class="line">                  job-name=job-demo</span><br><span class="line">Annotations:      &lt;none&gt;</span><br><span class="line">Parallelism:      1</span><br><span class="line">Completions:      1</span><br><span class="line">Completion Mode:  NonIndexed</span><br><span class="line">Start Time:       Sat, 13 Nov 2021 18:34:17 +0800</span><br><span class="line">Completed At:     Sat, 13 Nov 2021 18:34:36 +0800</span><br><span class="line">Duration:         19s</span><br><span class="line">Pods Statuses:    0 Running / 1 Succeeded / 0 Failed</span><br><span class="line">Pod Template:</span><br><span class="line">  Labels:  controller-uid=10618fc6-5610-41c6-bdeb-531167716179</span><br><span class="line">           job-name=job-demo</span><br><span class="line">  Containers:</span><br><span class="line">   counter:</span><br><span class="line">    Image:      busybox</span><br><span class="line">    Port:       &lt;none&gt;</span><br><span class="line">    Host Port:  &lt;none&gt;</span><br><span class="line">    Command:</span><br><span class="line">      bin/sh</span><br><span class="line">      -c</span><br><span class="line">      for i in 9 8 7 6 5 4 3 2 1; do echo $i; done</span><br><span class="line">    Environment:  &lt;none&gt;</span><br><span class="line">    Mounts:       &lt;none&gt;</span><br><span class="line">  Volumes:        &lt;none&gt;</span><br><span class="line">Events:</span><br><span class="line">  Type    Reason            Age   From            Message</span><br><span class="line">  ----    ------            ----  ----            -------</span><br><span class="line">  Normal  SuccessfulCreate  73s   job-controller  Created pod: job-demo--1-p9s5r</span><br><span class="line">  Normal  Completed         54s   job-controller  Job completed</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，Job 对象在创建后，它的 Pod 模板，被自动加上了一个 <code>controller-uid=&lt; 一个随机字符串 &gt;</code> 这样的 Label 标签，而这个 Job 对象本身，则被自动加上了这个 Label 对应的 Selector，从而 保证了 Job 与它所管理的 Pod 之间的匹配关系。而 Job 控制器之所以要使用这种携带了 UID 的 Label，就是为了避免不同 Job 对象所管理的 Pod 发生重合。</p>
+<p>我们可以看到很快 Pod 变成了 <code>Completed</code> 状态，这是因为容器的任务执行完成正常退出了，我们可以查看对应的日志：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl logs job-demo--1-p9s5r</span><br><span class="line">9</span><br><span class="line">8</span><br><span class="line">7</span><br><span class="line">6</span><br><span class="line">5</span><br><span class="line">4</span><br><span class="line">3</span><br><span class="line">2</span><br><span class="line">1</span><br><span class="line">➜  ~ kubectl get pod</span><br><span class="line">NAME                       READY   STATUS       RESTARTS   AGE</span><br><span class="line">job-demo--1-p9s5r          0/1     Completed    0          11m</span><br></pre></td></tr></table></figure>
+
+<p>上面我们这里的 Job 任务对应的 Pod 在运行结束后，会变成 <code>Completed</code> 状态，但是如果执行任务的 Pod 因为某种原因一直没有结束怎么办呢？同样我们可以在 Job 对象中通过设置字段 <code>spec.activeDeadlineSeconds</code> 来限制任务运行的最长时间，比如：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">spec:</span></span><br><span class="line"> <span class="attr">activeDeadlineSeconds:</span> <span class="number">100</span></span><br></pre></td></tr></table></figure>
+
+<p>那么当我们的任务 Pod 运行超过了 100s 后，这个 Job 的所有 Pod 都会被终止，并且， Pod 的终止原因会变成 <code>DeadlineExceeded</code>。</p>
+<p>如果的任务执行失败了，会怎么处理呢，这个和定义的 <code>restartPolicy</code> 有关系，比如定义如下所示的 Job 任务，定义 <code>restartPolicy: Never</code> 的重启策略：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># job-failed-demo.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">batch/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Job</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">job-failed-demo</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">test-job</span></span><br><span class="line">        <span class="attr">image:</span> <span class="string">busybox</span></span><br><span class="line">        <span class="attr">command:</span> [<span class="string">&quot;echo123&quot;</span>, <span class="string">&quot;test failed job!&quot;</span>]</span><br><span class="line">      <span class="attr">restartPolicy:</span> <span class="string">Never</span></span><br></pre></td></tr></table></figure>
+
+<p>直接创建上面的资源对象：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl apply -f job-failed-demo.yaml</span><br><span class="line">job.batch/job-failed-demo created</span><br><span class="line">➜  ~ kubectl get pod</span><br><span class="line">NAME                       READY   STATUS       RESTARTS   AGE</span><br><span class="line">job-failed-demo--1-87wvj   0/1     StartError   0          4m40s</span><br><span class="line">job-failed-demo--1-bl7jm   0/1     StartError   0          5m7s</span><br><span class="line">job-failed-demo--1-dcmph   0/1     StartError   0          3m</span><br><span class="line">job-failed-demo--1-hb24j   0/1     StartError   0          20s</span><br><span class="line">job-failed-demo--1-n7h24   0/1     StartError   0          4m20s</span><br><span class="line">job-failed-demo--1-q7vxq   0/1     StartError   0          5m24s</span><br></pre></td></tr></table></figure>
+
+<p>可以看到当我们设置成 <code>Never</code> 重启策略的时候，Job 任务执行失败后会不断创建新的 Pod，但是不会一直创建下去，会根据 <code>spec.backoffLimit</code> 参数进行限制，默认为6，通过该字段可以定义重建 Pod 的次数，另外需要注意的是 Job 控制器重新创建 Pod 的间隔是呈指数增加的，即下一次重新创建 Pod 的动作会分别发生在 10s、20s、40s… 后。</p>
+<p>但是如果我们设置的 <code>restartPolicy: OnFailure</code> 重启策略，则当 Job 任务执行失败后不会创建新的 Pod 出来，只会不断重启 Pod。</p>
+<p>除此之外，我们还可以通过设置 <code>spec.parallelism</code> 参数来进行并行控制，该参数定义了一个 Job 在任意时间最多可以有多少个 Pod 同时运行。<code>spec.completions</code> 参数可以定义 Job 至少要完成的 Pod 数目。如下所示创建一个新的 Job 任务，设置允许并行数为2，至少要完成的 Pod 数为8：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># job-para-demo.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">batch/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Job</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">job-para-test</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">parallelism:</span> <span class="number">2</span></span><br><span class="line">  <span class="attr">completions:</span> <span class="number">8</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">test-job</span></span><br><span class="line">        <span class="attr">image:</span> <span class="string">busybox</span></span><br><span class="line">        <span class="attr">command:</span> [<span class="string">&quot;echo&quot;</span>, <span class="string">&quot;test paralle job!&quot;</span>]</span><br><span class="line">      <span class="attr">restartPolicy:</span> <span class="string">Never</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>创建完成后查看任务状态：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl get pod</span><br><span class="line">NAME                     READY   STATUS              RESTARTS   AGE</span><br><span class="line">job-para-test--1-rwxm8   0/1     ContainerCreating   0          6s</span><br><span class="line">job-para-test--1-vgtxf   0/1     ContainerCreating   0          2s</span><br><span class="line">➜  ~ kubectl get job</span><br><span class="line">NAME            COMPLETIONS   DURATION   AGE</span><br><span class="line">job-para-test   0/8           29s        29s</span><br><span class="line">➜  ~ kubectl get job</span><br><span class="line">NAME            COMPLETIONS   DURATION   AGE</span><br><span class="line">job-para-test   8/8           111s       2m34s</span><br><span class="line">➜  ~ kubectl get pod</span><br><span class="line">NAME                     READY   STATUS      RESTARTS   AGE</span><br><span class="line">job-para-test--1-7nk2x   0/1     Completed   0          76s</span><br><span class="line">job-para-test--1-dcdvp   0/1     Completed   0          2m2s</span><br><span class="line">job-para-test--1-k9sgw   0/1     Completed   0          2m36s</span><br><span class="line">job-para-test--1-rwkkb   0/1     Completed   0          2m17s</span><br><span class="line">job-para-test--1-rwxm8   0/1     Completed   0          2m36s</span><br><span class="line">job-para-test--1-tqlzd   0/1     Completed   0          106s</span><br><span class="line">job-para-test--1-vgtxf   0/1     Completed   0          2m32s</span><br><span class="line">job-para-test--1-vxj6b   0/1     Completed   0          91s</span><br></pre></td></tr></table></figure>
+
+<p>可以看到一次可以有2个 Pod 同时运行，需要8个 Pod 执行成功，如果不是8个成功，那么会根据 <code>restartPolicy</code> 的策略进行处理，可以认为是一种检查机制。</p>
+<h2 id="CronJob"><a href="#CronJob" class="headerlink" title="CronJob"></a>CronJob</h2><p><code>CronJob</code> 其实就是在 <code>Job</code> 的基础上加上了时间调度，我们可以在给定的时间点运行一个任务，也可以周期性地在给定时间点运行。这个实际上和我们 Linux 中的 <code>crontab</code> 就非常类似了。</p>
+<p>一个 <code>CronJob</code> 对象其实就对应中 <code>crontab</code> 文件中的一行，它根据配置的时间格式周期性地运行一个 <code>Job</code>，格式和 <code>crontab</code> 也是一样的。</p>
+<p>crontab 的格式为：<code>分 时 日 月 星期 要运行的命令</code> 。</p>
+<ul>
+<li>第1列分钟 0～59</li>
+<li>第2列小时 0～23</li>
+<li>第3列日 1～31</li>
+<li>第4列月 1～12</li>
+<li>第5列星期 0～7（0和7表示星期天）</li>
+<li>第6列要运行的命令</li>
+</ul>
+<p>现在，我们用 <code>CronJob</code> 来管理我们上面的 <code>Job</code> 任务，定义如下所示的资源清单：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># cronjob-demo.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">batch/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">CronJob</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">cronjob-demo</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">schedule:</span> <span class="string">&quot;*/1 * * * *&quot;</span></span><br><span class="line">  <span class="attr">jobTemplate:</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">template:</span></span><br><span class="line">        <span class="attr">spec:</span></span><br><span class="line">          <span class="attr">restartPolicy:</span> <span class="string">OnFailure</span></span><br><span class="line">          <span class="attr">containers:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">hello</span></span><br><span class="line">            <span class="attr">image:</span> <span class="string">busybox</span></span><br><span class="line">            <span class="attr">args:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">&quot;bin/sh&quot;</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">&quot;-c&quot;</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">&quot;for i in 9 8 7 6 5 4 3 2 1; do echo $i; done&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>这里的 Kind 变成了 <code>CronJob</code> 了，要注意的是 <code>.spec.schedule</code> 字段是必须填写的，用来指定任务运行的周期，格式就和 <code>crontab</code> 一样，另外一个字段是 <code>.spec.jobTemplate</code>, 用来指定需要运行的任务，格式当然和 <code>Job</code> 是一致的。还有一些值得我们关注的字段 <code>.spec.successfulJobsHistoryLimit</code>(默认为3) 和 <code>.spec.failedJobsHistoryLimit</code>(默认为1)，表示历史限制，是可选的字段，指定可以保留多少完成和失败的 <code>Job</code>。然而，当运行一个 <code>CronJob</code> 时，<code>Job</code> 可以很快就堆积很多，所以一般推荐设置这两个字段的值，如果设置限制的值为 0，那么相关类型的 <code>Job</code> 完成后将不会被保留。</p>
+<p>我们直接新建上面的资源对象：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl apply -f cronjob-demo.yaml</span><br><span class="line">cronjob &quot;cronjob-demo&quot; created</span><br></pre></td></tr></table></figure>
+
+<p>然后可以查看对应的 Cronjob 资源对象：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl get cronjob</span><br><span class="line">NAME           SCHEDULE      SUSPEND   ACTIVE   LAST SCHEDULE   AGE</span><br><span class="line">cronjob-demo   */1 * * * *   False     0        28s             36s</span><br></pre></td></tr></table></figure>
+
+<p>稍微等一会儿查看可以发现多了几个 Job 资源对象，这个就是因为上面我们设置的 CronJob 资源对象，每1分钟执行一个新的 Job：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl get job</span><br><span class="line">NAME                    COMPLETIONS   DURATION   AGE</span><br><span class="line">cronjob-demo-27280016   1/1           17s        118s</span><br><span class="line">cronjob-demo-27280017   1/1           16s        58s</span><br><span class="line">➜  ~ kubectl get pods</span><br><span class="line">NAME                             READY   STATUS              RESTARTS   AGE</span><br><span class="line">cronjob-demo-27280016--1-kvkt4   0/1     Completed           0          2m9s</span><br><span class="line">cronjob-demo-27280017--1-pkwdb   0/1     Completed           0          69s</span><br><span class="line">cronjob-demo-27280018--1-q9n7w   0/1     ContainerCreating   0          9s</span><br></pre></td></tr></table></figure>
+
+<p>这个就是 CronJob 的基本用法，一旦不再需要 CronJob，我们可以使用 kubectl 命令删除它：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl delete cronjob cronjob-demo</span><br><span class="line">cronjob &quot;cronjob-demo&quot; deleted</span><br></pre></td></tr></table></figure>
+
+
+
+<p>不过需要注意的是这将会终止正在创建的 Job，但是运行中的 Job 将不会被终止，不会删除 Job 或 它们的 Pod。</p>
+<p>思考：那如果我们想要在每个节点上去执行一个 Job 或者 Cronjob 又该怎么来实现呢？</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Kafka%20%E4%B8%AD%E5%85%B3%E4%BA%8E%E4%BA%8B%E5%8A%A1%E6%B6%88%E6%81%AF%E7%9A%84%E5%AE%9E%E7%8E%B0/" rel="prev" title="Kafka 中关于事务消息的实现">
+      <i class="fa fa-chevron-left"></i> Kafka 中关于事务消息的实现
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Ingress/" rel="next" title="Ingress">
+      Ingress <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Job-%E4%B8%8E-CronJob"><span class="nav-number">1.</span> <span class="nav-text">Job 与 CronJob</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Job"><span class="nav-number">1.1.</span> <span class="nav-text">Job</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CronJob"><span class="nav-number">1.2.</span> <span class="nav-text">CronJob</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

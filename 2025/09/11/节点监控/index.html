@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="节点监控前面我们和大家学习了怎样用 Promethues 来监控 Kubernetes 集群中的应用，但是对于 Kubernetes 集群本身的监控也是非常重要的，我们需要时时刻刻了解集群的运行状态。 监控方案对于集群的监控一般我们需要考虑以下几个方面：  Kubernetes 节点的监控：比如节点的 cpu、load、disk、memory 等指标 内部系统组件的状态：比如 kube-sched">
+<meta property="og:type" content="article">
+<meta property="og:title" content="节点监控">
+<meta property="og:url" content="http://example.com/2025/09/11/%E8%8A%82%E7%82%B9%E7%9B%91%E6%8E%A7/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="节点监控前面我们和大家学习了怎样用 Promethues 来监控 Kubernetes 集群中的应用，但是对于 Kubernetes 集群本身的监控也是非常重要的，我们需要时时刻刻了解集群的运行状态。 监控方案对于集群的监控一般我们需要考虑以下几个方面：  Kubernetes 节点的监控：比如节点的 cpu、load、disk、memory 等指标 内部系统组件的状态：比如 kube-sched">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:14:30.922Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta property="article:tag" content="Prometheus">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/%E8%8A%82%E7%82%B9%E7%9B%91%E6%8E%A7/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>节点监控 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/%E8%8A%82%E7%82%B9%E7%9B%91%E6%8E%A7/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          节点监控
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:14:30" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/" itemprop="url" rel="index"><span itemprop="name">k8s-monitor</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/Prometheus/" itemprop="url" rel="index"><span itemprop="name">Prometheus</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/Prometheus/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="节点监控"><a href="#节点监控" class="headerlink" title="节点监控"></a>节点监控</h1><p>前面我们和大家学习了怎样用 Promethues 来监控 Kubernetes 集群中的应用，但是对于 Kubernetes 集群本身的监控也是非常重要的，我们需要时时刻刻了解集群的运行状态。</p>
+<h2 id="监控方案"><a href="#监控方案" class="headerlink" title="监控方案"></a>监控方案</h2><p>对于集群的监控一般我们需要考虑以下几个方面：</p>
+<ul>
+<li>Kubernetes 节点的监控：比如节点的 cpu、load、disk、memory 等指标</li>
+<li>内部系统组件的状态：比如 kube-scheduler、kube-controller-manager、kubedns&#x2F;coredns 等组件的详细运行状态</li>
+<li>编排级的 metrics：比如 Deployment 的状态、资源请求、调度和 API 延迟等数据指标</li>
+</ul>
+<p>Kubernetes 集群的监控方案目前主要有以下几种方案：</p>
+<ul>
+<li><code>cAdvisor</code>：<a target="_blank" rel="noopener" href="https://github.com/google/cadvisor">cAdvisor</a> 是 Google 开源的容器资源监控和性能分析工具，它是专门为容器而生，本身也支持 Docker 容器。</li>
+<li><code>kube-state-metrics</code>：<a target="_blank" rel="noopener" href="https://github.com/kubernetes/kube-state-metrics">kube-state-metrics</a> 通过监听 API Server 生成有关资源对象的状态指标，比如 Deployment、Node、Pod，需要注意的是 kube-state-metrics 只是简单提供一个 metrics 数据，并不会存储这些指标数据，所以我们可以使用 Prometheus 来抓取这些数据然后存储。</li>
+<li><code>metrics-server</code>：metrics-server 也是一个集群范围内的资源数据聚合工具，是 Heapster 的替代品，同样的，metrics-server 也只是显示数据，并不提供数据存储服务。</li>
+</ul>
+<p>不过 kube-state-metrics 和 metrics-server 之间还是有很大不同的，二者的主要区别如下：</p>
+<ul>
+<li>kube-state-metrics 主要关注的是业务相关的一些元数据，比如 Deployment、Pod、副本状态等</li>
+<li>metrics-server 主要关注的是<a target="_blank" rel="noopener" href="https://github.com/kubernetes/community/blob/master/contributors/design-proposals/instrumentation/resource-metrics-api.md">资源度量 API</a> 的实现，比如 CPU、文件描述符、内存、请求延时等指标。</li>
+</ul>
+<h2 id="监控集群节点"><a href="#监控集群节点" class="headerlink" title="监控集群节点"></a>监控集群节点</h2><p>要监控节点同样我们这里使用 <a target="_blank" rel="noopener" href="https://github.com/prometheus/node_exporter">node_exporter</a>，由于每个节点我们都需要获取到监控指标数据，所以我们可以通过 DaemonSet 控制器来部署该服务，这样每一个节点都会自动运行一个 <code>node-exporter</code> 的 Pod，如果我们从集群中删除或者添加节点后，也会进行自动扩展。</p>
+<p>在部署 <code>node-exporter</code> 的时候有一些细节需要注意，如下资源清单文件:</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">DaemonSet</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">node-exporter</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-mon</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">node-exporter</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">node-exporter</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">node-exporter</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">hostPID:</span> <span class="literal">true</span></span><br><span class="line">      <span class="attr">hostIPC:</span> <span class="literal">true</span></span><br><span class="line">      <span class="attr">hostNetwork:</span> <span class="literal">true</span></span><br><span class="line">      <span class="attr">nodeSelector:</span></span><br><span class="line">        <span class="attr">kubernetes.io/os:</span> <span class="string">linux</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">node-exporter</span></span><br><span class="line">          <span class="attr">image:</span> <span class="string">prom/node-exporter:v1.3.1</span></span><br><span class="line">          <span class="attr">args:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">--web.listen-address=$(HOSTIP):9100</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">--path.procfs=/host/proc</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">--path.sysfs=/host/sys</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">--path.rootfs=/host/root</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">--no-collector.hwmon</span> <span class="comment"># 禁用不需要的一些采集器</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">--no-collector.nfs</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">--no-collector.nfsd</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">--no-collector.nvme</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">--no-collector.dmi</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">--no-collector.arp</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">--collector.filesystem.ignored-mount-points=^/(dev|proc|sys|var/lib/containerd/.+|/var/lib/docker/.+|var/lib/kubelet/pods/.+)($|/)</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">--collector.filesystem.ignored-fs-types=^(autofs|binfmt_misc|cgroup|configfs|debugfs|devpts|devtmpfs|fusectl|hugetlbfs|mqueue|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|sysfs|tracefs)$</span></span><br><span class="line">          <span class="attr">ports:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">9100</span></span><br><span class="line">          <span class="attr">env:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">HOSTIP</span></span><br><span class="line">              <span class="attr">valueFrom:</span></span><br><span class="line">                <span class="attr">fieldRef:</span></span><br><span class="line">                  <span class="attr">fieldPath:</span> <span class="string">status.hostIP</span></span><br><span class="line">          <span class="attr">resources:</span></span><br><span class="line">            <span class="attr">requests:</span></span><br><span class="line">              <span class="attr">cpu:</span> <span class="string">150m</span></span><br><span class="line">              <span class="attr">memory:</span> <span class="string">180Mi</span></span><br><span class="line">            <span class="attr">limits:</span></span><br><span class="line">              <span class="attr">cpu:</span> <span class="string">150m</span></span><br><span class="line">              <span class="attr">memory:</span> <span class="string">180Mi</span></span><br><span class="line">          <span class="attr">securityContext:</span></span><br><span class="line">            <span class="attr">runAsNonRoot:</span> <span class="literal">true</span></span><br><span class="line">            <span class="attr">runAsUser:</span> <span class="number">65534</span></span><br><span class="line">          <span class="attr">volumeMounts:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">proc</span></span><br><span class="line">              <span class="attr">mountPath:</span> <span class="string">/host/proc</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">sys</span></span><br><span class="line">              <span class="attr">mountPath:</span> <span class="string">/host/sys</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">root</span></span><br><span class="line">              <span class="attr">mountPath:</span> <span class="string">/host/root</span></span><br><span class="line">              <span class="attr">mountPropagation:</span> <span class="string">HostToContainer</span></span><br><span class="line">              <span class="attr">readOnly:</span> <span class="literal">true</span></span><br><span class="line">      <span class="attr">tolerations:</span> <span class="comment"># 添加容忍</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">operator:</span> <span class="string">&quot;Exists&quot;</span></span><br><span class="line">      <span class="attr">volumes:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">proc</span></span><br><span class="line">          <span class="attr">hostPath:</span></span><br><span class="line">            <span class="attr">path:</span> <span class="string">/proc</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">dev</span></span><br><span class="line">          <span class="attr">hostPath:</span></span><br><span class="line">            <span class="attr">path:</span> <span class="string">/dev</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">sys</span></span><br><span class="line">          <span class="attr">hostPath:</span></span><br><span class="line">            <span class="attr">path:</span> <span class="string">/sys</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">root</span></span><br><span class="line">          <span class="attr">hostPath:</span></span><br><span class="line">            <span class="attr">path:</span> <span class="string">/</span></span><br></pre></td></tr></table></figure>
+
+<p>由于我们要获取到的数据是主机的监控指标数据，而我们的 <code>node-exporter</code> 是运行在容器中的，所以我们在 Pod 中需要配置一些 Pod 的安全策略，这里我们就添加了 <code>hostPID: true</code>、<code>hostIPC: true</code>、<code>hostNetwork: true</code> 3 个策略，用来使用主机的 <code>PID namespace</code>、<code>IPC namespace</code> 以及主机网络，这些 namespace 就是用于容器隔离的关键技术，要注意这里的 namespace 和集群中的 namespace 是两个完全不相同的概念。</p>
+<p>另外我们还将主机的 <code>/dev</code>、<code>/proc</code>、<code>/sys</code>这些目录挂载到容器中，这些因为我们采集的很多节点数据都是通过这些文件夹下面的文件来获取到的，比如我们在使用 <code>top</code> 命令可以查看当前 cpu 使用情况，数据就来源于文件 <code>/proc/stat</code>，使用 <code>free</code> 命令可以查看当前内存使用情况，其数据来源是来自 <code>/proc/meminfo</code> 文件。</p>
+<p>另外由于我们集群使用的是 <code>kubeadm</code> 搭建的，所以如果希望 master 节点也一起被监控，则需要添加相应的容忍，然后直接创建上面的资源对象：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">☸ ➜ kubectl apply -f https://p8s.io/docs/k8s/manifests/prometheus/node-exporter.yaml</span><br><span class="line">☸ ➜ kubectl get pods -n kube-mon -l app=node-exporter -o wide</span><br><span class="line">NAME                  READY   STATUS    RESTARTS      AGE   IP               NODE      NOMINATED NODE   READINESS GATES</span><br><span class="line">node-exporter-b6w2v   1/1     Running   0             25m   192.168.31.31    master1   &lt;none&gt;           &lt;none&gt;</span><br><span class="line">node-exporter-dmldp   1/1     Running   8 (20m ago)   25m   192.168.31.108   node1     &lt;none&gt;           &lt;none&gt;</span><br><span class="line">node-exporter-wdxsb   1/1     Running   6 (22m ago)   25m   192.168.31.46    node2     &lt;none&gt;           &lt;none&gt;</span><br></pre></td></tr></table></figure>
+
+<p>部署完成后，我们可以看到在 3 个节点上都运行了一个 Pod，由于我们指定了 <code>hostNetwork=true</code>，所以在每个节点上就会绑定一个端口 9100，我们可以通过这个端口去获取到监控指标数据：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">☸ ➜ curl 10.151.31.31:9100/metrics</span><br><span class="line">...</span><br><span class="line">node_filesystem_device_error&#123;device=&quot;shm&quot;,fstype=&quot;tmpfs&quot;,mountpoint=&quot;/rootfs/var/lib/docker/containers/aefe8b1b63c3aa5f27766053ec817415faf8f6f417bb210d266fef0c2da64674/shm&quot;&#125; 1</span><br><span class="line">node_filesystem_device_error&#123;device=&quot;shm&quot;,fstype=&quot;tmpfs&quot;,mountpoint=&quot;/rootfs/var/lib/docker/containers/c8652ca72230496038a07e4fe4ee47046abb5f88d9d2440f0c8a923d5f3e133c/shm&quot;&#125; 1</span><br><span class="line">node_filesystem_device_error&#123;device=&quot;tmpfs&quot;,fstype=&quot;tmpfs&quot;,mountpoint=&quot;/dev&quot;&#125; 0</span><br><span class="line">node_filesystem_device_error&#123;device=&quot;tmpfs&quot;,fstype=&quot;tmpfs&quot;,mountpoint=&quot;/dev/shm&quot;&#125; 0</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+              <a href="/tags/Prometheus/" rel="tag"># Prometheus</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E8%AE%BF%E9%97%AE%E6%8E%A7%E5%88%B6/" rel="prev" title="访问控制">
+      <i class="fa fa-chevron-left"></i> 访问控制
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E8%81%9A%E5%90%88/" rel="next" title="聚合">
+      聚合 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%8A%82%E7%82%B9%E7%9B%91%E6%8E%A7"><span class="nav-number">1.</span> <span class="nav-text">节点监控</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9B%91%E6%8E%A7%E6%96%B9%E6%A1%88"><span class="nav-number">1.1.</span> <span class="nav-text">监控方案</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9B%91%E6%8E%A7%E9%9B%86%E7%BE%A4%E8%8A%82%E7%82%B9"><span class="nav-number">1.2.</span> <span class="nav-text">监控集群节点</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Kubernetes 多集群管理系统 KarmadaKarmada（Kubernetes Armada）是 CNCF 孵化的一个 Kubernetes 管理系统，使您能够在多个 Kubernetes 集群和云中运行云原生应用程序，而无需更改应用程序。通过使用 Kubernetes 原生 API 并提供先进的调度功能，Karmada 实现了真正的开放式、多云 Kubernetes。  Karmada">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Karmada">
+<meta property="og:url" content="http://example.com/2025/09/11/Karmada/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="Kubernetes 多集群管理系统 KarmadaKarmada（Kubernetes Armada）是 CNCF 孵化的一个 Kubernetes 管理系统，使您能够在多个 Kubernetes 集群和云中运行云原生应用程序，而无需更改应用程序。通过使用 Kubernetes 原生 API 并提供先进的调度功能，Karmada 实现了真正的开放式、多云 Kubernetes。  Karmada">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/msf9hv.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/8y4u2n.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/lm8efw.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/rdv8z5.png">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:45:22.083Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://mudutestmenu.mudu.tv/upload/msf9hv.png">
+
+<link rel="canonical" href="http://example.com/2025/09/11/Karmada/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Karmada | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Karmada/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Karmada
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:45:22" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E9%9B%86%E7%BE%A4%E7%AE%A1%E7%90%86/" itemprop="url" rel="index"><span itemprop="name">集群管理</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>37k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>33 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Kubernetes-多集群管理系统-Karmada"><a href="#Kubernetes-多集群管理系统-Karmada" class="headerlink" title="Kubernetes 多集群管理系统 Karmada"></a>Kubernetes 多集群管理系统 Karmada</h1><p>Karmada（Kubernetes Armada）是 CNCF 孵化的一个 Kubernetes 管理系统，使您能够在多个 Kubernetes 集群和云中运行云原生应用程序，而无需更改应用程序。通过使用 Kubernetes 原生 API 并提供先进的调度功能，Karmada 实现了真正的开放式、多云 Kubernetes。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/msf9hv.png" alt="Karmada（Kubernetes"></p>
+<p>Karmada 旨在为多云和混合云场景下的多集群应用程序管理提供即插即用的自动化，具有集中式多云管理、高可用性、故障恢复和流量调度等关键功能。</p>
+<h2 id="特性"><a href="#特性" class="headerlink" title="特性"></a>特性</h2><ul>
+<li>兼容 K8s 原生 API<ul>
+<li>从单集群到多集群的无侵入式升级</li>
+<li>现有 K8s 工具链的无缝集成</li>
+</ul>
+</li>
+<li>开箱即用<ul>
+<li>针对场景内置策略集，包括：<code>Active-active</code>、<code>Remote DR</code>、<code>Geo Redundant</code> 等。</li>
+<li>在多集群上进行跨集群应用程序自动伸缩、故障转移和负载均衡。</li>
+</ul>
+</li>
+<li>避免供应商锁定<ul>
+<li>与主流云提供商集成</li>
+<li>在集群之间自动分配、迁移</li>
+<li>未绑定专有供应商编排</li>
+</ul>
+</li>
+<li>集中式管理<ul>
+<li>位置无关的集群管理</li>
+<li>支持公有云、本地或边缘上的集群。</li>
+</ul>
+</li>
+<li>丰富多集群调度策略<ul>
+<li>集群亲和性、实例在多集群中的拆分调度&#x2F;再平衡，</li>
+<li>多维 HA:区域&#x2F;AZ&#x2F;集群&#x2F;提供商</li>
+</ul>
+</li>
+<li>开放和中立<ul>
+<li>由互联网、金融、制造业、电信、云提供商等联合发起。</li>
+<li>目标是与 CNCF 一起进行开放治理。</li>
+</ul>
+</li>
+</ul>
+<h2 id="Karmada-架构"><a href="#Karmada-架构" class="headerlink" title="Karmada 架构"></a>Karmada 架构</h2><p>Karmada 的架构非常类似于单个 Kubernetes 集群，他们都有一个控制平面、一个 APIServer、一个调度器和一组控制器，而且 Karmada 完全兼容 K8s 的原生 API 操作，便于各种 K8s 集群的接入。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/8y4u2n.png" alt="Karmada 架构"></p>
+<p>所以同样 Karmada 的核心是其控制平面，一个完整且可工作的 Karmada 控制平面由以下组件组成。其中 <code>karmada-agent</code> 可以是可选的，这取决于集群注册模式。</p>
+<p><strong>karmada-apiserver</strong></p>
+<p>APIServer 是 Karmada 控制平面的一个组件，对外暴露 Karmada API 以及 Kubernetes 原生 API，APIServer 是 Karmada 控制平面的前端。</p>
+<p>Karmada APIServer 是直接使用 Kubernetes 的 kube-apiserver 实现的，因此 Karmada 与 Kubernetes API 自然兼容。这也使得 Karmada 更容易实现与 Kubernetes 生态系统的集成，例如允许用户使用 kubectl 来操作 Karmada、与 ArgoCD 集成、与 Flux 集成等等。</p>
+<p><strong>karmada-aggregated-apiserver</strong></p>
+<p>聚合 API 服务器是使用 Kubernetes API 聚合层技术实现的扩展 API 服务器。它提供了集群 API 以及相应的子资源，例如 <code>cluster/status</code> 和 <code>cluster/proxy</code>，实现了聚合 Kubernetes API Endpoint 等可以通过 <code>karmada-apiserver</code> 访问成员集群的高级功能。</p>
+<p><strong>kube-controller-manager</strong></p>
+<p><code>kube-controller-manager</code> 由一组控制器组成，Karmada 只是从 Kubernetes 的官方版本中挑选了一些控制器，以保持与原生控制器一致的用户体验和行为。值得注意的是，并非所有的原生控制器都是 Karmada 所需要的。</p>
+<blockquote>
+<p>注意：当用户向 Karmada APIServer 提交 Deployment 或其他 Kubernetes 标准资源时，它们只记录在 Karmada 控制平面的 etcd 中。随后，这些资源会向成员集群同步。然而，这些部署资源不会在 Karmada 控制平面集群中进行 reconcile 过程（例如创建 Pod）。</p>
+</blockquote>
+<p><strong>karmada-controller-manager</strong></p>
+<p>Karmada 控制器管理器运行了各种自定义控制器进程。控制器负责监视 Karmada 对象，并与底层集群的 API 服务器通信，以创建原生的 Kubernetes 资源。</p>
+<p><strong>karmada-scheduler</strong></p>
+<p><code>karmada-scheduler</code> 负责将 Kubernetes 原生 API 资源对象（以及 CRD 资源）调度到成员集群。</p>
+<p>调度器依据策略约束和可用资源来确定哪些集群对调度队列中的资源是可用的，然后调度器对每个可用集群进行打分排序，并将资源绑定到最合适的集群。</p>
+<p><strong>karmada-webhook</strong></p>
+<p><code>karmada-webhook</code> 是用于接收 karmada&#x2F;Kubernetes API 请求的 HTTP 回调，并对请求进行处理。你可以定义两种类型的 <code>karmada-webhook</code>，即验证性质的 webhook 和修改性质的 webhook。修改性质的准入 webhook 会先被调用。它们可以更改发送到 Karmada API 服务器的对象以执行自定义的设置默认值操作。</p>
+<p>在完成了所有对象修改并且 Karmada API 服务器也验证了所传入的对象之后，验证性质的 webhook 会被调用，并通过拒绝请求的方式来强制实施自定义的策略。</p>
+<p><strong>etcd</strong></p>
+<p>一致且高可用的键值存储，用作 Karmada 的所有 Karmada&#x2F;Kubernetes 资源对象数据的后台数据库。</p>
+<p>如果你的 Karmada 使用 etcd 作为其后台数据库，请确保你针对这些数据有一份备份计划。</p>
+<p><strong>karmada-agent</strong></p>
+<p>Karmada 有 <code>Push</code> 和 <code>Pull</code> 两种集群注册模式，<code>karmada-agent</code> 应部署在每个 <code>Pull</code> 模式的成员集群上。它可以将特定集群注册到 Karmada 控制平面，并将工作负载清单从 Karmada 控制平面同步到成员集群。此外，它也负责将成员集群及其资源的状态同步到 Karmada 控制平面。</p>
+<p><strong>插件（Addons）</strong></p>
+<ul>
+<li><code>karmada-scheduler-estimator</code></li>
+</ul>
+<p>Karmada 调度估计器为每个成员集群运行精确的调度预估，它为调度器提供了更准确的集群资源信息。</p>
+<blockquote>
+<p>注意：早期的 Karmada 调度器只支持根据集群资源的总量来决策可调度副本的数量。在这种情况下，当集群资源的总量足够但每个节点资源不足时，会发生调度失败。为了解决这个问题，引入了估计器组件，该组件根据资源请求计算每个节点的可调度副本的数量，从而计算出真正的整个集群的可调度副本的数量。</p>
+</blockquote>
+<ul>
+<li><code>karmada-descheduler</code></li>
+</ul>
+<p>Karmada 重调度组件负责定时检测所有副本（默认为两分钟），并根据成员集群中副本实例状态的变化触发重新调度。</p>
+<p>该组件是通过调用 <code>karmada-scheduler-estimator</code> 来感知有多少副本实例状态发生了变化，并且只有当副本的调度策略为动态划分时，它才会发挥作用。</p>
+<ul>
+<li><code>karmada-search</code></li>
+</ul>
+<p>Karmada 搜索组件以聚合服务的形式，提供了在多云环境中进行全局搜索和资源代理等功能。</p>
+<p>其中，全局搜索能力是用来跨多个集群缓存资源对象和事件，以及通过搜索 API 对外提供图形化的检索服务；资源代理能力使用户既可以访问 Karmada 控制平面所有资源，又可以访问成员集群中的所有资源。</p>
+<p><strong>CLI 工具</strong></p>
+<ul>
+<li><code>karmadactl</code></li>
+</ul>
+<p>Karmada 提供了一个命令行工具 <code>karmadactl</code>，用于使用 Karmada API 与 Karmada 的控制平面进行通信。</p>
+<p>你可以使用 <code>karmadactl</code> 执行成员集群的添加&#x2F;剔除，将成员集群标记&#x2F;取消标记为不可调度，等等。</p>
+<ul>
+<li><code>kubectl karmada</code></li>
+</ul>
+<p><code>kubectl karmada</code> 以 kubectl 插件的形式提供功能，但它的实现与 <code>karmadactl</code> 完全相同。</p>
+<h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><p>首先要注意我们使用 Karmada 管理的多集群包含两类：</p>
+<ul>
+<li>host 集群：即由 karmada 控制面构成的集群，接受用户提交的工作负载部署需求，将之同步到 member 集群，并从 member 集群同步工作负载后续的运行状况。</li>
+<li>member 集群：由一个或多个 K8s 集群构成，负责运行用户提交的工作负载</li>
+</ul>
+<p>所以首先我们需要准备几个 K8s 集群用于测试，其中 host 集群就是我们要安装 Karmada 的集群，这里我们可以使用 <code>KinD</code> 部署一个 host 集群以及两个 member 集群，用于测试 Karmada 的多集群管理功能，当然首先需要在你的测试环境中安装 Docker 和 KinD。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">$ docker version</span><br><span class="line">Client:</span><br><span class="line"> Cloud integration: v1.0.29</span><br><span class="line"> Version:           20.10.21</span><br><span class="line"> API version:       1.41</span><br><span class="line"> Go version:        go1.18.7</span><br><span class="line"> Git commit:        baeda1f</span><br><span class="line"> Built:             Tue Oct 25 18:01:18 2022</span><br><span class="line"> OS/Arch:           darwin/arm64</span><br><span class="line"> Context:           orbstack</span><br><span class="line"> Experimental:      <span class="literal">true</span></span><br><span class="line"></span><br><span class="line">Server: Docker Engine - Community</span><br><span class="line"> Engine:</span><br><span class="line">  Version:          25.0.5</span><br><span class="line">  API version:      1.44 (minimum version 1.24)</span><br><span class="line">  Go version:       go1.21.8</span><br><span class="line">  Git commit:       e63daec</span><br><span class="line">  Built:            Tue Mar 19 15:05:27 2024</span><br><span class="line">  OS/Arch:          linux/arm64</span><br><span class="line">  Experimental:     <span class="literal">false</span></span><br><span class="line"> containerd:</span><br><span class="line">  Version:          v1.7.13</span><br><span class="line">  GitCommit:        7c3aca7a610df76212171d200ca3811ff6096eb8</span><br><span class="line"> runc:</span><br><span class="line">  Version:          1.1.12</span><br><span class="line">  GitCommit:        51d5e94601ceffbbd85688df1c928ecccbfa4685</span><br><span class="line"> docker-init:</span><br><span class="line">  Version:          0.19.0</span><br><span class="line">  GitCommit:        de40ad0</span><br><span class="line">$ kind version</span><br><span class="line">kind v0.20.0 go1.20.4 darwin/arm64</span><br></pre></td></tr></table></figure>
+
+<p>然后我们可以使用 Karmada 官方提供的 <code>create-cluster.sh</code> 脚本来创建两个 member 集群。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">$ git <span class="built_in">clone</span> https://github.com/karmada-io/karmada.git</span><br><span class="line">$ <span class="built_in">cd</span> karmada</span><br><span class="line"><span class="comment"># 创建 host 集群</span></span><br><span class="line">$ hack/create-cluster.sh host <span class="variable">$HOME</span>/.kube/host.config</span><br><span class="line">$ kubectl get nodes --context host --kubeconfig /Users/cnych/.kube/host.config</span><br><span class="line">NAME                 STATUS   ROLES           AGE   VERSION</span><br><span class="line">host-control-plane   Ready    control-plane   63s   v1.27.3</span><br><span class="line"><span class="comment"># 创建 member1 集群</span></span><br><span class="line">$ hack/create-cluster.sh member1 <span class="variable">$HOME</span>/.kube/member1.config</span><br><span class="line">$ kubectl get nodes --context member1 --kubeconfig /Users/cnych/.kube/member1.config</span><br><span class="line">NAME                    STATUS   ROLES           AGE    VERSION</span><br><span class="line">member1-control-plane   Ready    control-plane   115s   v1.27.3</span><br><span class="line"><span class="comment"># 创建 member2 集群</span></span><br><span class="line">$ hack/create-cluster.sh member2 <span class="variable">$HOME</span>/.kube/member2.config</span><br><span class="line">$ kubectl get nodes --context member2 --kubeconfig /Users/cnych/.kube/member2.config</span><br><span class="line">NAME                    STATUS   ROLES           AGE   VERSION</span><br><span class="line">member2-control-plane   Ready    control-plane   29s   v1.27.3</span><br></pre></td></tr></table></figure>
+
+<p>到这里我们就准备好了一个 host 集群和两个 member 集群，接下来我们就可以在 host 集群上安装 Karmada 了。安装 Karmada 的方法有很多，可以直接使用官方的 CLI 工具，也可以使用 Helm Chart 方式，还可以使用 Operator 方式等等，如果需要定制化安装，使用 Helm Chart 的方式会更加灵活。由于官方提供的 CLI 工具并不只是用于安装 Karmada，还可以用于管理 Karmada 集群，所以无论如何我们都可以先安装 CLI 工具 - <code>karmadactl</code>，<code>karmadactl</code> 是允许你控制 Karmada 控制面的 Karmada 命令行工具，此外还提供一个 kubectl 插件 <code>kubectl-karmada</code>，尽管这两个工具的名字不同，但其关联的命令和选项完全相同，所以无论使用哪一个都是一样的，在实际使用中，你可以根据自己的需求选择一个 CLI 工具。</p>
+<p>直接使用下面的命令即可一键安装 <code>karmadactl</code>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> ./hack/install-cli.sh</span><br><span class="line">[INFO]  Downloading metadata https://api.github.com/repos/karmada-io/karmada/releases/latest</span><br><span class="line">[INFO]  Using 1.9.1 as release</span><br><span class="line">[INFO]  Downloading <span class="built_in">hash</span> https://github.com/karmada-io/karmada/releases/download/v1.9.1/karmadactl-darwin-arm64.tgz.sha256</span><br><span class="line">[INFO]  Downloading binary https://github.com/karmada-io/karmada/releases/download/v1.9.1/karmadactl-darwin-arm64.tgz</span><br><span class="line">[INFO]  Verifying binary download</span><br><span class="line">[INFO]  Installing karmadactl to /usr/local/bin/karmadactl</span><br><span class="line">$ karmadactl version</span><br><span class="line">karmadactl version: version.Info&#123;GitVersion:<span class="string">&quot;v1.9.1&quot;</span>, GitCommit:<span class="string">&quot;b57bff17d6133deb26d9c319714170a915d4fa54&quot;</span>, GitTreeState:<span class="string">&quot;clean&quot;</span>, BuildDate:<span class="string">&quot;2024-04-30T02:03:53Z&quot;</span>, GoVersion:<span class="string">&quot;go1.20.11&quot;</span>, Compiler:<span class="string">&quot;gc&quot;</span>, Platform:<span class="string">&quot;darwin/arm64&quot;</span>&#125;</span><br></pre></td></tr></table></figure>
+
+<p>安装 <code>kubectl-karmada</code> 与安装 <code>karmadactl</code> 相同，你只需要添加一个 <code>kubectl-karmada</code> 参数即可：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> ./hack/install-cli.sh kubectl-karmada</span><br><span class="line">[INFO]  Downloading metadata https://api.github.com/repos/karmada-io/karmada/releases/latest</span><br><span class="line">[INFO]  Using 1.9.1 as release</span><br><span class="line">[INFO]  Downloading <span class="built_in">hash</span> https://github.com/karmada-io/karmada/releases/download/v1.9.1/kubectl-karmada-darwin-arm64.tgz.sha256</span><br><span class="line">[INFO]  Downloading binary https://github.com/karmada-io/karmada/releases/download/v1.9.1/kubectl-karmada-darwin-arm64.tgz</span><br><span class="line">[INFO]  Verifying binary download</span><br><span class="line">[INFO]  Installing kubectl-karmada to /usr/local/bin/kubectl-karmada</span><br><span class="line">$ kubectl karmada version</span><br><span class="line">kubectl karmada version: version.Info&#123;GitVersion:<span class="string">&quot;v1.9.1&quot;</span>, GitCommit:<span class="string">&quot;b57bff17d6133deb26d9c319714170a915d4fa54&quot;</span>, GitTreeState:<span class="string">&quot;clean&quot;</span>, BuildDate:<span class="string">&quot;2024-04-30T02:03:52Z&quot;</span>, GoVersion:<span class="string">&quot;go1.20.11&quot;</span>, Compiler:<span class="string">&quot;gc&quot;</span>, Platform:<span class="string">&quot;darwin/arm64&quot;</span>&#125;</span><br></pre></td></tr></table></figure>
+
+<p>接下来我们就可以在 host 集群上安装 Karmada 了，我们已将 host 集群的 <code>kubeconfig</code> 文件放到了 <code>$HOME/.kube/config</code>。直接执行以下命令即可进行安装：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># --kube-image-mirror-country 用于指定镜像国内源</span></span><br><span class="line"><span class="comment"># --etcd-storage-mode 用于指定 etcd 存储模式，支持 emptyDir、hostPath、PVC，默认为 hostPath</span></span><br><span class="line">$ <span class="built_in">sudo</span> kubectl karmada init --kube-image-mirror-country=cn --etcd-storage-mode PVC --storage-classes-name standard --kubeconfig=<span class="variable">$HOME</span>/.kube/host.config</span><br><span class="line">I0516 15:56:35.549617   98690 deploy.go:244] kubeconfig file: /Users/cnych/.kube/host.config, kubernetes: https://192.168.247.4:6443</span><br><span class="line">I0516 15:56:35.586638   98690 deploy.go:264] karmada apiserver ip: [192.168.247.4]</span><br><span class="line">I0516 15:56:36.330162   98690 cert.go:246] Generate ca certificate success.</span><br><span class="line">I0516 15:56:36.368464   98690 cert.go:246] Generate karmada certificate success.</span><br><span class="line">I0516 15:56:36.453671   98690 cert.go:246] Generate apiserver certificate success.</span><br><span class="line">I0516 15:56:36.535924   98690 cert.go:246] Generate front-proxy-ca certificate success.</span><br><span class="line">I0516 15:56:36.666694   98690 cert.go:246] Generate front-proxy-client certificate success.</span><br><span class="line">I0516 15:56:36.716602   98690 cert.go:246] Generate etcd-ca certificate success.</span><br><span class="line">I0516 15:56:36.772838   98690 cert.go:246] Generate etcd-server certificate success.</span><br><span class="line">I0516 15:56:36.905275   98690 cert.go:246] Generate etcd-client certificate success.</span><br><span class="line">I0516 15:56:36.905808   98690 deploy.go:360] download crds file:https://github.com/karmada-io/karmada/releases/download/v1.9.1/crds.tar.gz</span><br><span class="line">Downloading...[ 100.00% ]</span><br><span class="line">Download complete.</span><br><span class="line">I0516 15:56:39.224167   98690 deploy.go:620] Create karmada kubeconfig success.</span><br><span class="line">I0516 15:56:39.300133   98690 idempotency.go:267] Namespace karmada-system has been created or updated.</span><br><span class="line">I0516 15:56:39.352865   98690 idempotency.go:291] Service karmada-system/etcd has been created or updated.</span><br><span class="line">I0516 15:56:39.353105   98690 deploy.go:426] Create etcd StatefulSets</span><br><span class="line">I0516 15:57:02.386423   98690 deploy.go:435] Create karmada ApiServer Deployment</span><br><span class="line">I0516 15:57:02.412127   98690 idempotency.go:291] Service karmada-system/karmada-apiserver has been created or updated.</span><br><span class="line">I0516 15:57:33.480629   98690 deploy.go:450] Create karmada aggregated apiserver Deployment</span><br><span class="line">I0516 15:57:33.488145   98690 idempotency.go:291] Service karmada-system/karmada-aggregated-apiserver has been created or updated.</span><br><span class="line">I0516 15:57:48.545482   98690 idempotency.go:267] Namespace karmada-system has been created or updated.</span><br><span class="line">I0516 15:57:48.547067   98690 deploy.go:85] Initialize karmada bases crd resource `/etc/karmada/crds/bases`</span><br><span class="line">I0516 15:57:48.549059   98690 deploy.go:240] Attempting to create CRD</span><br><span class="line">I0516 15:57:48.569222   98690 deploy.go:250] Create CRD cronfederatedhpas.autoscaling.karmada.io successfully.</span><br><span class="line"><span class="comment"># ......省略部分输出</span></span><br><span class="line">I0516 15:57:49.963201   98690 deploy.go:96] Initialize karmada patches crd resource `/etc/karmada/crds/patches`</span><br><span class="line">I0516 15:57:50.372020   98690 deploy.go:108] Create MutatingWebhookConfiguration mutating-config.</span><br><span class="line">I0516 15:57:50.379939   98690 webhook_configuration.go:362] MutatingWebhookConfiguration mutating-config has been created or updated successfully.</span><br><span class="line">I0516 15:57:50.379957   98690 deploy.go:113] Create ValidatingWebhookConfiguration validating-config.</span><br><span class="line">I0516 15:57:50.387416   98690 webhook_configuration.go:333] ValidatingWebhookConfiguration validating-config has been created or updated successfully.</span><br><span class="line">I0516 15:57:50.387434   98690 deploy.go:119] Create Service <span class="string">&#x27;karmada-aggregated-apiserver&#x27;</span> and APIService <span class="string">&#x27;v1alpha1.cluster.karmada.io&#x27;</span>.</span><br><span class="line">I0516 15:57:50.390795   98690 idempotency.go:291] Service karmada-system/karmada-aggregated-apiserver has been created or updated.</span><br><span class="line">I0516 15:57:50.394479   98690 check.go:42] Waiting <span class="keyword">for</span> APIService(v1alpha1.cluster.karmada.io) condition(Available), will try</span><br><span class="line">I0516 15:57:51.506085   98690 tlsbootstrap.go:49] [bootstrap-token] configured RBAC rules to allow Karmada Agent Bootstrap tokens to post CSRs <span class="keyword">in</span> order <span class="keyword">for</span> agent to get long term certificate credentials</span><br><span class="line">I0516 15:57:51.508289   98690 tlsbootstrap.go:63] [bootstrap-token] configured RBAC rules to allow the csrapprover controller automatically approve CSRs from a Karmada Agent Bootstrap Token</span><br><span class="line">I0516 15:57:51.511340   98690 tlsbootstrap.go:77] [bootstrap-token] configured RBAC rules to allow certificate rotation <span class="keyword">for</span> all agent client certificates <span class="keyword">in</span> the member cluster</span><br><span class="line">I0516 15:57:51.635344   98690 deploy.go:143] Initialize karmada bootstrap token</span><br><span class="line">I0516 15:57:51.656584   98690 deploy.go:468] Create karmada kube controller manager Deployment</span><br><span class="line">I0516 15:57:51.671152   98690 idempotency.go:291] Service karmada-system/kube-controller-manager has been created or updated.</span><br><span class="line">I0516 15:57:58.728859   98690 deploy.go:482] Create karmada scheduler Deployment</span><br><span class="line">I0516 15:58:10.763913   98690 deploy.go:493] Create karmada controller manager Deployment</span><br><span class="line">I0516 15:58:22.787659   98690 deploy.go:504] Create karmada webhook Deployment</span><br><span class="line">I0516 15:58:22.798328   98690 idempotency.go:291] Service karmada-system/karmada-webhook has been created or updated.</span><br><span class="line"></span><br><span class="line">------------------------------------------------------------------------------------------------------</span><br><span class="line"> █████   ████   █████████   ███████████   ██████   ██████   █████████   ██████████     █████████</span><br><span class="line">░░███   ███░   ███░░░░░███ ░░███░░░░░███ ░░██████ ██████   ███░░░░░███ ░░███░░░░███   ███░░░░░███</span><br><span class="line"> ░███  ███    ░███    ░███  ░███    ░███  ░███░█████░███  ░███    ░███  ░███   ░░███ ░███    ░███</span><br><span class="line"> ░███████     ░███████████  ░██████████   ░███░░███ ░███  ░███████████  ░███    ░███ ░███████████</span><br><span class="line"> ░███░░███    ░███░░░░░███  ░███░░░░░███  ░███ ░░░  ░███  ░███░░░░░███  ░███    ░███ ░███░░░░░███</span><br><span class="line"> ░███ ░░███   ░███    ░███  ░███    ░███  ░███      ░███  ░███    ░███  ░███    ███  ░███    ░███</span><br><span class="line"> █████ ░░████ █████   █████ █████   █████ █████     █████ █████   █████ ██████████   █████   █████</span><br><span class="line">░░░░░   ░░░░ ░░░░░   ░░░░░ ░░░░░   ░░░░░ ░░░░░     ░░░░░ ░░░░░   ░░░░░ ░░░░░░░░░░   ░░░░░   ░░░░░</span><br><span class="line">------------------------------------------------------------------------------------------------------</span><br><span class="line">Karmada is installed successfully.</span><br><span class="line"></span><br><span class="line">Register Kubernetes cluster to Karmada control plane.</span><br><span class="line"></span><br><span class="line">Register cluster with <span class="string">&#x27;Push&#x27;</span> mode</span><br><span class="line"></span><br><span class="line">Step 1: Use <span class="string">&quot;kubectl karmada join&quot;</span> <span class="built_in">command</span> to register the cluster to Karmada control plane. --cluster-kubeconfig is kubeconfig of the member cluster.</span><br><span class="line">(In karmada)~# MEMBER_CLUSTER_NAME=$(<span class="built_in">cat</span> ~/.kube/config  | grep current-context | sed <span class="string">&#x27;s/: /\n/g&#x27;</span>| sed <span class="string">&#x27;1d&#x27;</span>)</span><br><span class="line">(In karmada)~# kubectl karmada --kubeconfig /etc/karmada/karmada-apiserver.config  <span class="built_in">join</span> <span class="variable">$&#123;MEMBER_CLUSTER_NAME&#125;</span> --cluster-kubeconfig=<span class="variable">$HOME</span>/.kube/config</span><br><span class="line"></span><br><span class="line">Step 2: Show members of karmada</span><br><span class="line">(In karmada)~# kubectl --kubeconfig /etc/karmada/karmada-apiserver.config get clusters</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Register cluster with <span class="string">&#x27;Pull&#x27;</span> mode</span><br><span class="line"></span><br><span class="line">Step 1: Use <span class="string">&quot;kubectl karmada register&quot;</span> <span class="built_in">command</span> to register the cluster to Karmada control plane. <span class="string">&quot;--cluster-name&quot;</span> is <span class="built_in">set</span> to cluster of current-context by default.</span><br><span class="line">(In member cluster)~# kubectl karmada register 192.168.247.4:32443 --token rflrr9.iisxtboo8dsz8jsv --discovery-token-ca-cert-hash sha256:008fb63e3b17c3e399f9688eca0978ab3a50dbe5d5b8d4f32c6bfd1fab12a1d8</span><br><span class="line"></span><br><span class="line">Step 2: Show members of karmada</span><br><span class="line">(In karmada)~# kubectl --kubeconfig /etc/karmada/karmada-apiserver.config get clusters</span><br></pre></td></tr></table></figure>
+
+<p>安装正常的话会看到如上所示的输出信息。默认 Karmada 会安装在 host 集群的 <code>karmada-system</code> 命名空间中：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl get pods -n karmada-system --kubeconfig ~/.kube/host.config</span><br><span class="line">NAME                                            READY   STATUS    RESTARTS   AGE</span><br><span class="line">etcd-0                                          1/1     Running   0          35m</span><br><span class="line">karmada-aggregated-apiserver-5fddf66847-nnfzv   1/1     Running   0          34m</span><br><span class="line">karmada-apiserver-6b6f5b45-fkbk4                1/1     Running   0          35m</span><br><span class="line">karmada-controller-manager-bbdf689db-rc67z      1/1     Running   0          34m</span><br><span class="line">karmada-scheduler-78f854fbd4-m24c8              1/1     Running   0          34m</span><br><span class="line">karmada-webhook-77b9945cf9-mkjrk                1/1     Running   0          33m</span><br><span class="line">kube-controller-manager-5c4975bf8d-6tx5r        1/1     Running   0          34m</span><br></pre></td></tr></table></figure>
+
+<p>如上所示 Karmada 控制平面相关 Pod 都已经正常运行，接下来我们就可以将两个 member 集群注册到 Karmada 控制平面中了，注册集群有两种方式，一种是 <code>Push</code> 模式，一种是 <code>Pull</code> 模式：</p>
+<ul>
+<li><code>Push</code>：Karmada 控制平面将直接访问成员集群的 kube-apiserver 以获取集群状态并部署清单。</li>
+<li><code>Pull</code>：Karmada 控制平面不会访问成员集群，而是将其委托给名为 <code>Karmada-agent</code> 的额外组件。</li>
+</ul>
+<p>我们这里的集群都使用的 KinD 搭建的，所以使用 <code>Push</code> 模式更方便，对于无法直接访问成员集群的环境下面可以使用 <code>Pull</code> 模式。</p>
+<p>我们可以使用 <code>kubectl karmada join</code> 命令来注册集群到 Karmada 控制平面。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> kubectl karmada --kubeconfig /etc/karmada/karmada-apiserver.config <span class="built_in">join</span> member1 --cluster-kubeconfig=<span class="variable">$HOME</span>/.kube/member1.config</span><br><span class="line"><span class="built_in">sudo</span> kubectl karmada --kubeconfig /etc/karmada/karmada-apiserver.config <span class="built_in">join</span> member2 --cluster-kubeconfig=<span class="variable">$HOME</span>/.kube/member2.config</span><br></pre></td></tr></table></figure>
+
+<p>注册成功后可以查看注册的集群列表：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> kubectl --kubeconfig /etc/karmada/karmada-apiserver.config get clusters</span><br><span class="line">NAME      VERSION   MODE   READY   AGE</span><br><span class="line">member1   v1.27.3   Push   True    12m</span><br><span class="line">member2   v1.27.3   Push   True    2s</span><br></pre></td></tr></table></figure>
+
+<p>到这里我们就完成了 Karmada 的安装和集群注册，接下来我们就可以使用 Karmada 来管理多集群了。</p>
+<h2 id="资源分发"><a href="#资源分发" class="headerlink" title="资源分发"></a>资源分发</h2><p>接下来我们创建一个 Deployment 资源，然后使用 Karmada 将其分发到 member1 和 member2 集群中。首先创建如下所示的 Deployment 资源：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># nginx-demo.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nginx</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">nginx</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">2</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">nginx</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">nginx</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">nginx</span></span><br><span class="line">          <span class="attr">image:</span> <span class="string">nginx:1.7.9</span></span><br></pre></td></tr></table></figure>
+
+<p>要注意我们需要使用 Karmada 控制平面的 <code>kubeconfig</code> 文件来创建资源对象，因为 Karmada 控制平面会将资源对象分发到成员集群中，所以在应用资源对象时需要使用 <code>--kubeconfig /etc/karmada/karmada-apiserver.config</code> 参数。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># karmada-apiserver 是与 Karmada 控制面交互时要使用的主要 kubeconfig</span></span><br><span class="line">$ kubectl apply -f nginx-demo.yaml --kubeconfig /etc/karmada/karmada-apiserver.config</span><br><span class="line">$ kubectl get pods --kubeconfig ~/.kube/member1.config</span><br><span class="line">No resources found <span class="keyword">in</span> default namespace.</span><br><span class="line">$ kubectl get pods --kubeconfig ~/.kube/member2.config</span><br><span class="line">No resources found <span class="keyword">in</span> default namespace.</span><br></pre></td></tr></table></figure>
+
+<p>现在成员集群 member1 和 member2 下面并没有对应的对象。要进行资源分发我们需要使用一个名为 <code>PropagationPolicy</code>（或者 <code>ClusterPropagationPolicy</code>）的资源对象，该资源对象定义了如何将资源分发到成员集群中。比如我们要将上面的 Deployment 对象分发到 member1 和 member2 集群中，我们可以创建如下所示的 <code>PropagationPolicy</code> 对象：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># nginx-propagation.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">policy.karmada.io/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PropagationPolicy</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nginx-propagation</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">resourceSelectors:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line">      <span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">nginx</span></span><br><span class="line">  <span class="attr">placement:</span></span><br><span class="line">    <span class="attr">clusterAffinity:</span></span><br><span class="line">      <span class="attr">clusterNames:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">member1</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">member2</span></span><br><span class="line">    <span class="attr">replicaScheduling:</span></span><br><span class="line">      <span class="attr">replicaDivisionPreference:</span> <span class="string">Weighted</span></span><br><span class="line">      <span class="attr">replicaSchedulingType:</span> <span class="string">Divided</span></span><br><span class="line">      <span class="attr">weightPreference:</span></span><br><span class="line">        <span class="attr">staticWeightList:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="attr">targetCluster:</span></span><br><span class="line">              <span class="attr">clusterNames:</span></span><br><span class="line">                <span class="bullet">-</span> <span class="string">member1</span></span><br><span class="line">            <span class="attr">weight:</span> <span class="number">1</span></span><br><span class="line">          <span class="bullet">-</span> <span class="attr">targetCluster:</span></span><br><span class="line">              <span class="attr">clusterNames:</span></span><br><span class="line">                <span class="bullet">-</span> <span class="string">member2</span></span><br><span class="line">            <span class="attr">weight:</span> <span class="number">1</span></span><br></pre></td></tr></table></figure>
+
+<p>在上面的 <code>PropagationPolicy</code> 对象中，首先我们通过 <code>resourceSelectors</code> 属性指定了要分发的资源对象，然后通过 <code>placement</code> 字段，指定了资源对象的分发策略。</p>
+<p>其中 <code>.spec.placement.clusterAffinity</code> 字段表示对特定集群集合的调度限制，没有该限制，任何集群都可以成为调度候选者，该字段包含以下几个属性：</p>
+<ul>
+<li><code>LabelSelector</code>：用于选择集群的标签，<code>matchLabels</code> 和 <code>matchExpressions</code> 两种方式都支持。</li>
+<li><code>FieldSelector</code>：按字段选择成员集群的过滤器。</li>
+<li><code>ClusterNames</code>：直接指定所选的集群。</li>
+<li><code>ExcludeClusters</code>：排除指定的集群。</li>
+</ul>
+<p>比如我们这里直接通过 <code>clusterNames</code> 属性指定了 member1 和 member2 集群，这意味着 Deployment 对象 <code>nginx</code> 可以被分发到 member1 和 member2 集群中。</p>
+<p>此外我们还可以设置 <code>ClusterAffinities</code> 字段来声明多个集群组。调度器将按照它们在规范中出现的顺序逐一评估这些组，不满足调度限制的组将被忽略，这意味着该组中的所有集群都不会被选择。如果没有一个组满足调度限制，则调度失败，这意味着不会选择任何集群。</p>
+<p>另外还要注意 <code>ClusterAffinities</code> 不能与 <code>ClusterAffinity</code> 共存。如果 <code>ClusterAffinity</code> 和 <code>ClusterAffinities</code> 均未设置，则任何集群都可以作为调度候选者。</p>
+<p>比如现在我们有两个分组的集群，其中本地数据中心的私有集群可以是主要的集群，云提供商提供的托管集群可以是次组。因此，Karmada 调度程序更愿意将工作负载调度到主集群组，并且只有在主组不满足限制（例如缺乏资源）的情况下才会考虑第二组集群，那么就可以配置如下所示的 <code>PropagationPolicy</code> 对象：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">policy.karmada.io/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PropagationPolicy</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">test-propagation</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="comment">#...</span></span><br><span class="line">  <span class="attr">placement:</span></span><br><span class="line">    <span class="attr">clusterAffinities:</span> <span class="comment"># 逐一评估这些组</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">affinityName:</span> <span class="string">local-clusters</span></span><br><span class="line">        <span class="attr">clusterNames:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="string">local-member1</span></span><br><span class="line">          <span class="bullet">-</span> <span class="string">local-member2</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">affinityName:</span> <span class="string">cloud-clusters</span></span><br><span class="line">        <span class="attr">clusterNames:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="string">public-cloud-member1</span></span><br><span class="line">          <span class="bullet">-</span> <span class="string">public-cloud-member2</span></span><br><span class="line">    <span class="comment">#...</span></span><br></pre></td></tr></table></figure>
+
+<p>又比如对于灾难恢复的场景，集群可以分为 <code>primary</code> 集群和 <code>backup</code> 集群，工作负载将首先调度到主集群，当主集群发生故障（例如数据中心断电）时，Karmada 调度程序可以迁移工作负载到备份集群。这种情况下可以配置如下所示的 <code>PropagationPolicy</code> 对象：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">policy.karmada.io/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PropagationPolicy</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">test-propagation</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="comment">#...</span></span><br><span class="line">  <span class="attr">placement:</span></span><br><span class="line">    <span class="attr">clusterAffinities:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">affinityName:</span> <span class="string">primary-clusters</span></span><br><span class="line">        <span class="attr">clusterNames:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="string">member1</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">affinityName:</span> <span class="string">backup-clusters</span></span><br><span class="line">        <span class="attr">clusterNames:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="string">member1</span></span><br><span class="line">          <span class="bullet">-</span> <span class="string">member2</span></span><br><span class="line">    <span class="comment">#...</span></span><br></pre></td></tr></table></figure>
+
+<p>现在我们已经指定了分发的集群，那么具体应该如何调度呢？哪一个集群应该有多少副本呢？这就需要指定调度策略了。和原生 Kubernetes 类似，Karmada 支持多种调度策略，比如支持容忍污点、权重等。</p>
+<p>通过 <code>.spec.placement.clusterTolerations</code> 字段可以设置容忍度，与 kubernetes 一样，容忍需要与集群上的污点结合使用。在集群上设置一个或多个污点后，无法在这些集群上调度或运行工作负载，除非策略明确声明可以容忍这些污点。Karmada 目前支持效果为 <code>NoSchedule</code> 和 <code>NoExecute</code> 的污点。我们可以使用 <code>karmadactl taint</code> 命令来设置集群的污点：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 为集群 foo 设置包含键 dedicated、值 special-user 和效果 NoSchedule 的污点</span></span><br><span class="line"><span class="comment"># 如果具有该键和效果的污点已经存在，则其值将按指定替换</span></span><br><span class="line">karmadactl taint clusters foo dedicated=special-user:NoSchedule</span><br></pre></td></tr></table></figure>
+
+<p>为了调度到上述集群，我们需要在 <code>PropagationPolicy</code> 中声明以下内容：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">policy.karmada.io/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PropagationPolicy</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nginx-propagation</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="comment">#...</span></span><br><span class="line">  <span class="attr">placement:</span></span><br><span class="line">    <span class="attr">clusterTolerations:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">key:</span> <span class="string">dedicated</span></span><br><span class="line">        <span class="attr">value:</span> <span class="string">special-user</span></span><br><span class="line">        <span class="attr">Effect:</span> <span class="string">NoSchedule</span></span><br></pre></td></tr></table></figure>
+
+<p>我们常常使用 <code>NoExecute</code> 污点来实现多集群故障转移。</p>
+<p>然后更多的时候我们需要设置副本调度策略，我们可以通过 <code>.spec.placement.replicaScheduling</code> 字段来设置副本调度策略，该字段表示将规范中具有副本的资源传播到成员集群时处理副本数量的调度策略。Karmada 一共提供了两种副本调度类型，用于确定 Karmada 传播资源时如何调度副本：</p>
+<ul>
+<li><code>Duplicated</code>：从资源中将相同的副本复制到每个候选成员集群。</li>
+<li><code>Divided</code>：根据有效候选成员集群的数量将副本划分为若干部分，每个集群的确切副本由 <code>ReplicaDivisionPreference</code> 确定。</li>
+</ul>
+<p><code>ReplicaDivisionPreference</code> 用于描述当 <code>ReplicaSchedulingType</code> 为 <code>Divided</code> 时副本如何被划分，也提供了两种副本划分方式：</p>
+<ul>
+<li><code>Aggregated</code>：将副本尽可能少地划分到集群，同时在划分过程中尊重集群的资源可用性。</li>
+<li><code>Weighted</code>：根据 <code>WeightPreference</code> 按权重划分副本，一共有两种方式。<code>StaticWeightList</code> 根据权重静态分配副本到目标集群，可以通过 <code>ClusterAffinity</code> 选择目标集群。<code>DynamicWeight</code> 指定生成动态权重列表的因子，如果指定，<code>StaticWeightList</code> 将被忽略。</li>
+</ul>
+<p>上面我们创建的 Nginx 的 <code>PropagationPolicy</code> 对象中，我们指定了 <code>ReplicaDivisionPreference</code> 为 <code>Weighted</code>，<code>ReplicaSchedulingType</code> 为 <code>Divided</code>，<code>weightPreference</code> 为 <code>1</code>，表示两个集群的权重相同，这意味着副本将均匀地传播到 member1 和 member2。</p>
+<p>我们这里直接应用传播策略资源对象即可：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> kubectl apply -f samples/nginx/propagationpolicy.yaml --kubeconfig /etc/karmada/karmada-apiserver.config</span><br><span class="line">propagationpolicy.policy.karmada.io/nginx-propagation created</span><br><span class="line">$ <span class="built_in">sudo</span> kubectl get propagationpolicy --kubeconfig /etc/karmada/karmada-apiserver.config</span><br><span class="line">NAME                AGE</span><br><span class="line">nginx-propagation   31s</span><br></pre></td></tr></table></figure>
+
+<p>当创建 <code>PropagationPolicy</code> 对象后，Karmada 控制平面 watch 到过后就会自动将资源对象分发到成员集群中，我们可以查看 Deployment 对象的状态：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> kubectl describe deploy nginx --kubeconfig /etc/karmada/karmada-apiserver.config</span><br><span class="line"><span class="comment"># ......</span></span><br><span class="line">Events:</span><br><span class="line">  Type    Reason                  Age                    From                                Message</span><br><span class="line">  ----    ------                  ----                   ----                                -------</span><br><span class="line">  Normal  ApplyPolicySucceed      2m17s (x2 over 2m17s)  resource-detector                   Apply policy(default/nginx-propagation) succeed</span><br><span class="line">  Normal  SyncWorkSucceed         2m17s (x3 over 2m17s)  binding-controller                  Sync work of resourceBinding(default/nginx-deployment) successful.</span><br><span class="line">  Normal  ScheduleBindingSucceed  2m17s                  default-scheduler                   Binding has been scheduled successfully.</span><br><span class="line">  Normal  SyncSucceed             2m17s                  execution-controller                Successfully applied resource(default/nginx) to cluster member2</span><br><span class="line">  Normal  SyncSucceed             2m17s                  execution-controller                Successfully applied resource(default/nginx) to cluster member1</span><br><span class="line">  Normal  AggregateStatusSucceed  2m2s (x9 over 2m17s)   resource-binding-status-controller  Update resourceBinding(default/nginx-deployment) with AggregatedStatus successfully.</span><br></pre></td></tr></table></figure>
+
+<p>可以看到 Deployment 对象已经成功分发到了 member1 和 member2 集群中，我们也可以查看 member1 和 member2 集群中的 Pod 对象来进行验证：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl get pods --kubeconfig ~/.kube/member1.config</span><br><span class="line">NAME                     READY   STATUS    RESTARTS   AGE</span><br><span class="line">nginx-77b4fdf86c-54qhc   1/1     Running   0          2m59s</span><br><span class="line">$ kubectl get pods --kubeconfig ~/.kube/member2.config</span><br><span class="line">NAME                     READY   STATUS    RESTARTS   AGE</span><br><span class="line">nginx-77b4fdf86c-9x98b   1/1     Running   0          3m24s</span><br></pre></td></tr></table></figure>
+
+<p>和我们声明的副本调度策略一样，两个 Pod 对象均匀地分布在 member1 和 member2 集群中。</p>
+<h2 id="分发-CRD"><a href="#分发-CRD" class="headerlink" title="分发 CRD"></a>分发 CRD</h2><p>除了内置的资源对象之外，Karmada 还支持分发自定义资源对象（CRD）。这里我们以 Karmada 仓库中的 <code>guestbook</code> 为例进行说明。</p>
+<p>首先进入 Karmada 仓库的 guestbook 目录下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">➜  <span class="built_in">cd</span> samples/guestbook</span><br><span class="line">➜  guestbook git:(master) ll</span><br><span class="line">total 48</span><br><span class="line">-rw-r--r--  1 cnych  staff   1.8K May 16 11:26 README.md</span><br><span class="line">-rw-r--r--  1 cnych  staff   135B May 16 11:26 guestbook.yaml</span><br><span class="line">-rw-r--r--  1 cnych  staff   353B May 16 11:26 guestbooks-clusterpropagationpolicy.yaml</span><br><span class="line">-rw-r--r--  1 cnych  staff   2.7K May 16 11:26 guestbooks-crd.yaml</span><br><span class="line">-rw-r--r--  1 cnych  staff   455B May 16 11:26 guestbooks-overridepolicy.yaml</span><br><span class="line">-rw-r--r--  1 cnych  staff   255B May 16 11:26 guestbooks-propagationpolicy.yaml</span><br></pre></td></tr></table></figure>
+
+<p>然后在 Karmada 的控制平面上创建 Guestbook CRD：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> kubectl apply -f guestbooks-crd.yaml --kubeconfig /etc/karmada/karmada-apiserver.config</span><br></pre></td></tr></table></figure>
+
+<p>该 CRD 应该被应用到 <code>karmada-apiserver</code>。</p>
+<p>然后我们可以创建一个 <code>ClusterPropagationPolicy</code> 对象，将 Guestbook CRD 分发到 member1，如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># guestbooks-clusterpropagationpolicy.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">policy.karmada.io/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ClusterPropagationPolicy</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">example-policy</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">resourceSelectors:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">apiVersion:</span> <span class="string">apiextensions.k8s.io/v1</span></span><br><span class="line">      <span class="attr">kind:</span> <span class="string">CustomResourceDefinition</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">guestbooks.webapp.my.domain</span></span><br><span class="line">  <span class="attr">placement:</span></span><br><span class="line">    <span class="attr">clusterAffinity:</span></span><br><span class="line">      <span class="attr">clusterNames:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">member1</span></span><br></pre></td></tr></table></figure>
+
+<p>需要注意的是 <code>CustomResourceDefinition</code> 是全局资源，所以我们使用 <code>ClusterPropagationPolicy</code> 对象来分发，该对象的配置和 <code>PropagationPolicy</code> 对象类似，注意 <code>resourceSelectors</code> 字段中的 <code>apiVersion</code> 和 <code>kind</code> 需要设置为 <code>apiextensions.k8s.io/v1</code> 和 <code>CustomResourceDefinition</code>，<code>name</code> 字段需要设置为 Guestbook CRD 的名称。</p>
+<p>然后我们直接创建 <code>ClusterPropagationPolicy</code> 对象即可：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> kubectl apply -f guestbooks-clusterpropagationpolicy.yaml --kubeconfig /etc/karmada/karmada-apiserver.config</span><br></pre></td></tr></table></figure>
+
+<p>应用后正常就会将 Guestbook CRD 对象分发到 member1 集群中。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> kubectl karmada get crd --kubeconfig /etc/karmada/karmada-apiserver.config</span><br><span class="line">NAME                          CLUSTER   CREATED AT             ADOPTION</span><br><span class="line">guestbooks.webapp.my.domain   member1   2024-05-18T11:56:10Z   Y</span><br><span class="line">$ kubectl get crd --kubeconfig ~/.kube/member1.config</span><br><span class="line">NAME                          CREATED AT</span><br><span class="line">guestbooks.webapp.my.domain   2024-05-18T11:56:10Z</span><br><span class="line">$ kubectl get crd --kubeconfig ~/.kube/member2.config</span><br><span class="line">No resources found</span><br></pre></td></tr></table></figure>
+
+<p>接下来我们就可以部署分发 Guestbook CRD 对象了，我们可以创建一个 Guestbook CR 对象：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># guestbook.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">webapp.my.domain/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Guestbook</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">guestbook-sample</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">size:</span> <span class="number">2</span></span><br><span class="line">  <span class="attr">configMapName:</span> <span class="string">test</span></span><br><span class="line">  <span class="attr">alias:</span> <span class="string">Name</span></span><br></pre></td></tr></table></figure>
+
+<p>同样在 Karmada 控制平面上应用该 Guestbook CR 对象即可：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> kubectl apply -f guestbook.yaml --kubeconfig /etc/karmada/karmada-apiserver.config</span><br></pre></td></tr></table></figure>
+
+<p>然后就可以创建 <code>PropagationPolicy</code> 对象，将 <code>guestbook-sample</code> 分发到 member1 集群：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># guestbooks-propagationpolicy.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">policy.karmada.io/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PropagationPolicy</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">example-policy</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">resourceSelectors:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">apiVersion:</span> <span class="string">webapp.my.domain/v1</span></span><br><span class="line">      <span class="attr">kind:</span> <span class="string">Guestbook</span></span><br><span class="line">  <span class="attr">placement:</span></span><br><span class="line">    <span class="attr">clusterAffinity:</span></span><br><span class="line">      <span class="attr">clusterNames:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">member1</span></span><br></pre></td></tr></table></figure>
+
+<p>上面的 <code>PropagationPolicy</code> 对象和我们之前创建的类似，只是这里的 <code>resourceSelectors</code> 字段中的 <code>apiVersion</code> 和 <code>kind</code> 需要设置为 <code>webapp.my.domain/v1</code> 和 <code>Guestbook</code>（我们自己的 CRD）。同样直接应用该 <code>PropagationPolicy</code> 对象即可：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> kubectl apply -f guestbooks-propagationpolicy.yaml --kubeconfig /etc/karmada/karmada-apiserver.config</span><br></pre></td></tr></table></figure>
+
+<p>应用后就可以将 <code>guestbook-sample</code> 这个 Guestbook CR 对象分发到 member1 集群中了。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl get guestbook --kubeconfig ~/.kube/member1.config</span><br><span class="line">NAME               AGE</span><br><span class="line">guestbook-sample   39s</span><br></pre></td></tr></table></figure>
+
+<p>可以看到 CRD 的分发和普通资源对象的分发原理是一样的，只是需要先将 CRD 对象分发到成员集群中。</p>
+<p>有的时候我们可能需要对分发的资源到不同集群进行一些覆盖操作，这个时候我们就可以使用 <code>OverridePolicy</code> 和 <code>ClusterOverridePolicy</code> 对象，用于声明资源传播到不同集群时的覆盖规则。</p>
+<p>比如我们创建一个 <code>OverridePolicy</code> 对象，用于覆盖 member1 中 <code>guestbook-sample</code> 的 size 字段，如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">policy.karmada.io/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">OverridePolicy</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">guestbook-sample</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">resourceSelectors:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">apiVersion:</span> <span class="string">webapp.my.domain/v1</span></span><br><span class="line">      <span class="attr">kind:</span> <span class="string">Guestbook</span></span><br><span class="line">  <span class="attr">overrideRules:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">targetCluster:</span></span><br><span class="line">        <span class="attr">clusterNames:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="string">member1</span></span><br><span class="line">      <span class="attr">overriders:</span></span><br><span class="line">        <span class="attr">plaintext:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="attr">path:</span> <span class="string">/spec/size</span></span><br><span class="line">            <span class="attr">operator:</span> <span class="string">replace</span></span><br><span class="line">            <span class="attr">value:</span> <span class="number">4</span></span><br><span class="line">          <span class="bullet">-</span> <span class="attr">path:</span> <span class="string">/metadata/annotations</span></span><br><span class="line">            <span class="attr">operator:</span> <span class="string">add</span></span><br><span class="line">            <span class="attr">value:</span> &#123; <span class="attr">&quot;OverridePolicy&quot;:</span> <span class="string">&quot;test&quot;</span> &#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面的对象中通过 <code>resourceSelectors</code> 字段指定了要覆盖的资源对象，然后通过 <code>overrideRules</code> 字段指定了覆盖规则，<code>targetCluster</code> 字段指定了目标集群，<code>overriders</code> 字段指定了覆盖规则，这里我们将 <code>guestbook-sample</code> 的 size 字段覆盖为 4，同时添加了一个 <code>OverridePolicy: test</code> 的注解。</p>
+<p>我们直接应用该 <code>OverridePolicy</code> 对象即可：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> kubectl apply -f guestbooks-overridepolicy.yaml --kubeconfig /etc/karmada/karmada-apiserver.config</span><br></pre></td></tr></table></figure>
+
+<p>创建完成后可以查看 member1 集群中的 <code>guestbook-sample</code> 对象来进行验证：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl get guestbook guestbook-sample --kubeconfig ~/.kube/member1.config -oyaml</span><br><span class="line">apiVersion: webapp.my.domain/v1</span><br><span class="line">kind: Guestbook</span><br><span class="line">metadata:</span><br><span class="line">  annotations:</span><br><span class="line">    OverridePolicy: <span class="built_in">test</span></span><br><span class="line"><span class="comment"># ......</span></span><br><span class="line">  name: guestbook-sample</span><br><span class="line">  namespace: default</span><br><span class="line">  resourceVersion: <span class="string">&quot;82669&quot;</span></span><br><span class="line">  uid: 5893b85d-3946-44a0-b210-d67bd021cb65</span><br><span class="line">spec:</span><br><span class="line">  <span class="built_in">alias</span>: Name</span><br><span class="line">  configMapName: <span class="built_in">test</span></span><br><span class="line">  size: 4</span><br></pre></td></tr></table></figure>
+
+<p>可以看到 <code>guestbook-sample</code> 对象的 <code>size</code> 字段已经被覆盖为 4，同时添加了一个 <code>OverridePolicy: test</code> 的注解，证明覆盖操作成功。</p>
+<p>Karmada 提供了多种声明覆盖规则的方案：</p>
+<ul>
+<li><code>ImageOverrider</code>：覆盖工作负载的镜像。</li>
+<li><code>CommandOverrider</code>：覆盖工作负载的命令。</li>
+<li><code>ArgsOverrider</code>：覆盖工作负载的参数。</li>
+<li><code>LabelsOverrider</code>：覆盖工作负载的标签。</li>
+<li><code>AnnotationsOverrider</code>：覆盖工作负载的注释。</li>
+<li><code>PlaintextOverrider</code>：用于覆盖任何类型资源的通用工具。</li>
+</ul>
+<p><strong>PlaintextOverrider</strong></p>
+<p>上面我们使用的是 <code>PlaintextOverrider</code> 覆盖规则，可以覆盖任何类型资源的字段。<code>PlaintextOverrider</code> 可以根据路径、运算符和值覆盖目标字段，就像 <code>kubectl patch</code> 一样。允许的操作如下：</p>
+<ul>
+<li><code>add</code>：向资源追加一个或多个元素。</li>
+<li><code>remove</code>：从资源中删除一个或多个元素。</li>
+<li><code>replace</code>：替换资源中的一个或多个元素。</li>
+</ul>
+<p><strong>ImageOverrider</strong></p>
+<p><code>ImageOverrider</code> 用于覆盖工作负载的镜像，用于覆盖格式为 <code>[registry/]repository[:tag|@digest]</code>（例如 <code>/spec/template/spec/containers/0/image</code> ）的镜像。允许的操作如下：</p>
+<ul>
+<li><code>add</code>：将注册表、存储库或 tag&#x2F;digest 附加到容器中的镜像。</li>
+<li><code>remove</code>：从容器中的镜像中删除注册表、存储库或 tag&#x2F;digest。</li>
+<li><code>replace</code>：替换容器中镜像的注册表、存储库或 tag&#x2F;digest。</li>
+</ul>
+<p>比如我们需要创建一个如下所示的 Deployment 对象：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">myapp</span></span><br><span class="line">  <span class="comment">#...</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">image:</span> <span class="string">myapp:1.0.0</span></span><br><span class="line">          <span class="attr">name:</span> <span class="string">myapp</span></span><br></pre></td></tr></table></figure>
+
+<p>当工作负载传播到特定集群时添加注册表，可以使用如下所示的 <code>OverridePolicy</code> 对象：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">policy.karmada.io/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">OverridePolicy</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">example</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="comment">#...</span></span><br><span class="line">  <span class="attr">overrideRules:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">overriders:</span></span><br><span class="line">        <span class="attr">imageOverrider:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="attr">component:</span> <span class="string">Registry</span></span><br><span class="line">            <span class="attr">operator:</span> <span class="string">add</span></span><br><span class="line">            <span class="attr">value:</span> <span class="string">test-repo</span></span><br></pre></td></tr></table></figure>
+
+<p>上面的覆盖规则表示添加 <code>test-repo</code> 这个镜像仓库到 <code>myapp</code> 的镜像中，这样在传播到集群时就会变成 <code>test-repo/myapp:1.0.0</code>。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">containers:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">image:</span> <span class="string">test-repo/myapp:1.0.0</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">myapp</span></span><br></pre></td></tr></table></figure>
+
+<p><code>replace</code> 和 <code>remove</code> 操作也是类似的，只是分别用于替换和删除镜像中的某些字段。</p>
+<h2 id="跨集群弹性伸缩"><a href="#跨集群弹性伸缩" class="headerlink" title="跨集群弹性伸缩"></a>跨集群弹性伸缩</h2><p>在 Karmada 中，我们可以使用 <code>FederatedHPA</code> 来实现跨多个集群扩展&#x2F;缩小工作负载的副本，旨在根据需求自动调整工作负载的规模。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/lm8efw.png" alt="FederatedHPA"></p>
+<p>当负载增加时，如果 Pod 的数量低于配置的最大值，则 <code>FederatedHPA</code> 扩展工作负载（例如 Deployment、StatefulSet 或其他类似资源）的副本数。当负载减少时，如果 Pod 的数量高于配置的最小值，则 <code>FederatedHPA</code> 缩小工作负载的副本数。</p>
+<p><code>FederatedHPA</code> 是作为 Karmada API 资源和控制器实现的，该资源确定了控制器的行为。<code>FederatedHPA</code> 控制器运行在 Karmada 控制平面中，定期调整其目标（例如 Deployment）的所需规模，以匹配观察到的指标，例如平均 CPU 利用率、平均内存利用率或任何其他自定义指标。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/rdv8z5.png" alt="FederatedHPA实现原理"></p>
+<p>为了实现跨集群的自动扩缩容，Karmada 引入了 <code>FederatedHPA</code> 控制器和 <code>karmada-metrics-adapter</code>，它们的工作方式如下：</p>
+<ul>
+<li>HPA 控制器定期通过指标 API <code>metrics.k8s.io</code> 或 <code>custom.metrics.k8s.io</code> 使用标签选择器查询指标。</li>
+<li><code>karmada-apiserver</code> 获取指标 API 查询结果，然后通过 API 服务注册将其路由到 <code>karmada-metrics-adapter</code>。</li>
+<li><code>karmada-metrics-adapter</code> 将从目标集群（Pod 所在的集群）查询指标。收集到指标后，它会对这些指标进行聚合并返回结果。</li>
+<li>HPA 控制器将根据指标计算所需的副本数，并直接扩展&#x2F;缩小工作负载的规模。然后，<code>karmada-scheduler</code> 将这些副本调度到成员集群中。</li>
+</ul>
+<blockquote>
+<p>注意：要使用此功能，Karmada 版本必须为 v1.6.0 或更高版本。</p>
+</blockquote>
+<p>下面我们就来演示如何使用 <code>FederatedHPA</code> 控制器来实现跨集群的自动扩缩容。首先至少需要两个成员集群，我们需要在成员集群中安装 <code>ServiceExport</code> 和 <code>ServiceImport</code> 来启用多集群服务。在 Karmada 控制平面上安装 <code>ServiceExport</code> 和 <code>ServiceImport</code> 后（init 安装后会自动安装），我  们可以创建 <code>ClusterPropagationPolicy</code> 将这两个 CRD 传播到成员集群。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># propagate-service-export-import.yaml</span></span><br><span class="line"><span class="comment"># propagate ServiceExport CRD</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">policy.karmada.io/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ClusterPropagationPolicy</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">serviceexport-policy</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">resourceSelectors:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">apiVersion:</span> <span class="string">apiextensions.k8s.io/v1</span></span><br><span class="line">      <span class="attr">kind:</span> <span class="string">CustomResourceDefinition</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">serviceexports.multicluster.x-k8s.io</span></span><br><span class="line">  <span class="attr">placement:</span></span><br><span class="line">    <span class="attr">clusterAffinity:</span></span><br><span class="line">      <span class="attr">clusterNames:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">member1</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">member2</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="comment"># propagate ServiceImport CRD</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">policy.karmada.io/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ClusterPropagationPolicy</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">serviceimport-policy</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">resourceSelectors:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">apiVersion:</span> <span class="string">apiextensions.k8s.io/v1</span></span><br><span class="line">      <span class="attr">kind:</span> <span class="string">CustomResourceDefinition</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">serviceimports.multicluster.x-k8s.io</span></span><br><span class="line">  <span class="attr">placement:</span></span><br><span class="line">    <span class="attr">clusterAffinity:</span></span><br><span class="line">      <span class="attr">clusterNames:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">member1</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">member2</span></span><br></pre></td></tr></table></figure>
+
+<p>直接应用该 <code>ClusterPropagationPolicy</code> 对象即可：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> kubectl apply -f propagate-service-export-import.yaml --kubeconfig /etc/karmada/karmada-apiserver.config</span><br></pre></td></tr></table></figure>
+
+<p>应用后就可以在 member1 和 member2 集群中创建 <code>ServiceExport</code> 和 <code>ServiceImport</code> 对象了。</p>
+<p>另外我们还需要为成员集群安装 <code>metrics-server</code> 来提供 metrics API，通过运行以下命令来安装：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">hack/deploy-k8s-metrics-server.sh <span class="variable">$HOME</span>/.kube/member1.config member1</span><br><span class="line">hack/deploy-k8s-metrics-server.sh <span class="variable">$HOME</span>/.kube/member2.config member2</span><br></pre></td></tr></table></figure>
+
+<p>最后我们还需要在 Karmada 控制平面中安装 <code>karmada-metrics-adapter</code> 以提供指标 API，通过运行以下命令来安装它：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> hack/deploy-metrics-adapter.sh ~/.kube/host.config host /etc/karmada/karmada-apiserver.config karmada-apiserver</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>需要注意使用 <code>karmada init</code> 安装的 Karmada 控制平面，需要将 <code>karmada-cert</code> 这个 Secret 对象重新拷贝创建一个名为 <code>karmada-cert-secret</code> 的 Secret 对象。</p>
+</blockquote>
+<p>部署后在 Karmada 控制平面中就会有 <code>karmada-metrics-adapter</code> 这个 Pod 对象。</p>
+<p>接下来我们在 member1 和 member2 中部署 Deployment（1 个副本）和 Service 对象，如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># nginx.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nginx</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">nginx</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">1</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">nginx</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">nginx</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">image:</span> <span class="string">nginx</span></span><br><span class="line">          <span class="attr">name:</span> <span class="string">nginx</span></span><br><span class="line">          <span class="attr">resources:</span></span><br><span class="line">            <span class="attr">requests:</span></span><br><span class="line">              <span class="attr">cpu:</span> <span class="string">25m</span></span><br><span class="line">              <span class="attr">memory:</span> <span class="string">64Mi</span></span><br><span class="line">            <span class="attr">limits:</span></span><br><span class="line">              <span class="attr">cpu:</span> <span class="string">25m</span></span><br><span class="line">              <span class="attr">memory:</span> <span class="string">64Mi</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nginx-service</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">port:</span> <span class="number">80</span></span><br><span class="line">      <span class="attr">targetPort:</span> <span class="number">80</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">nginx</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">policy.karmada.io/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PropagationPolicy</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nginx-propagation</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">resourceSelectors:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line">      <span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">nginx</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line">      <span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">nginx-service</span></span><br><span class="line">  <span class="attr">placement:</span></span><br><span class="line">    <span class="attr">clusterAffinity:</span></span><br><span class="line">      <span class="attr">clusterNames:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">member1</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">member2</span></span><br><span class="line">    <span class="attr">replicaScheduling:</span></span><br><span class="line">      <span class="attr">replicaDivisionPreference:</span> <span class="string">Weighted</span></span><br><span class="line">      <span class="attr">replicaSchedulingType:</span> <span class="string">Divided</span></span><br><span class="line">      <span class="attr">weightPreference:</span></span><br><span class="line">        <span class="attr">staticWeightList:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="attr">targetCluster:</span></span><br><span class="line">              <span class="attr">clusterNames:</span></span><br><span class="line">                <span class="bullet">-</span> <span class="string">member1</span></span><br><span class="line">            <span class="attr">weight:</span> <span class="number">1</span></span><br><span class="line">          <span class="bullet">-</span> <span class="attr">targetCluster:</span></span><br><span class="line">              <span class="attr">clusterNames:</span></span><br><span class="line">                <span class="bullet">-</span> <span class="string">member2</span></span><br><span class="line">            <span class="attr">weight:</span> <span class="number">1</span></span><br></pre></td></tr></table></figure>
+
+<p>直接应用上面的资源对象即可：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> kubectl apply -f nginx.yaml --kubeconfig /etc/karmada/karmada-apiserver.config</span><br><span class="line">deployment.apps/nginx configured</span><br><span class="line">service/nginx-service created</span><br><span class="line">propagationpolicy.policy.karmada.io/nginx-propagation configured</span><br><span class="line">$ <span class="built_in">sudo</span> kubectl karmada get pods --kubeconfig /etc/karmada/karmada-apiserver.config</span><br><span class="line">NAME                     CLUSTER   READY   STATUS    RESTARTS   AGE</span><br><span class="line">nginx-5c54b4855f-ztmnk   member1   1/1     Running   0          43s</span><br><span class="line">$ <span class="built_in">sudo</span> kubectl karmada get svc --kubeconfig /etc/karmada/karmada-apiserver.config</span><br><span class="line">NAME            CLUSTER   TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)   AGE     ADOPTION</span><br><span class="line">nginx-service   member2   ClusterIP   100.171.35.78    &lt;none&gt;        80/TCP    52s     Y</span><br><span class="line">nginx-service   member1   ClusterIP   100.91.124.245   &lt;none&gt;        80/TCP    52s     Y</span><br></pre></td></tr></table></figure>
+
+<p>然后让我们在 Karmada 控制平面中部署一个 <code>FederatedHPA</code> 对象，用来自动扩缩容，如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># nginx-federatedhpa.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">autoscaling.karmada.io/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">FederatedHPA</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nginx</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">scaleTargetRef:</span></span><br><span class="line">    <span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line">    <span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">nginx</span></span><br><span class="line">  <span class="attr">minReplicas:</span> <span class="number">1</span></span><br><span class="line">  <span class="attr">maxReplicas:</span> <span class="number">10</span></span><br><span class="line">  <span class="attr">behavior:</span></span><br><span class="line">    <span class="attr">scaleDown:</span></span><br><span class="line">      <span class="attr">stabilizationWindowSeconds:</span> <span class="number">10</span></span><br><span class="line">    <span class="attr">scaleUp:</span></span><br><span class="line">      <span class="attr">stabilizationWindowSeconds:</span> <span class="number">10</span></span><br><span class="line">  <span class="attr">metrics:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">type:</span> <span class="string">Resource</span></span><br><span class="line">      <span class="attr">resource:</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">cpu</span></span><br><span class="line">        <span class="attr">target:</span></span><br><span class="line">          <span class="attr">type:</span> <span class="string">Utilization</span></span><br><span class="line">          <span class="attr">averageUtilization:</span> <span class="number">10</span></span><br></pre></td></tr></table></figure>
+
+<p>上面的 <code>FederatedHPA</code> 对象中，我们指定了 <code>scaleTargetRef</code> 字段为 <code>Deployment</code> 对象 <code>nginx</code>，<code>minReplicas</code> 和 <code>maxReplicas</code> 分别为 1 和 10，<code>metrics</code> 字段中指定了 CPU 利用率为 10% 时进行扩缩容。同样直接应用该 <code>FederatedHPA</code> 对象即可：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> kubectl apply -f nginx-federatedhpa.yaml --kubeconfig /etc/karmada/karmada-apiserver.config</span><br><span class="line">$ <span class="built_in">sudo</span> kubectl get fhpa --kubeconfig /etc/karmada/karmada-apiserver.config</span><br><span class="line">NAME    REFERENCE-KIND   REFERENCE-NAME   MINPODS   MAXPODS   REPLICAS   AGE</span><br><span class="line">nginx   Deployment       nginx            1         10        1          19s</span><br></pre></td></tr></table></figure>
+
+<p>我们还需要一个多集群服务将请求路由到 member1 和 member2 集群中的 pod。首先在 Karmada 控制平面上创建 <code>ServiceExport</code> 对象，然后创建 <code>PropagationPolicy</code> 以将 <code>ServiceExport</code> 对象传播到 member1 和 member2 集群。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># nginx-serviceexport.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">multicluster.x-k8s.io/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ServiceExport</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nginx-service</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">policy.karmada.io/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PropagationPolicy</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">serve-export-policy</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">resourceSelectors:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">apiVersion:</span> <span class="string">multicluster.x-k8s.io/v1alpha1</span></span><br><span class="line">      <span class="attr">kind:</span> <span class="string">ServiceExport</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">nginx-service</span></span><br><span class="line">  <span class="attr">placement:</span></span><br><span class="line">    <span class="attr">clusterAffinity:</span></span><br><span class="line">      <span class="attr">clusterNames:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">member1</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">member2</span></span><br></pre></td></tr></table></figure>
+
+<p>然后在 Karmada 控制平面上创建 <code>ServiceImport</code> 对象，然后创建 <code>PropagationPolicy</code> 以将 <code>ServiceImport</code> 对象传播到 member1 集群。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># nginx-serviceimport.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">multicluster.x-k8s.io/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ServiceImport</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nginx-service</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">ClusterSetIP</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">port:</span> <span class="number">80</span></span><br><span class="line">      <span class="attr">protocol:</span> <span class="string">TCP</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">policy.karmada.io/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PropagationPolicy</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">serve-import-policy</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">resourceSelectors:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">apiVersion:</span> <span class="string">multicluster.x-k8s.io/v1alpha1</span></span><br><span class="line">      <span class="attr">kind:</span> <span class="string">ServiceImport</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">nginx-service</span></span><br><span class="line">  <span class="attr">placement:</span></span><br><span class="line">    <span class="attr">clusterAffinity:</span></span><br><span class="line">      <span class="attr">clusterNames:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">member1</span></span><br></pre></td></tr></table></figure>
+
+<p>直接应用上面的资源对象即可：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> kubectl apply -f nginx-serviceexport.yaml --kubeconfig /etc/karmada/karmada-apiserver.config</span><br><span class="line">$ <span class="built_in">sudo</span> kubectl apply -f nginx-serviceimport.yaml --kubeconfig /etc/karmada/karmada-apiserver.config</span><br></pre></td></tr></table></figure>
+
+<p>部署完成后，可以查看多集群服务：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> kubectl karmada get svc --kubeconfig /etc/karmada/karmada-apiserver.config</span><br><span class="line">NAME                    CLUSTER   TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)   AGE     ADOPTION</span><br><span class="line">nginx-service           member2   ClusterIP   100.171.35.78    &lt;none&gt;        80/TCP    6m36s   Y</span><br><span class="line">derived-nginx-service   member1   ClusterIP   100.91.3.68      &lt;none&gt;        80/TCP    17s     Y</span><br><span class="line">nginx-service           member1   ClusterIP   100.91.124.245   &lt;none&gt;        80/TCP    6m36s   Y</span><br></pre></td></tr></table></figure>
+
+<p>接下来我们在 member1 集群使用 <code>hey</code> 工具来进行 http 负载测试，模拟请求增加，从而触发 Pod 的 CPU 使用率增加：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ wget https://hey-release.s3.us-east-2.amazonaws.com/hey_linux_amd64</span><br><span class="line">$ <span class="built_in">chmod</span> +x hey_linux_amd64</span><br><span class="line">$ docker <span class="built_in">cp</span> hey_linux_amd64 member1-control-plane:/usr/local/bin/hey</span><br></pre></td></tr></table></figure>
+
+<p>然后我们可以使用 <code>hey</code> 请求多集群服务以增加 nginx pod 的 CPU 使用率。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line">$ docker <span class="built_in">exec</span> member1-control-plane hey -c 1000 -z 1m http://100.91.3.68</span><br><span class="line"></span><br><span class="line">Summary:</span><br><span class="line">  Total:        61.4678 secs</span><br><span class="line">  Slowest:      4.7916 secs</span><br><span class="line">  Fastest:      0.0244 secs</span><br><span class="line">  Average:      0.9024 secs</span><br><span class="line">  Requests/sec: 1090.3758</span><br><span class="line"></span><br><span class="line">  Total data:   41219145 bytes</span><br><span class="line">  Size/request: 615 bytes</span><br><span class="line"></span><br><span class="line">Response time histogram:</span><br><span class="line">  0.024 [1]     |</span><br><span class="line">  0.501 [23047] |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■</span><br><span class="line">  0.978 [23117] |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■</span><br><span class="line">  1.455 [8696]  |■■■■■■■■■■■■■■■</span><br><span class="line">  1.931 [5681]  |■■■■■■■■■■</span><br><span class="line">  2.408 [3352]  |■■■■■■</span><br><span class="line">  2.885 [1534]  |■■■</span><br><span class="line">  3.361 [832]   |■</span><br><span class="line">  3.838 [375]   |■</span><br><span class="line">  4.315 [318]   |■</span><br><span class="line">  4.792 [70]    |</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Latency distribution:</span><br><span class="line">  10% <span class="keyword">in</span> 0.2733 secs</span><br><span class="line">  25% <span class="keyword">in</span> 0.4264 secs</span><br><span class="line">  50% <span class="keyword">in</span> 0.6478 secs</span><br><span class="line">  75% <span class="keyword">in</span> 1.1603 secs</span><br><span class="line">  90% <span class="keyword">in</span> 1.9114 secs</span><br><span class="line">  95% <span class="keyword">in</span> 2.3694 secs</span><br><span class="line">  99% <span class="keyword">in</span> 3.4382 secs</span><br><span class="line"></span><br><span class="line">Details (average, fastest, slowest):</span><br><span class="line">  DNS+dialup:   0.0019 secs, 0.0244 secs, 4.7916 secs</span><br><span class="line">  DNS-lookup:   0.0000 secs, 0.0000 secs, 0.0000 secs</span><br><span class="line">  req write:    0.0006 secs, 0.0000 secs, 0.1423 secs</span><br><span class="line">  resp <span class="built_in">wait</span>:    0.7861 secs, 0.0002 secs, 4.6641 secs</span><br><span class="line">  resp <span class="built_in">read</span>:    0.0553 secs, 0.0000 secs, 1.3870 secs</span><br><span class="line"></span><br><span class="line">Status code distribution:</span><br><span class="line">  [200] 67023 responses</span><br></pre></td></tr></table></figure>
+
+<p>等一会儿，副本就会开始扩容了，我们可以查看 <code>FederatedHPA</code> 对象的状态来了解副本的变化：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> kubectl describe fhpa nginx --kubeconfig /etc/karmada/karmada-apiserver.config</span><br><span class="line">Name:         nginx</span><br><span class="line">Namespace:    default</span><br><span class="line">Labels:       &lt;none&gt;</span><br><span class="line">Annotations:  &lt;none&gt;</span><br><span class="line">API Version:  autoscaling.karmada.io/v1alpha1</span><br><span class="line">Kind:         FederatedHPA</span><br><span class="line"><span class="comment"># ...</span></span><br><span class="line">Spec:</span><br><span class="line">  Behavior:</span><br><span class="line">    Scale Down:</span><br><span class="line">      Policies:</span><br><span class="line">        Period Seconds:              15</span><br><span class="line">        Type:                        Percent</span><br><span class="line">        Value:                       100</span><br><span class="line">      Select Policy:                 Max</span><br><span class="line">      Stabilization Window Seconds:  10</span><br><span class="line">    Scale Up:</span><br><span class="line">      Policies:</span><br><span class="line">        Period Seconds:              15</span><br><span class="line">        Type:                        Pods</span><br><span class="line">        Value:                       4</span><br><span class="line">        Period Seconds:              15</span><br><span class="line">        Type:                        Percent</span><br><span class="line">        Value:                       100</span><br><span class="line">      Select Policy:                 Max</span><br><span class="line">      Stabilization Window Seconds:  10</span><br><span class="line">  Max Replicas:                      10</span><br><span class="line">  Metrics:</span><br><span class="line">    Resource:</span><br><span class="line">      Name:  cpu</span><br><span class="line">      Target:</span><br><span class="line">        Average Utilization:  10</span><br><span class="line">        Type:                 Utilization</span><br><span class="line">    Type:                     Resource</span><br><span class="line">  Min Replicas:               1</span><br><span class="line">  Scale Target Ref:</span><br><span class="line">    API Version:  apps/v1</span><br><span class="line">    Kind:         Deployment</span><br><span class="line">    Name:         nginx</span><br><span class="line">Status:</span><br><span class="line">  Conditions:</span><br><span class="line">    Last Transition Time:  2024-05-19T01:43:16Z</span><br><span class="line">    Message:               recommended size matches current size</span><br><span class="line">    Reason:                ReadyForNewScale</span><br><span class="line">    Status:                True</span><br><span class="line">    Type:                  AbleToScale</span><br><span class="line">    Last Transition Time:  2024-05-19T01:43:16Z</span><br><span class="line">    Message:               the HPA was able to successfully calculate a replica count from cpu resource utilization (percentage of request)</span><br><span class="line">    Reason:                ValidMetricFound</span><br><span class="line">    Status:                True</span><br><span class="line">    Type:                  ScalingActive</span><br><span class="line">    Last Transition Time:  2024-05-19T01:45:16Z</span><br><span class="line">    Message:               the desired replica count is less than the minimum replica count</span><br><span class="line">    Reason:                TooFewReplicas</span><br><span class="line">    Status:                True</span><br><span class="line">    Type:                  ScalingLimited</span><br><span class="line">  Current Metrics:</span><br><span class="line">    Resource:</span><br><span class="line">      Current:</span><br><span class="line">        Average Utilization:  0</span><br><span class="line">        Average Value:        0</span><br><span class="line">      Name:                   cpu</span><br><span class="line">    Type:                     Resource</span><br><span class="line">  Current Replicas:           1</span><br><span class="line">  Desired Replicas:           1</span><br><span class="line">  Last Scale Time:            2024-05-19T01:45:16Z</span><br><span class="line">Events:</span><br><span class="line">  Type    Reason             Age   From                     Message</span><br><span class="line">  ----    ------             ----  ----                     -------</span><br><span class="line">  Normal  SuccessfulRescale  2m7s  federatedHPA-controller  New size: 5; reason: cpu resource utilization (percentage of request) above target</span><br><span class="line">  Normal  SuccessfulRescale  112s  federatedHPA-controller  New size: 10; reason: cpu resource utilization (percentage of request) above target</span><br><span class="line">  Normal  SuccessfulRescale  67s   federatedHPA-controller  New size: 3; reason: All metrics below target</span><br><span class="line">  Normal  SuccessfulRescale  52s   federatedHPA-controller  New size: 1; reason: All metrics below target</span><br></pre></td></tr></table></figure>
+
+<p>同时可以查看 member1 和 member2 集群中的 Pod 对象：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> kubectl karmada get pods --kubeconfig /etc/karmada/karmada-apiserver.config</span><br><span class="line">NAME                     CLUSTER   READY   STATUS    RESTARTS   AGE</span><br><span class="line">nginx-5c54b4855f-4p6wq   member1   1/1     Running   0          40s</span><br><span class="line">nginx-5c54b4855f-kdwpc   member1   1/1     Running   0          2m6s</span><br><span class="line">nginx-5c54b4855f-l4vm4   member1   1/1     Running   0          40s</span><br><span class="line">nginx-5c54b4855f-t4ghv   member1   1/1     Running   0          25s</span><br><span class="line">nginx-5c54b4855f-vbj9c   member1   1/1     Running   0          25s</span><br><span class="line">nginx-5c54b4855f-hx2xn   member2   1/1     Running   0          25s</span><br><span class="line">nginx-5c54b4855f-kfnbh   member2   1/1     Running   0          40s</span><br><span class="line">nginx-5c54b4855f-rmbv9   member2   1/1     Running   0          40s</span><br><span class="line">nginx-5c54b4855f-wfd92   member2   1/1     Running   0          25s</span><br><span class="line">nginx-5c54b4855f-wwsvq   member2   1/1     Running   0          25s</span><br></pre></td></tr></table></figure>
+
+<p>可以看到 Pod 的副本数已经扩容到 10 个了。同样当负载测试结束后，Pod 的副本数会自动缩小为 1 个副本。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">sudo</span> kubectl karmada get pods --kubeconfig /etc/karmada/karmada-apiserver.config</span><br><span class="line">NAME                     CLUSTER   READY   STATUS    RESTARTS   AGE</span><br><span class="line">nginx-5c54b4855f-kdwpc   member1   1/1     Running   0          5m25s</span><br></pre></td></tr></table></figure>
+
+<p>到这里我们就完成了使用 <code>FederatedHPA</code> 进行跨集群的自动扩缩容，除此之外我们还可以使用 <code>CronFederatedHPA</code> 用于定期自动缩放操作，它可以缩放具有 scale 子资源的工作负载或 Karmada FederatedHPA。典型的场景是在可预见的流量高峰到来前提前扩容工作负载。例如，如果我知道每天早上 9 点会突发流量洪峰，我们就可以提前半个小时扩容相关服务，以处理高峰负载并确保服务持续可用性。在 Karmada 控制平面内运行的 <code>CronFederatedHPA</code> 控制器根据预定义的 cron 计划来伸缩工作负载的副本或 <code>FederatedHPA</code> 的最小&#x2F;最大副本数。</p>
+<p>比如我们有一个如下所示的 <code>CronFederatedHPA</code> 对象：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">autoscaling.karmada.io/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">CronFederatedHPA</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nginx-cronfhpa</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">default</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">scaleTargetRef:</span></span><br><span class="line">    <span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line">    <span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">nginx</span></span><br><span class="line">  <span class="attr">rules:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">&quot;scale-up&quot;</span></span><br><span class="line">      <span class="attr">schedule:</span> <span class="string">&quot;*/1 * * * *&quot;</span></span><br><span class="line">      <span class="attr">targetReplicas:</span> <span class="number">5</span></span><br><span class="line">      <span class="attr">suspend:</span> <span class="literal">false</span></span><br></pre></td></tr></table></figure>
+
+<p>其中表达式 <code>*/1 * * * *</code> 的意思是 nginx deployment 的副本应该每分钟更新为 5 个，确保了处理接下来的流量突发流量洪峰。</p>
+<p>除了这些使用场景之外，Karmada 还有很多实践场景，比如跨集群的灾备、多集群网络、多集群服务治理、多集群 CI&#x2F;CD 等等，这些场景都可以通过 Karmada 来实现，更多最佳实践方案可以参考 <a target="_blank" rel="noopener" href="https://karmada.io/zh/docs/">Karmada 官方文档</a>以了解更多。</p>
+<blockquote>
+<p>参考链接：<a target="_blank" rel="noopener" href="https://karmada.io/zh/docs/">https://karmada.io/zh/docs/</a></p>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Kubernetes%20Operator%20%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8%E6%95%99%E7%A8%8B/" rel="prev" title="Kubernetes Operator 快速入门教程">
+      <i class="fa fa-chevron-left"></i> Kubernetes Operator 快速入门教程
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Kafka%20%E7%9A%84%E9%AB%98%E6%80%A7%E8%83%BD/" rel="next" title="Kafka 的高性能">
+      Kafka 的高性能 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Kubernetes-%E5%A4%9A%E9%9B%86%E7%BE%A4%E7%AE%A1%E7%90%86%E7%B3%BB%E7%BB%9F-Karmada"><span class="nav-number">1.</span> <span class="nav-text">Kubernetes 多集群管理系统 Karmada</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%89%B9%E6%80%A7"><span class="nav-number">1.1.</span> <span class="nav-text">特性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Karmada-%E6%9E%B6%E6%9E%84"><span class="nav-number">1.2.</span> <span class="nav-text">Karmada 架构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85"><span class="nav-number">1.3.</span> <span class="nav-text">安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B5%84%E6%BA%90%E5%88%86%E5%8F%91"><span class="nav-number">1.4.</span> <span class="nav-text">资源分发</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E5%8F%91-CRD"><span class="nav-number">1.5.</span> <span class="nav-text">分发 CRD</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B7%A8%E9%9B%86%E7%BE%A4%E5%BC%B9%E6%80%A7%E4%BC%B8%E7%BC%A9"><span class="nav-number">1.6.</span> <span class="nav-text">跨集群弹性伸缩</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

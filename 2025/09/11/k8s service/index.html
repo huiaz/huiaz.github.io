@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Service 主要有以下几种类型：  ClusterIP (默认类型) NodePort LoadBalancer ExternalName  接下来，我将分别详细介绍每种类型及其应用场景。  1. ClusterIP (默认类型) 作用： 为 Service 在 Kubernetes 集群内部分配一个唯一的、虚拟的 IP 地址（ClusterIP）。这个 IP 地址只在集群内部可达。  访问方">
+<meta property="og:type" content="article">
+<meta property="og:title" content="k8s service">
+<meta property="og:url" content="http://example.com/2025/09/11/k8s%20service/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="Service 主要有以下几种类型：  ClusterIP (默认类型) NodePort LoadBalancer ExternalName  接下来，我将分别详细介绍每种类型及其应用场景。  1. ClusterIP (默认类型) 作用： 为 Service 在 Kubernetes 集群内部分配一个唯一的、虚拟的 IP 地址（ClusterIP）。这个 IP 地址只在集群内部可达。  访问方">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:44:01.942Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/k8s%20service/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>k8s service | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/k8s%20service/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          k8s service
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:44:01" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E9%9D%A2%E8%AF%95%E9%A2%98/" itemprop="url" rel="index"><span itemprop="name">面试题</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>5.2k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Service 主要有以下几种类型：</p>
+<ol>
+<li><strong>ClusterIP (默认类型)</strong></li>
+<li><strong>NodePort</strong></li>
+<li><strong>LoadBalancer</strong></li>
+<li><strong>ExternalName</strong></li>
+</ol>
+<p>接下来，我将分别详细介绍每种类型及其应用场景。</p>
+<hr>
+<h3 id="1-ClusterIP-默认类型"><a href="#1-ClusterIP-默认类型" class="headerlink" title="1. ClusterIP (默认类型)"></a>1. ClusterIP (默认类型)</h3><ul>
+<li><p><strong>作用：</strong> 为 Service 在 Kubernetes 集群内部分配一个<strong>唯一的、虚拟的 IP 地址</strong>（ClusterIP）。这个 IP 地址只在集群内部可达。</p>
+</li>
+<li><p><strong>访问方式：</strong> 集群<strong>内部</strong>的其他 Pod 或组件可以通过这个 ClusterIP 和端口来访问该 Service 后端的 Pod。</p>
+</li>
+<li><p><strong>特点：</strong></p>
+<ul>
+<li><strong>内部可见：</strong> 只能在集群内部访问，外部无法直接访问。</li>
+<li><strong>负载均衡：</strong> Pod 流量通过 kube-proxy 代理转发到后端的 Pod，并自动进行简单的轮询式负载均衡。</li>
+<li><strong>稳定性：</strong> 提供了稳定的 IP 地址和 DNS 名称， Pod 的 IP 变化不会影响 Service 的可访问性。</li>
+</ul>
+</li>
+<li><p><strong>使用场景：</strong></p>
+<ul>
+<li><strong>内部服务通信：</strong> 最常见的用于微服务之间互相调用的场景。例如，前端服务访问后端服务，或其他服务访问数据库服务等。</li>
+<li>集群内部调试。</li>
+</ul>
+</li>
+<li><p><strong>示例 YAML 片段:</strong></p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">my-app-service</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">my-app</span> <span class="comment"># 这个 Service 会关联所有带有 &#x27;app: my-app&#x27; 标签的 Pod</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">protocol:</span> <span class="string">TCP</span></span><br><span class="line">      <span class="attr">port:</span> <span class="number">80</span> <span class="comment"># Service 监听的端口</span></span><br><span class="line">      <span class="attr">targetPort:</span> <span class="number">8080</span> <span class="comment"># Pod 内部应用监听的端口</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">ClusterIP</span> <span class="comment"># 可以省略，因为是默认类型</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<hr>
+<h3 id="2-NodePort"><a href="#2-NodePort" class="headerlink" title="2. NodePort"></a>2. NodePort</h3><ul>
+<li><strong>作用：</strong> 在每个集群节点（Node）上开启一个<strong>静态端口</strong> (NodePort)，并将这个端口映射到 Service 的 ClusterIP 端口。这意味着，任何发送到 <code>&lt;NodeIP&gt;:&lt;NodePort&gt;</code> 的请求都会被转发到 Service。</li>
+<li><strong>访问方式：</strong> 集群<strong>内部和外部</strong>都可以通过任意节点的 IP 地址加上 NodePort 来访问 Service。</li>
+<li><strong>特点：</strong><ul>
+<li><strong>外部暴露：</strong> 这是将 Service 暴露给集群外部的最基本方式。</li>
+<li><strong>端口范围：</strong> NodePort 的端口范围通常是 <code>30000-32767</code>，这个范围可以在 kube-apiserver 配置中修改。</li>
+<li><strong>任意节点：</strong> 无论请求发送到哪个节点的 NodePort，都会被路由到正确的后端 Pod。</li>
+<li><strong>不适合生产：</strong> NodePort 端口是固定的，但若有多个 NodePort Service，端口号的管理会比较繁琐。更重要的是，它不提供负载均衡能力（客户端需要知道所有节点 IP），且端口暴露在所有节点上，安全性较低。</li>
+</ul>
+</li>
+<li><strong>使用场景：</strong><ul>
+<li><strong>测试和演示：</strong> 快速验证应用程序的外部可访问性，不适合生产环境。</li>
+<li><strong>非云环境的裸金属集群：</strong> 有时在没有外部负载均衡器的环境中，作为临时的外部访问方案。</li>
+</ul>
+</li>
+<li><strong>示例 YAML 片段:</strong><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">my-app-nodeport-service</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">my-app</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">protocol:</span> <span class="string">TCP</span></span><br><span class="line">      <span class="attr">port:</span> <span class="number">80</span></span><br><span class="line">      <span class="attr">targetPort:</span> <span class="number">8080</span></span><br><span class="line">      <span class="attr">nodePort:</span> <span class="number">30080</span> <span class="comment"># 可以指定，也可以由K8s自动分配一个（在30000-32767范围内）</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">NodePort</span></span><br></pre></td></tr></table></figure>
+外部访问：<code>http://&lt;任何一个Node的IP&gt;:30080</code></li>
+</ul>
+<hr>
+<h3 id="3-LoadBalancer"><a href="#3-LoadBalancer" class="headerlink" title="3. LoadBalancer"></a>3. LoadBalancer</h3><ul>
+<li><strong>作用：</strong> 这是在公有云提供商（如 AWS EKS, GKE, Azure AKS 等）环境中，<strong>将 Service 暴露给外部流量的标准方式。</strong> 它会请求云提供商创建一个<strong>外部负载均衡器</strong>，并将外部流量路由到 Kubernetes 集群中的 Service。</li>
+<li><strong>访问方式：</strong> 外部客户端通过云提供商分配的负载均衡器 IP 地址或 DNS 名称来访问 Service。</li>
+<li><strong>特点：</strong><ul>
+<li><strong>外部负载均衡器：</strong> 由云提供商管理，通常具备高可用、弹性伸缩和高级路由功能。</li>
+<li><strong>自动配置：</strong> Kubernetes 会自动与云提供商 API 集成，创建、配置和管理负载均衡器。</li>
+<li><strong>生产环境推荐：</strong> 这是在公有云上暴露 Web 服务和 API 服务的首选方式。</li>
+<li><strong>成本：</strong> 云负载均衡器通常会产生费用。</li>
+</ul>
+</li>
+<li><strong>使用场景：</strong><ul>
+<li><strong>部署在公有云上的 Web 应用、API 服务等，需要对外提供稳定、高可用的访问入口。</strong></li>
+</ul>
+</li>
+<li><strong>示例 YAML 片段:</strong><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">my-app-lb-service</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">my-app</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">protocol:</span> <span class="string">TCP</span></span><br><span class="line">      <span class="attr">port:</span> <span class="number">80</span></span><br><span class="line">      <span class="attr">targetPort:</span> <span class="number">8080</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">LoadBalancer</span></span><br></pre></td></tr></table></figure>
+应用此 YAML 后，Kubernetes 会在几分钟内（取决于云提供商）为这个 Service 分配一个外部 IP 地址。可以通过 <code>kubectl get svc my-app-lb-service</code> 查看 <code>EXTERNAL-IP</code> 字段。</li>
+</ul>
+<hr>
+<h3 id="4-ExternalName"><a href="#4-ExternalName" class="headerlink" title="4. ExternalName"></a>4. ExternalName</h3><ul>
+<li><strong>作用：</strong> ExternalName Service 不会代理任何 Pod，也不会分配 ClusterIP。它通过返回一个 CNAME 记录，将 Service 映射到集群外部的 DNS 名称。</li>
+<li><strong>访问方式：</strong> 当集群内部的 Pod 尝试访问这个 Service 时，DNS 服务（CoreDNS）会直接返回其配置的外部 DNS 名称，客户端会直接连接到那个外部地址，而不是通过 Kube-proxy。</li>
+<li><strong>特点：</strong><ul>
+<li><strong>DNS 别名：</strong> 像 DNS CNAME 一样工作，将流量重定向到集群外部的服务。</li>
+<li><strong>无代理：</strong> 没有代理行为，因此没有负载均衡，没有端口映射。</li>
+<li><strong>不占用 IP：</strong> 不分配 ClusterIP。</li>
+</ul>
+</li>
+<li><strong>使用场景：</strong><ul>
+<li><strong>集群内部服务访问外部数据库或外部API：</strong> 允许集群内部的服务使用一个统一的、内部的 DNS 名称来访问集群外部的某个服务（如云数据库 RDS、第三方 API），而无需修改应用程序代码。</li>
+<li>在不改变代码的情况下，将应用从集群内部的服务切换到外部服务。</li>
+</ul>
+</li>
+<li><strong>示例 YAML 片段:</strong><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">my-external-db</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">ExternalName</span></span><br><span class="line">  <span class="attr">externalName:</span> <span class="string">my-database.example.com</span> <span class="comment"># 指向集群外部的DNS名称</span></span><br></pre></td></tr></table></figure>
+集群内部的 Pod 如果尝试连接 <code>my-external-db:8080</code>，DNS 查询会直接解析到 <code>my-database.example.com</code>，然后客户端会直接连接到该外部地址。</li>
+</ul>
+<hr>
+<h3 id="总结选择指南："><a href="#总结选择指南：" class="headerlink" title="总结选择指南："></a>总结选择指南：</h3><ol>
+<li><strong>内部服务通信 (Service-to-Service):</strong> 始终使用 <strong>ClusterIP</strong>。</li>
+<li><strong>在公有云上暴露服务：</strong> 使用 <strong>LoadBalancer</strong>。</li>
+<li><strong>开发&#x2F;测试时快速暴露服务，或裸金属环境的临时方案：</strong> 可以使用 <strong>NodePort</strong>，但需注意其局限性。</li>
+<li><strong>将内部流量重定向到集群外部服务：</strong> 使用 <strong>ExternalName</strong>。</li>
+</ol>
+<p>在实际生产中，除了 LoadBalancer 类型 Service，更高级的外部暴露方式通常还会结合 <strong>Ingress</strong>，Ingress 提供了更灵活的 HTTP&#x2F;HTTPS 路由规则，如基于路径、基于域名的路由，以及 SSL&#x2F;TLS 终止等功能。Ingress 通常需要 Ingress Controller（如 Nginx Ingress Controller）来实际执行这些路由。</p>
+<p>好的，Headless Service 是 Kubernetes Service 中的一个特殊类型，它<strong>不会为其分配 ClusterIP</strong>。这是它最主要的特征。</p>
+<h3 id="Headless-Service-的定义与特点"><a href="#Headless-Service-的定义与特点" class="headerlink" title="Headless Service 的定义与特点"></a>Headless Service 的定义与特点</h3><p>当你在定义 Service 时，将 <code>clusterIP</code> 字段设置为 <code>None</code> (或者在 YAML 文件中完全不指定 <code>clusterIP</code> 字段，并确保 <code>type</code> 不是 <code>ExternalName</code> 且不是 <code>LoadBalancer</code>，对于一些早期的 Kubernetes 版本可能需要显式设置，但现在自动推断为空即可)，或者使用 <code>clusterIP: None</code>，Kubernetes 就会创建一个 Headless Service。</p>
+<p><strong>核心特点：</strong></p>
+<ol>
+<li><strong>无 ClusterIP：</strong> 这是其名称 “Headless” 的由来。它没有一个统一的、虚拟的 Service IP。</li>
+<li><strong>DNS 解析行为不同：</strong><ul>
+<li><strong>常规 Service (有 ClusterIP)：</strong> 当你通过 DNS 查询一个常规 Service 时，它会返回 Service 的 ClusterIP。然后所有请求都会被代理到这个 ClusterIP。</li>
+<li><strong>Headless Service：</strong> 当你通过 DNS 查询一个 Headless Service 时，Kubernetes 的 DNS 服务（CoreDNS）会直接返回<strong>所有匹配该 Service 的 Pod 的 IP 地址列表</strong>，而不是一个单一的 Service IP。<ul>
+<li>如果该 Headless Service 没有 <code>selector</code>，它会直接返回 Service 定义的 <code>endpoints</code> 中的 IP 列表。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>无负载均衡 (通过 Kube-proxy)：</strong> 由于没有 ClusterIP，kube-proxy 不会为它进行流量代理和负载均衡。客户端需要自己处理从 DNS 返回的多个 IP 地址。</li>
+<li><strong>提供 Pod 级别的可发现性：</strong> 对于需要直接连接特定 Pod 或需要客户端自己决定连接哪个 Pod 的场景非常有用。</li>
+</ol>
+<h3 id="Headless-Service-的应用场景"><a href="#Headless-Service-的应用场景" class="headerlink" title="Headless Service 的应用场景"></a>Headless Service 的应用场景</h3><p>Headless Service 主要用于以下几种情况：</p>
+<ol>
+<li><p><strong>有状态应用程序 (StatefulSets)：</strong></p>
+<ul>
+<li>这是 Headless Service 最常见的用途。<code>StatefulSet</code> 资源在创建 Pod 时通常需要每个 Pod 都拥有一个<strong>稳定且唯一的网络身份</strong>（稳定的主机名、稳定的存储、稳定的网络标识）。</li>
+<li><code>StatefulSet</code> 通常会与一个 Headless Service 配合使用。这个 Headless Service 不仅让每个 Pod 拥有一个通过 DNS 解析的服务名称（如 <code>my-app-0.my-headless-service</code>, <code>my-app-1.my-headless-service</code>），而且客户端可以直接解析到这些 Pod 的 IP 地址。</li>
+<li>这对于分布式数据库（如 Cassandra、MongoDB、Elasticsearch 集群）、消息队列（Kafka）等需要对副本进行精确控制和直接寻址的场景至关重要。</li>
+</ul>
+</li>
+<li><p><strong>需要客户端自定义负载均衡或流量控制：</strong></p>
+<ul>
+<li>有些应用程序或服务网格（如 Istio、Linkerd）有自己内置的负载均衡逻辑。它们不希望 Kubernetes 的 kube-proxy 进行额外的代理。通过 Headless Service，它们可以直接获取到后端 Pod 的 IP 列表，然后根据自己的算法进行连接和负载均衡。</li>
+<li>例如，gRPC 客户端通常希望进行客户端负载均衡。</li>
+</ul>
+</li>
+<li><p><strong>需要直接操作 Pod IP 的场景：</strong></p>
+<ul>
+<li>某些特殊应用需要直接与 Pod IP 进行通信，而不是通过Service 的抽象 IP。Headless Service 提供了这种可能性。</li>
+</ul>
+</li>
+</ol>
+<h3 id="Headless-Service-的-DNS-解析示例"><a href="#Headless-Service-的-DNS-解析示例" class="headerlink" title="Headless Service 的 DNS 解析示例"></a>Headless Service 的 DNS 解析示例</h3><p>假设您有一个 Headless Service 叫 <code>my-app-headless</code>，它有三个 Pod 副本，IP 分别是 <code>10.42.0.10</code>、<code>10.42.0.11</code>、<code>10.42.0.12</code>。</p>
+<ul>
+<li><p><strong>常规查询：</strong></p>
+<ul>
+<li>如果你在集群内 <code>ping my-app-headless</code>，DNS 服务器会返回这三个 Pod 的 IP 地址列表。</li>
+<li>如果你使用 <code>dig my-app-headless.mynamespace.svc.cluster.local</code>，你将看到返回多个 A 记录，每个记录对应一个 Pod 的 IP。</li>
+</ul>
+</li>
+<li><p><strong>特定 Pod 查询 (通常用于 StatefulSets)：</strong></p>
+<ul>
+<li>如果 <code>my-app-headless</code> 是一个 StatefulSet 的 Headless Service，并且 StatefulSet 的 Pod 命名为 <code>my-app-0</code>, <code>my-app-1</code>, <code>my-app-2</code>。</li>
+<li>那么你可以通过 <code>my-app-0.my-app-headless.mynamespace.svc.cluster.local</code> 来直接解析到 <code>my-app-0</code> 这个 Pod 的 IP 地址。</li>
+</ul>
+</li>
+</ul>
+<h3 id="YAML-示例"><a href="#YAML-示例" class="headerlink" title="YAML 示例"></a>YAML 示例</h3><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">my-app-headless-service</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">my-app-stateful</span> <span class="comment"># 匹配你的 Pod 的标签</span></span><br><span class="line">  <span class="attr">clusterIP:</span> <span class="string">None</span>       <span class="comment"># **关键！** 将此 Service 定义为 Headless</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">protocol:</span> <span class="string">TCP</span></span><br><span class="line">      <span class="attr">port:</span> <span class="number">80</span></span><br><span class="line">      <span class="attr">targetPort:</span> <span class="number">8080</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>Headless Service 绕过了 Kubernetes 默认的 Service ClusterIP 抽象层，直接暴露了后端 Pod 的 IP 地址。它牺牲了 Service 提供的标准负载均衡能力，但换来了对单个 Pod 的精确寻址能力和更灵活的客户端负载均衡实现。这使得它成为管理有状态应用和需要更细粒度网络控制场景的理想选择。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/k8s_PV&PVC/" rel="prev" title="k8s_PV&PVC">
+      <i class="fa fa-chevron-left"></i> k8s_PV&PVC
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/k8s_ConfigMap&Secret%20/" rel="next" title="k8s_ConfigMap&Secret">
+      k8s_ConfigMap&Secret <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-ClusterIP-%E9%BB%98%E8%AE%A4%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.</span> <span class="nav-text">1. ClusterIP (默认类型)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-NodePort"><span class="nav-number">2.</span> <span class="nav-text">2. NodePort</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-LoadBalancer"><span class="nav-number">3.</span> <span class="nav-text">3. LoadBalancer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-ExternalName"><span class="nav-number">4.</span> <span class="nav-text">4. ExternalName</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%E9%80%89%E6%8B%A9%E6%8C%87%E5%8D%97%EF%BC%9A"><span class="nav-number">5.</span> <span class="nav-text">总结选择指南：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Headless-Service-%E7%9A%84%E5%AE%9A%E4%B9%89%E4%B8%8E%E7%89%B9%E7%82%B9"><span class="nav-number">6.</span> <span class="nav-text">Headless Service 的定义与特点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Headless-Service-%E7%9A%84%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">7.</span> <span class="nav-text">Headless Service 的应用场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Headless-Service-%E7%9A%84-DNS-%E8%A7%A3%E6%9E%90%E7%A4%BA%E4%BE%8B"><span class="nav-number">8.</span> <span class="nav-text">Headless Service 的 DNS 解析示例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#YAML-%E7%A4%BA%E4%BE%8B"><span class="nav-number">9.</span> <span class="nav-text">YAML 示例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">10.</span> <span class="nav-text">总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

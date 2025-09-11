@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="文件监控在 Shell 中，实现文件监控主要有两种策略：  轮询检查（Polling）：定时检查文件的元数据（如修改时间、大小、校验和），适用于对实时性要求不高的场景。 事件驱动（Event-Driven）：利用系统工具（如 inotifywait）实时捕捉文件系统的事件，效率高，响应快，是生产环境中的首选方案。  下面我将分别介绍这两种方法，并重点推荐使用 inotifywait 的专业方案。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="shell-notify">
+<meta property="og:url" content="http://example.com/2025/09/11/shell-notify/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="文件监控在 Shell 中，实现文件监控主要有两种策略：  轮询检查（Polling）：定时检查文件的元数据（如修改时间、大小、校验和），适用于对实时性要求不高的场景。 事件驱动（Event-Driven）：利用系统工具（如 inotifywait）实时捕捉文件系统的事件，效率高，响应快，是生产环境中的首选方案。  下面我将分别介绍这两种方法，并重点推荐使用 inotifywait 的专业方案。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:59:17.760Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Shell">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/shell-notify/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>shell-notify | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/shell-notify/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          shell-notify
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:59:17" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/scripts/" itemprop="url" rel="index"><span itemprop="name">scripts</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.8k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="文件监控"><a href="#文件监控" class="headerlink" title="文件监控"></a>文件监控</h3><p>在 Shell 中，实现文件监控主要有两种策略：</p>
+<ol>
+<li><strong>轮询检查（Polling）</strong>：定时检查文件的元数据（如修改时间、大小、校验和），适用于对实时性要求不高的场景。</li>
+<li><strong>事件驱动（Event-Driven）</strong>：利用系统工具（如 <code>inotifywait</code>）实时捕捉文件系统的事件，效率高，响应快，是生产环境中的<strong>首选方案</strong>。</li>
+</ol>
+<p>下面我将分别介绍这两种方法，并重点推荐使用 <code>inotifywait</code> 的专业方案。</p>
+<hr>
+<h3 id="方法一：轮询检查（基于-stat-和-md5sum）"><a href="#方法一：轮询检查（基于-stat-和-md5sum）" class="headerlink" title="方法一：轮询检查（基于 stat 和 md5sum）"></a>方法一：轮询检查（基于 <code>stat</code> 和 <code>md5sum</code>）</h3><p>这种方法简单直接，不依赖任何额外工具，但效率较低，且有延迟。</p>
+<h4 id="核心思路"><a href="#核心思路" class="headerlink" title="核心思路"></a>核心思路</h4><ol>
+<li>在一个无限循环 <code>while true; do ... done</code> 中执行。</li>
+<li>记录文件当前的 MD5 校验和或修改时间。</li>
+<li><code>sleep</code> 一段时间。</li>
+<li>再次获取文件的校验和或修改时间，与之前记录的值进行比较。</li>
+<li>如果发生变化，则执行相应操作（如发送警报、记录日志）。</li>
+</ol>
+<h4 id="示例脚本：监控-etc-hosts-文件的内容变化"><a href="#示例脚本：监控-etc-hosts-文件的内容变化" class="headerlink" title="示例脚本：监控 /etc/hosts 文件的内容变化"></a>示例脚本：监控 <code>/etc/hosts</code> 文件的内容变化</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"><span class="comment"># file_monitor_polling.sh: A simple file monitor using polling (md5sum).</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># --- Configuration ---</span></span><br><span class="line">FILE_TO_WATCH=<span class="string">&quot;/etc/hosts&quot;</span></span><br><span class="line">SLEEP_INTERVAL=5 <span class="comment"># Check every 5 seconds</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># --- Sanity Checks ---</span></span><br><span class="line"><span class="keyword">if</span> [ ! -f <span class="string">&quot;<span class="variable">$FILE_TO_WATCH</span>&quot;</span> ]; <span class="keyword">then</span></span><br><span class="line">    <span class="built_in">echo</span> <span class="string">&quot;错误: 文件不存在: <span class="variable">$FILE_TO_WATCH</span>&quot;</span> &gt;&amp;2</span><br><span class="line">    <span class="built_in">exit</span> 1</span><br><span class="line"><span class="keyword">fi</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">echo</span> <span class="string">&quot;开始监控文件: <span class="variable">$FILE_TO_WATCH</span>&quot;</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">&quot;按 [CTRL+C] 停止监控。&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># --- Get initial checksum ---</span></span><br><span class="line">last_checksum=$(<span class="built_in">md5sum</span> <span class="string">&quot;<span class="variable">$FILE_TO_WATCH</span>&quot;</span> | awk <span class="string">&#x27;&#123;print $1&#125;&#x27;</span>)</span><br><span class="line"><span class="built_in">echo</span> <span class="string">&quot;初始 MD5 校验和: <span class="variable">$last_checksum</span>&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># --- Monitoring Loop ---</span></span><br><span class="line"><span class="keyword">while</span> <span class="literal">true</span>; <span class="keyword">do</span></span><br><span class="line">    <span class="comment"># Get current checksum</span></span><br><span class="line">    current_checksum=$(<span class="built_in">md5sum</span> <span class="string">&quot;<span class="variable">$FILE_TO_WATCH</span>&quot;</span> | awk <span class="string">&#x27;&#123;print $1&#125;&#x27;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># Compare checksums</span></span><br><span class="line">    <span class="keyword">if</span> [ <span class="string">&quot;<span class="variable">$current_checksum</span>&quot;</span> != <span class="string">&quot;<span class="variable">$last_checksum</span>&quot;</span> ]; <span class="keyword">then</span></span><br><span class="line">        timestamp=$(<span class="built_in">date</span> +<span class="string">&quot;%Y-%m-%d %H:%M:%S&quot;</span>)</span><br><span class="line">        <span class="built_in">echo</span> <span class="string">&quot;[<span class="variable">$timestamp</span>] 文件已变更! (<span class="variable">$FILE_TO_WATCH</span>)&quot;</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">&quot;  - 旧校验和: <span class="variable">$last_checksum</span>&quot;</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">&quot;  - 新校验和: <span class="variable">$current_checksum</span>&quot;</span></span><br><span class="line">      </span><br><span class="line">        <span class="comment"># 在这里执行你的操作，例如发送邮件、重启服务等</span></span><br><span class="line">        <span class="comment"># mail -s &quot;警报: $FILE_TO_WATCH 已被修改&quot; your_email@example.com &lt; /dev/null</span></span><br><span class="line">      </span><br><span class="line">        <span class="comment"># Update the checksum for the next check</span></span><br><span class="line">        last_checksum=<span class="string">&quot;<span class="variable">$current_checksum</span>&quot;</span></span><br><span class="line">    <span class="keyword">fi</span></span><br><span class="line"></span><br><span class="line">    <span class="built_in">sleep</span> <span class="string">&quot;<span class="variable">$SLEEP_INTERVAL</span>&quot;</span></span><br><span class="line"><span class="keyword">done</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>优点</strong>：</p>
+<ul>
+<li>简单，无需额外工具。</li>
+<li>可移植性强。</li>
+</ul>
+<p><strong>缺点</strong>：</p>
+<ul>
+<li><strong>性能差</strong>：频繁计算 MD5 对大文件来说是昂贵的。</li>
+<li><strong>延迟高</strong>：变更发生在 <code>sleep</code> 期间，你无法立即知道。</li>
+<li><strong>信息有限</strong>：你只知道文件被改了，但不知道是哪个进程、哪个用户改的，也不知道是哪种操作（写入、删除、重命名等）。</li>
+</ul>
+<hr>
+<h3 id="方法二：事件驱动（基于-inotifywait）-专业推荐"><a href="#方法二：事件驱动（基于-inotifywait）-专业推荐" class="headerlink" title="方法二：事件驱动（基于 inotifywait）- 专业推荐"></a>方法二：事件驱动（基于 <code>inotifywait</code>）- 专业推荐</h3><p><code>inotify</code> 是 Linux 内核的一个子系统，它能监控文件系统事件并通知应用程序。<code>inotify-tools</code> 包中的 <code>inotifywait</code> 命令是其在 Shell 中的接口。</p>
+<h4 id="核心优势"><a href="#核心优势" class="headerlink" title="核心优势"></a>核心优势</h4><ul>
+<li><strong>实时性</strong>：事件发生时，内核立即通知，几乎没有延迟。</li>
+<li><strong>高性能</strong>：由内核驱动，CPU 占用极低，比轮询高效得多。</li>
+<li><strong>信息丰富</strong>：可以精确地监控多种事件，如 <code>modify</code> (修改), <code>create</code> (创建), <code>delete</code> (删除), <code>move</code> (移动), <code>access</code> (访问) 等。</li>
+</ul>
+<h4 id="安装-inotify-tools"><a href="#安装-inotify-tools" class="headerlink" title="安装 inotify-tools"></a>安装 <code>inotify-tools</code></h4><p>在大多数 Linux 发行版中，都可以通过包管理器轻松安装。</p>
+<ul>
+<li><strong>Debian&#x2F;Ubuntu</strong>: <code>sudo apt-get install inotify-tools</code></li>
+<li><strong>CentOS&#x2F;RHEL</strong>: <code>sudo yum install inotify-tools</code></li>
+</ul>
+<h4 id="示例脚本：实时监控-var-log-app-目录"><a href="#示例脚本：实时监控-var-log-app-目录" class="headerlink" title="示例脚本：实时监控 /var/log/app/ 目录"></a>示例脚本：实时监控 <code>/var/log/app/</code> 目录</h4><p>这个脚本将监控一个目录下所有的新文件、修改和删除操作。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"><span class="comment"># file_monitor_inotify.sh: A professional file monitor using inotifywait.</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># --- Configuration ---</span></span><br><span class="line"><span class="comment"># 监控单个文件: DIR_TO_WATCH=&quot;/etc/nginx/nginx.conf&quot;</span></span><br><span class="line"><span class="comment"># 监控整个目录及其子目录:</span></span><br><span class="line">DIR_TO_WATCH=<span class="string">&quot;/var/log/app/&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># --- Sanity Checks ---</span></span><br><span class="line"><span class="comment"># 检查 inotifywait 命令是否存在</span></span><br><span class="line"><span class="keyword">if</span> ! <span class="built_in">command</span> -v inotifywait &amp;&gt; /dev/null; <span class="keyword">then</span></span><br><span class="line">    <span class="built_in">echo</span> <span class="string">&quot;错误: 本脚本需要 &#x27;inotifywait&#x27; 命令，请安装 &#x27;inotify-tools&#x27; 包。&quot;</span> &gt;&amp;2</span><br><span class="line">    <span class="built_in">exit</span> 1</span><br><span class="line"><span class="keyword">fi</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> [ ! -d <span class="string">&quot;<span class="variable">$DIR_TO_WATCH</span>&quot;</span> ]; <span class="keyword">then</span></span><br><span class="line">    <span class="built_in">echo</span> <span class="string">&quot;错误: 目录不存在: <span class="variable">$DIR_TO_WATCH</span>&quot;</span> &gt;&amp;2</span><br><span class="line">    <span class="built_in">exit</span> 1</span><br><span class="line"><span class="keyword">fi</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">echo</span> <span class="string">&quot;实时监控目录: <span class="variable">$DIR_TO_WATCH</span>&quot;</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">&quot;监控的事件: MODIFY, CREATE, DELETE&quot;</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">&quot;按 [CTRL+C] 停止监控。&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># --- Monitoring Loop ---</span></span><br><span class="line"><span class="comment"># -m, --monitor:   持续监控，而不是在第一个事件后退出。</span></span><br><span class="line"><span class="comment"># -r, --recursive: 递归监控所有子目录。</span></span><br><span class="line"><span class="comment"># -q, --quiet:     只打印事件信息。</span></span><br><span class="line"><span class="comment"># -e &lt;event&gt;:      指定要监控的事件。</span></span><br><span class="line"><span class="comment"># --format:        自定义输出格式。</span></span><br><span class="line"><span class="comment">#    %T: 时间</span></span><br><span class="line"><span class="comment">#    %w: 监控的文件或目录的路径</span></span><br><span class="line"><span class="comment">#    %f: 触发事件的文件名 (如果有)</span></span><br><span class="line"><span class="comment">#    %e: 触发的事件名称</span></span><br><span class="line">inotifywait -m -q -r \</span><br><span class="line">    -e modify,create,delete \</span><br><span class="line">    --timefmt <span class="string">&#x27;%Y-%m-%d %H:%M:%S&#x27;</span> \</span><br><span class="line">    --format <span class="string">&#x27;%T %w%f %e&#x27;</span> \</span><br><span class="line">    <span class="string">&quot;<span class="variable">$DIR_TO_WATCH</span>&quot;</span> | <span class="keyword">while</span> <span class="built_in">read</span> -r line; <span class="keyword">do</span></span><br><span class="line">        <span class="comment"># `read` 命令会逐行读取 inotifywait 的输出</span></span><br><span class="line">        <span class="built_in">echo</span> <span class="string">&quot;[警报] 检测到文件系统事件: <span class="variable">$line</span>&quot;</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># 在这里执行你的自动化操作</span></span><br><span class="line">        <span class="comment"># 例如，如果配置文件被修改，则自动重载服务</span></span><br><span class="line">        <span class="comment"># if [[ &quot;$line&quot; == *&quot;/etc/nginx/nginx.conf MODIFY&quot;* ]]; then</span></span><br><span class="line">        <span class="comment">#    echo &quot;Nginx 配置文件已修改，正在尝试重载...&quot;</span></span><br><span class="line">        <span class="comment">#    systemctl reload nginx</span></span><br><span class="line">        <span class="comment"># fi</span></span><br><span class="line">    <span class="keyword">done</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>如何运行：</strong><br><code>./file_monitor_inotify.sh</code></p>
+<p>当你在此目录下创建、修改或删除文件时，脚本会立即打印出类似下面的信息：</p>
+<figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">实时监控目录: /<span class="keyword">var</span>/<span class="keyword">log</span>/<span class="keyword">app</span>/</span><br><span class="line">监控的事件: MODIFY, CREATE, DELETE</span><br><span class="line">按 [CTRL+C] 停止监控。</span><br><span class="line">[警报] 检测到文件系统事件: 2023-10-27 15:30:10 /<span class="keyword">var</span>/<span class="keyword">log</span>/<span class="keyword">app</span>/new_log.txt CREATE</span><br><span class="line">[警报] 检测到文件系统事件: 2023-10-27 15:30:15 /<span class="keyword">var</span>/<span class="keyword">log</span>/<span class="keyword">app</span>/new_log.txt MODIFY</span><br><span class="line">[警报] 检测到文件系统事件: 2023-10-27 15:30:20 /<span class="keyword">var</span>/<span class="keyword">log</span>/<span class="keyword">app</span>/new_log.txt DELETE_SELF</span><br></pre></td></tr></table></figure>
+
+<h3 id="总结与选择"><a href="#总结与选择" class="headerlink" title="总结与选择"></a>总结与选择</h3><ul>
+<li>对于<strong>临时</strong>或<strong>简单</strong>的检查，或者在无法安装新工具的受限环境中，<strong>轮询法</strong>是可行的。</li>
+<li>对于<strong>所有生产级别的、需要高实时性和高性能</strong>的监控任务，**<code>inotifywait</code>** 是<strong>绝对的最佳选择</strong>。它更可靠、更高效，并能提供更丰富的上下文信息，是每个运维工程师都应该掌握的工具。</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Shell/" rel="tag"># Shell</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/shell-service/" rel="prev" title="shell-service">
+      <i class="fa fa-chevron-left"></i> shell-service
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/shell-clean/" rel="next" title="shell-clean">
+      shell-clean <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%87%E4%BB%B6%E7%9B%91%E6%8E%A7"><span class="nav-number">1.</span> <span class="nav-text">文件监控</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%B3%95%E4%B8%80%EF%BC%9A%E8%BD%AE%E8%AF%A2%E6%A3%80%E6%9F%A5%EF%BC%88%E5%9F%BA%E4%BA%8E-stat-%E5%92%8C-md5sum%EF%BC%89"><span class="nav-number">2.</span> <span class="nav-text">方法一：轮询检查（基于 stat 和 md5sum）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E6%80%9D%E8%B7%AF"><span class="nav-number">2.1.</span> <span class="nav-text">核心思路</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B%E8%84%9A%E6%9C%AC%EF%BC%9A%E7%9B%91%E6%8E%A7-etc-hosts-%E6%96%87%E4%BB%B6%E7%9A%84%E5%86%85%E5%AE%B9%E5%8F%98%E5%8C%96"><span class="nav-number">2.2.</span> <span class="nav-text">示例脚本：监控 &#x2F;etc&#x2F;hosts 文件的内容变化</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%B3%95%E4%BA%8C%EF%BC%9A%E4%BA%8B%E4%BB%B6%E9%A9%B1%E5%8A%A8%EF%BC%88%E5%9F%BA%E4%BA%8E-inotifywait%EF%BC%89-%E4%B8%93%E4%B8%9A%E6%8E%A8%E8%8D%90"><span class="nav-number">3.</span> <span class="nav-text">方法二：事件驱动（基于 inotifywait）- 专业推荐</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E4%BC%98%E5%8A%BF"><span class="nav-number">3.1.</span> <span class="nav-text">核心优势</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%89%E8%A3%85-inotify-tools"><span class="nav-number">3.2.</span> <span class="nav-text">安装 inotify-tools</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B%E8%84%9A%E6%9C%AC%EF%BC%9A%E5%AE%9E%E6%97%B6%E7%9B%91%E6%8E%A7-var-log-app-%E7%9B%AE%E5%BD%95"><span class="nav-number">3.3.</span> <span class="nav-text">示例脚本：实时监控 &#x2F;var&#x2F;log&#x2F;app&#x2F; 目录</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%E4%B8%8E%E9%80%89%E6%8B%A9"><span class="nav-number">4.</span> <span class="nav-text">总结与选择</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

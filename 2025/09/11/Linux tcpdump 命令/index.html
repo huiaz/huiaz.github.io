@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="作为一名运维工程师，tcpdump 是我进行网络故障排查和性能分析时不可或缺的“瑞士军刀”。它是一个基于命令行的数据包捕获工具，能够截获并显示通过网络接口的数据包。无论是在诊断网络连接问题、分析协议行为、检测异常流量，还是验证防火墙规则时，tcpdump 都扮演着至关重要的角色。  一、tcpdump 简介 功能： 捕获网络接口上符合指定条件的数据包，并将其内容打印到标准输出或保存到文件中。 原理">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux tcpdump 命令">
+<meta property="og:url" content="http://example.com/2025/09/11/Linux%20tcpdump%20%E5%91%BD%E4%BB%A4/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="作为一名运维工程师，tcpdump 是我进行网络故障排查和性能分析时不可或缺的“瑞士军刀”。它是一个基于命令行的数据包捕获工具，能够截获并显示通过网络接口的数据包。无论是在诊断网络连接问题、分析协议行为、检测异常流量，还是验证防火墙规则时，tcpdump 都扮演着至关重要的角色。  一、tcpdump 简介 功能： 捕获网络接口上符合指定条件的数据包，并将其内容打印到标准输出或保存到文件中。 原理">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:48:22.702Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/Linux%20tcpdump%20%E5%91%BD%E4%BB%A4/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Linux tcpdump 命令 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Linux%20tcpdump%20%E5%91%BD%E4%BB%A4/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Linux tcpdump 命令
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:48:22" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/Command/" itemprop="url" rel="index"><span itemprop="name">Command</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>5.8k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>作为一名运维工程师，<code>tcpdump</code> 是我进行网络故障排查和性能分析时不可或缺的“瑞士军刀”。它是一个基于命令行的数据包捕获工具，能够截获并显示通过网络接口的数据包。无论是在诊断网络连接问题、分析协议行为、检测异常流量，还是验证防火墙规则时，<code>tcpdump</code> 都扮演着至关重要的角色。</p>
+<hr>
+<h3 id="一、tcpdump-简介"><a href="#一、tcpdump-简介" class="headerlink" title="一、tcpdump 简介"></a>一、<code>tcpdump</code> 简介</h3><ul>
+<li><strong>功能：</strong> 捕获网络接口上符合指定条件的数据包，并将其内容打印到标准输出或保存到文件中。</li>
+<li><strong>原理：</strong> <code>tcpdump</code> 使用 <code>libpcap</code> 库来与网络接口进行交互，接收、过滤和解析流经接口的数据包。它工作在数据链路层，能够看到IP层及以上的所有协议数据。</li>
+<li><strong>应用场景：</strong><ul>
+<li><strong>诊断连通性问题：</strong> 验证客户端&#x2F;服务器之间是否有数据包传输。</li>
+<li><strong>分析协议行为：</strong> 深入了解 HTTP、DNS、SSH 等协议的具体交互过程。</li>
+<li><strong>排查防火墙问题：</strong> 确认流量是否被防火墙阻拦。</li>
+<li><strong>检测异常流量：</strong> 发现端口扫描、拒绝服务攻击（DoS）的迹象。</li>
+<li><strong>性能瓶颈分析：</strong> 识别延迟、丢包等网络性能问题。</li>
+<li><strong>验证流量转发：</strong> 检查路由和 NAT 是否按预期工作。</li>
+<li><strong>安全审计：</strong> 监控关键系统的网络活动。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="二、tcpdump-的基本使用方法"><a href="#二、tcpdump-的基本使用方法" class="headerlink" title="二、tcpdump 的基本使用方法"></a>二、<code>tcpdump</code> 的基本使用方法</h3><p>最简单的 <code>tcpdump</code> 命令会捕获所有流经默认网络接口的数据包并打印出来。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tcpdump</span><br></pre></td></tr></table></figure>
+<p><strong>注意：</strong> 运行 <code>tcpdump</code> 通常需要 <code>root</code> 权限。若输出太快，可使用 <code>Ctrl+C</code> 停止。</p>
+<p><strong>默认输出格式解释：</strong><br><code>tcpdump</code> 的输出由多列组成，通常包含：<br><code>时间戳 协议 源IP.源端口 &gt; 目的IP.目的端口 标志位 序号 确认号 窗口大小 选项 [数据长度]</code></p>
+<p>示例：<br><code>15:00:00.123456 IP 192.168.1.10.54321 &gt; 192.168.1.1.80: Flags [S], seq 123, win 29200, length 0</code></p>
+<ul>
+<li><code>15:00:00.123456</code>: 数据包捕获的时间戳。</li>
+<li><code>IP</code>: 协议类型 (此处是 IP)。</li>
+<li><code>192.168.1.10.54321</code>: 源 IP 地址和端口。</li>
+<li><code>192.168.1.1.80</code>: 目的 IP 地址和端口。</li>
+<li><code>Flags [S]</code>: TCP 标志位，<code>S</code> 表示 SYN (同步)，用于建立连接。</li>
+<li><code>seq 123</code>: TCP 序列号。</li>
+<li><code>win 29200</code>: TCP 窗口大小。</li>
+<li><code>length 0</code>: 应用层数据长度。</li>
+</ul>
+<hr>
+<h3 id="三、tcpdump-的常用选项"><a href="#三、tcpdump-的常用选项" class="headerlink" title="三、tcpdump 的常用选项"></a>三、<code>tcpdump</code> 的常用选项</h3><h4 id="1-指定网络接口-i"><a href="#1-指定网络接口-i" class="headerlink" title="1. 指定网络接口 (-i)"></a>1. 指定网络接口 (<code>-i</code>)</h4><p>默认情况下，<code>tcpdump</code> 会选择第一个活动的网络接口。在多网卡系统中，务必指定接口。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">tcpdump -i eth0             <span class="comment"># 捕获 eth0 接口上的流量</span></span><br><span class="line">tcpdump -i any              <span class="comment"># 捕获所有接口上的流量</span></span><br><span class="line">tcpdump -i lo               <span class="comment"># 捕获回环接口上的流量 (用于调试本地进程间网络通信)</span></span><br></pre></td></tr></table></figure>
+<p>可以使用 <code>ip a</code> 或 <code>ifconfig</code> 命令查看系统上的网络接口名称。</p>
+<h4 id="2-显示详细信息-v-vv-vvv"><a href="#2-显示详细信息-v-vv-vvv" class="headerlink" title="2. 显示详细信息 (-v, -vv, -vvv)"></a>2. 显示详细信息 (<code>-v</code>, <code>-vv</code>, <code>-vvv</code>)</h4><p>这些选项会增加输出的详细程度，对于协议分析非常有用。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">tcpdump -v                  <span class="comment"># 更详细的输出，如 TTL、ID 等</span></span><br><span class="line">tcpdump -vv                 <span class="comment"># 再详细一些，如 HTTP-INFO</span></span><br><span class="line">tcpdump -vvv                <span class="comment"># 最详细输出</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="3-不解析主机名和端口号-n-nn"><a href="#3-不解析主机名和端口号-n-nn" class="headerlink" title="3. 不解析主机名和端口号 (-n, -nn)"></a>3. 不解析主机名和端口号 (<code>-n</code>, <code>-nn</code>)</h4><ul>
+<li><code>-n</code>: 不进行主机名解析，直接显示 IP 地址。这会加快捕获速度，并避免DNS解析延时。</li>
+<li><code>-nn</code>: 不进行主机名和端口号解析，直接显示 IP 地址和端口号。在排查问题时非常推荐，可以避免误解服务名。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tcpdump -nn -i eth0</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h4 id="4-显示数据包内容-A-X-XX"><a href="#4-显示数据包内容-A-X-XX" class="headerlink" title="4. 显示数据包内容 (-A, -X, -XX)"></a>4. 显示数据包内容 (<code>-A</code>, <code>-X</code>, <code>-XX</code>)</h4><ul>
+<li><code>-A</code>: 以 ASCII 码形式打印每个数据包的载荷 (Payload)。适用于查看 HTTP 请求&#x2F;响应、纯文本协议内容。</li>
+<li><code>-X</code>: 以十六进制和 ASCII 码形式打印每个数据包的载荷。适用于查看二进制协议或更详细的数据结构。</li>
+<li><code>-XX</code>: 与 <code>-X</code> 类似，但还包含链路层头信息 (如以太网头)。</li>
+</ul>
+<h4 id="5-限制捕获数量-c"><a href="#5-限制捕获数量-c" class="headerlink" title="5. 限制捕获数量 (-c)"></a>5. 限制捕获数量 (<code>-c</code>)</h4><p>指定捕获多少个数据包后停止。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tcpdump -c 10 -i eth0       <span class="comment"># 捕获 10 个数据包后停止</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="6-将捕获写入文件-w"><a href="#6-将捕获写入文件-w" class="headerlink" title="6. 将捕获写入文件 (-w)"></a>6. 将捕获写入文件 (<code>-w</code>)</h4><p>将捕获的数据包保存到文件中，以便后续使用 <code>tcpdump -r</code> 或 Wireshark 等工具进行离线分析。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tcpdump -w traffic.pcap -i eth0</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>.pcap</code> 是标准的数据包捕获文件格式。</li>
+</ul>
+<h4 id="7-从文件读取捕获-r"><a href="#7-从文件读取捕获-r" class="headerlink" title="7. 从文件读取捕获 (-r)"></a>7. 从文件读取捕获 (<code>-r</code>)</h4><p>读取之前使用 <code>-w</code> 保存的 <code>.pcap</code> 文件。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">tcpdump -r traffic.pcap</span><br><span class="line">tcpdump -r traffic.pcap -nn -A  <span class="comment"># 读取并以 ASCII 码显示内容</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="四、tcpdump-强大的过滤表达式"><a href="#四、tcpdump-强大的过滤表达式" class="headerlink" title="四、tcpdump 强大的过滤表达式"></a>四、<code>tcpdump</code> 强大的过滤表达式</h3><p>过滤表达式是 <code>tcpdump</code> 的核心，允许你只捕获感兴趣的流量，大大减少输出量，提高分析效率。过滤表达式可以组合使用逻辑运算符 (<code>and</code>, <code>or</code>, <code>not</code>)。</p>
+<h4 id="1-协议类型过滤"><a href="#1-协议类型过滤" class="headerlink" title="1. 协议类型过滤"></a>1. 协议类型过滤</h4><ul>
+<li><code>tcp</code>: 只捕获 TCP 包。</li>
+<li><code>udp</code>: 只捕获 UDP 包。</li>
+<li><code>icmp</code>: 只捕获 ICMP 包 (如 <code>ping</code>)。</li>
+<li><code>arp</code>: 只捕获 ARP 包。</li>
+<li><code>ip</code>: 只捕获 IP 包。</li>
+<li><code>net</code>: 只捕获网络层的特定协议（如 <code>ip</code>, <code>ip6</code>, <code>arp</code>）。</li>
+</ul>
+<p><strong>示例：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">tcpdump -i eth0 tcp           <span class="comment"># 捕获 TCP 流量</span></span><br><span class="line">tcpdump -i eth0 icmp          <span class="comment"># 捕获 ping 包</span></span><br></pre></td></tr></table></figure>
+
+<h4>2. 主机过滤 (<code>host</code>)</h4>
+
+<ul>
+<li><code>host &lt;ip_address&gt;</code>: 捕获与指定 IP 地址相关的所有流量（作为源或目的）。</li>
+<li><code>src host &lt;ip_address&gt;</code>: 只捕获源 IP 为指定地址的流量。</li>
+<li><code>dst host &lt;ip_address&gt;</code>: 只捕获目的 IP 为指定地址的流量。</li>
+</ul>
+<p><strong>示例：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">tcpdump -i eth0 host 192.168.1.100    <span class="comment"># 与 192.168.1.100 相关的流量</span></span><br><span class="line">tcpdump -i eth0 src host 192.168.1.100 <span class="comment"># 源自 192.168.1.100 的流量</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="3-端口过滤-port"><a href="#3-端口过滤-port" class="headerlink" title="3. 端口过滤 (port)"></a>3. 端口过滤 (<code>port</code>)</h4><ul>
+<li><code>port &lt;port_number&gt;</code>: 捕获与指定端口号相关的所有流量（作为源或目的）。</li>
+<li><code>src port &lt;port_number&gt;</code>: 只捕获源端口为指定端口的流量。</li>
+<li><code>dst port &lt;port_number&gt;</code>: 只捕获目的端口为指定端口的流量。</li>
+</ul>
+<p><strong>示例：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">tcpdump -i eth0 port 80             <span class="comment"># 捕获所有 http 流量 (80 端口)</span></span><br><span class="line">tcpdump -i eth0 dst port 22         <span class="comment"># 捕获所有发往 22 端口的 SSH 流量</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="4-网络过滤-net"><a href="#4-网络过滤-net" class="headerlink" title="4. 网络过滤 (net)"></a>4. 网络过滤 (<code>net</code>)</h4><ul>
+<li><code>net &lt;network_address&gt;</code>: 捕获与指定网段相关的所有流量。</li>
+<li><code>src net &lt;network_address&gt;</code>: 只捕获源 IP 在指定网段的流量。</li>
+<li><code>dst net &lt;network_address&gt;</code>: 只捕获目的 IP 在指定网段的流量。</li>
+</ul>
+<p><strong>示例：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tcpdump -i eth0 net 192.168.1.0/24  <span class="comment"># 捕获与 192.168.1.0/24 网段相关的流量</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="5-组合过滤表达式"><a href="#5-组合过滤表达式" class="headerlink" title="5. 组合过滤表达式"></a>5. 组合过滤表达式</h4><p>使用 <code>and</code> (或 <code>&amp;&amp;</code>), <code>or</code> (或 <code>||</code>), <code>not</code> (或 <code>!</code>) 组合多个过滤条件。<br><strong>注意：</strong> 组合时，为避免歧义，复杂表达式建议使用括号 <code>()</code>，但括号在 shell 中有特殊含义，需要用引号 <code>&#39;&#39;</code> 或 <code>\</code> 转义。</p>
+<p><strong>示例：</strong></p>
+<ul>
+<li><strong>捕获来自 192.168.1.100 的发往 80 端口的 TCP 流量：</strong><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tcpdump -nn -i eth0 <span class="string">&#x27;src host 192.168.1.100 and tcp dst port 80&#x27;</span></span><br></pre></td></tr></table></figure></li>
+<li><strong>捕获除了 SSH (22) 和 HTTP (80) 以外的 TCP 流量：</strong><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tcpdump -nn -i eth0 <span class="string">&#x27;tcp and not (port 22 or port 80)&#x27;</span></span><br></pre></td></tr></table></figure></li>
+<li><strong>捕获 HTTP 请求 (假设是 GET 方法):</strong><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 捕获目的端口是80的tcp流量，并且数据包中有&quot;GET&quot;字符串（区分大小写）</span></span><br><span class="line">tcpdump -nn -A -i eth0 <span class="string">&#x27;tcp dst port 80 and (tcp[((tcp[12:1] &amp; 0xf0) &gt;&gt; 2):4] = 0x47455420)&#x27;</span></span><br><span class="line"><span class="comment"># ^ 这是一个高级过滤方式，表示 TCP payload 的前 4 个字节等于 &quot;GET &quot; 的 ASCII 码</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 简单点的，直接捕获到文件再用 grep 过滤可能更快：</span></span><br><span class="line"><span class="comment"># tcpdump -w http.pcap -nn -i eth0 tcp dst port 80</span></span><br><span class="line"><span class="comment"># strings http.pcap | grep &quot;GET /&quot;</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<hr>
+<h3 id="五、tcpdump-实际故障排查案例"><a href="#五、tcpdump-实际故障排查案例" class="headerlink" title="五、tcpdump 实际故障排查案例"></a>五、<code>tcpdump</code> 实际故障排查案例</h3><p><strong>故障场景：</strong> Web服务器无法连接到数据库服务器，应用程序报错“无法连接数据库”。<code>ping</code> 数据库服务器正常。</p>
+<ol>
+<li><p><strong>确认问题出在哪里：</strong></p>
+<ul>
+<li><code>ping</code> 正常表示 IP 层连通性正常，网络路由可能没问题。</li>
+<li>应用程序报错是连接层面。</li>
+<li>检查数据库服务（MySQL）本身是否运行：<code>systemctl status mysql</code>，确认运行正常。</li>
+</ul>
+</li>
+<li><p><strong>在 Web 服务器上捕获流量：</strong><br>我们怀疑是 Web 服务器到数据库服务器的连接问题，所以在 Web 服务器上使用 <code>tcpdump</code> 捕获到数据库服务器的 MySQL 端口 (3306) 流量。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 在 Web 服务器上执行</span></span><br><span class="line">tcpdump -nn -i eth0 <span class="string">&#x27;host &lt;DB_SERVER_IP&gt; and tcp port 3306&#x27;</span> -c 100 -s 0 -w /tmp/db_conn_issue.pcap</span><br><span class="line"><span class="comment"># -i eth0: 指定网卡</span></span><br><span class="line"><span class="comment"># host &lt;DB_SERVER_IP&gt;: 过滤掉其他IP的流量，只看数据库服务器的流量</span></span><br><span class="line"><span class="comment"># tcp port 3306: 只看3306端口的TCP流量</span></span><br><span class="line"><span class="comment"># -c 100: 捕获100个包后停止，防止文件过大</span></span><br><span class="line"><span class="comment"># -s 0: 不截断数据包，完全捕获数据包内容（默认为65535，即不截断）</span></span><br><span class="line"><span class="comment"># -w /tmp/db_conn_issue.pcap: 保存到文件，方便后面用Wireshark分析</span></span><br></pre></td></tr></table></figure>
+<p>同时，触发一次应用程序连接数据库的操作（如刷新网页）。</p>
+</li>
+<li><p><strong>分析捕获结果：</strong></p>
+<p>a. <strong>直接在命令行查看简要信息：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tcpdump -nn -r /tmp/db_conn_issue.pcap</span><br></pre></td></tr></table></figure>
+<p><strong>可能发现的现象及解释：</strong></p>
+<ul>
+<li><p><strong>只有 SYN 包，没有 SYN-ACK 包：</strong></p>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;WEB_IP&gt;<span class="string">.54321</span> &gt; &lt;DB_IP&gt;<span class="string">.3306</span>: Flags [S], seq <span class="string">...</span> length 0</span><br><span class="line">&lt;WEB_IP&gt;<span class="string">.54322</span> &gt; &lt;DB_IP&gt;<span class="string">.3306</span>: Flags [S], seq <span class="string">...</span> length 0</span><br><span class="line"><span class="string">...</span> <span class="params">(反复出现 SYN 包)</span></span><br></pre></td></tr></table></figure>
+<p><strong>解释：</strong> Web服务器发送了连接请求 (SYN)，但数据库服务器没有响应 (SYN-ACK)。<br><strong>原因：</strong></p>
+<ol>
+<li><strong>数据库服务器防火墙阻拦：</strong> 数据库服务器的 3306 端口可能没有对 Web 服务器开放。</li>
+<li><strong>网络ACL&#x2F;安全组问题：</strong> 云环境中，安全组可能阻止了入站流量。</li>
+<li><strong>数据库服务未监听或端口错误：</strong> MySQL 服务可能没有在 3306 端口监听，或者监听的地址不对 (例如只监听了 <code>127.0.0.1</code>)。</li>
+</ol>
+<p><strong>进一步排查：</strong></p>
+<ul>
+<li>在<strong>数据库服务器</strong>上执行 <code>tcpdump -nn -i eth0 &#39;host &lt;WEB_IP&gt; and tcp port 3306&#39;</code>，看能否收到 Web 服务器发来的 SYN 包。如果能收到，说明网络路径没问题，问题出在数据库服务器本身。</li>
+<li>在<strong>数据库服务器</strong>上检查防火墙 (<code>firewalld</code>, <code>ufw</code>, <code>iptables</code>) 规则。</li>
+<li>检查 MySQL 配置 (<code>my.cnf</code>)，确认 <code>bind-address</code> 和 <code>port</code> 设置是否正确。</li>
+</ul>
+</li>
+<li><p><strong>看到 SYN, SYN-ACK，但没有 ACK 或 RST：</strong></p>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;WEB_IP&gt;<span class="string">.54321</span> &gt; &lt;DB_IP&gt;<span class="string">.3306</span>: Flags [S], seq <span class="string">...</span> length 0</span><br><span class="line">&lt;DB_IP&gt;<span class="string">.3306</span> &gt; &lt;WEB_IP&gt;<span class="string">.54321</span>: Flags [S.], seq <span class="string">...</span>, ack <span class="string">...</span>, length 0</span><br><span class="line"><span class="string">...</span> <span class="params">(没有第三个包)</span></span><br></pre></td></tr></table></figure>
+<p><strong>解释：</strong> 数据库服务器成功响应用 <code>SYN-ACK</code>，但 Web 服务器没有发送最终的 <code>ACK</code> 包完成三次握手。<br><strong>原因：</strong></p>
+<ol>
+<li><strong>Web服务器防火墙阻拦：</strong> Web 服务器出站或入站的某些规则可能阻止了响应流量。</li>
+<li><strong>网络ACL&#x2F;安全组问题：</strong> Web服务器的出站安全组可能阻止了 ACK 包。</li>
+<li><strong>Web服务器端口耗尽：</strong> 连接数过多，可用临时端口耗尽。</li>
+</ol>
+</li>
+<li><p><strong>看到 RST (复位) 包：</strong></p>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&lt;WEB_IP&gt;<span class="string">.54321</span> &gt; &lt;DB_IP&gt;<span class="string">.3306</span>: Flags [S], seq <span class="string">...</span> length 0</span><br><span class="line">&lt;DB_IP&gt;<span class="string">.3306</span> &gt; &lt;WEB_IP&gt;<span class="string">.54321</span>: Flags [R.], seq <span class="string">...</span>, ack <span class="string">...</span>, win 0, length 0</span><br></pre></td></tr></table></figure>
+<p><strong>解释：</strong> 数据库服务器收到了 SYN 包，但立即发送了一个 RST 包，表示连接被拒绝。<br><strong>原因：</strong></p>
+<ol>
+<li><strong>连接数超出限制：</strong> 数据库服务器当前连接数已达到上限。</li>
+<li><strong>账号密码错误：</strong> 通常在三次握手后，应用层认证失败才会导致断开，但有时配置错误也可能在连接建立初期就 RST。</li>
+<li><strong>服务异常：</strong> 数据库服务可能内部错误导致无法接受新连接。</li>
+</ol>
+</li>
+</ul>
+<p>b. <strong>使用 Wireshark 进行图形化分析：</strong><br>对于复杂的场景，将 <code>.pcap</code> 文件下载到本地，用 Wireshark 打开能提供更直观、强大的分析能力，包括：</p>
+<ul>
+<li>TCP Stream Reassembly (重组TCP流，看到应用层数据)</li>
+<li>Expert Information (专家信息，快速识别异常)</li>
+<li>Follow TCP Stream (跟踪单个TCP会话)</li>
+<li>统计图表</li>
+</ul>
+<p>通过 Wireshark 的“专家信息”或“跟踪 TCP 流”，可以清晰地看到三次握手是否完成，以及是否有应用层协议数据（如 MySQL 协议的认证消息）被发送或接收。</p>
+</li>
+</ol>
+<h3 id="六、注意事项"><a href="#六、注意事项" class="headerlink" title="六、注意事项"></a>六、注意事项</h3><ul>
+<li><strong>权限：</strong> <code>tcpdump</code> 通常需要 <code>root</code> 权限。</li>
+<li><strong>性能影响：</strong> 在高流量的生产环境中捕获所有数据包可能会引起显著的 CPU 和内存开销。务必使用精确的过滤条件，并限制捕获时间或数量。</li>
+<li><strong>环形缓冲区：</strong> 对于长时间的捕获，可以结合 <code>split</code> 或 <code>rotat</code> 选项创建多个文件，形成环形缓冲区，避免单个文件过大：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">tcpdump -w traffic-%Y%m%d%H%M%S.pcap -G 3600 -C 100 -i eth0 host &lt;IP&gt;</span><br><span class="line"><span class="comment"># -G 3600: 每 3600 秒 (1小时) 创建一个新文件</span></span><br><span class="line"><span class="comment"># -C 100: 每个文件最大 100MB</span></span><br></pre></td></tr></table></figure></li>
+<li><strong>隐私和安全：</strong> 捕获的数据包可能包含敏感信息（如密码、API 密钥）。在非信任环境中操作时要小心，并且分析完后及时删除捕获文件。</li>
+<li><strong>不足之处：</strong> <code>tcpdump</code> 捕获的是已经到达网卡的数据包。如果问题发生在更早的层面（如硬件故障、网线未插紧），<code>tcpdump</code> 可能什么都捕获不到。</li>
+</ul>
+<p>掌握 <code>tcpdump</code> 的使用，不仅能快速定位网络层故障，还能帮助我们更深入地理解网络协议，是任何运维工程师的必备技能。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Linux%20%E4%B8%AD%20df%20%E4%B8%8E%20du%20%E5%8C%BA%E5%88%AB/" rel="prev" title="Linux 中 df 与 du 区别">
+      <i class="fa fa-chevron-left"></i> Linux 中 df 与 du 区别
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Linux%20strace%20%E5%91%BD%E4%BB%A4/" rel="next" title="Linux strace">
+      Linux strace <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E3%80%81tcpdump-%E7%AE%80%E4%BB%8B"><span class="nav-number">1.</span> <span class="nav-text">一、tcpdump 简介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E3%80%81tcpdump-%E7%9A%84%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95"><span class="nav-number">2.</span> <span class="nav-text">二、tcpdump 的基本使用方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E3%80%81tcpdump-%E7%9A%84%E5%B8%B8%E7%94%A8%E9%80%89%E9%A1%B9"><span class="nav-number">3.</span> <span class="nav-text">三、tcpdump 的常用选项</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E6%8C%87%E5%AE%9A%E7%BD%91%E7%BB%9C%E6%8E%A5%E5%8F%A3-i"><span class="nav-number">3.1.</span> <span class="nav-text">1. 指定网络接口 (-i)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E6%98%BE%E7%A4%BA%E8%AF%A6%E7%BB%86%E4%BF%A1%E6%81%AF-v-vv-vvv"><span class="nav-number">3.2.</span> <span class="nav-text">2. 显示详细信息 (-v, -vv, -vvv)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E4%B8%8D%E8%A7%A3%E6%9E%90%E4%B8%BB%E6%9C%BA%E5%90%8D%E5%92%8C%E7%AB%AF%E5%8F%A3%E5%8F%B7-n-nn"><span class="nav-number">3.3.</span> <span class="nav-text">3. 不解析主机名和端口号 (-n, -nn)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-%E6%98%BE%E7%A4%BA%E6%95%B0%E6%8D%AE%E5%8C%85%E5%86%85%E5%AE%B9-A-X-XX"><span class="nav-number">3.4.</span> <span class="nav-text">4. 显示数据包内容 (-A, -X, -XX)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-%E9%99%90%E5%88%B6%E6%8D%95%E8%8E%B7%E6%95%B0%E9%87%8F-c"><span class="nav-number">3.5.</span> <span class="nav-text">5. 限制捕获数量 (-c)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#6-%E5%B0%86%E6%8D%95%E8%8E%B7%E5%86%99%E5%85%A5%E6%96%87%E4%BB%B6-w"><span class="nav-number">3.6.</span> <span class="nav-text">6. 将捕获写入文件 (-w)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#7-%E4%BB%8E%E6%96%87%E4%BB%B6%E8%AF%BB%E5%8F%96%E6%8D%95%E8%8E%B7-r"><span class="nav-number">3.7.</span> <span class="nav-text">7. 从文件读取捕获 (-r)</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%9B%E3%80%81tcpdump-%E5%BC%BA%E5%A4%A7%E7%9A%84%E8%BF%87%E6%BB%A4%E8%A1%A8%E8%BE%BE%E5%BC%8F"><span class="nav-number">4.</span> <span class="nav-text">四、tcpdump 强大的过滤表达式</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E5%8D%8F%E8%AE%AE%E7%B1%BB%E5%9E%8B%E8%BF%87%E6%BB%A4"><span class="nav-number">4.1.</span> <span class="nav-text">1. 协议类型过滤</span></a></li><li class="nav-item nav-level-4"><a class="nav-link"><span class="nav-number">4.2.</span> <span class="nav-text">2. 主机过滤 (host)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E7%AB%AF%E5%8F%A3%E8%BF%87%E6%BB%A4-port"><span class="nav-number">4.3.</span> <span class="nav-text">3. 端口过滤 (port)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-%E7%BD%91%E7%BB%9C%E8%BF%87%E6%BB%A4-net"><span class="nav-number">4.4.</span> <span class="nav-text">4. 网络过滤 (net)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-%E7%BB%84%E5%90%88%E8%BF%87%E6%BB%A4%E8%A1%A8%E8%BE%BE%E5%BC%8F"><span class="nav-number">4.5.</span> <span class="nav-text">5. 组合过滤表达式</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%94%E3%80%81tcpdump-%E5%AE%9E%E9%99%85%E6%95%85%E9%9A%9C%E6%8E%92%E6%9F%A5%E6%A1%88%E4%BE%8B"><span class="nav-number">5.</span> <span class="nav-text">五、tcpdump 实际故障排查案例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%AD%E3%80%81%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9"><span class="nav-number">6.</span> <span class="nav-text">六、注意事项</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

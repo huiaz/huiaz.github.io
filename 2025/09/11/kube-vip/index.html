@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="使用 kube-vip 搭建高可用 Kubernetes 集群kube-vip 可以在你的控制平面节点上提供一个 Kubernetes 原生的 HA 负载均衡，我们不需要再在外部设置 HAProxy 和 Keepalived 来实现集群的高可用了。 kube-vip 是一个为 Kubernetes 集群内部和外部提供高可用和负载均衡的开源项目，在 Vmware 的 Tanzu 项目中已经使用 ku">
+<meta property="og:type" content="article">
+<meta property="og:title" content="kube-vip">
+<meta property="og:url" content="http://example.com/2025/09/11/kube-vip/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="使用 kube-vip 搭建高可用 Kubernetes 集群kube-vip 可以在你的控制平面节点上提供一个 Kubernetes 原生的 HA 负载均衡，我们不需要再在外部设置 HAProxy 和 Keepalived 来实现集群的高可用了。 kube-vip 是一个为 Kubernetes 集群内部和外部提供高可用和负载均衡的开源项目，在 Vmware 的 Tanzu 项目中已经使用 ku">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/5k3mcb.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/2dn4g5.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/kerish.png">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:45:47.705Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://mudutestmenu.mudu.tv/upload/5k3mcb.png">
+
+<link rel="canonical" href="http://example.com/2025/09/11/kube-vip/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>kube-vip | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/kube-vip/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          kube-vip
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:45:47" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E9%9B%86%E7%BE%A4%E7%AE%A1%E7%90%86/" itemprop="url" rel="index"><span itemprop="name">集群管理</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.8k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="使用-kube-vip-搭建高可用-Kubernetes-集群"><a href="#使用-kube-vip-搭建高可用-Kubernetes-集群" class="headerlink" title="使用 kube-vip 搭建高可用 Kubernetes 集群"></a>使用 kube-vip 搭建高可用 Kubernetes 集群</h1><p><a target="_blank" rel="noopener" href="https://kube-vip.io/">kube-vip</a> 可以在你的控制平面节点上提供一个 Kubernetes 原生的 HA 负载均衡，我们不需要再在外部设置 HAProxy 和 Keepalived 来实现集群的高可用了。</p>
+<p><code>kube-vip</code> 是一个为 Kubernetes 集群内部和外部提供高可用和负载均衡的开源项目，在 Vmware 的 Tanzu 项目中已经<a target="_blank" rel="noopener" href="https://docs.vmware.com/en/VMware-Tanzu-Kubernetes-Grid/1.2/rn/VMware-Tanzu-Kubernetes-Grid-12-Release-Notes.html">使用 kube-vip 替换了用于 vSphere 部署的 HAProxy 负载均衡器</a>，本文我们将先来了解 kube-vip 如何用于 Kubernetes 控制平面的高可用和负载均衡功能。</p>
+<h2 id="特点"><a href="#特点" class="headerlink" title="特点"></a>特点</h2><p>Kube-Vip 最初是为 Kubernetes 控制平面提供 HA 解决方案而创建的，随着时间的推移，它已经发展为将相同的功能合并到 Kubernetes 的 LoadBalancer 类型的 Service 中了。</p>
+<ul>
+<li>VIP 地址可以是 IPv4 或 IPv6</li>
+<li>带有 ARP（第 2 层）或 BGP（第 3 层）的控制平面</li>
+<li>使用领导选举或 raft 控制平面</li>
+<li>带有 kubeadm（静态 Pod）的控制平面 HA</li>
+<li>带有 K3s&#x2F;和其他（DaemonSets）的控制平面 HA</li>
+<li>使用 ARP 领导者选举的 Service LoadBalancer（第 2 层）</li>
+<li>通过 BGP 使用多个节点的 Service LoadBalancer</li>
+<li>每个命名空间或全局的 Service LoadBalancer 地址池</li>
+<li>Service LoadBalancer 地址通过 UPNP 暴露给网关</li>
+</ul>
+<h2 id="HAProxy-和-kube-vip-的-HA-集群"><a href="#HAProxy-和-kube-vip-的-HA-集群" class="headerlink" title="HAProxy 和 kube-vip 的 HA 集群"></a>HAProxy 和 kube-vip 的 HA 集群</h2><p>在以前我们在私有环境下创建 Kubernetes 集群时，我们需要准备一个硬件&#x2F;软件的负载均衡器来创建多控制面集群，更多的情况下我们会选择使用 HAProxy + Keepalived 来实现这个功能。一般情况下我们创建 2 个负载均衡器的虚拟机，然后分配一个 VIP，然后使用 VIP 为负载均衡器提供服务，通过 VIP 将流量重定向到后端的某个 Kubernetes 控制器平面节点上。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/5k3mcb.png" alt="haproxy+keepalived"></p>
+<p>接下来我们再来看看如果我们使用 kube-vip 的话会怎样呢？</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/2dn4g5.png" alt="kube-vip"></p>
+<p>kube-vip 可以通过静态 pod 运行在控制平面节点上，这些 pod 通过 ARP 对话来识别每个节点上的其他主机，所以需要在 hosts 文件中设置每个节点的 IP 地址，我们可以选择 BGP 或 ARP 来设置负载平衡器，这与 Metal LB 比较类似。这里我们没有 BGP 服务，只是想快速测试一下，所以这里我们使用 ARP 与静态 pod 的方式。</p>
+<h2 id="kube-vip-架构"><a href="#kube-vip-架构" class="headerlink" title="kube-vip 架构"></a>kube-vip 架构</h2><p>kube-vip 有许多功能设计选择提供高可用性或网络功能，作为 VIP&#x2F;负载平衡解决方案的一部分。</p>
+<h3 id="Cluster"><a href="#Cluster" class="headerlink" title="Cluster"></a>Cluster</h3><p>kube-vip 建立了一个多节点或多模块的集群来提供高可用性。在 ARP 模式下，会选出一个领导者，这个节点将继承虚拟 IP 并成为集群内负载均衡的领导者，而在 BGP 模式下，所有节点都会通知 VIP 地址。</p>
+<p>当使用 ARP 或 layer2 时，它将使用领导者选举，当然也可以使用 raft 集群技术，但这种方法在很大程度上已经被领导者选举所取代，特别是在集群中运行时。</p>
+<h3 id="虚拟-IP"><a href="#虚拟-IP" class="headerlink" title="虚拟 IP"></a>虚拟 IP</h3><p>集群中的领导者将分配 vip，并将其绑定到配置中声明的选定接口上。当领导者改变时，它将首先撤销 vip，或者在失败的情况下，vip 将直接由下一个当选的领导者分配。</p>
+<p>当 vip 从一个主机移动到另一个主机时，任何使用 vip 的主机将保留以前的 <code>vip &lt;-&gt; MAC</code> 地址映射，直到 ARP 过期（通常是 30 秒）并检索到一个新的 <code>vip &lt;-&gt; MAC</code> 映射，这可以通过使用无偿的 ARP 广播来优化。</p>
+<h3 id="ARP"><a href="#ARP" class="headerlink" title="ARP"></a>ARP</h3><p>kube-vip 可以被配置为广播一个无偿的 arp（可选），通常会立即通知所有本地主机 <code>vip &lt;-&gt; MAC</code> 地址映射已经改变。</p>
+<p>下面我们可以看到，当 ARP 广播被接收时，故障转移通常在几秒钟内完成。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">64 bytes from 192.168.0.75: icmp_seq=146 ttl=64 time=0.258 ms</span><br><span class="line">64 bytes from 192.168.0.75: icmp_seq=147 ttl=64 time=0.240 ms</span><br><span class="line">92 bytes from 192.168.0.70: Redirect Host(New addr: 192.168.0.75)</span><br><span class="line">Vr HL TOS  Len   ID Flg  off TTL Pro  cks      Src      Dst</span><br><span class="line"> 4  5  00 0054 bc98   0 0000  3f  01 3d16 192.168.0.95  192.168.0.75</span><br><span class="line"></span><br><span class="line">Request timeout for icmp_seq 148</span><br><span class="line">92 bytes from 192.168.0.70: Redirect Host(New addr: 192.168.0.75)</span><br><span class="line">Vr HL TOS  Len   ID Flg  off TTL Pro  cks      Src      Dst</span><br><span class="line"> 4  5  00 0054 75ff   0 0000  3f  01 83af 192.168.0.95  192.168.0.75</span><br><span class="line"></span><br><span class="line">Request timeout for icmp_seq 149</span><br><span class="line">92 bytes from 192.168.0.70: Redirect Host(New addr: 192.168.0.75)</span><br><span class="line">Vr HL TOS  Len   ID Flg  off TTL Pro  cks      Src      Dst</span><br><span class="line"> 4  5  00 0054 2890   0 0000  3f  01 d11e 192.168.0.95  192.168.0.75</span><br><span class="line"></span><br><span class="line">Request timeout for icmp_seq 150</span><br><span class="line">64 bytes from 192.168.0.75: icmp_seq=151 ttl=64 time=0.245 ms</span><br></pre></td></tr></table></figure>
+
+<h2 id="使用-kube-vip"><a href="#使用-kube-vip" class="headerlink" title="使用 kube-vip"></a>使用 kube-vip</h2><p>接下来我们来使用 kube-vip 搭建一个高可用的 Kubernetes 集群。先准备 6 个节点：</p>
+<ul>
+<li>3 个控制平面节点</li>
+<li>3 个 worker 节点</li>
+</ul>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/kerish.png" alt="kube-vip"></p>
+<p>首先在宿主机上面安装相关依赖，包括 kubeadm、kubelet、kubectl 以及一个容器运行时，这里我们使用的是 containerd。</p>
+<p>获取 kube-vip 的 docker 镜像，并在 <code>/etc/kuberentes/manifests</code> 中设置静态 pod 的 yaml 资源清单文件，这样 Kubernetes 就会自动在每个控制平面节点上部署 kube-vip 的 pod 了。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">设置VIP地址</span></span><br><span class="line">export VIP=192.168.0.100</span><br><span class="line">export INTERFACE=eth0</span><br><span class="line">ctr image pull docker.io/plndr/kube-vip:0.3.1</span><br><span class="line">ctr run --rm --net-host docker.io/plndr/kube-vip:0.3.1 vip \</span><br><span class="line">/kube-vip manifest pod \</span><br><span class="line">--interface $INTERFACE \</span><br><span class="line">--vip $VIP \</span><br><span class="line">--controlplane \</span><br><span class="line">--services \</span><br><span class="line">--arp \</span><br><span class="line">--leaderElection | tee  /etc/kubernetes/manifests/kube-vip.yaml</span><br></pre></td></tr></table></figure>
+
+<p>接下来就可以配置 kubeadm 了，如下所示：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">cat &gt; ~/init_kubelet.yaml &lt;&lt;EOF</span><br><span class="line">apiVersion: kubeadm.k8s.io/v1beta2</span><br><span class="line">kind: InitConfiguration</span><br><span class="line">bootstrapTokens:</span><br><span class="line">- token: &quot;9a08jv.c0izixklcxtmnze7&quot;</span><br><span class="line">description: &quot;kubeadm bootstrap token&quot;</span><br><span class="line">ttl: &quot;24h&quot;</span><br><span class="line">nodeRegistration:</span><br><span class="line">criSocket: &quot;/var/run/containerd/containerd.sock&quot;</span><br><span class="line">---</span><br><span class="line">apiVersion: kubeadm.k8s.io/v1beta2</span><br><span class="line">kind: ClusterConfiguration</span><br><span class="line">controlPlaneEndpoint: &quot;192.168.0.100:6443&quot;</span><br><span class="line">---</span><br><span class="line">apiVersion: kubelet.config.k8s.io/v1beta1</span><br><span class="line">kind: KubeletConfiguration</span><br><span class="line">cgroupDriver: &quot;systemd&quot;</span><br><span class="line">protectKernelDefaults: true</span><br><span class="line">EOF</span><br><span class="line">kubeadm init --config init_kubelet.yaml --upload-certs</span><br></pre></td></tr></table></figure>
+
+<p>然后安装 CNI，比如我们选择使用 Cilium。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash</span><br><span class="line">helm repo add cilium https://helm.cilium.io/</span><br><span class="line">helm install cilium cilium/cilium --version 1.9.4 \</span><br><span class="line">--namespace kube-system</span><br></pre></td></tr></table></figure>
+
+<p>在第一个控制平面节点准备好后，让其他节点加入你的集群。对于其他控制平面节点，运行如下命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">kubeadm join 192.168.0.100:6443 --token hash.hash\</span><br><span class="line">     --discovery-token-ca-cert-hash sha256:hash \</span><br><span class="line">     --control-plane --certificate-key key</span><br></pre></td></tr></table></figure>
+
+<p>对于工作节点，运行类似命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">kubeadm join 192.168.0.100:6443 --token hash.hash\</span><br><span class="line">    --discovery-token-ca-cert-hash sha256:hash</span><br></pre></td></tr></table></figure>
+
+<p>正常执行完成后集群就可以启动起来了：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">kubectl get node -o wide</span></span><br><span class="line">NAME           STATUS   ROLES                  AGE    VERSION   INTERNAL-IP   EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION     CONTAINER-RUNTIME</span><br><span class="line">k8s-master-0   Ready    control-plane,master   121m   v1.20.2   192.168.0.201   &lt;none&gt;        Ubuntu 20.04.2 LTS   5.4.0-45-generic   containerd://1.4.3</span><br><span class="line">k8s-master-1   Ready    control-plane,master   114m   v1.20.2   192.168.0.202   &lt;none&gt;        Ubuntu 20.04.2 LTS   5.4.0-45-generic   containerd://1.4.3</span><br><span class="line">k8s-master-2   Ready    control-plane,master   113m   v1.20.2   192.168.0.203   &lt;none&gt;        Ubuntu 20.04.2 LTS   5.4.0-45-generic   containerd://1.4.3</span><br><span class="line">k8s-worker-0   Ready    &lt;none&gt;                 114m   v1.20.2   192.168.0.204   &lt;none&gt;        Ubuntu 20.04.2 LTS   5.4.0-45-generic   containerd://1.4.3</span><br><span class="line">k8s-worker-1   Ready    &lt;none&gt;                 114m   v1.20.2   192.168.0.205   &lt;none&gt;        Ubuntu 20.04.2 LTS   5.4.0-45-generic   containerd://1.4.3</span><br><span class="line">k8s-worker-2   Ready    &lt;none&gt;                 112m   v1.20.2   192.168.0.206   &lt;none&gt;        Ubuntu 20.04.2 LTS   5.4.0-45-generic   containerd://1.4.3</span><br></pre></td></tr></table></figure>
+
+<p>现在可以看到我们的控制面的端点是 192.168.0.100，没有其他额外的节点，是不是非常方便。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/mysql_backup/" rel="prev" title="mysql_backup">
+      <i class="fa fa-chevron-left"></i> mysql_backup
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/kube-state-metrics/" rel="next" title="kube-state-metrics">
+      kube-state-metrics <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-kube-vip-%E6%90%AD%E5%BB%BA%E9%AB%98%E5%8F%AF%E7%94%A8-Kubernetes-%E9%9B%86%E7%BE%A4"><span class="nav-number">1.</span> <span class="nav-text">使用 kube-vip 搭建高可用 Kubernetes 集群</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%89%B9%E7%82%B9"><span class="nav-number">1.1.</span> <span class="nav-text">特点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HAProxy-%E5%92%8C-kube-vip-%E7%9A%84-HA-%E9%9B%86%E7%BE%A4"><span class="nav-number">1.2.</span> <span class="nav-text">HAProxy 和 kube-vip 的 HA 集群</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#kube-vip-%E6%9E%B6%E6%9E%84"><span class="nav-number">1.3.</span> <span class="nav-text">kube-vip 架构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Cluster"><span class="nav-number">1.3.1.</span> <span class="nav-text">Cluster</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%99%9A%E6%8B%9F-IP"><span class="nav-number">1.3.2.</span> <span class="nav-text">虚拟 IP</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ARP"><span class="nav-number">1.3.3.</span> <span class="nav-text">ARP</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-kube-vip"><span class="nav-number">1.4.</span> <span class="nav-text">使用 kube-vip</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

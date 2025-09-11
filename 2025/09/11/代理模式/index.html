@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="什么是正向代理？正向代理（Forward Proxy），通常我们所说的“代理服务器”指的就是正向代理。它是一个位于客户端和目标服务器之间的服务器。  工作原理： 客户端明确知道自己要访问的目标服务器，但它不直接与目标服务器通信，而是将请求发送给正向代理服务器，由代理服务器去访问目标服务器，然后将目标服务器的响应返回给客户端。 隐藏谁？ 隐藏的是真实的客户端。对于目标服务器来说，它只知道请求来自代理">
+<meta property="og:type" content="article">
+<meta property="og:title" content="代理模式">
+<meta property="og:url" content="http://example.com/2025/09/11/%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="什么是正向代理？正向代理（Forward Proxy），通常我们所说的“代理服务器”指的就是正向代理。它是一个位于客户端和目标服务器之间的服务器。  工作原理： 客户端明确知道自己要访问的目标服务器，但它不直接与目标服务器通信，而是将请求发送给正向代理服务器，由代理服务器去访问目标服务器，然后将目标服务器的响应返回给客户端。 隐藏谁？ 隐藏的是真实的客户端。对于目标服务器来说，它只知道请求来自代理">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:11:06.714Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Network">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>代理模式 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          代理模式
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:11:06" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/" itemprop="url" rel="index"><span itemprop="name">WEB</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/Nginx/" itemprop="url" rel="index"><span itemprop="name">Nginx</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.7k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="什么是正向代理？"><a href="#什么是正向代理？" class="headerlink" title="什么是正向代理？"></a>什么是正向代理？</h3><p><strong>正向代理（Forward Proxy）</strong>，通常我们所说的“代理服务器”指的就是正向代理。它是一个位于<strong>客户端</strong>和<strong>目标服务器</strong>之间的服务器。</p>
+<ul>
+<li><strong>工作原理：</strong> 客户端明确知道自己要访问的目标服务器，但它不直接与目标服务器通信，而是将请求发送给正向代理服务器，由代理服务器去访问目标服务器，然后将目标服务器的响应返回给客户端。</li>
+<li><strong>隐藏谁？</strong> 隐藏的是真实的<strong>客户端</strong>。对于目标服务器来说，它只知道请求来自代理服务器，而不知道是哪个客户端发起的。</li>
+<li><strong>应用场景：</strong><ul>
+<li><strong>规避防火墙或网络限制：</strong> 例如，在某些地区或公司网络中，访问特定网站被限制，可以通过境外或未受限地区的正向代理服务器进行访问。</li>
+<li><strong>访问内部资源：</strong> 例如，公司内部网络通过一个统一的正向代理出口访问互联网资源。</li>
+<li><strong>提高访问速度：</strong> 代理服务器可以缓存内容，当多个用户访问同一资源时，可以直接从代理缓存中获取，加快速度。</li>
+<li><strong>匿名访问：</strong> 隐藏真实 IP 地址，保护用户隐私。</li>
+<li><strong>网络安全审计：</strong> 记录所有经过代理的请求，进行内容过滤和安全检查。</li>
+</ul>
+</li>
+</ul>
+<p><strong>简单理解：</strong> 客户端请求一个它想访问的网站A，告诉代理服务器，代理服务器代替客户端去访问网站A，然后把网站A的内容返回给客户端。客户端知道代理服务器的存在，并且是主动使用代理服务器的。</p>
+<h3 id="什么是反向代理？"><a href="#什么是反向代理？" class="headerlink" title="什么是反向代理？"></a>什么是反向代理？</h3><p><strong>反向代理（Reverse Proxy）</strong> 也是一个代理服务器，但它位于<strong>用户（客户端）</strong>和<strong>后端服务器集群</strong>之间。</p>
+<ul>
+<li><strong>工作原理：</strong> 客户端发送请求到反向代理服务器，客户端并不知道背后有多少台服务器，也不知道具体是哪台服务器处理的请求。反向代理服务器接收请求后，再根据内部规则（如负载均衡算法、请求路由规则等）将请求转发给后端的一台或多台真实的服务器，然后将后端服务器的响应返回给客户端。</li>
+<li><strong>隐藏谁？</strong> 隐藏的是真实的<strong>后端服务器</strong>。对于客户端来说，它只知道请求发给了反向代理服务器，而不知道背后有多少台（或哪台）后端服务器在提供服务。它误以为反向代理服务器就是真正的服务器。</li>
+<li><strong>应用场景：</strong><ul>
+<li><strong>负载均衡：</strong> 将客户端请求分发到多台后端服务器上，均衡各服务器的负载，提高系统性能和可用性。</li>
+<li><strong>增强安全性：</strong> 隐藏后端服务器的真实 IP 地址和端口，只暴露反向代理服务器，后端服务器不直接暴露在公网，抵御外部攻击。</li>
+<li><strong>SSL&#x2F;TLS 卸载：</strong> 在反向代理层处理 HTTPS 的加密解密工作，减轻后端服务器的计算压力，提高后端服务器的处理能力。</li>
+<li><strong>统一入口和管理：</strong> 客户端无需知道后端服务的复杂性，所有请求都通过反向代理这一个统一入口。</li>
+<li><strong>静态资源缓存：</strong> 反向代理服务器可以缓存静态文件，减轻后端服务器的压力，加速响应。</li>
+<li><strong>A&#x2F;B 测试和灰度发布：</strong> 根据规则将一部分用户请求转发到新版本的服务上，实现平滑升级。</li>
+</ul>
+</li>
+</ul>
+<p><strong>简单理解：</strong> 客户端向代理服务器发送请求，它以为代理服务器就是它要访问的网站。代理服务器收到请求后，根据内部配置决定把请求转交给哪个真正的后端服务器，后端服务器处理完后，把结果返回给代理服务器，代理服务器再返回给客户端。客户端不知道它访问的网站实际上是由代理服务器背后的多台服务器提供服务的。</p>
+<h3 id="如何使用-Nginx-做反向代理？"><a href="#如何使用-Nginx-做反向代理？" class="headerlink" title="如何使用 Nginx 做反向代理？"></a>如何使用 Nginx 做反向代理？</h3><p>Nginx 是一个非常强大的反向代理服务器。其配置相对简洁明了。</p>
+<p>以下是一个基本的 Nginx 反向代理配置示例，假设你有两个后端服务器：<code>backend1.example.com</code> 和 <code>backend2.example.com</code>，它们都在 8000 端口提供服务。我们希望通过 Nginx 监听 80 端口，并将请求代理到这两台后端服务器。</p>
+<p>我们将配置写在 Nginx 的配置文件中，通常是 <code>/etc/nginx/nginx.conf</code> 或在 <code>conf.d</code> 目录下的一个<code>.conf</code>文件，例如 <code>/etc/nginx/conf.d/proxy.conf</code>。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># step 1: 定义一个上游服务器组 (upstream)，用于负载均衡后端服务器</span></span><br><span class="line"><span class="comment"># 这个 upstream 块定义了一个名为 &#x27;my_backend_servers&#x27; 的逻辑组</span></span><br><span class="line"><span class="section">upstream</span> my_backend_servers &#123;</span><br><span class="line">    <span class="comment"># server 指令指定了后端服务器的地址和端口</span></span><br><span class="line">    <span class="comment"># weight 参数表示服务器的权重，权重越高，被分配到的请求越多</span></span><br><span class="line">    <span class="comment"># 可选的 max_fails 和 fail_timeout 用于健康检查</span></span><br><span class="line">    <span class="attribute">server</span> backend1.example.com:<span class="number">8000</span> weight=<span class="number">3</span>;</span><br><span class="line">    <span class="attribute">server</span> backend2.example.com:<span class="number">8000</span> weight=<span class="number">1</span>;</span><br><span class="line">    <span class="comment"># 也可以是 IP 地址</span></span><br><span class="line">    <span class="comment"># server 192.168.1.10:8000 weight=3;</span></span><br><span class="line">    <span class="comment"># server 192.168.1.11:8000 weight=1;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 可选的负载均衡算法（默认是轮询）</span></span><br><span class="line">    <span class="comment"># round </span></span><br><span class="line">    <span class="comment"># least_conn; # 最少连接数，将请求发往连接数最少的服务器</span></span><br><span class="line">    <span class="comment"># ip_hash;    # 根据客户端IP的哈希值来分配请求，确保同一客户端请求始终发往同一服务器</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># step 2: 配置一个 server 块来监听客户端请求</span></span><br><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>; <span class="comment"># Nginx 监听 80 端口，接收 HTTP 请求</span></span><br><span class="line">    <span class="attribute">server_name</span> your_domain.com www.your_domain.com; <span class="comment"># 你的域名，客户端通过这个域名访问Nginx</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># step 3: 配置 location 块来定义如何处理请求</span></span><br><span class="line">    <span class="section">location</span> / &#123;</span><br><span class="line">        <span class="comment"># proxy_pass 指令是实现反向代理的核心</span></span><br><span class="line">        <span class="comment"># 它将所有匹配 &#x27;/ &#x27; 路径的请求转发到上面定义的 &#x27;my_backend_servers&#x27; 上游组</span></span><br><span class="line">        <span class="attribute">proxy_pass</span> http://my_backend_servers; </span><br><span class="line"></span><br><span class="line">        <span class="comment"># 以下是常见的反向代理配置，用于正确处理请求头，确保后端服务器能获取到客户端的真实信息</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># 设置 X-Real-IP 头，将客户端的真实 IP 地址传递给后端服务器</span></span><br><span class="line">        <span class="attribute">proxy_set_header</span> X-Real-IP <span class="variable">$remote_addr</span>;</span><br><span class="line">      </span><br><span class="line">        <span class="comment"># 设置 X-Forwarded-For 头，记录客户端到代理服务器的完整路径，</span></span><br><span class="line">        <span class="comment"># 如果有多个代理，会看到一个 IP 列表，第一个是真实客户端 IP</span></span><br><span class="line">        <span class="attribute">proxy_set_header</span> X-Forwarded-For <span class="variable">$proxy_add_x_forwarded_for</span>;</span><br><span class="line">      </span><br><span class="line">        <span class="comment"># 设置 Host 头，将客户端请求的原始 Host 头传递给后端服务器</span></span><br><span class="line">        <span class="comment"># 否则，后端可能会看到Nginx服务器的Host或者upstream名字</span></span><br><span class="line">        <span class="attribute">proxy_set_header</span> Host <span class="variable">$host</span>; </span><br><span class="line">      </span><br><span class="line">        <span class="comment"># 允许后端服务器重定向到 HTTPS 或其他域名时使用正确的协议和主机名</span></span><br><span class="line">        <span class="attribute">proxy_redirect</span> <span class="literal">off</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 可选：设置连接和读取超时时间，防止因后端响应慢而导致客户端等待过久</span></span><br><span class="line">        <span class="attribute">proxy_connect_timeout</span> <span class="number">60s</span>;</span><br><span class="line">        <span class="attribute">proxy_send_timeout</span> <span class="number">60s</span>;</span><br><span class="line">        <span class="attribute">proxy_read_timeout</span> <span class="number">60s</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 可选：缓冲设置，Nginx会先接收后端服务器的响应，满足条件后才发送给客户端</span></span><br><span class="line">        <span class="comment"># 这对于处理慢速后端或优化网络传输有用</span></span><br><span class="line">        <span class="attribute">proxy_buffering</span> <span class="literal">on</span>;</span><br><span class="line">        <span class="attribute">proxy_buffers</span> <span class="number">4</span> <span class="number">32k</span>;</span><br><span class="line">        <span class="attribute">proxy_buffer_size</span> <span class="number">64k</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 如果有静态文件，可以单独配置，让Nginx直接处理，不经过后端，提高效率</span></span><br><span class="line">    <span class="section">location</span> <span class="regexp">~* \.(jpg|jpeg|gif|png|css|js|ico|woff|woff2|ttf|svg|eot)$</span> &#123;</span><br><span class="line">        <span class="attribute">root</span> /var/www/your_static_files; <span class="comment"># 静态文件存放路径</span></span><br><span class="line">        <span class="attribute">expires</span> <span class="number">30d</span>; <span class="comment"># 缓存30天</span></span><br><span class="line">        <span class="attribute">access_log</span> <span class="literal">off</span>; <span class="comment"># 静态文件不记录访问日志</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>配置步骤和解释:</strong></p>
+<ol>
+<li><p><strong><code>upstream</code> 块:</strong></p>
+<ul>
+<li><code>upstream my_backend_servers &#123; ... &#125;</code>：这里定义了一个名为 <code>my_backend_servers</code> 的上游服务器组。Nginx 会通过这个组来管理和分发请求给后端服务器。</li>
+<li><code>server backend1.example.com:8000 weight=3;</code>：指定了一个后端服务器的地址和端口。<ul>
+<li><code>weight=3</code> 表示该服务器会比其他服务器获得更多的请求（权重是 3:1，即 <code>backend1</code> 获得 75% 的请求，<code>backend2</code> 获得 25%）。默认权重是 1。</li>
+<li>可以添加多个 <code>server</code> 条目来包含所有的后端服务器。</li>
+</ul>
+</li>
+<li><strong>负载均衡算法：</strong> 如果不指定，默认是 <strong>轮询（round-robin）</strong>，即依次将请求分发给组中的每个服务器。<ul>
+<li><code>least_conn;</code>：将请求转发给当前活动连接数最少的服务器。适用于连接时间较长的场景。</li>
+<li><code>ip_hash;</code>：根据客户端 IP 地址的哈希值来决定将请求转发给哪台服务器。这可以确保来自同一 IP 的请求始终由同一台服务器处理，对于会话粘性（session affinity）非常有用。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong><code>server</code> 块:</strong></p>
+<ul>
+<li><code>listen 80;</code>：Nginx 监听 80 端口，等待客户端的 HTTP 请求。</li>
+<li><code>server_name your_domain.com www.your_domain.com;</code>：指定 Nginx 应该响应哪个域名。</li>
+</ul>
+</li>
+<li><p><strong><code>location / &#123; ... &#125;</code> 块:</strong></p>
+<ul>
+<li><code>location / &#123; ... &#125;</code>：这个块定义了当请求的 URI 匹配 <code>/</code> 时（即所有请求）如何处理。</li>
+<li><code>proxy_pass http://my_backend_servers;</code>：这是实现反向代理的核心指令。它告诉 Nginx 将匹配的请求转发到 <code>my_backend_servers</code> 这个上游组中定义的后端服务器之一。</li>
+<li><strong><code>proxy_set_header</code> 配置项：</strong> 这些非常重要，它们用于将客户端请求的原始信息传递给后端服务器。<ul>
+<li><code>X-Real-IP</code> 和 <code>X-Forwarded-For</code>：确保后端服务器能获取客户端的真实 IP 地址，而不是 Nginx 服务器的 IP。</li>
+<li><code>Host</code>：将客户端请求的原始 <code>Host</code> 头传递给后端，这对于后端应用程序正确处理请求（例如处理虚拟主机、生成正确的回调 URL）至关重要。</li>
+</ul>
+</li>
+<li><code>proxy_redirect off;</code>：此指令禁用 Nginx 默认的 <code>Location</code> 头修改行为。当后端服务器发送重定向响应时（例如 HTTP 301&#x2F;302），后端可能会返回一个内部 URL。<code>proxy_redirect off</code> 可以确保 Nginx 不会修改这些重定向 URL，从而防止意外的行为。通常是设置为 <code>off</code>。</li>
+</ul>
+</li>
+</ol>
+<p><strong>完成配置后的操作：</strong></p>
+<ol>
+<li><strong>保存配置文件。</strong></li>
+<li><strong>测试配置语法：</strong> <code>sudo nginx -t</code><ul>
+<li>如果输出 <code>test is successful</code>，则表示配置语法正确。如果有错误，需要根据提示进行修改。</li>
+</ul>
+</li>
+<li><strong>重新加载 Nginx 配置：</strong> <code>sudo systemctl reload nginx</code> 或 <code>sudo service nginx reload</code><ul>
+<li>这样 Nginx 就会在不中断现有连接的情况下加载新配置。</li>
+</ul>
+</li>
+</ol>
+<p>现在，当客户端访问 <code>http://your_domain.com</code> 时，Nginx 会接收请求，并根据 <code>my_backend_servers</code> 上游组中配置的负载均衡算法，将请求转发给 <code>backend1.example.com:8000</code> 或 <code>backend2.example.com:8000</code>。后端服务器处理请求后，响应会通过 Nginx 返回给客户端。客户端全程都不知道背后有多个后端服务器在工作，也看不到它们的真实 IP。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Network/" rel="tag"># Network</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E4%BA%91%E5%8E%9F%E7%94%9F%E5%8F%AF%E8%A7%82%E6%B5%8B%E5%B9%B3%E5%8F%B0%20OpenObserve/" rel="prev" title="云原生可观测平台 OpenObserve">
+      <i class="fa fa-chevron-left"></i> 云原生可观测平台 OpenObserve
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E4%B8%BA%E4%BB%80%E4%B9%88%20TCP%20%E6%8C%A5%E6%89%8B%E9%9C%80%E8%A6%81%E6%9C%89%20TIME_WAIT%20%E7%8A%B6%E6%80%81/" rel="next" title="为什么 TCP 挥手需要有 TIME_WAIT 状态">
+      为什么 TCP 挥手需要有 TIME_WAIT 状态 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E6%AD%A3%E5%90%91%E4%BB%A3%E7%90%86%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">什么是正向代理？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86%EF%BC%9F"><span class="nav-number">2.</span> <span class="nav-text">什么是反向代理？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8-Nginx-%E5%81%9A%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86%EF%BC%9F"><span class="nav-number">3.</span> <span class="nav-text">如何使用 Nginx 做反向代理？</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

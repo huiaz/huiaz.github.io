@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="常见的网络攻击类型1. CC 攻击 (Challenge Collapsar)CC 攻击 是 应用层攻击 的一种，主要针对 Web 服务器的 应用层，通过模拟大量真实用户访问行为，耗尽服务器的处理资源。它的目标是让网站无法正常响应合法用户的请求。 攻击原理：CC 攻击通常会伪造大量的 IP 地址，向目标网站的同一个页面或多个页面发送大量合法的 HTTP 请求。这些请求通常是动态页面（如登录页面、搜">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LInux 安全">
+<meta property="og:url" content="http://example.com/2025/09/11/LInux%20%E5%AE%89%E5%85%A8/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="常见的网络攻击类型1. CC 攻击 (Challenge Collapsar)CC 攻击 是 应用层攻击 的一种，主要针对 Web 服务器的 应用层，通过模拟大量真实用户访问行为，耗尽服务器的处理资源。它的目标是让网站无法正常响应合法用户的请求。 攻击原理：CC 攻击通常会伪造大量的 IP 地址，向目标网站的同一个页面或多个页面发送大量合法的 HTTP 请求。这些请求通常是动态页面（如登录页面、搜">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:46:39.978Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/LInux%20%E5%AE%89%E5%85%A8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>LInux 安全 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/LInux%20%E5%AE%89%E5%85%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          LInux 安全
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:46:39" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/Manage/" itemprop="url" rel="index"><span itemprop="name">Manage</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.2k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="常见的网络攻击类型"><a href="#常见的网络攻击类型" class="headerlink" title="常见的网络攻击类型"></a>常见的网络攻击类型</h3><h3 id="1-CC-攻击-Challenge-Collapsar"><a href="#1-CC-攻击-Challenge-Collapsar" class="headerlink" title="1. CC 攻击 (Challenge Collapsar)"></a>1. CC 攻击 (Challenge Collapsar)</h3><p><strong>CC 攻击</strong> 是 <strong>应用层攻击</strong> 的一种，主要针对 Web 服务器的 <strong>应用层</strong>，通过模拟大量真实用户访问行为，耗尽服务器的处理资源。它的目标是让网站无法正常响应合法用户的请求。</p>
+<p><strong>攻击原理：</strong><br>CC 攻击通常会伪造大量的 IP 地址，向目标网站的同一个页面或多个页面发送大量<strong>合法的 HTTP 请求</strong>。这些请求通常是动态页面（如登录页面、搜索页面、提交表单页面等），因为动态页面的处理需要服务器执行复杂的计算、查询数据库、调用后端程序，这会消耗大量的 CPU、内存和数据库资源。</p>
+<ul>
+<li><strong>模拟真实用户行为：</strong> 攻击者会模拟用户的 GET 或 POST 请求，可能包括浏览器头、Referer 等信息，使得这些请求看起来像是正常的访问。</li>
+<li><strong>高并发请求：</strong> 在短时间内发送海量的请求，使服务器的连接数、并发处理能力达到上限。</li>
+<li><strong>耗尽服务器资源：</strong> 导致服务器处理请求队列堆积，CPU 负载过高，内存耗尽，数据库连接池饱和，最终表现为网站响应缓慢或直接崩溃，无法服务正常用户。</li>
+</ul>
+<p><strong>特点：</strong></p>
+<ul>
+<li><strong>隐蔽性相对较高：</strong> 请求包本身是合法的 HTTP 请求，难以通过简单的防火墙规则过滤。</li>
+<li><strong>成本较低：</strong> 攻击者可以使用僵尸网络（Botnet）发动攻击，或者自己编写脚本模拟请求。</li>
+<li><strong>针对应用层：</strong> 专注于消耗服务器的应用层处理能力，而非网络带宽。</li>
+</ul>
+<p><strong>防范思路（运维角度）：</strong></p>
+<ul>
+<li><strong>Web 应用防火墙 (WAF)：</strong> WAF 可以识别和过滤恶意请求，例如基于行为模式、IP 信誉库、请求频率等。</li>
+<li><strong>CDN (内容分发网络)：</strong> CDN 可以分散请求，并提供DDoS&#x2F;CC防护能力。</li>
+<li><strong>负载均衡：</strong> 将流量分散到多台服务器，提高整体处理能力。</li>
+<li><strong>请求频率限制：</strong> 限制单个 IP 在单位时间内的请求次数。</li>
+<li><strong>验证码&#x2F;人机验证：</strong> 在高频访问或关键操作处引入验证码（如 Google reCAPTCHA），区分人与机器。</li>
+<li><strong>优化服务器配置：</strong> 优化 Web 服务器（Nginx&#x2F;Apache）配置，如连接数、超时时间等。</li>
+<li><strong>代码优化：</strong> 提高网站程序的处理效率，减少数据库查询和复杂运算。</li>
+<li><strong>IP 黑白名单：</strong> 识别并封禁恶意 IP，或允许已知信誉良好的 IP。</li>
+</ul>
+<h3 id="2-DDoS-攻击-Distributed-Denial-of-Service-Attack"><a href="#2-DDoS-攻击-Distributed-Denial-of-Service-Attack" class="headerlink" title="2. DDoS 攻击 (Distributed Denial of Service Attack)"></a>2. DDoS 攻击 (Distributed Denial of Service Attack)</h3><p><strong>DDoS 攻击</strong> 是 <strong>分布式拒绝服务攻击</strong> 的缩写。它是一种利用大量的“傀儡机”或“僵尸网络”从多个不同地理位置同时发起攻击，以超负荷的流量或请求淹没目标服务器或网络，使其无法提供正常服务的攻击方式。</p>
+<p><strong>攻击原理：</strong><br>DDoS 攻击的本质是“量”的攻击。攻击者通常会控制大量的受感染计算机（僵尸网络），形成一个庞大的攻击集群。然后，这些僵尸计算机同时向目标发起攻击，可以是：</p>
+<ul>
+<li><strong>带宽消耗型攻击：</strong> 发送大量无意义的流量（如 UDP Flood, ICMP Flood），直接耗尽目标网络的带宽，导致所有正常流量都无法通过。</li>
+<li><strong>协议消耗型攻击：</strong> 利用网络协议的缺陷，发送畸形包或大量半连接请求（如 SYN Flood），耗尽服务器的连接表或协议栈资源。</li>
+<li><strong>应用层攻击：</strong> 除了之前提到的 CC 攻击（本身就是应用层 DDoS 的一种），还有其他更复杂的应用层攻击，通过模拟合法用户行为，耗尽应用服务器资源。</li>
+</ul>
+<p><strong>特点：</strong></p>
+<ul>
+<li><strong>分布式：</strong> 攻击源分散在世界各地，难以追溯和简单封禁。</li>
+<li><strong>攻击流量巨大：</strong> 可以是单个攻击者无法比拟的巨大流量，可能达到数 Tbps。</li>
+<li><strong>范围广：</strong> 可以攻击网络的各个层面（L3, L4, L7）。</li>
+<li><strong>目的直接：</strong> 使目标服务彻底不可用，造成业务中断和经济损失。</li>
+</ul>
+<p><strong>防范思路（运维角度）：</strong><br>DDoS 防御是一个复杂的多层次工程：</p>
+<ul>
+<li><strong>流量清洗服务：</strong> 部署专业的 DDoS 清洗服务（如高防 IP、云服务商提供的 DDoS 防护服务）。这些服务在流量到达您的源站之前，通过高速识别和过滤技术，清洗掉恶意流量。</li>
+<li><strong>防火墙和路由器 ACLs：</strong> 配置路由器和防火墙的访问控制列表，限制不必要的端口，过滤已知恶意 IP。</li>
+<li><strong>入侵检测&#x2F;防御系统 (IDS&#x2F;IPS)：</strong> 实时监控网络流量，识别异常模式并采取防御措施。</li>
+<li><strong>CDN：</strong> 作为第一道防线，分发流量，隐藏源站 IP，吸收部分攻击。</li>
+<li><strong>负载均衡和集群：</strong> 增加后端服务器的数量和处理能力，提高对流量洪峰的承受力。</li>
+<li><strong>带宽扩容：</strong> 在经济条件允许的情况下，尽可能增加运营商接入带宽。</li>
+<li><strong>应急响应计划：</strong> 提前制定 DDoS 攻击的应急响应流程，包括流量分析、切换清洗服务、联系运营商等。</li>
+<li><strong>安全意识和系统加固：</strong> 防止自己的服务器成为僵尸网络的一部分。</li>
+</ul>
+<h3 id="3-网站数据库注入-SQL-Injection"><a href="#3-网站数据库注入-SQL-Injection" class="headerlink" title="3. 网站数据库注入 (SQL Injection)"></a>3. 网站数据库注入 (SQL Injection)</h3><p><strong>数据库注入</strong> 是一种 <strong>代码注入技术</strong>，攻击者通过在 Web 应用的输入接口中插入恶意的 SQL（Structured Query Language）代码，来绕过应用程序的安全验证，执行非授权的数据库操作。最常见的是 <strong>SQL 注入</strong>。</p>
+<p><strong>攻击原理：</strong><br>当网站应用程序在构建数据库查询时，如果直接将用户输入的数据拼接到 SQL 语句中，而没有进行充分的验证和过滤，攻击者就可以通过巧妙构造输入内容，改变原有 SQL 语句的逻辑。</p>
+<p><strong>例如，一个登录验证的 SQL 语句可能是这样的：</strong><br><code>SELECT * FROM users WHERE username = &#39;用户输入&#39; AND password = &#39;用户输入的密码&#39;</code></p>
+<p><strong>攻击者在用户名输入框中输入：</strong><br><code>admin&#39; OR &#39;1&#39;=&#39;1</code></p>
+<p><strong>原本的 SQL 语句就会变成：</strong><br><code>SELECT * FROM users WHERE username = &#39;admin&#39; OR &#39;1&#39;=&#39;1&#39; AND password = &#39;用户输入的密码&#39;</code></p>
+<p>由于 <code>&#39;1&#39;=&#39;1&#39;</code> 永远为真，这个查询语句就会绕过密码验证，直接返回 <code>admin</code> 用户的数据，从而实现无需密码登录。</p>
+<p><strong>更严重的攻击手段：</strong></p>
+<ul>
+<li><strong>获取敏感数据：</strong> 攻击者可以利用注入语句查询其他表格的数据（如用户信息、订单信息等）。</li>
+<li><strong>修改或删除数据：</strong> 使用 <code>UPDATE</code> 或 <code>DELETE</code> 语句修改甚至删除数据库中的关键数据。</li>
+<li><strong>执行系统命令：</strong> 在某些配置不当的数据库服务器上，甚至可以通过注入语句执行操作系统的命令，获取服务器控制权。</li>
+<li><strong>绕过认证：</strong> 如上述登录绕过。</li>
+</ul>
+<p><strong>特点：</strong></p>
+<ul>
+<li><strong>针对应用程序漏洞：</strong> 攻击的是应用程序层面的编程错误。</li>
+<li><strong>危害巨大：</strong> 可能导致数据泄露、数据篡改、数据丢失，甚至服务器被完全控制。</li>
+<li><strong>攻击面广：</strong> 任何与数据库交互的用户输入点都可能存在注入风险。</li>
+</ul>
+<p><strong>防范思路（运维与开发协作）：</strong><br>虽然 SQL 注入主要是开发人员的责任，但作为运维工程师，我们也有助于推动和部署相关安全措施：</p>
+<ol>
+<li><strong>参数化查询 (Prepared Statements)：</strong> <strong>这是最有效且推荐的方法</strong>。使用预编译语句或参数化查询，将用户输入作为参数传递，而不是直接拼接在 SQL 语句中。这样数据库会区分代码和数据，不会将用户输入解析为 SQL 命令。<ul>
+<li><strong>开发必须采用这种方式。</strong></li>
+</ul>
+</li>
+<li><strong>输入验证和过滤：</strong><ul>
+<li><strong>白名单验证：</strong> 只允许合法的字符集、数据类型和格式通过。</li>
+<li><strong>黑名单过滤：</strong> 过滤或转义常见的 SQL 关键字和特殊字符（如单引号 <code>&#39;</code>、双引号 <code>&quot;</code>、分号 <code>;</code>、注释符 <code>--</code>、<code>/* */</code> 等）。但<strong>不建议单独依赖黑名单过滤</strong>，因为它很容易被绕过。</li>
+</ul>
+</li>
+<li><strong>最小权限原则：</strong><ul>
+<li>数据库用户（应用程序连接数据库的用户）只授予其执行必要操作的最小权限。例如，一个读取数据的模块，就只给 <code>SELECT</code> 权限，不给 <code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code> 权限。</li>
+</ul>
+</li>
+<li><strong>Web 应用防火墙 (WAF)：</strong> WAF 可以识别和阻止常见的 SQL 注入攻击模式，它能在应用层面对请求进行深度检测。</li>
+<li><strong>错误信息处理：</strong> 不要向用户暴露详细的数据库错误信息，这可能泄露数据库结构和敏感信息，帮助攻击者构造注入语句。</li>
+<li><strong>定期安全审计和代码审查：</strong> 定期进行代码审查和渗透测试，发现并修复潜在的注入漏洞。</li>
+<li><strong>数据库安全配置：</strong> 禁用不安全的数据库特性，如 <code>xp_cmdshell</code> (SQL Server) 或 <code>LOAD_FILE</code> (MySQL)，这些可能被利用来执行系统命令。</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Linux%20iostat/" rel="prev" title="Linux iostat">
+      <i class="fa fa-chevron-left"></i> Linux iostat
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Kubernetes/" rel="next" title="Kubernetes">
+      Kubernetes <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B8%B8%E8%A7%81%E7%9A%84%E7%BD%91%E7%BB%9C%E6%94%BB%E5%87%BB%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.</span> <span class="nav-text">常见的网络攻击类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-CC-%E6%94%BB%E5%87%BB-Challenge-Collapsar"><span class="nav-number">2.</span> <span class="nav-text">1. CC 攻击 (Challenge Collapsar)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-DDoS-%E6%94%BB%E5%87%BB-Distributed-Denial-of-Service-Attack"><span class="nav-number">3.</span> <span class="nav-text">2. DDoS 攻击 (Distributed Denial of Service Attack)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E7%BD%91%E7%AB%99%E6%95%B0%E6%8D%AE%E5%BA%93%E6%B3%A8%E5%85%A5-SQL-Injection"><span class="nav-number">4.</span> <span class="nav-text">3. 网站数据库注入 (SQL Injection)</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="这是一个非常经典的面试题和网络故障场景分析点。我们来详细分析一下 TCP 客户端在发送 SYN 之后宕机（Crash）会发生什么。 假设客户端 A 尝试连接服务器 B。 1. 客户端发送 SYN (第一次握手) 客户端 A： 生成一个 SYN 包，Seq &#x3D; client_ISN，发送给服务器 B。 发送后，客户端 A 的 TCP 状态会从 CLOSED 变为 SYN_SENT。  2. 客户端">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TCP 客户端在发送 SYN 之后宕机">
+<meta property="og:url" content="http://example.com/2025/09/11/TCP%20%E5%AE%A2%E6%88%B7%E7%AB%AF%E5%9C%A8%E5%8F%91%E9%80%81%20SYN%20%E4%B9%8B%E5%90%8E%E5%AE%95%E6%9C%BA/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="这是一个非常经典的面试题和网络故障场景分析点。我们来详细分析一下 TCP 客户端在发送 SYN 之后宕机（Crash）会发生什么。 假设客户端 A 尝试连接服务器 B。 1. 客户端发送 SYN (第一次握手) 客户端 A： 生成一个 SYN 包，Seq &#x3D; client_ISN，发送给服务器 B。 发送后，客户端 A 的 TCP 状态会从 CLOSED 变为 SYN_SENT。  2. 客户端">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:07:10.481Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Network">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/TCP%20%E5%AE%A2%E6%88%B7%E7%AB%AF%E5%9C%A8%E5%8F%91%E9%80%81%20SYN%20%E4%B9%8B%E5%90%8E%E5%AE%95%E6%9C%BA/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>TCP 客户端在发送 SYN 之后宕机 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/TCP%20%E5%AE%A2%E6%88%B7%E7%AB%AF%E5%9C%A8%E5%8F%91%E9%80%81%20SYN%20%E4%B9%8B%E5%90%8E%E5%AE%95%E6%9C%BA/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          TCP 客户端在发送 SYN 之后宕机
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:07:10" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/" itemprop="url" rel="index"><span itemprop="name">WEB</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/Http/" itemprop="url" rel="index"><span itemprop="name">Http</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/Http/TCP/" itemprop="url" rel="index"><span itemprop="name">TCP</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.6k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>这是一个非常经典的面试题和网络故障场景分析点。我们来详细分析一下 TCP 客户端在发送 SYN 之后宕机（Crash）会发生什么。</p>
+<p>假设客户端 A 尝试连接服务器 B。</p>
+<h3 id="1-客户端发送-SYN-第一次握手"><a href="#1-客户端发送-SYN-第一次握手" class="headerlink" title="1. 客户端发送 SYN (第一次握手)"></a>1. 客户端发送 SYN (第一次握手)</h3><ul>
+<li><strong>客户端 A：</strong> 生成一个 SYN 包，<code>Seq = client_ISN</code>，发送给服务器 B。</li>
+<li>发送后，客户端 A 的 TCP 状态会从 <code>CLOSED</code> 变为 <code>SYN_SENT</code>。</li>
+</ul>
+<h3 id="2-客户端-A-宕机"><a href="#2-客户端-A-宕机" class="headerlink" title="2. 客户端 A 宕机"></a>2. 客户端 A 宕机</h3><ul>
+<li>就在发送 SYN 包之后，客户端 A 突然崩溃（例如，操作系统蓝屏、电源故障、进程被杀掉等）。这意味着客户端 A 的所有网络状态、定时器、内存中的 TCP 控制块信息都瞬间丢失了。</li>
+</ul>
+<h3 id="3-服务器-B-的处理"><a href="#3-服务器-B-的处理" class="headerlink" title="3. 服务器 B 的处理"></a>3. 服务器 B 的处理</h3><ul>
+<li><strong>服务器 B 收到 SYN：</strong> 服务器 B 收到了客户端 A 发送的 SYN 包。</li>
+<li><strong>服务器 B 响应 SYN+ACK：</strong> 服务器 B 按照 TCP 握手流程，会进入 <code>SYN_RCVD</code> 状态，并向客户端 A 发送 SYN+ACK 包 (<code>Seq = server_ISN</code>, <code>Ack = client_ISN + 1</code>)。</li>
+<li><strong>服务器 B 等待客户端 ACK：</strong> 服务器 B 此时会启动一个定时器（称为 SYN-ACK 重传定时器）。它在等待客户端 A 发送第三次握手的 ACK 报文。</li>
+</ul>
+<h3 id="4-客户端-A-的未来"><a href="#4-客户端-A-的未来" class="headerlink" title="4. 客户端 A 的未来"></a>4. 客户端 A 的未来</h3><ul>
+<li>因为客户端 A 已经宕机，它<strong>不可能</strong>收到服务器 B 发来的 SYN+ACK 报文。</li>
+<li>它<strong>更不可能</strong>发送第三次握手的 ACK 报文。</li>
+</ul>
+<h3 id="5-服务器-B-的超时处理"><a href="#5-服务器-B-的超时处理" class="headerlink" title="5. 服务器 B 的超时处理"></a>5. 服务器 B 的超时处理</h3><ul>
+<li>服务器 B 会一直等待客户端 A 的 ACK。</li>
+<li>当 SYN-ACK 重传定时器超时后，服务器 B 会<strong>重传</strong> SYN+ACK 报文。</li>
+<li>这个重传过程会持续进行<strong>几次</strong>（通常是 3 到 5 次，具体次数取决于操作系统的 TCP 参数配置，例如 Linux 默认 <code>net.ipv4.tcp_synack_retries</code>）。</li>
+<li>在每次重传之后，超时时间会呈指数级增长（例如，1秒，2秒，4秒，8秒…）。</li>
+<li>如果经过多次重传后，服务器 B <strong>仍然没有收到</strong>客户端 A 的 ACK 报文：<ul>
+<li>服务器 B 会认定客户端 A 不可达，或者客户端 A 根本没有响应意愿。</li>
+<li>服务器 B 会<strong>放弃</strong>这个连接尝试，将为这个半开连接（Half-Open Connection，也称为 SYN 半连接）分配的所有资源（如端口、内存中的 TCP 控制块等）<strong>释放掉</strong>。</li>
+<li>服务器 B 的这个连接状态会从 <code>SYN_RCVD</code> 最终回到 <code>CLOSED</code>。</li>
+</ul>
+</li>
+</ul>
+<h3 id="6-对双方的影响总结："><a href="#6-对双方的影响总结：" class="headerlink" title="6. 对双方的影响总结："></a>6. 对双方的影响总结：</h3><ul>
+<li><strong>对客户端 A (宕机方)：</strong> 无后续影响。它已经崩溃，所有状态都消失了。当它重新启动并尝试建立新的连接时，那将是全新的连接，与之前失败的尝试无关。</li>
+<li><strong>对服务器 B (接收方)：</strong><ul>
+<li><strong>资源占用：</strong> 在客户端 A 宕机到服务器 B 超时释放资源这段时间内，服务器 B 会为这个未完成的半开连接占用一定的资源（主要是内存中的 TCP 控制块）。</li>
+<li><strong>超时后释放：</strong> 一旦超时机制发挥作用，资源就会被释放，对服务器的正常运行不会造成长期影响。</li>
+<li><strong>潜在的拒绝服务攻击 (DoS&#x2F;DDoS)：</strong> 如果恶意攻击者短时间内向服务器发送大量的 SYN 包，然后不响应 SYN+ACK（比如发送 SYN 后立即宕机，或者伪造源 IP），这就会导致服务器维护大量半开连接，耗尽服务器的资源，这就是著名的 <strong>SYN Flood 攻击</strong>。为了缓解这种攻击，操作系统通常会有一些保护机制，如 SYN Cookies、降低 SYN 半连接队列大小、或更快的超时释放等。</li>
+</ul>
+</li>
+</ul>
+<h3 id="关键点："><a href="#关键点：" class="headerlink" title="关键点："></a>关键点：</h3><ul>
+<li><strong>超时机制：</strong> TCP 的重传和超时机制是处理这种异常情况的关键。它确保服务器不会无限期地等待一个永远不会到来的响应。</li>
+<li><strong>资源释放：</strong> 及时释放半开连接的资源对于服务器的稳定运行至关重要。</li>
+<li><strong>SYN Flood 攻击：</strong> 这是这种场景的一个主要安全隐患。</li>
+</ul>
+<p>所以，总的来说，当客户端发送 SYN 后宕机，服务器会等待一段时间并重传几次 SYN+ACK，如果一直没有收到响应，最终会超时并释放为该连接分配的资源。这是一个 TCP 协议通过其超时和重传机制处理网络异常和不可靠性的典型例子。</p>
+<p>TCP SYN Flood 攻击的目标是耗尽服务器的资源（主要是半开连接队列，也称 SYN backlog），使合法用户无法建立新的连接。服务器一般会等待的时间长度是其处理 SYN Flood 攻击能力的关键因素之一。</p>
+<h3 id="服务器等待的时间（SYN-ACK-重传定时器）"><a href="#服务器等待的时间（SYN-ACK-重传定时器）" class="headerlink" title="服务器等待的时间（SYN-ACK 重传定时器）"></a>服务器等待的时间（SYN-ACK 重传定时器）</h3><p>服务器在收到 SYN 并发送 SYN-ACK 后，会启动一个定时器来等待客户端的 ACK。这个定时器就是 SYN-ACK 重传定时器。其行为如下：</p>
+<ol>
+<li><strong>初始超时：</strong> 第一次等待 ACK 的时间。这个值通常比较短，例如 1 秒或 3 秒。</li>
+<li><strong>指数退避重传：</strong> 如果在初始超时时间内没有收到 ACK，服务器会重传 SYN-ACK，并将下一次的超时时间翻倍。例如，1秒 -&gt; 2秒 -&gt; 4秒 -&gt; 8秒…</li>
+<li><strong>重传次数限制：</strong> 服务器不会无限重传。它会有一个最大重传次数限制（例如 5 次）。</li>
+</ol>
+<p>这些参数通常是操作系统级别的配置：</p>
+<ul>
+<li><strong>Linux 系统：</strong><ul>
+<li><code>net.ipv4.tcp_synack_retries</code>: 控制 SYN-ACK 的最大重传次数。默认值通常是 5 或 6。</li>
+<li><code>net.ipv4.tcp_syn_retries</code>: (主要是客户端) 控制 SYN 的最大重传次数。</li>
+<li><code>net.ipv4.tcp_retries2</code>: 重传数据的最大重传次数 (不是指 SYN&#x2F;SYN-ACK)。</li>
+<li><code>net.ipv4.tcp_rtos</code>: (很少直接调整) 连接超时时的初始 RTO (Retransmission Timeout) 值，会影响第一次重传的时间。</li>
+</ul>
+</li>
+</ul>
+<p><strong>举例 (Linux 默认 <code>tcp_synack_retries=5</code>)：</strong><br>假设初始超时时间为 1 秒。</p>
+<ul>
+<li>第一次 SYN-ACK 发送。等待 1 秒。</li>
+<li>1 秒后未收到 ACK。重传 SYN-ACK。等待 2 秒。</li>
+<li>2 秒后未收到 ACK。重传 SYN-ACK。等待 4 秒。</li>
+<li>4 秒后未收到 ACK。重传 SYN-ACK。等待 8 秒。</li>
+<li>8 秒后未收到 ACK。重传 SYN-ACK。等待 16 秒。</li>
+<li>16 秒后未收到 ACK。放弃连接。</li>
+</ul>
+<p><strong>总共等待时间：</strong> 1 + 2 + 4 + 8 + 16 &#x3D; <strong>31 秒</strong> (这只是一个近似值，实际还可能受到 RTO min&#x2F;max 限制以及其他因素影响)。</p>
+<p>这意味着，一个半开连接在服务器上<strong>最长可能占用三十秒左右</strong>的资源才会因为超时被释放。</p>
+<h3 id="SYN-Flood-攻击如何利用这个时间？"><a href="#SYN-Flood-攻击如何利用这个时间？" class="headerlink" title="SYN Flood 攻击如何利用这个时间？"></a>SYN Flood 攻击如何利用这个时间？</h3><p>攻击者利用的就是这段“最长等待时间”和服务器<strong>半开连接队列</strong>的有限大小。</p>
+<ol>
+<li><strong>伪造源 IP：</strong> 攻击者发送 SYN 包时，伪造一个不存在的源 IP 地址。这样即使服务器回复 SYN-ACK，这个 SYN-ACK 也发送到了一个不存在的 IP，攻击者永远不会收到它，就无法完成三次握手。</li>
+<li><strong>大量发送：</strong> 攻击者在短时间内向目标服务器发送巨量的这种伪造 SYN 包。</li>
+<li><strong>耗尽队列：</strong> 服务器为每个收到的 SYN 包分配资源（半开连接条目），并回复 SYN-ACK。由于 ACK 永远不会到来，这些半开连接会一直占用队列中的位置，直到超时被释放。如果攻击发送 SYN 包的速度远超服务器释放半开连接的速度，那么半开连接队列很快就会被填满。</li>
+<li><strong>拒绝服务：</strong> 一旦半开连接队列满了，服务器就无法再接受新的合法连接请求，导致拒绝服务。</li>
+</ol>
+<h3 id="防御-SYN-Flood-攻击的常见策略："><a href="#防御-SYN-Flood-攻击的常见策略：" class="headerlink" title="防御 SYN Flood 攻击的常见策略："></a>防御 SYN Flood 攻击的常见策略：</h3><p>为了对抗这种攻击，服务器和网络设备采取了多种防御机制：</p>
+<ol>
+<li><strong>减小 <code>net.ipv4.tcp_synack_retries</code>：</strong> 缩短半开连接的存活时间，例如设置为 2 或 3，这样可以在 7-15 秒内释放资源。但这可能增加在短暂网络拥塞时合法连接建立失败的风险。</li>
+<li><strong>增大 <code>net.ipv4.tcp_max_syn_backlog</code>：</strong> 增大半开连接队列的大小，使其可以容纳更多的半开连接。但这会消耗更多内存，并且当攻击流量非常大时，效果有限。</li>
+<li><strong>SYN Cookies (最常用和有效的方法之一)：</strong><ul>
+<li>服务器在收到 SYN 后，不立即分配资源，而是计算一个包含客户端 IP、端口、服务器 IP、端口、时间戳以及一个秘密信息的散列值，将这个散列值作为 ISN 放入 SYN-ACK 包的序列号字段并发送。</li>
+<li>当客户端发回 ACK 时，服务器会重新根据 ACK 包中的相关信息计算一次散列值，并与 ACK 报文中携带的序列号进行比对。如果匹配，就认为这是一个合法连接，然后才正式为该连接分配资源并进入 <code>ESTABLISHED</code> 状态。</li>
+<li>这样，除非客户端发送最终的 ACK，否则服务器不会为半开连接消耗大量资源。大幅降低了 SYN Flood 的危害。</li>
+</ul>
+</li>
+<li><strong>SYN Proxy &#x2F; SYN 防火墙：</strong> 中间设备（如防火墙、负载均衡器）代服务器完成三次握手。当它们收到客户端 SYN 后，先回复 SYN-ACK。只有当客户端回复 ACK 后，中间设备才认为这是合法连接，然后才将真正的 SYN 包发送给后端服务器。这样，后端服务器看到的都是已经建立握手的合法连接，减轻了服务器的压力。</li>
+<li><strong>TCP Fast Open (TFO)：</strong> 虽然主要用于加速连接建立，但其原理（使用 Cookie 避免完整握手建立连接）在某种程度上也能间接缓解小规模的 SYN Flood。</li>
+<li><strong>IP 信誉系统和黑名单：</strong> 识别并阻止来自已知恶意 IP 地址的流量。</li>
+<li><strong>流量清洗：</strong> 将攻击流量重定向到专业的 DDoS 清洗服务进行过滤。</li>
+</ol>
+<p>总而言之，服务器为了应对 SYN Flood 攻击，会通过超时机制等待一段时间，以便判断连接是否能够建立，但这段时间也是攻击者利用的关键点。防御策略旨在缩短等待时间、减少资源占用或完全规避半开连接队列的消耗。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Network/" rel="tag"># Network</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/TCP%20%E7%9A%84%20SACK/" rel="prev" title="TCP 的 SACK">
+      <i class="fa fa-chevron-left"></i> TCP 的 SACK
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/TCP%20%E5%88%9D%E5%A7%8B%E5%BA%8F%E5%88%97%E5%8F%B7%20ISN%20%E6%80%8E%E4%B9%88%E5%8F%96%E5%80%BC%E7%9A%84%EF%BC%9F/" rel="next" title="TCP 初始序列号 ISN 怎么取值的？">
+      TCP 初始序列号 ISN 怎么取值的？ <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E5%AE%A2%E6%88%B7%E7%AB%AF%E5%8F%91%E9%80%81-SYN-%E7%AC%AC%E4%B8%80%E6%AC%A1%E6%8F%A1%E6%89%8B"><span class="nav-number">1.</span> <span class="nav-text">1. 客户端发送 SYN (第一次握手)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%AE%A2%E6%88%B7%E7%AB%AF-A-%E5%AE%95%E6%9C%BA"><span class="nav-number">2.</span> <span class="nav-text">2. 客户端 A 宕机</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E6%9C%8D%E5%8A%A1%E5%99%A8-B-%E7%9A%84%E5%A4%84%E7%90%86"><span class="nav-number">3.</span> <span class="nav-text">3. 服务器 B 的处理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E5%AE%A2%E6%88%B7%E7%AB%AF-A-%E7%9A%84%E6%9C%AA%E6%9D%A5"><span class="nav-number">4.</span> <span class="nav-text">4. 客户端 A 的未来</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-%E6%9C%8D%E5%8A%A1%E5%99%A8-B-%E7%9A%84%E8%B6%85%E6%97%B6%E5%A4%84%E7%90%86"><span class="nav-number">5.</span> <span class="nav-text">5. 服务器 B 的超时处理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-%E5%AF%B9%E5%8F%8C%E6%96%B9%E7%9A%84%E5%BD%B1%E5%93%8D%E6%80%BB%E7%BB%93%EF%BC%9A"><span class="nav-number">6.</span> <span class="nav-text">6. 对双方的影响总结：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B3%E9%94%AE%E7%82%B9%EF%BC%9A"><span class="nav-number">7.</span> <span class="nav-text">关键点：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%AD%89%E5%BE%85%E7%9A%84%E6%97%B6%E9%97%B4%EF%BC%88SYN-ACK-%E9%87%8D%E4%BC%A0%E5%AE%9A%E6%97%B6%E5%99%A8%EF%BC%89"><span class="nav-number">8.</span> <span class="nav-text">服务器等待的时间（SYN-ACK 重传定时器）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SYN-Flood-%E6%94%BB%E5%87%BB%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8%E8%BF%99%E4%B8%AA%E6%97%B6%E9%97%B4%EF%BC%9F"><span class="nav-number">9.</span> <span class="nav-text">SYN Flood 攻击如何利用这个时间？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%98%B2%E5%BE%A1-SYN-Flood-%E6%94%BB%E5%87%BB%E7%9A%84%E5%B8%B8%E8%A7%81%E7%AD%96%E7%95%A5%EF%BC%9A"><span class="nav-number">10.</span> <span class="nav-text">防御 SYN Flood 攻击的常见策略：</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

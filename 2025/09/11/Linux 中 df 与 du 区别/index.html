@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="df 和 du 是日常工作中用于查看磁盘使用情况的两个最基本也是最重要的命令。它们都与磁盘空间有关，但它们的工作原理、关注点以及提供的信息维度截然不同。理解这两者的区别至关重要，因为它能帮助我们准确地判断磁盘空间问题，而不是被表象所迷惑。  一、df (disk free)df 命令用于报告文件系统的磁盘空间使用情况。它读取的是文件系统的超级块（superblock）信息，反映的是文件系统层面上的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux 中 df 与 du 区别">
+<meta property="og:url" content="http://example.com/2025/09/11/Linux%20%E4%B8%AD%20df%20%E4%B8%8E%20du%20%E5%8C%BA%E5%88%AB/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="df 和 du 是日常工作中用于查看磁盘使用情况的两个最基本也是最重要的命令。它们都与磁盘空间有关，但它们的工作原理、关注点以及提供的信息维度截然不同。理解这两者的区别至关重要，因为它能帮助我们准确地判断磁盘空间问题，而不是被表象所迷惑。  一、df (disk free)df 命令用于报告文件系统的磁盘空间使用情况。它读取的是文件系统的超级块（superblock）信息，反映的是文件系统层面上的">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:47:43.876Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/Linux%20%E4%B8%AD%20df%20%E4%B8%8E%20du%20%E5%8C%BA%E5%88%AB/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Linux 中 df 与 du 区别 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Linux%20%E4%B8%AD%20df%20%E4%B8%8E%20du%20%E5%8C%BA%E5%88%AB/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Linux 中 df 与 du 区别
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:47:43" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/Command/" itemprop="url" rel="index"><span itemprop="name">Command</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.7k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>2 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><code>df</code> 和 <code>du</code> 是日常工作中用于查看磁盘使用情况的两个最基本也是最重要的命令。它们都与磁盘空间有关，但它们的工作原理、关注点以及提供的信息维度截然不同。理解这两者的区别至关重要，因为它能帮助我们准确地判断磁盘空间问题，而不是被表象所迷惑。</p>
+<hr>
+<h3 id="一、df-disk-free"><a href="#一、df-disk-free" class="headerlink" title="一、df (disk free)"></a>一、<code>df</code> (disk free)</h3><p><code>df</code> 命令用于报告<strong>文件系统</strong>的磁盘空间使用情况。它读取的是文件系统的<strong>超级块（superblock）</strong>信息，反映的是文件系统层面上的整体空间统计。</p>
+<h4 id="1-核心特点："><a href="#1-核心特点：" class="headerlink" title="1. 核心特点："></a>1. <strong>核心特点：</strong></h4><ul>
+<li><strong>报告文件系统总览：</strong> 关注的是整个文件系统（分区、挂载点）的使用情况。</li>
+<li><strong>读取文件系统元数据：</strong> 它直接查询文件系统的元数据（如 inode 表、块位图等），来得知已用、可用空间和总容量。</li>
+<li><strong>速度快：</strong> 由于只读取元数据，不遍历文件，所以执行速度通常很快。</li>
+<li><strong>计算已挂载文件系统：</strong> 只能报告已挂载的文件系统，包括本地磁盘、网络文件系统（NFS, Samba&#x2F;CIFS）、虚拟文件系统等。</li>
+<li><strong>显示已分配但未释放的空间：</strong> 如果文件被删除但仍被进程占用（即文件句柄未释放），<code>df</code> 会将这部分空间计入“已用”空间，因为它对文件系统来说这部分空间是“被占用的”。</li>
+</ul>
+<h4 id="2-常用选项："><a href="#2-常用选项：" class="headerlink" title="2. 常用选项："></a>2. <strong>常用选项：</strong></h4><ul>
+<li><code>-h</code>：以人类可读的格式（例如，使用 K、M、G 等单位）显示。<strong>最常用！</strong><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">df</span> -h</span><br></pre></td></tr></table></figure>
+输出示例：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Filesystem      Size  Used Avail Use% Mounted on</span><br><span class="line">/dev/sda1        50G   10G   38G  21% /</span><br><span class="line">/dev/sdb1       100G   50G   50G  50% /data</span><br><span class="line">tmpfs           3.9G     0  3.9G   0% /dev/shm</span><br></pre></td></tr></table></figure></li>
+<li><code>-T</code>：显示文件系统类型。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">df</span> -hT</span><br></pre></td></tr></table></figure>
+输出示例：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Filesystem     Type   Size  Used Avail Use% Mounted on</span><br><span class="line">/dev/sda1      ext4    50G   10G   38G  21% /</span><br><span class="line">/dev/sdb1      xfs    100G   50G   50G  50% /data</span><br><span class="line">tmpfs          tmpfs  3.9G     0  3.9G   0% /dev/shm</span><br></pre></td></tr></table></figure></li>
+<li><code>-i</code>：显示 inode 使用情况（inode 是文件&#x2F;目录的元数据结构，文件数量的限制）。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">df</span> -hi</span><br></pre></td></tr></table></figure>
+输出示例：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Filesystem      Inodes IUsed IFree IUse% Mounted on</span><br><span class="line">/dev/sda1         3.2M  160K  3.0M    5% /</span><br><span class="line">/dev/sdb1         6.4M  320K  6.1M    5% /data</span><br></pre></td></tr></table></figure>
+即使磁盘空间足够，如果 inode 耗尽，也无法创建新文件。</li>
+</ul>
+<h4 id="3-典型问题："><a href="#3-典型问题：" class="headerlink" title="3. 典型问题："></a>3. <strong>典型问题：</strong></h4><ul>
+<li><strong>文件句柄未释放导致的“假”满：</strong> 当通过 <code>rm</code> 命令删除了一个大文件，但有进程仍然持有该文件的文件句柄时，<code>df</code> 会显示该文件系统空间没有被释放（<code>Use%</code> 依然很高），而 <code>du</code> 不会计算已被删除的文件。这是 <code>df</code> 最大的“坑”之一，也是 <code>lsof</code> 大显身手的时候。</li>
+</ul>
+<hr>
+<h3 id="二、du-disk-usage"><a href="#二、du-disk-usage" class="headerlink" title="二、du (disk usage)"></a>二、<code>du</code> (disk usage)</h3><p><code>du</code> 命令用于报告<strong>指定文件或目录</strong>的磁盘空间使用情况。它通过遍历指定路径下的所有文件和子目录来计算它们实际占用的磁盘块大小。</p>
+<h4 id="1-核心特点：-1"><a href="#1-核心特点：-1" class="headerlink" title="1. 核心特点："></a>1. <strong>核心特点：</strong></h4><ul>
+<li><strong>报告文件&#x2F;目录粒度：</strong> 关注的是文件或目录树占用的实际空间。</li>
+<li><strong>遍历文件系统：</strong> 它会递归地遍历指定路径下的文件和目录，累加文件占用的块大小。</li>
+<li><strong>速度相对慢：</strong> 对于包含大量文件或大文件的目录，遍历需要时间，速度比 <code>df</code> 慢。</li>
+<li><strong>计算文件的块使用量：</strong> 统计的是<strong>文件实际占用的磁盘块数量</strong>。这可能比文件本身的大小（<code>ls -l</code> 看到的字节数）大，因为磁盘分配是按块进行的，即使文件很小也会占用一个或多个完整的块。</li>
+<li><strong>不计算已删除但未释放的文件：</strong> <code>du</code> 不会计算那些已经被“删除”但其文件句柄仍被进程持有的文件，因为它只扫描文件系统目录树中“存在”的文件。</li>
+</ul>
+<h4 id="2-常用选项：-1"><a href="#2-常用选项：-1" class="headerlink" title="2. 常用选项："></a>2. <strong>常用选项：</strong></h4><ul>
+<li><code>-h</code>：以人类可读的格式显示。<strong>最常用！</strong><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">du</span> -h /path/to/directory</span><br><span class="line"><span class="built_in">du</span> -h /var/log</span><br></pre></td></tr></table></figure></li>
+<li><code>-s</code>：只显示总计（summarize），不显示子目录的详细信息。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">du</span> -sh /path/to/directory <span class="comment"># 显示指定目录的总大小</span></span><br></pre></td></tr></table></figure></li>
+<li><code>-a</code>：显示所有文件（不仅仅是目录）的大小。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">du</span> -ha /path/to/directory</span><br></pre></td></tr></table></figure></li>
+<li><code>--max-depth=&lt;N&gt;</code>：限制递归的深度。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">du</span> -h --max-depth=1 /var <span class="comment"># 显示 /var 下一级目录的大小</span></span><br></pre></td></tr></table></figure></li>
+<li><code>-c</code>：除了每个参数的总和，还显示所有指定参数的总和。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">du</span> -hc /home/user1 /home/user2</span><br></pre></td></tr></table></figure></li>
+<li><code>--exclude=&lt;PATTERN&gt;</code>：排除符合特定模式的文件或目录。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">du</span> -h --exclude=<span class="string">&quot;*.log&quot;</span> /var/log</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h4 id="3-典型问题：-1"><a href="#3-典型问题：-1" class="headerlink" title="3. 典型问题："></a>3. <strong>典型问题：</strong></h4><ul>
+<li><strong>文件系统差异：</strong> <code>du</code> 统计的是文件占用的块数，而文件系统可能存在一些特殊的元数据开销，导致 <code>du</code> 报告的总和与 <code>df</code> 的“已用”空间略有差异，但这个差异通常不大。</li>
+<li><strong>权限问题：</strong> 如果你没有某个目录的读取权限，<code>du</code> 将无法计算其内容的大小，并可能报错。</li>
+</ul>
+<hr>
+<h3 id="三、df-与-du-的核心区别总结"><a href="#三、df-与-du-的核心区别总结" class="headerlink" title="三、df 与 du 的核心区别总结"></a>三、<code>df</code> 与 <code>du</code> 的核心区别总结</h3><table>
+<thead>
+<tr>
+<th align="left">特征</th>
+<th align="left"><code>df</code> (disk free)</th>
+<th align="left"><code>du</code> (disk usage)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>侧重</strong></td>
+<td align="left">整个<strong>文件系统&#x2F;分区</strong>的整体空间使用情况</td>
+<td align="left"><strong>文件和目录</strong>的实际磁盘占用大小</td>
+</tr>
+<tr>
+<td align="left"><strong>工作原理</strong></td>
+<td align="left">读取文件系统的超级块（元数据）</td>
+<td align="left">遍历指定目录下的所有文件和子目录，累加块大小</td>
+</tr>
+<tr>
+<td align="left"><strong>计算速度</strong></td>
+<td align="left">快</td>
+<td align="left">相对慢（取决于文件数量和目录深度）</td>
+</tr>
+<tr>
+<td align="left"><strong>是否包含已删除但未释放文件</strong></td>
+<td align="left"><strong>包含</strong></td>
+<td align="left"><strong>不包含</strong>（因为它只遍历文件系统中“可见”的文件）</td>
+</tr>
+<tr>
+<td align="left"><strong>应用场景</strong></td>
+<td align="left">快速查看分区空间概览；检查 inode 使用；判断整个文件系统是否已满。</td>
+<td align="left">查找大文件&#x2F;目录；分析特定路径下的空间使用详情。</td>
+</tr>
+<tr>
+<td align="left"><strong>常见痛点</strong></td>
+<td align="left">无法解释 <code>df</code> 满但 <code>du</code> 不满的情况（文件句柄未释放）</td>
+<td align="left">无法访问无权限的文件；对于大量文件的目录可能耗时。</td>
+</tr>
+</tbody></table>
+<hr>
+<h3 id="四、实际运维中的应用场景"><a href="#四、实际运维中的应用场景" class="headerlink" title="四、实际运维中的应用场景"></a>四、实际运维中的应用场景</h3><p>作为运维工程师，我通常会这样使用它们：</p>
+<ol>
+<li><p><strong>日常监控：</strong></p>
+<ul>
+<li>使用 <code>df -h</code> 快速查看所有挂载点（尤其是根分区 <code>/</code> 和数据分区）的整体空间使用率 (<code>Use%</code>)。如果某个分区达到警戒值（如 80% 或 90%），我会进一步排查。</li>
+<li>使用 <code>df -hi</code> 来检查 inode 使用率，防止因文件数量过多导致的问题。</li>
+</ul>
+</li>
+<li><p><strong>空间不足排查：</strong></p>
+<ul>
+<li>当 <code>df -h</code> 显示某个文件系统已满时，我的第一反应是使用 <code>du -sh /*</code> 或 <code>du -sh /path/to/directory/*</code>（结合 <code>--max-depth</code>）来找出是哪个子目录占用了大量空间。</li>
+<li>如果 <code>df</code> 显示空间不足，但 <code>du</code> 的总和却远小于 <code>df</code> 的“已用”空间，那么十有八九是<strong>有被删除但仍被进程占用的文件</strong>。这时，我会立即使用 <code>lsof +L1</code> 来查找这些文件及其对应的进程，并采取措施（如重启相关服务或 <code>kill</code> 进程）来释放空间。</li>
+</ul>
+</li>
+<li><p><strong>容量规划：</strong></p>
+<ul>
+<li>在进行容量规划时，<code>du</code> 可以帮助我了解特定应用程序数据或日志目录的增长趋势。</li>
+</ul>
+</li>
+</ol>
+<p>理解 <code>df</code> 和 <code>du</code> 的根本差异，并结合 <code>lsof</code> 等工具，是精确诊断和解决 Linux 磁盘空间相关问题的关键。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Linux%20%E4%B8%AD%E7%9A%84%E7%A1%AC%E9%93%BE%E6%8E%A5%E5%92%8C%E8%BD%AF%E8%BF%9E%E6%8E%A5/" rel="prev" title="Linux 中的硬链接和软连接">
+      <i class="fa fa-chevron-left"></i> Linux 中的硬链接和软连接
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Linux%20tcpdump%20%E5%91%BD%E4%BB%A4/" rel="next" title="Linux tcpdump 命令">
+      Linux tcpdump 命令 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E3%80%81df-disk-free"><span class="nav-number">1.</span> <span class="nav-text">一、df (disk free)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E6%A0%B8%E5%BF%83%E7%89%B9%E7%82%B9%EF%BC%9A"><span class="nav-number">1.1.</span> <span class="nav-text">1. 核心特点：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E5%B8%B8%E7%94%A8%E9%80%89%E9%A1%B9%EF%BC%9A"><span class="nav-number">1.2.</span> <span class="nav-text">2. 常用选项：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E5%85%B8%E5%9E%8B%E9%97%AE%E9%A2%98%EF%BC%9A"><span class="nav-number">1.3.</span> <span class="nav-text">3. 典型问题：</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E3%80%81du-disk-usage"><span class="nav-number">2.</span> <span class="nav-text">二、du (disk usage)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E6%A0%B8%E5%BF%83%E7%89%B9%E7%82%B9%EF%BC%9A-1"><span class="nav-number">2.1.</span> <span class="nav-text">1. 核心特点：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E5%B8%B8%E7%94%A8%E9%80%89%E9%A1%B9%EF%BC%9A-1"><span class="nav-number">2.2.</span> <span class="nav-text">2. 常用选项：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E5%85%B8%E5%9E%8B%E9%97%AE%E9%A2%98%EF%BC%9A-1"><span class="nav-number">2.3.</span> <span class="nav-text">3. 典型问题：</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E3%80%81df-%E4%B8%8E-du-%E7%9A%84%E6%A0%B8%E5%BF%83%E5%8C%BA%E5%88%AB%E6%80%BB%E7%BB%93"><span class="nav-number">3.</span> <span class="nav-text">三、df 与 du 的核心区别总结</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%9B%E3%80%81%E5%AE%9E%E9%99%85%E8%BF%90%E7%BB%B4%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">4.</span> <span class="nav-text">四、实际运维中的应用场景</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="RIP (Routing Information Protocol) 协议的工作原理及特点RIP (Routing Information Protocol) 是一种经典的**距离向量路由协议 (Distance-Vector Routing Protocol)**，用于在内部网关 (Interior Gateway Protocol, IGP) 环境中交换路由信息。它历史悠久，简单易用，但存在一">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RIR 协议">
+<meta property="og:url" content="http://example.com/2025/09/11/RIR%20%E5%8D%8F%E8%AE%AE/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="RIP (Routing Information Protocol) 协议的工作原理及特点RIP (Routing Information Protocol) 是一种经典的**距离向量路由协议 (Distance-Vector Routing Protocol)**，用于在内部网关 (Interior Gateway Protocol, IGP) 环境中交换路由信息。它历史悠久，简单易用，但存在一">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:54:15.634Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Network">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/RIR%20%E5%8D%8F%E8%AE%AE/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>RIR 协议 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/RIR%20%E5%8D%8F%E8%AE%AE/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          RIR 协议
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:54:15" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/" itemprop="url" rel="index"><span itemprop="name">WEB</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/Http/" itemprop="url" rel="index"><span itemprop="name">Http</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.6k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>2 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="RIP-Routing-Information-Protocol-协议的工作原理及特点"><a href="#RIP-Routing-Information-Protocol-协议的工作原理及特点" class="headerlink" title="RIP (Routing Information Protocol) 协议的工作原理及特点"></a>RIP (Routing Information Protocol) 协议的工作原理及特点</h3><p>RIP (Routing Information Protocol) 是一种经典的**距离向量路由协议 (Distance-Vector Routing Protocol)**，用于在内部网关 (Interior Gateway Protocol, IGP) 环境中交换路由信息。它历史悠久，简单易用，但存在一些固有的局限性。</p>
+<hr>
+<h4 id="RIP-的工作原理："><a href="#RIP-的工作原理：" class="headerlink" title="RIP 的工作原理："></a>RIP 的工作原理：</h4><p>RIP 的工作原理基于 <strong>Bellman-Ford 算法</strong>的变体，其核心思想是每个路由器维护一个到所有已知目的地的距离向量，并定期与邻居交换此信息。</p>
+<ol>
+<li><p><strong>里程 (Metric) - 跳数 (Hop Count)：</strong></p>
+<ul>
+<li>RIP 使用<strong>跳数 (Hop Count)</strong> 作为唯一的路由度量（metric）。</li>
+<li>每经过一个路由器，跳数就增加 1。</li>
+<li><strong>最大跳数限制：</strong> RIP 的最大跳数限制为 <strong>15 跳</strong>。这意味着任何超过 15 跳的目的地都被认为是不可达的（即距离为无穷大）。这是 RIP 最大的局限性之一，使其不适合大型网络。</li>
+</ul>
+</li>
+<li><p><strong>距离向量的维护：</strong></p>
+<ul>
+<li>每个 RIP 路由器维护一个**路由表 (Routing Table)**，其中包含以下信息：<ul>
+<li><strong>目的地网络：</strong> 该路由器所知道的所有可达网络。</li>
+<li><strong>跳数 (Metric)：</strong> 到达该目的地的最低跳数。</li>
+<li><strong>下一跳 (Next-Hop)：</strong> 到达该目的地的下一个路由器（通过哪个接口发送到哪个邻居）。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>路由通告 (Route Advertisement)：</strong></p>
+<ul>
+<li>RIP 路由器会定期（默认每 <strong>30 秒</strong>）将其完整的路由表作为<strong>路由更新报文</strong>（RIP Update Message）发送给所有<strong>直连的邻居</strong>。</li>
+<li>当一个路由器收到邻居的路由更新报文时：<ul>
+<li>它会将报文中的所有路由条目的跳数<strong>加 1</strong> (因为这些路由是通过邻居转发的，多了一跳)。</li>
+<li>然后，它会将这些更新后的路由与自己当前的路由表进行比较。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>路由表的更新规则：</strong></p>
+<ul>
+<li><strong>发现新路由：</strong> 如果收到的路由是它当前路由表中没有的新路由，则将其添加到路由表中。</li>
+<li><strong>路径更优：</strong> 如果收到的路由指向已知的目的地，但其新的跳数更小（即路径更短），则更新路由表，采用这条更优的路径。</li>
+<li><strong>通过同一邻居发现相同路由：</strong> 如果收到的路由与现有路由相同，并且是通过同一邻居学到的，则更新其定时器（防止路由失效）。</li>
+<li><strong>路径劣化：</strong> 如果收到的路由指向已知目的地，但跳数更大，通常不会立即更新，除非当前路由失效。</li>
+</ul>
+</li>
+<li><p><strong>路由撤销与聚合：</strong></p>
+<ul>
+<li><strong>路由失效定时器 (Invalid Timer&#x2F;Route Timeout):</strong> 如果一个路由器在 <strong>180 秒</strong>（默认）内没有收到某个路由的更新，它会认为该路由已失效，并将其跳数设置为 16 (无穷大)，标记为不可达。</li>
+<li><strong>保持计时器 (Holddown Timer):</strong> 为了防止在路由失效时出现路由环路，RIP 通常会采用“保持计时器”。在路由被标记为不可达后的一段时间内（默认 <strong>180 秒</strong>），路由器不会接受来自任何邻居的关于该目的地的更优路由（除非是来自原先通告该路由的邻居，且该邻居通告该路由已恢复）。</li>
+<li><strong>垃圾收集定时器 (Garbage-Collection Timer):</strong> 在路由被标记为不可达（跳数 16）后，它仍会在路由表中保留一段垃圾收集时间（默认 <strong>240 秒</strong>），在此期间它会继续通告这条“不可达”的路由，以确保全网都知道它已失效。这段时间结束后才从路由表中删除。</li>
+<li><strong>路由聚合 (Route Summarization):</strong> RIPv2 支持路由聚合，将多个连续的子网聚合成一个更大的网络，减少路由表的规模和路由更新的数量。</li>
+</ul>
+</li>
+<li><p><strong>防止路由环路 (Loop Prevention) 机制：</strong></p>
+<ul>
+<li><strong>水平分割 (Split Horizon):</strong> 从某个接口学到的路由，不会再从这个接口发送回去。这能有效防止两跳路由环路。</li>
+<li><strong>路由中毒 (Route Poisoning) 和毒性反转 (Poison Reverse):</strong> 当一个路由失效时，路由器会立即将其跳数设置为 16 (无穷大)，并通过更新报文通告出去。毒性反转是，如果路由器从一个接口学到某个路由，当该路由失效时，它会向该接口回发一个跳数为 16 的更新，以确保该接口的邻居知道此路由已失效。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h4 id="RIP-的特点："><a href="#RIP-的特点：" class="headerlink" title="RIP 的特点："></a>RIP 的特点：</h4><p><strong>优点：</strong></p>
+<ul>
+<li><strong>简单易配置：</strong> RIP 配置相对简单，是小型网络的理想选择。</li>
+<li><strong>资源占用低：</strong> 对路由器 CPU、内存和带宽的需求较低。</li>
+<li><strong>普遍支持：</strong> 几乎所有路由器都支持 RIP。</li>
+</ul>
+<p><strong>缺点&#x2F;局限性：</strong></p>
+<ol>
+<li><strong>最大跳数限制 (15 跳)：</strong> 这是 RIP 最主要的限制，使得它不适用于大型或中型网络，因为超过 15 跳的目的地将无法到达。</li>
+<li><strong>收敛速度慢：</strong><ul>
+<li>定期更新（30 秒一次）导致网络变化（如链路故障）传播到全网的时间较长。</li>
+<li>依赖定时器和防止环路机制（如保持计时器），进一步延长了收敛时间。</li>
+<li>在网络拓扑变化时，可能出现**路由环路 (Routing Loops)**，导致数据包无限循环（虽然有机制缓解，但无法完全消除）。</li>
+<li><strong>“计数到无穷大”问题 (Count-to-Infinity Problem):</strong> 当一条链路失效时，如果处理不当，可能导致路由器之间互相通告错误的更优路径，从而导致跳数逐渐增加到 16（无穷大），才能发现真正不可达，整个过程耗时较长。</li>
+</ul>
+</li>
+<li><strong>仅支持跳数度量：</strong> 不考虑链路带宽、延迟、负载等更真实的因素，可能导致选择次优路径（例如，一条经过光纤的 5 跳路径可能比一条经过卫星的 3 跳路径更快，但 RIP 会选择 3 跳路径）。</li>
+<li><strong>占用带宽：</strong> 每 30 秒广播或多播其完整的路由表（即使没有变化），对大型网络而言，这会消耗不必要的带宽。</li>
+<li><strong>不支持 VLSM&#x2F;CIDR (RIPv1)：</strong><ul>
+<li><strong>RIPv1 (RIP Version 1):</strong> 是一个<strong>有类别 (Classful)</strong> 路由协议，它不携带子网掩码信息，不支持可变长子网掩码 (VLSM) 和无类别域间路由 (CIDR)。这意味着所有在相同主网络下的子网必须使用相同的子网掩码。</li>
+<li><strong>RIPv2 (RIP Version 2):</strong> 是一个<strong>无类别 (Classless)</strong> 路由协议，它在路由更新报文中包含子网掩码信息，支持 VLSM 和 CIDR，并支持路由聚合和身份验证（MD5）。RIPv2 比 RIPv1 更常用更优越。</li>
+</ul>
+</li>
+<li><strong>安全问题：</strong> RIPv1 缺乏身份验证，RIPv2 支持简单的 MD5 身份验证，但相对其他协议仍较弱。</li>
+<li><strong>扩展性差：</strong> 由于上述限制，RIP 很难扩展到大型复杂的网络环境中，通常只适用于小型、平面化的网络。</li>
+</ol>
+<p><strong>总结：</strong></p>
+<p>RIP 协议因其简单性而在小型网络中仍有一定应用，尤其是在传统或资源有限的环境中。然而，由于其跳数限制、慢收敛速度和对网络复杂性缺乏支持，它在大中型企业网络或互联网骨干网中已被 OSPF、EIGRP 和 BGP 等更先进的路由协议所取代。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Network/" rel="tag"># Network</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Relabe/" rel="prev" title="Relabe">
+      <i class="fa fa-chevron-left"></i> Relabe
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/RIP%20(Routing%20Information%20Protocol)%20%E5%8D%8F%E8%AE%AE/" rel="next" title="RIP (Routing Information Protocol) 协议">
+      RIP (Routing Information Protocol) 协议 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#RIP-Routing-Information-Protocol-%E5%8D%8F%E8%AE%AE%E7%9A%84%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86%E5%8F%8A%E7%89%B9%E7%82%B9"><span class="nav-number">1.</span> <span class="nav-text">RIP (Routing Information Protocol) 协议的工作原理及特点</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#RIP-%E7%9A%84%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86%EF%BC%9A"><span class="nav-number">1.1.</span> <span class="nav-text">RIP 的工作原理：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#RIP-%E7%9A%84%E7%89%B9%E7%82%B9%EF%BC%9A"><span class="nav-number">1.2.</span> <span class="nav-text">RIP 的特点：</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

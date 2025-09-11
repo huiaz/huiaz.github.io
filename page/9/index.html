@@ -1,0 +1,2473 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta property="og:type" content="website">
+<meta property="og:title" content="Hui&#39;s Blog">
+<meta property="og:url" content="http://example.com/page/9/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:author" content="六一">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/page/9/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : true,
+    isPost : false,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content index posts-expand">
+            
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Linux%20%E4%B8%AD%E7%9A%84%E7%A1%AC%E9%93%BE%E6%8E%A5%E5%92%8C%E8%BD%AF%E8%BF%9E%E6%8E%A5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/Linux%20%E4%B8%AD%E7%9A%84%E7%A1%AC%E9%93%BE%E6%8E%A5%E5%92%8C%E8%BD%AF%E8%BF%9E%E6%8E%A5/" class="post-title-link" itemprop="url">Linux 中的硬链接和软连接</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:47:48" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/Command/" itemprop="url" rel="index"><span itemprop="name">Command</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.2k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="1-硬链接-Hard-Link"><a href="#1-硬链接-Hard-Link" class="headerlink" title="1. 硬链接 (Hard Link)"></a>1. 硬链接 (Hard Link)</h3><p><strong>定义：</strong><br>硬链接是文件系统中的一种特殊引用，它指向文件系统中的同一个文件 inode（索引节点）。简单来说，一个硬链接就是原始文件的一个别名，它们共享同一个 inode。 inode 包含了文件的所有元数据，如文件类型、权限、所有者、组、大小以及数据的物理位置等信息。</p>
+<p><strong>创建方式：</strong><br>使用 <code>ln</code> 命令创建硬链接：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">ln</span> [原始文件] [硬链接文件]</span><br></pre></td></tr></table></figure>
+
+<p><strong>特点：</strong></p>
+<ul>
+<li><strong>共享 inode：</strong> 原始文件和硬链接文件共享同一个 inode 号。你可以通过 <code>ls -i</code> 命令来查看。</li>
+<li><strong>同等地位：</strong> 对于操作系统来说，硬链接和原始文件是完全平等的。它们只是同一个文件内容的两个不同入口。</li>
+<li><strong>不能跨文件系统：</strong> 硬链接只能在同一个文件系统内部创建，因为 inode 号在不同的文件系统上是独立的。</li>
+<li><strong>不能链接目录：</strong> 出于文件系统结构完整性和避免循环引用等复杂性，不允许创建指向目录的硬链接。</li>
+<li><strong>删除特性：</strong><ul>
+<li>删除硬链接文件不会影响原始文件，也不会影响其他硬链接文件，只要还有至少一个硬链接指向该 inode，文件内容就不会被删除。</li>
+<li>只有当所有指向该 inode 的硬链接都被删除后，操作系统才会释放 inode 和数据块，文件才会被真正删除。</li>
+<li>你可以通过 <code>ls -l</code> 命令查看到文件的链接计数（硬链接数量）。</li>
+</ul>
+</li>
+</ul>
+<p><strong>应用场景：</strong></p>
+<ul>
+<li>为重要的配置文件或数据文件创建多个入口，即使原始路径被误删，文件内容仍可访问。</li>
+<li>保持文件的一致性，修改任何一个硬链接都会反映到所有其他硬链接上。</li>
+</ul>
+<p><strong>示例：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建一个原始文件</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">&quot;This is a test file.&quot;</span> &gt; original.txt</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看文件信息和 inode 号</span></span><br><span class="line"><span class="built_in">ls</span> -li original.txt</span><br><span class="line"><span class="comment"># 123456 -rw-r--r-- 1 user group 21 May 20 10:00 original.txt</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建一个硬链接</span></span><br><span class="line"><span class="built_in">ln</span> original.txt hardlink.txt</span><br><span class="line"></span><br><span class="line"><span class="comment"># 再次查看两个文件的信息（inode 号相同）</span></span><br><span class="line"><span class="built_in">ls</span> -li original.txt hardlink.txt</span><br><span class="line"><span class="comment"># 123456 -rw-r--r-- 2 user group 21 May 20 10:00 original.txt</span></span><br><span class="line"><span class="comment"># 123456 -rw-r--r-- 2 user group 21 May 20 10:00 hardlink.txt</span></span><br><span class="line"><span class="comment"># 注意：original.txt 的链接计数变成了 2，因为 hardlink.txt 也指向它。</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 修改其中一个，另一个也随之改变</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">&quot;Appended text.&quot;</span> &gt;&gt; hardlink.txt</span><br><span class="line"><span class="built_in">cat</span> original.txt</span><br><span class="line"><span class="comment"># This is a test file.</span></span><br><span class="line"><span class="comment"># Appended text.</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="2-软链接-Symbolic-Link-Symlink"><a href="#2-软链接-Symbolic-Link-Symlink" class="headerlink" title="2. 软链接 (Symbolic Link &#x2F; Symlink)"></a>2. 软链接 (Symbolic Link &#x2F; Symlink)</h3><p><strong>定义：</strong><br>软链接，也称为符号链接，是一个特殊的文件，它包含了另一个文件或目录的路径名。它更像是一个快捷方式或指针，指向另一个文件或目录。它有自己的 inode，并且该 inode 的数据块中存储的仅仅是它所指向的文件的路径。</p>
+<p><strong>创建方式：</strong><br>使用 <code>ln -s</code> 命令创建软链接：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">ln</span> -s [原始文件或目录] [软链接文件或目录]</span><br></pre></td></tr></table></figure>
+
+<p><strong>特点：</strong></p>
+<ul>
+<li><strong>独立 inode：</strong> 软链接有自己独立的 inode 号，与原始文件的 inode 号不同。通过 <code>ls -i</code> 可以看到。</li>
+<li><strong>存储路径：</strong> 软链接文件的大小通常很小，因为它只存储了它所链接的文件的路径。</li>
+<li><strong>可以跨文件系统：</strong> 软链接可以链接到不同文件系统上的文件或目录。</li>
+<li><strong>可以链接目录：</strong> 软链接可以指向目录，这是其一个重要特性。</li>
+<li><strong>“悬空”链接：</strong> 如果原始文件或目录被删除，软链接就会失效，变成一个“悬空”链接（dangling link），因为它指向的目标已经不存在了。此时你尝试访问软链接，会提示“No such file or directory”。</li>
+<li><strong>删除特性：</strong><ul>
+<li>删除软链接文件不会影响原始文件或目录。</li>
+<li>删除原始文件或目录，只会使软链接失效，软链接文件本身仍然存在。</li>
+</ul>
+</li>
+<li><strong>权限和所有者：</strong> 软链接自身的权限通常是 <code>lrwxrwxrwx</code>（或者更具体），并且它有自己的所有者和组。但是，当通过软链接访问目标文件时，生效的是目标文件的权限。</li>
+</ul>
+<p><strong>应用场景：</strong></p>
+<ul>
+<li>为常用文件或目录创建便捷的快捷方式。</li>
+<li>解决库文件版本问题（例如，<code>libfoo.so</code> 链接到 <code>libfoo.so.1.2.3</code>）。</li>
+<li>网站配置，将上传目录链接到其他磁盘分区。</li>
+<li>项目路径管理，使不同服务或脚本能够访问到统一的资源路径。</li>
+</ul>
+<p><strong>示例：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建一个原始文件</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">&quot;This is another test file.&quot;</span> &gt; original2.txt</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看文件信息和 inode 号</span></span><br><span class="line"><span class="built_in">ls</span> -li original2.txt</span><br><span class="line"><span class="comment"># 789012 -rw-r--r-- 1 user group 26 May 20 10:05 original2.txt</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建一个软链接</span></span><br><span class="line"><span class="built_in">ln</span> -s original2.txt symlink.txt</span><br><span class="line"></span><br><span class="line"><span class="comment"># 再次查看两个文件的信息（inode 号不同）</span></span><br><span class="line"><span class="built_in">ls</span> -li original2.txt symlink.txt</span><br><span class="line"><span class="comment"># 789012 -rw-r--r-- 1 user group 26 May 20 10:05 original2.txt</span></span><br><span class="line"><span class="comment"># 987654 lrwxrwxrwx 1 user group 14 May 20 10:06 symlink.txt -&gt; original2.txt</span></span><br><span class="line"><span class="comment"># 注意：symlink.txt 的类型是 &#x27;l&#x27; （链接），且指向 original2.txt。</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 修改原始文件，软链接会反映改变</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">&quot;More text.&quot;</span> &gt;&gt; original2.txt</span><br><span class="line"><span class="built_in">cat</span> symlink.txt</span><br><span class="line"><span class="comment"># This is another test file.</span></span><br><span class="line"><span class="comment"># More text.</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 删除原始文件</span></span><br><span class="line"><span class="built_in">rm</span> original2.txt</span><br><span class="line"></span><br><span class="line"><span class="comment"># 此时软链接失效，变成“悬空”链接</span></span><br><span class="line"><span class="built_in">cat</span> symlink.txt</span><br><span class="line"><span class="comment"># cat: symlink.txt: No such file or directory</span></span><br><span class="line"><span class="built_in">ls</span> -l symlink.txt</span><br><span class="line"><span class="comment"># lrwxrwxrwx 1 user group 14 May 20 10:06 symlink.txt -&gt; original2.txt (红色，表示链接失效)</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="3-硬链接与软链接的主要区别总结"><a href="#3-硬链接与软链接的主要区别总结" class="headerlink" title="3. 硬链接与软链接的主要区别总结"></a>3. 硬链接与软链接的主要区别总结</h3><table>
+<thead>
+<tr>
+<th align="left">特性</th>
+<th align="left">硬链接 (Hard Link)</th>
+<th align="left">软链接 (Soft Link &#x2F; Symbolic Link)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>Inode</strong></td>
+<td align="left">共享同一个 inode 号</td>
+<td align="left">有自己独立的 inode 号</td>
+</tr>
+<tr>
+<td align="left"><strong>文件类型</strong></td>
+<td align="left">普通文件</td>
+<td align="left">特殊文件类型（快捷方式，<code>l</code> 类型）</td>
+</tr>
+<tr>
+<td align="left"><strong>存储内容</strong></td>
+<td align="left">文件的实际数据内容</td>
+<td align="left">目标文件（或目录）的路径字符串</td>
+</tr>
+<tr>
+<td align="left"><strong>所占空间</strong></td>
+<td align="left">不增加额外空间（只增加 inode 的链接计数）</td>
+<td align="left">通常占用少量空间（存储目标路径）</td>
+</tr>
+<tr>
+<td align="left"><strong>跨文件系统</strong></td>
+<td align="left"><strong>不能</strong>跨文件系统创建</td>
+<td align="left"><strong>可以</strong>跨文件系统创建</td>
+</tr>
+<tr>
+<td align="left"><strong>链接目录</strong></td>
+<td align="left"><strong>不能</strong>链接目录</td>
+<td align="left"><strong>可以</strong>链接目录</td>
+</tr>
+<tr>
+<td align="left"><strong>原始文件删除</strong></td>
+<td align="left">只要有一个硬链接存在，文件内容就不会丢失</td>
+<td align="left">原始文件删除后，软链接失效（“悬空”链接）</td>
+</tr>
+<tr>
+<td align="left"><strong>功能</strong></td>
+<td align="left">别名，多入口访问同一个文件</td>
+<td align="left">快捷方式，指针，指向另一个文件或目录</td>
+</tr>
+<tr>
+<td align="left"><strong>权限继承</strong></td>
+<td align="left">与原始文件权限一致</td>
+<td align="left">软链接自身有权限，但访问时依赖目标文件的权限</td>
+</tr>
+<tr>
+<td align="left"><strong><code>ls -l</code> 显示</strong></td>
+<td align="left">显示链接数增加</td>
+<td align="left">显示为 <code>lrwxrwxrwx</code> 并指示目标路径 (<code>-&gt; target</code>)</td>
+</tr>
+</tbody></table>
+<h3 id="选择建议："><a href="#选择建议：" class="headerlink" title="选择建议："></a>选择建议：</h3><ul>
+<li><strong>使用硬链接：</strong> 当你需要为文件创建多个别名，并且希望它们有同等地位，即使其中一个被删除也不影响文件内容时，硬链接是理想选择。但请记住它不能跨文件系统和不能链接目录的限制。</li>
+<li><strong>使用软链接：</strong> 当你需要创建文件或目录的快捷方式，或者需要在不同文件系统之间进行链接，或者需要链接目录时，软链接是更灵活和通用的选择。但要意识到原始目标丢失时，软链接会失效。</li>
+</ul>
+<p>作为运维工程师，我会在日常工作中根据具体需求灵活选择使用硬链接或软链接，充分利用它们的特性来提升系统效率和管理便利性。例如，在管理 <code>/var/log</code> 下的日志进行归档时，我可能会使用软链接将旧日志目录链接到其他存储介质；在管理一些共享配置文件时，可能会用到硬链接来确保多处引用的是同一个文件内容。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Linux%20%E5%86%85%E5%AD%98%E5%BC%82%E5%B8%B8%E6%8E%92%E6%9F%A5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/Linux%20%E5%86%85%E5%AD%98%E5%BC%82%E5%B8%B8%E6%8E%92%E6%9F%A5/" class="post-title-link" itemprop="url">Linux 内存异常排查</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:46:51" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/Command/" itemprop="url" rel="index"><span itemprop="name">Command</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>5.8k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="一、什么是-Linux-系统中的内存泄漏？"><a href="#一、什么是-Linux-系统中的内存泄漏？" class="headerlink" title="一、什么是 Linux 系统中的内存泄漏？"></a>一、什么是 Linux 系统中的内存泄漏？</h3><p>简单来说，<strong>内存泄漏（Memory Leak）</strong> 指的是程序在运行过程中，动态地申请了内存空间（例如 C 语言的 <code>malloc()</code> 或 Java 的 <code>new</code>），但在使用完毕后，没有按预期释放（或无法被垃圾回收器回收）。</p>
+<p>结果是，这部分内存既不能被当前程序再次使用，也无法被操作系统回收分配给其他程序。从操作系统的视角看，这块内存一直被该程序“合法”地占用着。随着时间的推移，泄漏的内存积少成多，最终会耗尽系统的可用物理内存和交换空间（Swap）。</p>
+<p><strong>一个常见的误解：</strong><br>很多时候，新手会把 Linux 的<strong>文件系统缓存（Cache）</strong>误认为是内存泄漏。Linux 内核会尽可能地利用空闲内存来缓存磁盘读写数据，以提高性能。在 <code>free -h</code> 命令中，这部分内存会显示在 <code>buff/cache</code> 列。这是正常且有益的行为，当应用程序需要更多内存时，内核会自动收缩这部分缓存来满足需求。</p>
+<p><strong>真正的内存泄漏迹象是 <code>available</code>（可用内存）持续、不可逆地减少，而不是 <code>free</code>（空闲内存）的减少。</strong></p>
+<h3 id="二、内存泄漏的典型症状"><a href="#二、内存泄漏的典型症状" class="headerlink" title="二、内存泄漏的典型症状"></a>二、内存泄漏的典型症状</h3><p>作为运维，我们通常不是直接看到代码，而是通过以下系统现象来感知到内存泄漏的存在：</p>
+<ol>
+<li><strong>系统性能逐渐下降：</strong> 服务器运行一段时间后（几天、几周甚至几个月），响应越来越慢，处理请求的延迟越来越高。</li>
+<li><strong>可用内存持续减少：</strong> 通过监控工具（如 Prometheus + Grafana, Zabbix）观察，服务器的可用内存曲线呈现出一种缓慢、稳定下降的趋势，即使在业务低谷期也无法恢复。</li>
+<li><strong>Swap 使用量增加：</strong> 当物理内存耗尽时，系统开始频繁使用交换空间（Swap），导致磁盘 I&#x2F;O 飙升，系统性能急剧恶化。</li>
+<li><strong>OOM Killer 介入：</strong> 当物理内存和交换空间都耗尽时，Linux 内核的 <strong>OOM Killer (Out-of-Memory Killer)</strong> 机制会被触发，它会选择一个进程（通常是占用内存最多的那个）并将其“杀死”（kill），以释放内存，保障系统至少能继续运行。你可以在系统日志中看到 OOM Killer 的“作案记录”。<ul>
+<li><strong>检查命令：</strong> <code>dmesg | grep -i &quot;out of memory&quot;</code> 或检查 <code>/var/log/messages</code>、<code>/var/log/syslog</code>。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3 id="三、内存泄漏的排查方法和工具"><a href="#三、内存泄漏的排查方法和工具" class="headerlink" title="三、内存泄漏的排查方法和工具"></a>三、内存泄漏的排查方法和工具</h3><p>排查内存泄漏遵循一个从宏观到微观的“漏斗模型”：<strong>系统层面 -&gt; 进程层面 -&gt; 代码层面</strong>。</p>
+<h4 id="步骤-1：确认是否存在泄漏并定位系统"><a href="#步骤-1：确认是否存在泄漏并定位系统" class="headerlink" title="步骤 1：确认是否存在泄漏并定位系统"></a><strong>步骤 1：确认是否存在泄漏并定位系统</strong></h4><ul>
+<li><strong>工具：</strong> <code>free</code>, <code>vmstat</code>, <code>sar</code>, 以及监控系统（如 Prometheus）。</li>
+<li><strong>方法：</strong><ol>
+<li><strong>长期观察：</strong> 查看监控系统中服务器的<strong>可用内存 (Available Memory)</strong> 历史图表。如果它呈现出随时间推移稳步下降且从不完全恢复的“下坡”趋势，就高度怀疑是内存泄漏。</li>
+<li><strong>实时检查：</strong> 使用 <code>free -h</code> 命令，持续关注 <code>available</code> 列的变化。同时，使用 <code>vmstat 1</code> 可以每秒输出一行系统状态，观察 <code>swpd</code> (交换区使用) 和 <code>si</code>, <code>so</code> (换入换出) 列，如果这些值持续很高，说明内存压力巨大。</li>
+</ol>
+</li>
+</ul>
+<h4 id="步骤-2：定位具体的泄漏进程"><a href="#步骤-2：定位具体的泄漏进程" class="headerlink" title="步骤 2：定位具体的泄漏进程"></a><strong>步骤 2：定位具体的泄漏进程</strong></h4><p>一旦确认系统存在内存泄漏，下一步就是找出是哪个进程干的。</p>
+<ul>
+<li><strong>工具：</strong> <code>top</code>, <code>htop</code>, <code>ps</code>。</li>
+<li><strong>方法：</strong><ol>
+<li><strong><code>top</code> 或 <code>htop</code>：</strong> 在命令行中运行 <code>top</code>，然后按 <code>M</code> (大写) 或 <code>htop</code> 中按 <code>F6</code> 选择 <code>PERCENT_MEM</code>，将进程按内存使用率排序。</li>
+<li><strong>观察：</strong> 长期观察列表，哪个进程的 <code>%MEM</code> (内存使用百分比) 和 <code>RES</code> (Resident Memory, 物理内存占用) 在持续、缓慢地增长，那个进程就是最大的嫌疑犯。</li>
+<li><strong>静态快照：</strong> 使用 <code>ps aux --sort=-%mem | head -n 10</code> 可以列出当前内存使用最高的前几个进程，适合做成脚本定时记录。</li>
+</ol>
+</li>
+</ul>
+<h4 id="步骤-3：深入分析嫌疑进程-关键步骤"><a href="#步骤-3：深入分析嫌疑进程-关键步骤" class="headerlink" title="步骤 3：深入分析嫌疑进程 (关键步骤)"></a><strong>步骤 3：深入分析嫌疑进程 (关键步骤)</strong></h4><p>定位到具体进程后，需要使用更专业的工具来分析其内部的内存分配情况。这通常需要根据进程的开发语言来选择合适的工具。</p>
+<ul>
+<li><p><strong>对于 C&#x2F;C++ 等编译型语言程序：</strong></p>
+<ul>
+<li><strong><code>valgrind (memcheck)</code>：</strong><ul>
+<li><strong>描述：</strong> 这是最强大的内存调试工具，可以精确报告每一处内存泄漏发生的位置（代码行）。</li>
+<li><strong>用法：</strong> <code>valgrind --leak-check=full ./your_program</code>。</li>
+<li><strong>缺点：</strong> 它会使程序运行速度降低 10-50 倍，<strong>不适用于生产环境</strong>，通常在开发或测试环境中使用。</li>
+</ul>
+</li>
+<li><strong><code>pmap</code>：</strong><ul>
+<li><strong>描述：</strong> 显示一个进程的内存映射。</li>
+<li><strong>用法：</strong> <code>pmap -x &lt;PID&gt;</code>。通过定时对同一个进程执行 <code>pmap</code> 并对输出进行 <code>diff</code>，可以发现是哪些内存地址段在持续增长。这能提供一些线索。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>对于 Java 程序 (JVM)：</strong></p>
+<ul>
+<li><strong><code>jmap</code>：</strong><ul>
+<li><strong>描述：</strong> JVM 自带的内存映像工具，非常实用。</li>
+<li><strong>用法：</strong><ol>
+<li><strong>查看堆中对象统计信息：</strong> <code>jmap -histo:live &lt;PID&gt; | head -n 20</code>。这个命令会触发一次 Full GC，然后打印出当前存活对象的直方图。定时执行并 <code>diff</code> 两次的结果，可以清晰地看到哪种类型的对象数量在不断增加。这是<strong>生产环境中最常用的快速定位方法</strong>。</li>
+<li><strong>生成堆转储快照 (Heap Dump)：</strong> <code>jmap -dump:live,format=b,file=heap.bin &lt;PID&gt;</code>。这个命令会生成一个完整的堆快照文件。</li>
+</ol>
+</li>
+</ul>
+</li>
+<li><strong><code>jstat</code>：</strong><ul>
+<li><strong>描述：</strong> 监控 JVM 的垃圾回收(GC)活动。</li>
+<li><strong>用法：</strong> <code>jstat -gcutil &lt;PID&gt; 1000</code>。观察 <code>E</code> (Eden), <code>S0</code>, <code>S1</code> (Survivor), <code>O</code> (Old Gen) 的使用率和 <code>YGC</code>, <code>FGC</code> (GC次数) 的变化。如果老年代(<code>O</code>)的使用率持续增长且 <code>FGC</code> 后也不下降，就是典型的泄漏迹象。</li>
+</ul>
+</li>
+<li><strong>MAT (Memory Analyzer Tool) 或 VisualVM：</strong><ul>
+<li><strong>描述：</strong> 离线分析工具。将 <code>jmap</code> 生成的 <code>heap.bin</code> 文件下载到本地，用这些图形化工具打开进行深入分析。它们可以帮你找到“支配树”（Dominator Tree），直接定位到持有大量内存且无法被回收的对象及其引用链。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>对于 Python&#x2F;Node.js&#x2F;Go 等语言：</strong></p>
+<ul>
+<li>这些语言通常有各自的生态工具，例如 Python 的 <code>tracemalloc</code>, <code>objgraph</code>，Node.js 的 <code>heapdump</code> 模块和 Chrome DevTools。</li>
+</ul>
+</li>
+<li><p><strong>对于内核级别的内存泄漏 (罕见)：</strong></p>
+<ul>
+<li><strong><code>slabtop</code>：</strong><ul>
+<li><strong>描述：</strong> 如果怀疑是内核模块或驱动程序泄漏（非常罕见），可以使用此工具。</li>
+<li><strong>用法：</strong> 运行 <code>slabtop -s c</code> 按缓存大小排序，观察是否有某个 slab cache 的 <code>OBJ</code> (对象数) 和 <code>ACTIVE</code> (活动对象) 在不正常地持续增长。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="四、解决方案和预防"><a href="#四、解决方案和预防" class="headerlink" title="四、解决方案和预防"></a>四、解决方案和预防</h3><ol>
+<li><p><strong>短期缓解 (运维侧)：</strong></p>
+<ul>
+<li><strong>重启服务：</strong> 最简单粗暴但有效的方法是定期重启泄漏的进程，释放其所有占用的内存。这只能作为临时解决方案。</li>
+<li><strong>资源隔离和限制：</strong> 使用 cgroups (或通过 Docker&#x2F;Kubernetes) 为进程设置内存上限。当内存使用达到上限时，容器会被 OOM-killed 并自动重启，从而将故障影响限制在单个服务内，避免拖垮整个宿主机。</li>
+</ul>
+</li>
+<li><p><strong>长期根治 (开发侧)：</strong></p>
+<ul>
+<li><strong>代码修复：</strong> 运维工程师需要将上述排查过程中收集到的证据（如进程名、jmap直方图、heap dump文件、valgrind报告等）提供给开发团队。</li>
+<li><strong>开发人员根据这些线索定位到具体的代码逻辑错误并进行修复。</strong></li>
+</ul>
+</li>
+</ol>
+<p>作为一名运维工程师，我们的核心职责是<strong>保障系统稳定</strong>，并<strong>高效地定位问题、提供数据</strong>。在内存泄漏问题上，我们的任务就是通过上述工具和方法，准确地找出“元凶”，然后将“案宗”交给“侦探”（开发人员）去破案。</p>
+<hr>
+<h3 id="场景解读：你在看什么？"><a href="#场景解读：你在看什么？" class="headerlink" title="场景解读：你在看什么？"></a>场景解读：你在看什么？</h3><p><strong>例如：Java 容器内存异常分析，RSS 内存使用率为 53%，WSS 内存使用率为 95%</strong></p>
+<p>首先，我们必须精确理解这两个指标的含义，以及它们在容器环境下的特殊性。</p>
+<ol>
+<li><p><strong>RSS (Resident Set Size - 物理内存使用量):</strong></p>
+<ul>
+<li><strong>含义：</strong> 这是操作系统内核视角下，该容器（或进程）当前<strong>实际占用</strong>了多少物理内存（RAM）。它包括了 JVM 的堆内存（Heap）、元空间（Metaspace）、JIT 编译缓存、线程栈以及程序加载的本地库（Native Libraries）等所有部分。</li>
+<li><strong>关键点：</strong> 这是容器调度器（如 Kubernetes）和 OOM Killer <strong>唯一关心</strong>的指标。当 RSS 超过容器的内存限制 (<code>memory.limit_in_bytes</code>) 时，容器就会被 OOM-killed。</li>
+<li><strong>现状（53%）：</strong> 表面上看，容器的物理内存使用量只占了一半多一点的配额，似乎高枕无忧。</li>
+</ul>
+</li>
+<li><p><strong>WSS (Working Set Size - 工作集大小):</strong></p>
+<ul>
+<li><strong>含义：</strong> 这是 RSS 的一个<strong>子集</strong>，指的是在最近一个时间窗口内，进程<strong>实际访问过（读&#x2F;写）</strong>的内存页。你可以把它理解为“热数据”或“活跃内存”。</li>
+<li><strong>关键点：</strong> WSS 是衡量一个应用<strong>内存活跃度</strong>的绝佳指标。它预示了应用在不久的将来最可能需要访问的内存量。</li>
+<li><strong>现状（95%）：</strong> 这是问题的<strong>核心</strong>。WSS 占 RSS 的 95%，意味着该容器当前占用的物理内存（那 53% 的配额），几乎全部都是“热”的，正在被高频访问。<strong>几乎没有“冷”的、可以被安全换出或回收的内存。</strong></li>
+</ul>
+</li>
+</ol>
+<h3 id="综合分析：危险的信号"><a href="#综合分析：危险的信号" class="headerlink" title="综合分析：危险的信号"></a>综合分析：危险的信号</h3><p>将这两个指标结合起来，我们得到的画像就不再是“内存充裕”，而是“<strong>高度活跃且逼近性能悬崖</strong>”。</p>
+<ul>
+<li><strong>表象 vs. 实质：</strong> 虽然 RSS 只有 53%，但因为 WSS 高达 95%，说明 Java 应用正在疯狂地使用它已分配到的大部分内存。内存使用效率极高，但反过来说，也<strong>毫无缓冲余地。</strong></li>
+<li><strong>潜在风险：</strong><ol>
+<li><strong>极易触发 OOM：</strong> 任何一个新的业务请求、一次性的数据加载、甚至是 Full GC 前的内存拷贝，只要需要一点点额外的内存，都会立即导致 RSS 上升。由于没有“冷”内存可供置换，应用会立刻向操作系统申请新的物理内存。RSS 的增长会非常“刚性”，从 53% 迅速攀升，一旦业务流量稍有波动，就可能在短时间内触及 100% 的限制而被杀死。</li>
+<li><strong>GC 压力巨大：</strong> 高 WSS 通常意味着堆内对象存活率高，或者新对象分配速度极快。这会导致频繁的 Young GC，并且存活对象会快速晋升到老年代。最终可能引发耗时更长的 Full GC，造成应用卡顿（Stop-the-World）。</li>
+<li><strong>性能抖动：</strong> 即使没被 OOM，高内存活跃度也可能导致 minor page faults（当内核需要将之前临时移出的内存页重新载入时），带来微小的性能抖动。</li>
+</ol>
+</li>
+</ul>
+<p><strong>结论：该 Java 容器正处于一种“稳定但脆弱”的状态。它当前还能正常工作，但对任何内存需求的增长都极其敏感，离故障（OOM 或性能雪崩）仅一步之遥。</strong></p>
+<hr>
+<h3 id="排查与行动计划"><a href="#排查与行动计划" class="headerlink" title="排查与行动计划"></a>排查与行动计划</h3><p>作为运维，我们的职责是防患于未然。以下是我的行动步骤：</p>
+<h4 id="阶段一：立即行动与数据采集-Ops-Lead"><a href="#阶段一：立即行动与数据采集-Ops-Lead" class="headerlink" title="阶段一：立即行动与数据采集 (Ops Lead)"></a><strong>阶段一：立即行动与数据采集 (Ops Lead)</strong></h4><ol>
+<li><p><strong>告警阈值调整：</strong></p>
+<ul>
+<li>立即为该容器设置更灵敏的告警。除了<code>container_memory_rss &gt; 85%</code>这种常规告警，更应该设置一个<strong>组合告警</strong>或<strong>基于 WSS 的告警</strong>，例如 <code>container_memory_working_set_bytes / container_memory_rss &gt; 0.9 AND container_memory_rss &gt; 50%</code>。这能让我们在危险真正来临前获得预警。</li>
+</ul>
+</li>
+<li><p><strong>关联监控数据：</strong></p>
+<ul>
+<li><strong>JVM 监控：</strong> 立即查看 APM 系统（如 SkyWalking, Prometheus JMX Exporter）中的 JVM 指标。重点关注：<ul>
+<li><strong>堆内存使用率 (Heap Usage)：</strong> 老年代（Old Gen）是否已经很高？</li>
+<li><strong>GC 活动 (GC Count &amp; Time)：</strong> <code>Full GC</code> 的频率和耗时是否在增加？<code>Young GC</code> 是否异常频繁？</li>
+<li><strong>线程数 (Thread Count)：</strong> 线程数是否过多？（每个线程都有自己的栈，占用 RSS）</li>
+</ul>
+</li>
+<li><strong>业务指标：</strong> 查看应用的 QPS、RT 和错误率。内存问题最终会反映在业务指标上。</li>
+</ul>
+</li>
+<li><p><strong>深入取证 (准备好“弹药”给开发)：</strong></p>
+<ul>
+<li><p><strong>执行 <code>jstat</code>：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 进入容器</span></span><br><span class="line">kubectl <span class="built_in">exec</span> -it &lt;pod_name&gt; -c &lt;container_name&gt; -- /bin/bash</span><br><span class="line"><span class="comment"># 找到 Java 进程的 PID</span></span><br><span class="line">ps -ef | grep java</span><br><span class="line"><span class="comment"># 持续观察 GC 情况，每秒一次，共 10 次</span></span><br><span class="line">jstat -gcutil &lt;PID&gt; 1000 10</span><br></pre></td></tr></table></figure>
+<p>观察 <code>O</code> (Old Gen) 列是否持续高位，<code>FGC</code> (Full GC 次数) 是否在短时间内增加。</p>
+</li>
+<li><p><strong>执行 <code>jmap</code> 分析对象：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 在非高峰期，或如果情况紧急</span></span><br><span class="line"><span class="comment"># 打印存活对象的直方图，查看是哪种对象占用了最多内存</span></span><br><span class="line">jmap -histo:live &lt;PID&gt; | <span class="built_in">head</span> -n 30</span><br></pre></td></tr></table></figure>
+<p>将输出结果保存下来。重复几次，对比是什么对象在持续增长。这是定位内存泄漏的关键证据。</p>
+</li>
+</ul>
+</li>
+</ol>
+<h4 id="阶段二：问题分析与协同-Ops-Dev"><a href="#阶段二：问题分析与协同-Ops-Dev" class="headerlink" title="阶段二：问题分析与协同 (Ops + Dev)"></a><strong>阶段二：问题分析与协同 (Ops + Dev)</strong></h4><ol>
+<li><p><strong>组织分析会：</strong> 将上述收集到的所有数据（RSS&#x2F;WSS 趋势图、JVM 监控截图、<code>jstat</code> 和 <code>jmap</code> 的输出）提交给开发团队。</p>
+</li>
+<li><p><strong>引导分析方向：</strong></p>
+<ul>
+<li><strong>场景一：内存泄漏 (Memory Leak)。</strong> 如果 <code>jmap -histo</code> 显示特定业务对象的数量随时间持续增长，且无法被 GC 回收，这基本就是内存泄漏。需要开发人员检查代码，找出是哪里持有了对象的引用。</li>
+<li><strong>场景二：内存使用不当 (Inefficient Memory Usage)。</strong><ul>
+<li>可能是程序中存在一个巨大的缓存，且缓存内容更新非常频繁，导致 WSS 居高不下。</li>
+<li>可能是单个请求处理了过大的数据量（如一次性从数据库查询 100 万条记录到内存中），导致瞬间内存暴增。</li>
+<li>可能是 JSON 解析、文件处理等库使用不当，产生了大量临时对象。</li>
+</ul>
+</li>
+<li><strong>场景三：容量不足 (Insufficient Capacity)。</strong> 也许应用本身就是内存密集型的，在当前的业务负载下，它就是需要这么多活跃内存。</li>
+</ul>
+</li>
+</ol>
+<h4 id="阶段三：解决方案-Dev-Lead-Ops-Support"><a href="#阶段三：解决方案-Dev-Lead-Ops-Support" class="headerlink" title="阶段三：解决方案 (Dev Lead, Ops Support)"></a><strong>阶段三：解决方案 (Dev Lead, Ops Support)</strong></h4><ol>
+<li><p><strong>短期缓解 (Ops)：</strong></p>
+<ul>
+<li>如果业务非常关键且 OOM 风险极高，作为临时措施，可以<strong>垂直扩容</strong>，即增加容器的 <code>memory.limit</code>。但这只是“续命”，不能解决根本问题。</li>
+</ul>
+</li>
+<li><p><strong>长期根治 (Dev + Ops)：</strong></p>
+<ul>
+<li><strong>代码优化：</strong> 开发人员根据分析结果修复内存泄漏或优化内存使用逻辑（如使用更小的对象、流式处理数据、优化缓存策略等）。</li>
+<li><strong>JVM 调优：</strong><ul>
+<li>审视 <code>-Xmx</code>, <code>-Xms</code> 等参数是否合理。</li>
+<li>考虑更换垃圾回收器（如 G1GC, ZGC），它们在处理大堆和控制停顿方面有更好的表现。</li>
+</ul>
+</li>
+<li><strong>容量重新评估：</strong> 如果确认是容量问题，需要和开发一起重新评估应用的基准内存需求，并调整容器的 <code>request</code> 和 <code>limit</code>，进行合理的容量规划。</li>
+</ul>
+</li>
+</ol>
+<p>通过这样一套组合拳，我们不仅能解决眼前的危机，更能推动应用的健康度和稳定性迈上一个新的台阶。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Linux%20%E6%8E%92%E6%9F%A5%E5%91%BD%E4%BB%A4/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/Linux%20%E6%8E%92%E6%9F%A5%E5%91%BD%E4%BB%A4/" class="post-title-link" itemprop="url">Linux 排查命令</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:46:56" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/Command/" itemprop="url" rel="index"><span itemprop="name">Command</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>(1) 如何在 Linux 中查看系统资源使用情况？比如内存、CPU、网络端口。</p>
+<hr>
+<h3 id="一、-CPU-使用情况"><a href="#一、-CPU-使用情况" class="headerlink" title="一、 CPU 使用情况"></a>一、 CPU 使用情况</h3><h4 id="1-top-命令-实时交互式"><a href="#1-top-命令-实时交互式" class="headerlink" title="1. top 命令 (实时交互式)"></a>1. <code>top</code> 命令 (实时交互式)</h4><p><code>top</code> 命令是最常用的 CPU 监控工具，它提供了一个实时更新的进程列表，并显示 CPU 使用率、内存使用率、进程 ID (PID)、用户、运行时间等信息。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">top</span><br></pre></td></tr></table></figure>
+
+<p><strong>关键信息解读：</strong></p>
+<ul>
+<li><strong>第一行（top line）：</strong> <code>load average</code> 显示了过去 1、5、15 分钟的系统平均负载。这是衡量系统忙碌程度的重要指标，数值大于 CPU 核心数时通常表示系统存在瓶颈。</li>
+<li><strong>第二行（Tasks）：</strong> 显示进程总数，以及运行、睡眠、停止和僵尸进程的数量。</li>
+<li><strong>第三行（Cpu(s)）：</strong> 显示 CPU 的使用率，各项指标含义如下：<ul>
+<li><code>us</code> (user): 用户空间程序的 CPU 使用率。</li>
+<li><code>sy</code> (system): 内核空间程序的 CPU 使用率。</li>
+<li><code>ni</code> (nice): 改变过优先级的用户进程的 CPU 使用率。</li>
+<li><code>id</code> (idle): 空闲 CPU 百分比。</li>
+<li><code>wa</code> (iowait): CPU 等待 I&#x2F;O 操作完成的百分比。</li>
+<li><code>hi</code> (hardware irq): 硬中断使用率。</li>
+<li><code>si</code> (software irq): 软中断使用率。</li>
+<li><code>st</code> (steal): 虚拟机管理程序强制等待时间 (用于虚拟化环境)。</li>
+</ul>
+</li>
+<li><strong>进程列表：</strong> 默认按 CPU 使用率降序排列，方便找出耗 CPU 的进程。</li>
+</ul>
+<p><strong>常用操作：</strong></p>
+<ul>
+<li>按下 <code>P</code>：按 CPU 使用率排序（默认）。</li>
+<li>按下 <code>M</code>：按内存使用率排序。</li>
+<li>按下 <code>1</code>：显示每个 CPU 核心的使用情况（如果有多核）。</li>
+<li>按下 <code>q</code>：退出。</li>
+</ul>
+<h4 id="2-htop-命令-增强版-top"><a href="#2-htop-命令-增强版-top" class="headerlink" title="2. htop 命令 (增强版 top)"></a>2. <code>htop</code> 命令 (增强版 top)</h4><p><code>htop</code> 是 <code>top</code> 的一个增强版，提供了更友好的交互界面、彩色显示和更便捷的操作。通常需要单独安装 (<code>sudo apt install htop</code> 或 <code>sudo yum install htop</code>)。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">htop</span><br></pre></td></tr></table></figure>
+
+<p><strong>特点：</strong></p>
+<ul>
+<li>更直观的 CPU 和内存的图形化显示。</li>
+<li>可以左右滚动查看更多列信息。</li>
+<li>支持鼠标操作，方便进行进程管理（杀死进程、修改优先级等）。</li>
+<li>F 键快捷操作，如 <code>F6</code> 排序，<code>F9</code> 杀进程。</li>
+</ul>
+<h4 id="3-mpstat-命令-多核-CPU-统计"><a href="#3-mpstat-命令-多核-CPU-统计" class="headerlink" title="3. mpstat 命令 (多核 CPU 统计)"></a>3. <code>mpstat</code> 命令 (多核 CPU 统计)</h4><p><code>mpstat</code> 命令用于报告每个处理器的活动情况（在 <code>sysstat</code> 包中，可能需要安装）。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mpstat 1 <span class="comment"># 每秒更新一次</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>输出解读：</strong><br>分行显示每个 CPU 核心的 <code>us</code>, <code>sy</code>, <code>id</code>, <code>wa</code> 等使用率，非常适合诊断多核 CPU 的瓶颈问题。</p>
+<h4 id="4-vmstat-命令-虚拟内存统计"><a href="#4-vmstat-命令-虚拟内存统计" class="headerlink" title="4. vmstat 命令 (虚拟内存统计)"></a>4. <code>vmstat</code> 命令 (虚拟内存统计)</h4><p><code>vmstat</code> 命令可以报告关于进程、内存、分页、块 IO、陷阱和 CPU 活动的详细信息。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vmstat 1 <span class="comment"># 每秒更新一次</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>CPU 相关列：</strong></p>
+<ul>
+<li><code>us</code>: 用户 CPU 使用率</li>
+<li><code>sy</code>: 系统 CPU 使用率</li>
+<li><code>id</code>: 空闲 CPU 百分比</li>
+<li><code>wa</code>: 等待 IO 的 CPU 百分比</li>
+</ul>
+<hr>
+<h3 id="二、-内存使用情况"><a href="#二、-内存使用情况" class="headerlink" title="二、 内存使用情况"></a>二、 内存使用情况</h3><h4 id="1-free-命令"><a href="#1-free-命令" class="headerlink" title="1. free 命令"></a>1. <code>free</code> 命令</h4><p><code>free</code> 命令用于显示系统内存、交换分区的使用情况。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">free -h   <span class="comment"># 人类可读格式 (MB/GB)</span></span><br><span class="line">free -m   <span class="comment"># 以 MB 为单位显示</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>关键信息解读：</strong></p>
+<ul>
+<li><strong><code>total</code>：</strong> 总内存（或交换区）大小。</li>
+<li><strong><code>used</code>：</strong> 已使用的内存（或交换区）大小。</li>
+<li><strong><code>free</code>：</strong> 未使用的内存（或交换区）大小。</li>
+<li><strong><code>shared</code>：</strong> 共享内存大小。</li>
+<li><strong><code>buff/cache</code>：</strong> buffers (缓存文件系统元数据) 和 cache (缓存文件内容) 使用的内存。这部分内存可以被应用程序快速回收利用，所以并不代表真正的“已用完”。</li>
+<li><strong><code>available</code>：</strong> 操作系统认为可供新应用程序使用的内存量（包含 free 和部分 reclaimable 的 buff&#x2F;cache）。</li>
+</ul>
+<p><strong>重要概念：</strong></p>
+<ul>
+<li>在 Linux 中，系统会尽量将空闲内存用于文件缓存（<code>buff/cache</code>），以提高系统性能。因此，<code>free</code> 内存看起来很少不一定代表内存不足，更重要的是关注 <code>available</code> 字段。</li>
+<li>当 <code>available</code> 内存很低时，才需要警惕内存不足。</li>
+</ul>
+<h4 id="2-top-htop-命令"><a href="#2-top-htop-命令" class="headerlink" title="2. top &#x2F; htop 命令"></a>2. <code>top</code> &#x2F; <code>htop</code> 命令</h4><p>前面提到的 <code>top</code> 和 <code>htop</code> 也能提供内存使用情况概览，并能按内存使用量排序进程。</p>
+<p><strong><code>top</code> 中内存相关的列：</strong></p>
+<ul>
+<li><code>VIRT</code>: 虚拟内存大小。</li>
+<li><code>RES</code>: 驻留内存大小（真实使用的物理内存）。</li>
+<li><code>SHR</code>: 共享内存大小。</li>
+<li><code>%MEM</code>: 进程使用的内存百分比。</li>
+</ul>
+<h4 id="3-proc-meminfo-文件"><a href="#3-proc-meminfo-文件" class="headerlink" title="3. /proc/meminfo 文件"></a>3. <code>/proc/meminfo</code> 文件</h4><p>这个文件包含了更详细的内存信息，是 <code>free</code> 命令数据来源之一。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cat</span> /proc/meminfo</span><br></pre></td></tr></table></figure>
+
+<p><strong>常用字段：</strong></p>
+<ul>
+<li><code>MemTotal</code>: 总物理内存。</li>
+<li><code>MemFree</code>: 空闲物理内存。</li>
+<li><code>Buffers</code>: 块设备缓存大小。</li>
+<li><code>Cached</code>: 页面缓存大小。</li>
+<li><code>SwapTotal</code>: 总交换空间。</li>
+<li><code>SwapFree</code>: 空闲交换空间。</li>
+<li><code>MemAvailable</code>: 可用内存（最接近真实可用内存的值）。</li>
+</ul>
+<hr>
+<h3 id="三、-网络端口使用情况"><a href="#三、-网络端口使用情况" class="headerlink" title="三、 网络端口使用情况"></a>三、 网络端口使用情况</h3><h4 id="1-netstat-命令-已过时，但仍常用"><a href="#1-netstat-命令-已过时，但仍常用" class="headerlink" title="1. netstat 命令 (已过时，但仍常用)"></a>1. <code>netstat</code> 命令 (已过时，但仍常用)</h4><p><code>netstat</code> 命令用于显示网络连接、路由表、接口统计等。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">netstat -tulnp <span class="comment"># 显示所有 TCP/UDP 监听端口及对应进程</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>常用选项：</strong></p>
+<ul>
+<li><code>-t</code>: 显示 TCP 连接。</li>
+<li><code>-u</code>: 显示 UDP 连接。</li>
+<li><code>-l</code>: 显示监听（Listening）状态的套接字。</li>
+<li><code>-n</code>: 以数字形式显示地址和端口号，加快显示速度。</li>
+<li><code>-p</code>: 显示建立连接的程序名称和 PID (需要 root 权限)。</li>
+</ul>
+<p><strong>示例：</strong></p>
+<ul>
+<li>查看所有正在监听的 TCP 端口：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">netstat -antpl | grep LISTEN</span><br></pre></td></tr></table></figure></li>
+<li>查看某个特定端口被哪个进程占用：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">netstat -antpl | grep 80</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h4 id="2-ss-命令-推荐，netstat-的替代品"><a href="#2-ss-命令-推荐，netstat-的替代品" class="headerlink" title="2. ss 命令 (推荐，netstat 的替代品)"></a>2. <code>ss</code> 命令 (推荐，<code>netstat</code> 的替代品)</h4><p><code>ss</code> 命令是 <code>netstat</code> 的替代品，它能更快地获取套接字统计信息，尤其在大并发量系统上性能更优。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ss -tulnp <span class="comment"># 同 netstat -tulnp，显示所有 TCP/UDP 监听端口及对应进程</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>常用选项：</strong></p>
+<ul>
+<li><code>-t</code>: TCP 套接字。</li>
+<li><code>-u</code>: UDP 套接字。</li>
+<li><code>-l</code>: 监听套接字。</li>
+<li><code>-n</code>: 不解析服务名和主机名。</li>
+<li><code>-p</code>: 显示进程信息。</li>
+<li><code>-a</code>: 显示所有套接字（listening and non-listening）。</li>
+</ul>
+<p><strong>示例：</strong></p>
+<ul>
+<li>查看所有监听的 IPv4 TCP 端口：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ss -tlna4</span><br></pre></td></tr></table></figure></li>
+<li>查看 80 端口的使用情况：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ss -tulnp | grep :80</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h4 id="3-lsof-命令-列出打开的文件-端口"><a href="#3-lsof-命令-列出打开的文件-端口" class="headerlink" title="3. lsof 命令 (列出打开的文件&#x2F;端口)"></a>3. <code>lsof</code> 命令 (列出打开的文件&#x2F;端口)</h4><p><code>lsof</code> 命令用于列出当前系统打开的文件（<code>lsof</code> &#x3D; list open files）。在 Linux 中，“一切皆文件”，网络连接也被视为文件，所以 <code>lsof</code> 也能用来查看端口占用。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">lsof -i :端口号 <span class="comment"># 查看指定端口被哪个进程占用</span></span><br><span class="line">lsof -i tcp:80 <span class="comment"># 查看 80 端口被哪个进程占用 (TCP)</span></span><br><span class="line">lsof -i -P -n <span class="comment"># 查看所有打开的网络连接 (IP, 端口用数字显示)</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>示例：</strong></p>
+<ul>
+<li>查看 22 端口：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsof -i :22</span><br></pre></td></tr></table></figure></li>
+<li>查看进程 ID 为 1234 的进程打开了哪些网络连接：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsof -p 1234 -i</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p><strong>注意：</strong> <code>lsof</code> 命令功能强大，但执行速度可能比 <code>ss</code> 慢，在生产环境高负载下需要谨慎使用。</p>
+<hr>
+<h3 id="四、-综合查看工具"><a href="#四、-综合查看工具" class="headerlink" title="四、 综合查看工具"></a>四、 综合查看工具</h3><h4 id="dstat-在-dstat-包中"><a href="#dstat-在-dstat-包中" class="headerlink" title="dstat (在 dstat 包中)"></a><code>dstat</code> (在 <code>dstat</code> 包中)</h4><p><code>dstat</code> 是一个多功能资源统计工具，可以替代 <code>vmstat</code>, <code>iostat</code>, <code>netstat</code> 等。它能提供内存、CPU、网络、磁盘 I&#x2F;O 等多种实时数据。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">dstat 1 <span class="comment"># 每秒刷新一次所有统计数据</span></span><br><span class="line">dstat -cmndl <span class="comment"># 关注 CPU, 内存, 网络, 磁盘, 平均负载</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>作为运维工程师，我会根据不同的问题场景选择合适的工具：</p>
+<ul>
+<li><strong>快速概览 CPU&#x2F;内存和进程状态：</strong> <code>top</code> 或 <code>htop</code>。</li>
+<li><strong>精确查看内存使用情况：</strong> <code>free -h</code> 和 <code>cat /proc/meminfo</code>。</li>
+<li><strong>排查端口占用问题：</strong> <code>ss -tulnp</code> 或 <code>lsof -i :端口号</code>。</li>
+<li><strong>分析 CPU 瓶颈和 IO 等待：</strong> <code>mpstat</code> 和 <code>vmstat</code>。</li>
+<li><strong>全面持续监控：</strong> <code>dstat</code> 或 Prometheus&#x2F;Grafana 等专业的监控系统。</li>
+</ul>
+<p>熟练掌握这些命令，能帮助您快速定位系统性能瓶颈和解决问题。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Linux%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E4%B8%AD%E7%9A%84%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%8C%BA%E5%88%AB/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/Linux%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E4%B8%AD%E7%9A%84%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%8C%BA%E5%88%AB/" class="post-title-link" itemprop="url">Linux 操作系统中的进程与线程的区别</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:46:43" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/Manage/" itemprop="url" rel="index"><span itemprop="name">Manage</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.1k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="Linux-操作系统中的进程与线程的区别"><a href="#Linux-操作系统中的进程与线程的区别" class="headerlink" title="Linux 操作系统中的进程与线程的区别"></a>Linux 操作系统中的进程与线程的区别</h3><hr>
+<h3 id="进程-Process"><a href="#进程-Process" class="headerlink" title="进程 (Process)"></a>进程 (Process)</h3><p>在 Linux 中，<strong>进程</strong> 是操作系统进行<strong>资源分配的最小单位</strong>。它是一个程序的执行实例，拥有独立的内存空间、文件描述符、打开的文件、信号处理、堆栈、程序计数器等资源。每个进程都是相互独立的。</p>
+<p><strong>核心特点：</strong></p>
+<ol>
+<li><strong>独立性：</strong> 每个进程都有自己独立的地址空间，这意味着一个进程的内存崩溃不会直接影响到另一个进程。这提供了<strong>强大的隔离性</strong>。</li>
+<li><strong>资源拥有者：</strong> 进程是系统资源的分配单位，它拥有代码段、数据段、堆、栈、文件描述符、信号、权限等。</li>
+<li><strong>上下文切换开销大：</strong> 进程之间的切换需要保存和恢复完整的上下文（包括所有寄存器、内存映射、打开的文件等），开销相对较大。</li>
+<li><strong>通信复杂：</strong> 进程间通信（IPC，Inter-Process Communication）需要通过特定的机制（如管道、消息队列、共享内存、信号量、套接字等）进行，相对复杂且通常涉及内核介入。</li>
+</ol>
+<hr>
+<h3 id="线程-Thread"><a href="#线程-Thread" class="headerlink" title="线程 (Thread)"></a>线程 (Thread)</h3><p><strong>线程</strong> 是操作系统进行调度的最小单位。一个进程可以包含一个或多个线程。线程是在进程内部执行的独立序列，它们共享进程的地址空间和大部分资源，但拥有独立的程序计数器、栈、寄存器集合等。</p>
+<p><strong>核心特点：</strong></p>
+<ol>
+<li><strong>共享资源：</strong> 同一进程内的所有线程共享该进程的地址空间、文件描述符、全局变量、堆等资源。这意味着它们可以很容易地访问和修改同一份数据。</li>
+<li><strong>轻量级：</strong> 由于线程共享进程的资源，创建和销毁线程的开销比进程小得多。</li>
+<li><strong>上下文切换开销小：</strong> 线程之间的切换只需要保存和恢复线程私有的上下文（栈、寄存器等），比进程切换开销小很多。</li>
+<li><strong>通信简单：</strong> 同一进程内的线程之间可以直接读写共享内存中的数据，通信非常高效和直接（但也容易引发同步问题）。</li>
+<li><strong>不提供隔离性：</strong> 由于共享内存空间，一个线程的崩溃可能会影响到同一进程中的其他线程，甚至导致整个进程崩溃。</li>
+</ol>
+<hr>
+<h3 id="进程与线程的区别总结"><a href="#进程与线程的区别总结" class="headerlink" title="进程与线程的区别总结"></a>进程与线程的区别总结</h3><table>
+<thead>
+<tr>
+<th align="left">特性</th>
+<th align="left">进程 (Process)</th>
+<th align="left">线程 (Thread)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>资源分配</strong></td>
+<td align="left">操作系统进行<strong>资源分配</strong>的最小单位</td>
+<td align="left">操作系统进行<strong>调度</strong>的最小单位</td>
+</tr>
+<tr>
+<td align="left"><strong>拥有资源</strong></td>
+<td align="left">拥有独立的地址空间、文件描述符、资源句柄等</td>
+<td align="left">共享进程的地址空间和大部分资源，有独立的栈和寄存器</td>
+</tr>
+<tr>
+<td align="left"><strong>开销</strong></td>
+<td align="left">创建、销毁、切换开销大</td>
+<td align="left">创建、销毁、切换开销小</td>
+</tr>
+<tr>
+<td align="left"><strong>独立性&#x2F;隔离</strong></td>
+<td align="left">独立性强，崩溃不影响其他进程</td>
+<td align="left">独立性弱，一个线程崩溃可能影响整个进程</td>
+</tr>
+<tr>
+<td align="left"><strong>通信</strong></td>
+<td align="left">复杂（IPC 机制）</td>
+<td align="left">简单（共享内存）</td>
+</tr>
+<tr>
+<td align="left"><strong>是否可并发</strong></td>
+<td align="left">是（进程间并发）</td>
+<td align="left">是（线程间并发，同一进程内）</td>
+</tr>
+<tr>
+<td align="left"><strong>别名</strong></td>
+<td align="left">重量级进程</td>
+<td align="left">轻量级进程（LWP, Light-Weight Process）</td>
+</tr>
+</tbody></table>
+<hr>
+<h3 id="进程的应用场景"><a href="#进程的应用场景" class="headerlink" title="进程的应用场景"></a>进程的应用场景</h3><p>进程因其强大的隔离性而适用于需要独立运行、互相不受影响的任务。</p>
+<ol>
+<li><p><strong>Web 服务器（如 Nginx, Apache）：</strong></p>
+<ul>
+<li><strong>场景说明：</strong> Nginx 或 Apache 通常会启动多个工作进程（worker processes）。每个工作进程处理一部分客户端请求。</li>
+<li><strong>为什么用进程：</strong> 即使一个工作进程因为处理某个请求出错而崩溃，其他工作进程仍然可以继续运行，从而保证服务的可用性。由于每个进程都有独立的内存空间，一个进程的内存泄漏或错误不会扩散到其他进程，提高了系统的健壮性。</li>
+<li><strong>运维视角：</strong> 当一个 Web 服务出现问题时，你可以直接杀死有问题的进程，而不会影响到其他正在运行的实例，这使得故障排查和恢复更加容易。</li>
+</ul>
+</li>
+<li><p><strong>数据库服务器（如 MySQL, PostgreSQL）：</strong></p>
+<ul>
+<li><strong>场景说明：</strong> 数据库服务器可能有多个独立的后台进程，负责不同的任务，如连接管理、查询优化、日志写入、备份等。</li>
+<li><strong>为什么用进程：</strong> 每个子进程可以处理一个客户端连接或特定任务，互相隔离。如果某个查询导致一个进程崩溃，其他连接和任务不会立即受到影响。</li>
+<li><strong>运维视角：</strong> 可以通过 <code>ps aux</code> 查看各个数据库相关进程的状态，根据 CPU&#x2F;内存占用判断是哪个组件或哪个客户端连接导致的问题。</li>
+</ul>
+</li>
+<li><p><strong>Shell 命令执行：</strong></p>
+<ul>
+<li><strong>场景说明：</strong> 当你在命令行中执行一个命令（如 <code>ls</code>、<code>grep</code>、<code>vi</code>）时，系统会为这个命令创建一个新的进程。</li>
+<li><strong>为什么用进程：</strong> 每个命令都在自己的独立环境中运行，互不干扰。即使一个命令执行失败或卡死，也不会影响到你的 Shell 会话或其他正在运行的命令。</li>
+<li><strong>运维视角：</strong> <code>nohup</code> 和 <code>&amp;</code> 符号就是用来让命令在后台作为独立进程运行，即使你关闭终端也不会中断。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3 id="线程的应用场景"><a href="#线程的应用场景" class="headerlink" title="线程的应用场景"></a>线程的应用场景</h3><p>线程因其轻量级和高效的通信而适用于需要共享数据、实现高并发且对隔离性要求不那么极致的任务。</p>
+<ol>
+<li><p><strong>多线程 Web 应用（如 Java Spring Boot, Python Flask&#x2F;Django with Gunicorn&#x2F;uWSGI）：</strong></p>
+<ul>
+<li><strong>场景说明：</strong> 一个 Java Web 应用或 Python Web 服务器进程在接收到多个客户端请求时，可以通过创建多个线程来并发处理这些请求。</li>
+<li><strong>为什么用线程：</strong> 多个请求通常需要访问相同的数据库连接池、缓存或配置文件等资源。线程共享进程的内存空间，使得这些资源的共享和通信变得非常高效，避免了进程间通信的复杂性。创建和销毁线程的开销也比进程小，适合处理大量短生命周期的请求。</li>
+<li><strong>运维视角：</strong> 当这类应用响应缓慢时，我们通常会查看线程池的状态、分析线程的堆栈信息（如 Java 的 <code>jstack</code>），找出是哪个线程阻塞或消耗了大量 CPU。</li>
+</ul>
+</li>
+<li><p><strong>图像处理&#x2F;视频编码&#x2F;科学计算：</strong></p>
+<ul>
+<li><strong>场景说明：</strong> 这些任务通常涉及大量并行计算。例如，图像处理可能需要对图像的不同区域同时进行像素操作，视频编码可能需要同时处理视频的不同帧。</li>
+<li><strong>为什么用线程：</strong> 将大型任务分解成多个小任务，每个小任务分配给一个线程执行。这些线程可以共享输入数据（图像像素数据、视频帧数据），并在不同的 CPU 核心上并行运行，从而显著提高处理速度。</li>
+<li><strong>运维视角：</strong> 在监控这类服务时，会关注其 CPU 利用率是否能充分利用多核处理器，以及是否存在线程死锁或过度竞争的情况。</li>
+</ul>
+</li>
+<li><p><strong>GUI 应用程序（桌面应用）：</strong></p>
+<ul>
+<li><strong>场景说明：</strong> 许多桌面应用程序会使用一个主线程来处理用户界面（UI）的事件和绘制，而将耗时的操作（如文件加载、网络请求、数据处理）放在单独的工作线程中。</li>
+<li><strong>为什么用线程：</strong> 如果耗时操作阻塞了主 UI 线程，应用程序就会“卡死”，无法响应用户操作。通过将这些操作放入独立线程，UI 线程可以保持响应，提高用户体验。这些线程可能需要共享一些应用状态或数据。</li>
+<li><strong>运维视角：</strong> 虽然通常不是直接运维桌面应用，但这体现了线程在保证用户体验和资源利用方面的作用。</li>
+</ul>
+</li>
+<li><p><strong>数据库连接池：</strong></p>
+<ul>
+<li><strong>场景说明：</strong> 应用程序为了避免每次请求都建立新的数据库连接，会维护一个连接池。当有请求来时，从池中获取连接；用完后归还。</li>
+<li><strong>为什么用线程：</strong> 通常由一个或多个后台线程来管理连接池的生命周期、清理过期连接等。这些线程需要访问和更新共享的连接池数据结构。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3 id="运维角度的考量"><a href="#运维角度的考量" class="headerlink" title="运维角度的考量"></a>运维角度的考量</h3><p>作为运维，理解进程与线程的区别，能帮助我们：</p>
+<ul>
+<li><strong>资源监控：</strong> 通过 <code>top</code>&#x2F;<code>htop</code>、<code>ps</code> 等命令，区分进程的 CPU&#x2F;内存占用和线程的活动状态。例如，一个进程内存使用高，可能是某个线程导致了内存泄漏。</li>
+<li><strong>故障排查：</strong><ul>
+<li>如果一个服务进程崩溃，查看其生成的核心转储（core dump）文件，分析其崩溃原因。</li>
+<li>如果一个 Java 应用响应慢，可能是某个线程阻塞，需要使用 <code>jstack</code> 查看线程堆栈。</li>
+</ul>
+</li>
+<li><strong>性能优化：</strong><ul>
+<li>根据应用特点选择合适的并发模型（多进程 vs. 多线程）。</li>
+<li>调整进程数或线程池大小，以适应不同的负载。</li>
+<li>识别并解决进程&#x2F;线程间的资源竞争或死锁问题。</li>
+</ul>
+</li>
+<li><strong>架构设计：</strong> 在部署服务时，决定是采用多进程模式（如 Nginx）还是多线程模式（如大部分 Java 应用），这取决于对隔离性、性能和复杂度的权衡。</li>
+</ul>
+<p>总结来说，进程提供了强大的隔离性，是资源调度的基本单位；线程提供了高效的并发和数据共享能力，是 CPU 调度的基本单位。它们在 Linux 操作系统中各司其职，共同构建了高效、稳定的并发执行环境。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Linux%20%E6%95%85%E9%9A%9C%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/Linux%20%E6%95%85%E9%9A%9C%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7/" class="post-title-link" itemprop="url">Linux 故障诊断工具</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:46:46" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/%E6%80%A7%E8%83%BD/" itemprop="url" rel="index"><span itemprop="name">性能</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>1.2k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="Linux-故障诊断工具（Markdown-整理）"><a href="#Linux-故障诊断工具（Markdown-整理）" class="headerlink" title="Linux 故障诊断工具（Markdown 整理）"></a>Linux 故障诊断工具（Markdown 整理）</h1><blockquote>
+<p><strong>背景</strong><br> 如果一款应用在 Linux 上运行缓慢，可能的瓶颈包括：CPU、磁盘 I&#x2F;O、网络、内存或数据库。以下工具可协助定位问题。建议不要只依赖某一个时刻的快照，而是多次采样观测趋势。 (<a target="_blank" rel="noopener" href="https://syedali.net/2013/08/20/linux-troubleshooting-tools/">Syed Ali</a>)</p>
+</blockquote>
+<h2 id="1-vmstat"><a href="#1-vmstat" class="headerlink" title="1. vmstat"></a>1. <code>vmstat</code></h2><ul>
+<li>显示多个系统统计信息。</li>
+<li>注意观察 <code>r</code>（运行队列长度）列，如果值偏高，说明 CPU 资源紧张。</li>
+<li><code>cs</code> 表示上下文切换次数，如果偏高，可能系统正在频繁切换任务（网络、磁盘、CPU 等），可考虑减少系统运行的应用数量。 (<a target="_blank" rel="noopener" href="https://syedali.net/2013/08/20/linux-troubleshooting-tools/">Syed Ali</a>)</li>
+</ul>
+<h2 id="2-free-与缓存逻辑说明"><a href="#2-free-与缓存逻辑说明" class="headerlink" title="2. free 与缓存逻辑说明"></a>2. <code>free</code> 与缓存逻辑说明</h2><p>Linux 会使用内存来缓存 inode 信息和文件内容以加速磁盘访问。因此 <code>free</code> 命令输出可能显示“free”值较少，但大部分内存被 buffers 和 cache 占用，如下例所示：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">$ free -m</span><br><span class="line">total used free shared buff/cache available</span><br><span class="line">Mem: 386445 16613 8443 4110 361388 364610</span><br><span class="line">Swap: 8191 317 7874</span><br><span class="line"></span><br><span class="line">$ free -g</span><br><span class="line">total used free shared buff/cache available</span><br><span class="line">Mem: 377 16 8 4 352 356</span><br><span class="line">Swap: 7 0 7</span><br></pre></td></tr></table></figure>
+
+<p>虽然 free 列只剩 8 GB，但 352 GB 用于缓存和缓冲，可在内存压力时被释放。 (<a target="_blank" rel="noopener" href="https://syedali.net/2013/08/20/linux-troubleshooting-tools/">Syed Ali</a>)</p>
+<h2 id="3-mpstat"><a href="#3-mpstat" class="headerlink" title="3. mpstat"></a>3. <code>mpstat</code></h2><p>按核心查看 CPU 使用情况：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ mpstat -P ALL</span><br><span class="line">Linux ... (8 CPU)</span><br><span class="line">...</span><br><span class="line">%usr   %<span class="built_in">nice</span>  %sys  %iowait  %irq  %soft  %idle</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>可用于分析是否某个 CPU 核心负载较高，从而影响整体性能。 (<a target="_blank" rel="noopener" href="https://syedali.net/2013/08/20/linux-troubleshooting-tools/">Syed Ali</a>)</p>
+<h2 id="4-iostat"><a href="#4-iostat" class="headerlink" title="4. iostat"></a>4. <code>iostat</code></h2><p>监测磁盘或 I&#x2F;O 子系统表现，包括 CPU 利用率、设备利用率（<code>%util</code>）和网络文件系统报告。若 <code>iowait</code> 高、<code>%util</code> 达到 100%，可能表示磁盘饱和或I&#x2F;O繁忙。 (<a target="_blank" rel="noopener" href="https://syedali.net/2013/08/20/linux-troubleshooting-tools/">Syed Ali</a>)</p>
+<h2 id="5-netstat"><a href="#5-netstat" class="headerlink" title="5. netstat"></a>5. <code>netstat</code></h2><p>非常实用的网络诊断命令：</p>
+<ul>
+<li><p>查看路由表：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ netstat -r</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>查看接口统计：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ netstat -i</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>查看 TCP&#x2F;UDP 统计：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ netstat -s</span><br><span class="line">``` :contentReference[oaicite:5]&#123;index=5&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h2 id="6-top"><a href="#6-top" class="headerlink" title="6. top"></a>6. <code>top</code></h2><p>经典工具，用于实时查看 CPU、内存及进程占用资源情况。适合快速识别系统负载和高资源进程。 (<a target="_blank" rel="noopener" href="https://syedali.net/2013/08/20/linux-troubleshooting-tools/">Syed Ali</a>)</p>
+<h2 id="7-traceroute"><a href="#7-traceroute" class="headerlink" title="7. traceroute"></a>7. <code>traceroute</code></h2><p>用于追踪目标主机的网络路径：</p>
+<ul>
+<li>通过逐跳调增 TTL 来显示数据包经过的各路由节点。</li>
+<li>如遇路由器阻止 ICMP，可添加 <code>-T</code> 使用 TCP。</li>
+<li>输出中的 <code>*</code> 表示该跳未返回 ICMP 信息。 (<a target="_blank" rel="noopener" href="https://syedali.net/2013/08/20/linux-troubleshooting-tools/">Syed Ali</a>)</li>
+</ul>
+<p>示例：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ traceroute www.google.com</span><br></pre></td></tr></table></figure>
+
+<h2 id="8-ping"><a href="#8-ping" class="headerlink" title="8. ping"></a>8. <code>ping</code></h2><p>使用 ICMP ECHO_REQUEST 检测目标主机是否可达，常用于判断主机状态与网络延迟。可 ping 广播地址查看局域网内活跃主机。输出包含延迟时间与丢包率。 (<a target="_blank" rel="noopener" href="https://syedali.net/2013/08/20/linux-troubleshooting-tools/">Syed Ali</a>)</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Linux%20%E6%96%87%E4%BB%B6%E6%9D%83%E9%99%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/Linux%20%E6%96%87%E4%BB%B6%E6%9D%83%E9%99%90/" class="post-title-link" itemprop="url">Linux 文件权限</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:47:11" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/Manage/" itemprop="url" rel="index"><span itemprop="name">Manage</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.4k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="Linux-系统权限管理"><a href="#Linux-系统权限管理" class="headerlink" title="Linux 系统权限管理"></a>Linux 系统权限管理</h3><hr>
+<h3 id="一、Linux-权限管理的核心理念：用户、组与权限"><a href="#一、Linux-权限管理的核心理念：用户、组与权限" class="headerlink" title="一、Linux 权限管理的核心理念：用户、组与权限"></a>一、Linux 权限管理的核心理念：用户、组与权限</h3><p>Linux 系统中的权限管理围绕着三个核心概念展开：<strong>用户（User）</strong>、<strong>组（Group）</strong> 和 <strong>其他（Others）</strong>，以及针对这些实体设定的<strong>读（Read）</strong>、<strong>写（Write）</strong>、<strong>执行（Execute）</strong> 三种基本权限。</p>
+<h4 id="1-用户-User-："><a href="#1-用户-User-：" class="headerlink" title="1. 用户 (User)："></a>1. 用户 (User)：</h4><p>每个用户都有一个唯一的用户 ID (UID)。系统通过 UID 来识别用户。</p>
+<ul>
+<li><strong>root 用户：</strong> UID 为 0，拥有系统最高权限，可以执行任何操作。</li>
+<li><strong>系统用户：</strong> UID 1-999 (具体范围依发行版可能不同)，用于运行系统服务，通常不能登录。</li>
+<li><strong>普通用户：</strong> UID 1000 及以上，是日常操作的用户。</li>
+</ul>
+<h4 id="2-组-Group-："><a href="#2-组-Group-：" class="headerlink" title="2. 组 (Group)："></a>2. 组 (Group)：</h4><p>每个组都有一个唯一的组 ID (GID)。用户可以属于一个或多个组。</p>
+<ul>
+<li><strong>Primary Group (主组)：</strong> 用户创建时自动归属的组。</li>
+<li><strong>Secondary Groups (附加组)：</strong> 用户除了主组外，还可以加入多个附加组。</li>
+<li><strong>目的：</strong> 简化权限管理。可以将文件权限赋给一个组，所有属于该组的用户都将获得相应的权限，而无需单独为每个用户设置。</li>
+</ul>
+<h4 id="3-其他-Others-World-："><a href="#3-其他-Others-World-：" class="headerlink" title="3. 其他 (Others &#x2F; World)："></a>3. 其他 (Others &#x2F; World)：</h4><p>指系统中除文件所有者和文件所属组之外的所有其他用户。</p>
+<h4 id="4-基本权限-Permissions-："><a href="#4-基本权限-Permissions-：" class="headerlink" title="4. 基本权限 (Permissions)："></a>4. 基本权限 (Permissions)：</h4><p>针对文件或目录，有三种基本权限：</p>
+<ul>
+<li><strong>r (Read 读)：</strong><ul>
+<li><strong>对文件：</strong> 允许查看文件内容。</li>
+<li><strong>对目录：</strong> 允许列出目录中的文件和子目录（即 <code>ls</code> 命令）。</li>
+</ul>
+</li>
+<li><strong>w (Write 写)：</strong><ul>
+<li><strong>对文件：</strong> 允许修改或删除文件内容（但删除文件还需要拥有父目录的写权限）。</li>
+<li><strong>对目录：</strong> 允许在目录中创建、删除、重命名文件或子目录。</li>
+</ul>
+</li>
+<li><strong>x (Execute 执行)：</strong><ul>
+<li><strong>对文件：</strong> 允许将该文件作为程序或脚本执行。</li>
+<li><strong>对目录：</strong> 允许进入该目录（即 <code>cd</code> 命令）并访问其下的文件。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="二、权限的表示方式"><a href="#二、权限的表示方式" class="headerlink" title="二、权限的表示方式"></a>二、权限的表示方式</h3><p>权限可以用符号表示（符号模式），也可以用数字表示（八进制模式）。</p>
+<h4 id="1-符号模式-Symbolic-Mode-："><a href="#1-符号模式-Symbolic-Mode-：" class="headerlink" title="1. 符号模式 (Symbolic Mode)："></a>1. 符号模式 (Symbolic Mode)：</h4><p><code>rwx rwx rwx</code> （文件所有者、文件所属组、其他用户）</p>
+<p>示例：<code>rwxrw-r--</code></p>
+<ul>
+<li>文件所有者：读、写、执行 (<code>rwx</code>)</li>
+<li>文件所属组：读、写 (<code>rw-</code>)</li>
+<li>其他用户：读 (<code>r--</code>)</li>
+</ul>
+<h4 id="2-八进制模式-Octal-Mode-："><a href="#2-八进制模式-Octal-Mode-：" class="headerlink" title="2. 八进制模式 (Octal Mode)："></a>2. 八进制模式 (Octal Mode)：</h4><p>将 <code>rwx</code> 映射为三位二进制数，再转换为八进制：</p>
+<ul>
+<li><code>r</code> &#x3D; 4 (100)</li>
+<li><code>w</code> &#x3D; 2 (010)</li>
+<li><code>x</code> &#x3D; 1 (001)</li>
+<li><code>-</code> &#x3D; 0 (000)</li>
+</ul>
+<p>将所有者、组、其他的权限数字相加，得到三位八进制数。</p>
+<p>示例：<code>rwxrw-r--</code> 转换为八进制</p>
+<ul>
+<li>所有者：<code>rwx</code> &#x3D; 4 + 2 + 1 &#x3D; 7</li>
+<li>组：<code>rw-</code> &#x3D; 4 + 2 + 0 &#x3D; 6</li>
+<li>其他：<code>r--</code> &#x3D; 4 + 0 + 0 &#x3D; 4<br>所以 <code>rwxrw-r--</code> 对应的八进制权限是 <code>764</code>。</li>
+</ul>
+<p><strong>常用权限数字：</strong></p>
+<ul>
+<li><code>777</code>：所有人可读、写、执行 (非常不安全)</li>
+<li><code>755</code>：所有者读、写、执行；组用户和其他用户只读、执行 (目录常用)</li>
+<li><code>644</code>：所有者读、写；组用户和其他用户只读 (文件常用)</li>
+<li><code>600</code>：所有者读、写；组用户和其他用户无任何权限 (非常私密的文件)</li>
+</ul>
+<hr>
+<h3 id="三、常用的权限管理命令"><a href="#三、常用的权限管理命令" class="headerlink" title="三、常用的权限管理命令"></a>三、常用的权限管理命令</h3><h4 id="1-ls-l：查看文件或目录权限"><a href="#1-ls-l：查看文件或目录权限" class="headerlink" title="1. ls -l：查看文件或目录权限"></a>1. <code>ls -l</code>：查看文件或目录权限</h4><ul>
+<li><code>-rw-r--r--. 1 user group 1024 Oct 26 10:00 filename.txt</code><ul>
+<li>第一个字符 <code>-</code>：表示文件类型（<code>-</code> 普通文件, <code>d</code> 目录, <code>l</code> 链接, <code>c</code> 字符设备, <code>b</code> 块设备等）。</li>
+<li>接下来的 9 个字符 (<code>rw-r--r--</code>)：分别代表所有者、组、其他的读&#x2F;写&#x2F;执行权限。</li>
+<li>点号 <code>.</code>：在 RHEL&#x2F;CentOS 系统中，如果存在 ACL 权限或 SELinux 上下文，会有一个点号，表示可能存在额外的安全属性。</li>
+<li><code>1</code>：链接数（硬链接）。</li>
+<li><code>user</code>：文件所有者。</li>
+<li><code>group</code>：文件所属组。</li>
+<li><code>1024</code>：文件大小（字节）。</li>
+<li><code>Oct 26 10:00</code>：最后修改时间。</li>
+<li><code>filename.txt</code>：文件名。</li>
+</ul>
+</li>
+</ul>
+<h4 id="2-chmod：改变文件或目录权限"><a href="#2-chmod：改变文件或目录权限" class="headerlink" title="2. chmod：改变文件或目录权限"></a>2. <code>chmod</code>：改变文件或目录权限</h4><ul>
+<li><strong>八进制模式：</strong><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">chmod</span> 755 script.sh           <span class="comment"># 将脚本文件设置为所有者可读写执行，组用户和其他用户只读执行</span></span><br><span class="line"><span class="built_in">chmod</span> 644 myfile.txt          <span class="comment"># 将文件设置为所有者可读写，组用户和其他用户只读</span></span><br><span class="line"><span class="built_in">chmod</span> -R 770 mydir            <span class="comment"># 递归地将目录及其内容设置为所有者和组可读写执行，其他人无权限</span></span><br></pre></td></tr></table></figure></li>
+<li><strong>符号模式：</strong><ul>
+<li><code>u</code> (user), <code>g</code> (group), <code>o</code> (others), <code>a</code> (all)</li>
+<li><code>+</code> (添加权限), <code>-</code> (删除权限), <code>=</code> (精确设置权限)<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">chmod</span> u+x script.sh           <span class="comment"># 为文件所有者添加执行权限</span></span><br><span class="line"><span class="built_in">chmod</span> g-w myfile.txt          <span class="comment"># 为文件所属组移除写权限</span></span><br><span class="line"><span class="built_in">chmod</span> o=r myfile.txt          <span class="comment"># 设置其他用户只读权限</span></span><br><span class="line"><span class="built_in">chmod</span> ug+w,o-rwx mydir        <span class="comment"># 同时为所有者和组添加写权限，并移除其他所有权限</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+</ul>
+<h4 id="3-chown：改变文件或目录的所有者"><a href="#3-chown：改变文件或目录的所有者" class="headerlink" title="3. chown：改变文件或目录的所有者"></a>3. <code>chown</code>：改变文件或目录的所有者</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">chown</span> newuser filename.txt            <span class="comment"># 改变文件的所有者为 newuser</span></span><br><span class="line"><span class="built_in">chown</span> newuser:newgroup filename.txt   <span class="comment"># 同时改变所有者为 newuser，所属组为 newgroup</span></span><br><span class="line"><span class="built_in">chown</span> :newgroup filename.txt          <span class="comment"># 只改变文件的所属组为 newgroup</span></span><br><span class="line"><span class="built_in">chown</span> -R newuser:newgroup /path/to/directory <span class="comment"># 递归地改变目录及其内容的所有者和组</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="4-chgrp：改变文件或目录的所属组"><a href="#4-chgrp：改变文件或目录的所属组" class="headerlink" title="4. chgrp：改变文件或目录的所属组"></a>4. <code>chgrp</code>：改变文件或目录的所属组</h4><p><code>chgrp</code> 命令只改变所属组，不改变所有者，功能上等同于 <code>chown :newgroup</code>。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">chgrp</span> newgroup filename.txt</span><br><span class="line"><span class="built_in">chgrp</span> -R newgroup /path/to/directory</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="四、特殊权限位"><a href="#四、特殊权限位" class="headerlink" title="四、特殊权限位"></a>四、特殊权限位</h3><p>除了 <code>rwx</code> 基本权限外，Linux 还有三种特殊的权限位，它们提供额外的功能。</p>
+<h4 id="1-SBIT-Sticky-Bit-粘滞位"><a href="#1-SBIT-Sticky-Bit-粘滞位" class="headerlink" title="1. SBIT &#x2F; Sticky Bit (粘滞位)"></a>1. SBIT &#x2F; Sticky Bit (粘滞位)</h4><ul>
+<li><strong>符号表示：</strong> <code>t</code> (当 <code>x</code> 权限位设置时), <code>T</code> (当 <code>x</code> 权限位未设置时)</li>
+<li><strong>八进制：</strong> <code>1000</code> (加在八进制权限数字的最前面，如 <code>1777</code>)</li>
+<li><strong>作用：</strong> 主要用于目录。当一个目录设置了粘滞位后，只有文件所有者、目录所有者或 <code>root</code> 用户才能删除或重命名该目录下的文件，即使其他用户对该目录有写权限。</li>
+<li><strong>场景：</strong> 典型的应用是 <code>/tmp</code> 目录。所有用户都可以在 <code>/tmp</code> 中创建文件，但只能删除自己的文件，而不能删除别人的文件。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">chmod</span> +t /tmp</span><br><span class="line"><span class="comment"># 或者</span></span><br><span class="line"><span class="built_in">chmod</span> 1777 /tmp</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h4 id="2-SUID-Set-User-ID-设置用户-ID"><a href="#2-SUID-Set-User-ID-设置用户-ID" class="headerlink" title="2. SUID &#x2F; Set User ID (设置用户 ID)"></a>2. SUID &#x2F; Set User ID (设置用户 ID)</h4><ul>
+<li><strong>符号表示：</strong> <code>s</code> (当用户 <code>x</code> 权限位设置时), <code>S</code> (当用户 <code>x</code> 权限位未设置时)</li>
+<li><strong>八进制：</strong> <code>4000</code> (加在八进制权限数字的最前面，如 <code>4755</code>)</li>
+<li><strong>作用：</strong> 针对可执行文件。当一个可执行文件设置了 SUID 权限后，任何用户执行该文件时，其进程会以文件所有者的身份运行，而不是以执行者的身份运行。</li>
+<li><strong>场景：</strong> 最典型的例子是 <code>passwd</code> 命令。普通用户执行 <code>passwd</code> 能够修改 <code>/etc/shadow</code> 文件（该文件的所有者是 <code>root</code>，且只有 <code>root</code> 有写权限），就是因为 <code>passwd</code> 命令设置了 SUID，使其在运行时拥有 <code>root</code> 权限。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">ls</span> -l /usr/bin/passwd</span><br><span class="line"><span class="comment"># -rwsr-xr-x. 1 root root ... /usr/bin/passwd</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li><strong>安全风险：</strong> SUID 权限非常危险，如果被恶意利用，可能导致权限提升。应谨慎使用。</li>
+</ul>
+</li>
+</ul>
+<h4 id="3-SGID-Set-Group-ID-设置组-ID"><a href="#3-SGID-Set-Group-ID-设置组-ID" class="headerlink" title="3. SGID &#x2F; Set Group ID (设置组 ID)"></a>3. SGID &#x2F; Set Group ID (设置组 ID)</h4><ul>
+<li><strong>符号表示：</strong> <code>s</code> (当组 <code>x</code> 权限位设置时), <code>S</code> (当组 <code>x</code> 权限位未设置时)</li>
+<li><strong>八进制：</strong> <code>2000</code> (加在八进制权限数字的最前面，如 <code>2775</code>)</li>
+<li><strong>作用：</strong><ul>
+<li><strong>对可执行文件：</strong> 当一个可执行文件设置了 SGID 权限后，任何用户执行该文件时，其进程会以文件所属组的身份运行。</li>
+<li><strong>对目录：</strong> 更常用的功能。当目录设置了 SGID 权限后，在该目录下创建的任何新文件或子目录，其所属组将自动继承父目录的组，而不是创建者用户的默认组。这对于团队协作非常有用。</li>
+</ul>
+</li>
+<li><strong>场景：</strong> 团队项目目录。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> /project</span><br><span class="line"><span class="built_in">chgrp</span> developers /project</span><br><span class="line"><span class="built_in">chmod</span> g+s /project</span><br><span class="line"><span class="comment"># 或者</span></span><br><span class="line"><span class="built_in">chmod</span> 2775 /project</span><br></pre></td></tr></table></figure>
+现在，任何在 <code>/project</code> 目录下创建的文件或目录，其组都会是 <code>developers</code>。</li>
+</ul>
+<hr>
+<h3 id="五、ACL-Access-Control-Lists"><a href="#五、ACL-Access-Control-Lists" class="headerlink" title="五、ACL (Access Control Lists)"></a>五、ACL (Access Control Lists)</h3><p>传统的 Linux 权限（UGO 权限）在某些复杂场景下可能无法满足细粒度的权限控制需求（例如，一个文件需要给某个特定用户 A 读写权限，给用户 B 只读权限，但传统权限只能给所有者、组、其他人设置）。为了解决这个问题，Linux 支持 **访问控制列表 (ACLs)**。</p>
+<ul>
+<li><p><strong>作用：</strong> 允许对单个文件或目录设置多个用户或组的权限，超越了传统 UGO 权限的限制。</p>
+</li>
+<li><p><strong>命令：</strong></p>
+<ul>
+<li><code>getfacl &lt;file/directory&gt;</code>：查看文件或目录的 ACL 权限。</li>
+<li><code>setfacl &lt;options&gt; &lt;file/directory&gt;</code>：设置文件或目录的 ACL 权限。</li>
+</ul>
+</li>
+<li><p><strong>示例：</strong></p>
+<ul>
+<li><strong>给用户 <code>john</code> 对 <code>report.txt</code> 文件读写权限：</strong><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">setfacl -m u:john:rw report.txt</span><br></pre></td></tr></table></figure></li>
+<li><strong>给组 <code>analysts</code> 对 <code>data/</code> 目录读和执行权限：</strong><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">setfacl -m g:analysts:r-x data/</span><br></pre></td></tr></table></figure></li>
+<li><strong>递归设置 ACL：</strong><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">setfacl -R -m u:john:rwX data/ <span class="comment"># X 表示如果目录有执行权限，则赋予执行权限</span></span><br></pre></td></tr></table></figure></li>
+<li><strong>清除所有 ACL 权限：</strong><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">setfacl -b report.txt</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p><strong>与传统权限的联系：</strong> 当文件存在 ACL 权限时，<code>ls -l</code> 命令的权限字段会显示一个 <code>+</code> 号 (<code>rw-r--r--+</code>)。</p>
+</li>
+</ul>
+<hr>
+<h3 id="六、SELinux-Security-Enhanced-Linux-和-AppArmor"><a href="#六、SELinux-Security-Enhanced-Linux-和-AppArmor" class="headerlink" title="六、SELinux (Security-Enhanced Linux) 和 AppArmor"></a>六、SELinux (Security-Enhanced Linux) 和 AppArmor</h3><p>除了传统的 UGO 权限和 ACLs，更现代的 Linux 系统还集成了强制访问控制 (MAC) 机制，如 SELinux 或 AppArmor，这些提供了更高层次和更细粒度的安全防护。</p>
+<ul>
+<li><strong>SELinux：</strong> (如前所述) 为系统中的所有文件、进程、端口等资源分配安全上下文，并根据预设的策略规则强制执行访问控制。权限是基于类型和角色的，而不是简单的用户ID。</li>
+<li><strong>AppArmor：</strong> 另一种 MAC 实现，它通过配置文件为程序或服务创建安全配置文件，限制其能够访问的系统资源。</li>
+</ul>
+<p>这些 MAC 机制在传统权限之上提供了额外的安全层，即使传统权限允许某个操作，如果 MAC 策略禁止，该操作也会被拒绝。</p>
+<hr>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>Linux 权限管理是一个分层且强大的机制。作为运维工程师，我们必须熟练掌握：</p>
+<ol>
+<li>**基本权限 (UGO)**：它是核心，用于日常的文件和目录访问控制。</li>
+<li>**特殊权限位 (SUID, SGID, Sticky Bit)**：用于实现特定功能，如进程身份切换或目录协作，但需警惕 SUID 和 SGID 的安全风险。</li>
+<li><strong>ACLs</strong>：用于满足更复杂的细粒度权限需求。</li>
+<li>**MAC (SELinux&#x2F;AppArmor)**：提供最强的安全控制，作为额外的防御层，即使面对权限提升攻击也能起到限制作用。</li>
+</ol>
+<p>合理的权限配置是系统安全的重要组成部分，能够有效防止未经授权的访问和恶意操作，确保系统的稳定运行。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Linux%20%E7%B3%BB%E7%BB%9F%20dmesg%20%E5%91%BD%E4%BB%A4/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/Linux%20%E7%B3%BB%E7%BB%9F%20dmesg%20%E5%91%BD%E4%BB%A4/" class="post-title-link" itemprop="url">Linux 系统 dmesg 命令</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:47:16" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/Command/" itemprop="url" rel="index"><span itemprop="name">Command</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p><code>dmesg</code> 是在 Linux 系统中排查各种底层问题（尤其是与硬件、驱动、系统启动、内存、I&#x2F;O 错误等相关的）时常用的诊断工具。它允许查看内核环形缓冲区（kernel ring buffer）中的消息，这些消息是内核在运行过程中记录的重要事件和错误信息，对于理解系统内部工作状态和定位故障至关重要。</p>
+<hr>
+<h3 id="一、dmesg-简介"><a href="#一、dmesg-简介" class="headerlink" title="一、dmesg 简介"></a>一、<code>dmesg</code> 简介</h3><ul>
+<li><strong>全称：</strong> diagnostic message</li>
+<li><strong>功能：</strong> 显示内核的启动信息以及运行时内核模块和硬件设备的日志信息。这些信息存储在内核的环形缓冲区中。</li>
+<li><strong>特性：</strong><ul>
+<li><strong>持久性：</strong> 即使系统崩溃，只要重新启动，<code>dmesg</code> 中的最近日志通常还在（取决于是否被新日志覆盖）。</li>
+<li><strong>实时性：</strong> 持续记录内核事件，包括硬件初始化、设备驱动加载、系统错误、USB 设备插拔、网络事件、OOM (Out Of Memory) 杀手活动等。</li>
+<li><strong>独立性：</strong> 不依赖于用户空间的日志服务（如 <code>syslogd</code> 或 <code>rsyslogd</code>），因此在这些服务未启动或有问题时也能查看内核日志。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="二、dmesg-的基本使用方法"><a href="#二、dmesg-的基本使用方法" class="headerlink" title="二、dmesg 的基本使用方法"></a>二、<code>dmesg</code> 的基本使用方法</h3><p>直接运行 <code>dmesg</code> 命令，默认会打印出内核环形缓冲区中的所有消息到标准输出。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dmesg</span><br></pre></td></tr></table></figure>
+<p>由于输出可能非常多，通常会结合管道 (<code>|</code>) 和分页器 (<code>less</code>, <code>more</code>) 或筛选器 (<code>grep</code>) 来查看。</p>
+<p><strong>示例：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">dmesg | less   <span class="comment"># 逐页查看内核日志</span></span><br><span class="line">dmesg | more   <span class="comment"># 逐页查看内核日志（功能较少）</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="三、dmesg-的常用选项和实用技巧"><a href="#三、dmesg-的常用选项和实用技巧" class="headerlink" title="三、dmesg 的常用选项和实用技巧"></a>三、<code>dmesg</code> 的常用选项和实用技巧</h3><h4 id="1-清除缓冲区-c"><a href="#1-清除缓冲区-c" class="headerlink" title="1. 清除缓冲区 (-c)"></a>1. 清除缓冲区 (<code>-c</code>)</h4><p>这个选项会打印出当前缓冲区的内容，然后<strong>清除</strong>缓冲区。在复现某个问题（例如插拔 USB 设备并观察内核输出）时非常有用。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> dmesg -c</span><br></pre></td></tr></table></figure>
+<p><strong>注意：</strong> 清除缓冲区需要 <code>root</code> 权限。清除后，旧的日志将无法再次通过 <code>dmesg</code> 查看。</p>
+<h4 id="2-显示可读时间戳-T"><a href="#2-显示可读时间戳-T" class="headerlink" title="2. 显示可读时间戳 (-T)"></a>2. 显示可读时间戳 (<code>-T</code>)</h4><p>默认的时间戳是自系统启动以来的秒数，不方便人类阅读。<code>-T</code> 选项会将其转换为更易读的日期和时间格式。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dmesg -T | less</span><br></pre></td></tr></table></figure>
+<p>输出示例：<br><code>[Tue Dec 12 10:30:00 2023] usb 1-1: new high-speed USB device number 2 using ehci-pci</code></p>
+<h4 id="3-显示时间戳（原始格式）-t"><a href="#3-显示时间戳（原始格式）-t" class="headerlink" title="3. 显示时间戳（原始格式） (-t)"></a>3. 显示时间戳（原始格式） (<code>-t</code>)</h4><p>仅显示自系统启动以来的秒数，不进行格式化。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dmesg -t | less</span><br></pre></td></tr></table></figure>
+
+<h4 id="4-指定日志级别-l"><a href="#4-指定日志级别-l" class="headerlink" title="4. 指定日志级别 (-l)"></a>4. 指定日志级别 (<code>-l</code>)</h4><p>通过指定日志级别来过滤输出，只显示特定严重程度的消息。<br>常见的日志级别（从高到低）：</p>
+<ul>
+<li><code>emerg</code> (0) : 系统不可用</li>
+<li><code>alert</code> (1) : 必须立即采取行动</li>
+<li><code>crit</code> (2) : 严重错误，如硬件错误</li>
+<li><code>err</code> (3) : 错误</li>
+<li><code>warn</code> (4) : 警告</li>
+<li><code>notice</code> (5) : 一般但显著的条件</li>
+<li><code>info</code> (6) : 信息性消息</li>
+<li><code>debug</code> (7) : 调试级别消息</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">dmesg -l err,warn   <span class="comment"># 只显示错误和警告级别的消息</span></span><br><span class="line">dmesg -l crit       <span class="comment"># 只显示严重错误</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="5-显示设备类型-k"><a href="#5-显示设备类型-k" class="headerlink" title="5. 显示设备类型 (-k)"></a>5. 显示设备类型 (<code>-k</code>)</h4><p>显示与内核设备相关的消息。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dmesg -k</span><br></pre></td></tr></table></figure>
+
+<h4 id="6-显示与用户事件相关的消息-u"><a href="#6-显示与用户事件相关的消息-u" class="headerlink" title="6. 显示与用户事件相关的消息 (-u)"></a>6. 显示与用户事件相关的消息 (<code>-u</code>)</h4><p>显示与用户空间进程相关的消息。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dmesg -u</span><br></pre></td></tr></table></figure>
+
+<h4 id="7-显示原始消息-r"><a href="#7-显示原始消息-r" class="headerlink" title="7. 显示原始消息 (-r)"></a>7. 显示原始消息 (<code>-r</code>)</h4><p>不进行颜色或其他格式化，显示原始缓冲区的消息。这对于后处理或将其传递给其他工具可能很有用。</p>
+<h4 id="8-持续输出新消息-w-或-follow"><a href="#8-持续输出新消息-w-或-follow" class="headerlink" title="8. 持续输出新消息 (-w 或 --follow)"></a>8. 持续输出新消息 (<code>-w</code> 或 <code>--follow</code>)</h4><p>类似于 <code>tail -f</code>，持续监听并打印新的内核消息。这在观察系统动态变化时非常有用，例如插入U盘、启动服务、模拟内存不足等。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> dmesg -w</span><br></pre></td></tr></table></figure>
+<p><strong>注意：</strong> <code>-w</code> 选项通常需要 <code>root</code> 权限，因为权限限制了对 <code>/dev/kmsg</code> 的直接读取。</p>
+<hr>
+<h3 id="四、dmesg-在故障排查中的应用"><a href="#四、dmesg-在故障排查中的应用" class="headerlink" title="四、dmesg 在故障排查中的应用"></a>四、<code>dmesg</code> 在故障排查中的应用</h3><p><code>dmesg</code> 是排查以下类型问题的重要工具：</p>
+<h4 id="1-硬件故障-识别问题"><a href="#1-硬件故障-识别问题" class="headerlink" title="1. 硬件故障&#x2F;识别问题"></a>1. 硬件故障&#x2F;识别问题</h4><ul>
+<li><strong>硬盘&#x2F;SSD 故障：</strong> 报错信息常包含 <code>ata</code>, <code>scsi</code>, <code>sd</code> 等关键词。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dmesg | grep -i <span class="string">&quot;disk\|ata\|scsi\|error&quot;</span></span><br></pre></td></tr></table></figure>
+示例：<code>ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen</code></li>
+<li><strong>内存问题：</strong> 常见错误如 <code>bad page</code>, <code>Memory error</code>, <code>parity error</code>。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dmesg | grep -i <span class="string">&quot;memory\|ram\|ecc\|page&quot;</span></span><br></pre></td></tr></table></figure></li>
+<li><strong>CPU 问题：</strong> <code>CPU</code> 核心离线，或一些特定的 CPU 错误。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dmesg | grep -i <span class="string">&quot;cpu\|processor&quot;</span></span><br></pre></td></tr></table></figure></li>
+<li><strong>USB 设备问题：</strong> 插拔 USB 设备后，<code>dmesg</code> 会详细记录设备的识别过程。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">dmesg | <span class="built_in">tail</span> <span class="comment"># 查看最近的日志</span></span><br><span class="line">dmesg | grep -i usb</span><br></pre></td></tr></table></figure></li>
+<li><strong>PCIe 设备问题：</strong> 图形卡、网卡等 PCIe 设备的问题。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dmesg | grep -i <span class="string">&quot;pcie\|pci device&quot;</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<h4 id="2-驱动加载问题"><a href="#2-驱动加载问题" class="headerlink" title="2. 驱动加载问题"></a>2. 驱动加载问题</h4><p>当某个硬件设备无法驱动或驱动加载失败时，<code>dmesg</code> 会记录相关错误。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dmesg | grep -i <span class="string">&quot;firmware\|driver\|fail\|error&quot;</span></span><br></pre></td></tr></table></figure>
+<p>示例：<code>iwlwifi 0000:01:00.0: Direct firmware load for iwlwifi-9000-pu-b0-jf-b0-34.ucode failed</code> (无线网卡固件加载失败)</p>
+<h4 id="3-网络接口问题"><a href="#3-网络接口问题" class="headerlink" title="3. 网络接口问题"></a>3. 网络接口问题</h4><p>网卡初始化、Link up&#x2F;down、速度协商等问题。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dmesg | grep -i <span class="string">&quot;eth\|enp\|link\|duplex&quot;</span></span><br></pre></td></tr></table></figure>
+<p>示例：<code>e1000e 0000:00:1f.6 eth0: NIC Link is Up 1000 Mbps Full Duplex, Flow Control: Rx/Tx</code></p>
+<h4 id="4-文件系统和-I-O-错误"><a href="#4-文件系统和-I-O-错误" class="headerlink" title="4. 文件系统和 I&#x2F;O 错误"></a>4. 文件系统和 I&#x2F;O 错误</h4><p>当文件系统出现异常（例如超级块损坏、I&#x2F;O 错误等）时，内核会记录。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dmesg | grep -i <span class="string">&quot;fs error\|io error\|ext4\|xfs\|superblock&quot;</span></span><br></pre></td></tr></table></figure>
+<p>示例：<code>EXT4-fs (sda1): Remounting filesystem read-only</code> (文件系统出错，被内核强制挂载为只读)</p>
+<h4 id="5-OOM-Out-Of-Memory-Killer"><a href="#5-OOM-Out-Of-Memory-Killer" class="headerlink" title="5. OOM (Out Of Memory) Killer"></a>5. OOM (Out Of Memory) Killer</h4><p>当系统内存耗尽时，内核的 OOM Killer 会选择性地杀死占用大量内存的进程，以防止系统崩溃。<code>dmesg</code> 是查看 OOM Killer 活动的唯一可靠来源。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dmesg | grep -i <span class="string">&quot;out of memory\|oom-killer&quot;</span></span><br></pre></td></tr></table></figure>
+<p>如果你看到 OOM 相关日志，意味着你的系统内存不足，需要扩容或优化程序内存使用。</p>
+<h4 id="6-内核恐慌-Kernel-Panic"><a href="#6-内核恐慌-Kernel-Panic" class="headerlink" title="6. 内核恐慌 (Kernel Panic)"></a>6. 内核恐慌 (Kernel Panic)</h4><p>内核恐慌是一种严重的错误，导致内核无法继续运行并导致系统崩溃。虽然系统可能无法重启到正常状态，但有时在重启前最后的一些 <code>dmesg</code> 信息可能会被保存在日志中，或者可以通过串行控制台捕获。<code>dmesg</code> 可能会包含一些关于崩溃的堆栈信息，尽管通常需要更专业的工具（如 <code>crash</code>）或分析 <code>vmcore</code> 来深入诊断。</p>
+<hr>
+<h3 id="五、与其他日志工具的配合使用"><a href="#五、与其他日志工具的配合使用" class="headerlink" title="五、与其他日志工具的配合使用"></a>五、与其他日志工具的配合使用</h3><p><code>dmesg</code> 专注于内核的输出，而用户空间的日志服务（如 <code>systemd-journald</code>, <code>rsyslogd</code>, <code>syslogd</code>）则收集来自各种应用程序和服务进程的日志。</p>
+<ul>
+<li><p><strong><code>journalctl</code> (Systemd 系统):</strong><br>在 Systemd 系统中，<code>journalctl</code> 是查看统一日志的工具，它也包含了 <code>dmesg</code> 能看到的内核消息。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">journalctl -b          <span class="comment"># 查看本次启动以来的所有日志 (包括内核日志)</span></span><br><span class="line">journalctl -k          <span class="comment"># 只查看内核日志 (等同于 dmesg 的功能)</span></span><br><span class="line">journalctl -b -k -p err,warn  <span class="comment"># 查看本次启动以来的内核错误和警告</span></span><br></pre></td></tr></table></figure>
+<p><code>journalctl</code> 的优势在于它会将日志持久化，即使系统重启，以往的日志也能查看（除非配置为非持久化）。</p>
+</li>
+<li><p><strong><code>/var/log/dmesg</code> (Syslog&#x2F;Rsyslog 系统):</strong><br>在一些旧系统或配置为将 <code>dmesg</code> 输出保存到文件的系统中，你可能在 <code>/var/log/dmesg</code> 中找到最近一次启动的 <code>dmesg</code> 输出。然而，这并不是实时的，每次启动都会被覆盖。</p>
+</li>
+</ul>
+<p><strong>总结：</strong></p>
+<p><code>dmesg</code> 是一个轻量级且强大的工具，用于快速诊断 Linux 系统底层问题。理解其输出，并结合各种选项和过滤技巧，是每位运维工程师必备的技能。在处理与硬件、驱动、文件系统或突发系统崩溃相关的疑难杂症时，<code>dmesg</code> 往往能提供第一手的关键信息。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Linux%20%E7%B3%BB%E7%BB%9F%20lsof%20%E5%91%BD%E4%BB%A4/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/Linux%20%E7%B3%BB%E7%BB%9F%20lsof%20%E5%91%BD%E4%BB%A4/" class="post-title-link" itemprop="url">Linux 系统 lsof 命令</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:47:21" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/Command/" itemprop="url" rel="index"><span itemprop="name">Command</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.5k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p><code>lsof</code>（list open files）命令是排查Linux系统中各种“文件占用”问题的利器。在Linux中，“一切皆文件”，这意味着进程不仅打开普通文件（如文本文件、二进制文件），还可能打开目录、网络套接字（sockets）、管道（pipes）、设备文件（如磁盘、终端）、以及共享库等。当我们需要定位某个文件为什么不能被删除、某个端口为何被占用、或者某个进程占用了大量资源时，<code>lsof</code> 都能提供至关重要的信息。</p>
+<hr>
+<h3 id="一、lsof-简介"><a href="#一、lsof-简介" class="headerlink" title="一、lsof 简介"></a>一、<code>lsof</code> 简介</h3><ul>
+<li><strong>功能：</strong> 列出当前系统打开文件的进程信息。</li>
+<li><strong>原理：</strong> <code>lsof</code> 通过读取内核信息来确定哪些进程正在持有哪些文件描述符。</li>
+<li><strong>应用场景：</strong><ul>
+<li><strong>文件无法删除&#x2F;卸载：</strong> 某个文件或目录被进程占用，无法删除或卸载其所在文件系统。</li>
+<li><strong>端口占用：</strong> 某个端口被未知进程监听或占用，导致新服务无法启动。</li>
+<li><strong>磁盘空间报警：</strong> 某个被删除的文件仍然占用磁盘空间（因为其句柄仍被进程持有）。</li>
+<li><strong>进程资源分析：</strong> 查看特定进程打开了哪些文件，评估其资源使用情况。</li>
+<li><strong>网络连接故障：</strong> 检查哪些进程在进行网络通信。</li>
+</ul>
+</li>
+</ul>
+<p><strong>注意：</strong> 运行 <code>lsof</code> 通常需要 <code>root</code> 权限才能查看所有进程打开的文件。</p>
+<hr>
+<h3 id="二、lsof-的基本使用方法"><a href="#二、lsof-的基本使用方法" class="headerlink" title="二、lsof 的基本使用方法"></a>二、<code>lsof</code> 的基本使用方法</h3><p>直接运行 <code>lsof</code> 会列出当前系统所有进程打开的所有文件，输出量巨大，通常不直接使用。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsof</span><br></pre></td></tr></table></figure>
+
+<p><strong>默认输出格式解释：</strong></p>
+<p>每行显示一个打开的文件信息，包括：</p>
+<ul>
+<li><strong><code>COMMAND</code></strong>: 打开文件的进程名。</li>
+<li><strong><code>PID</code></strong>: 进程ID。</li>
+<li><strong><code>USER</code></strong>: 进程所有者。</li>
+<li><strong><code>FD</code></strong>: 文件描述符。这是一个数字，表示进程用于访问文件的句柄。常见的类型有：<ul>
+<li><code>cwd</code>: 当前工作目录</li>
+<li><code>txt</code>: 程序的可执行文本（例如，一个执行中的二进制文件）。</li>
+<li><code>mem</code>: 内存映射文件。</li>
+<li><code>mmap</code>: 内存映射文件。</li>
+<li><code>rtd</code>: 根目录。</li>
+<li><code>DEL</code>: 已被删除但仍被进程占用的文件。</li>
+<li><code>数字</code>: 表示普通文件描述符（例如 <code>0</code> 是标准输入，<code>1</code> 是标准输出，<code>2</code> 是标准错误）。</li>
+<li><code>数字u</code>: 读写模式的文件。</li>
+<li><code>数字r</code>: 只读模式的文件。</li>
+<li><code>数字w</code>: 只写模式的文件。</li>
+</ul>
+</li>
+<li><strong><code>TYPE</code></strong>: 文件类型。常见的有：<ul>
+<li><code>REG</code>: 普通文件。</li>
+<li><code>DIR</code>: 目录。</li>
+<li><code>CHR</code>: 字符特殊文件（例如终端设备）。</li>
+<li><code>BLK</code>: 块特殊文件（例如磁盘设备）。</li>
+<li><code>FIFO</code>: 命名管道。</li>
+<li><code>PIPE</code>: 匿名管道。</li>
+<li><code>LNK</code>: 符号链接。</li>
+<li><code>UNIX</code>: UNIX 域套接字。</li>
+<li><code>IPv4</code>, <code>IPv6</code>: IPV4&#x2F;IPV6 套接字。</li>
+</ul>
+</li>
+<li><strong><code>DEVICE</code></strong>: 设备号（主设备号,次设备号）。对于网络文件，它通常显示为 <code>node</code>。</li>
+<li><strong><code>SIZE/OFF</code></strong>: 文件大小或文件偏移量。对于套接字，有时显示为 <code>inode</code> 号。</li>
+<li><strong><code>NODE</code></strong>: 文件的 inode 号（对于网络文件通常是 TCP&#x2F;UDP 的 inode 号）。</li>
+<li><strong><code>NAME</code></strong>: 文件的路径或网络连接的详细信息。</li>
+</ul>
+<hr>
+<h3 id="三、lsof-的常用选项和排查技巧"><a href="#三、lsof-的常用选项和排查技巧" class="headerlink" title="三、lsof 的常用选项和排查技巧"></a>三、<code>lsof</code> 的常用选项和排查技巧</h3><h4 id="1-根据文件-目录查找占用进程"><a href="#1-根据文件-目录查找占用进程" class="headerlink" title="1. 根据文件&#x2F;目录查找占用进程"></a>1. 根据文件&#x2F;目录查找占用进程</h4><p>这是最常见的用途之一，当你发现无法删除或卸载某个文件&#x2F;目录时。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">lsof /path/to/file          <span class="comment"># 查找占用指定文件的进程</span></span><br><span class="line">lsof /path/to/directory     <span class="comment"># 查找占用指定目录下任何文件的进程</span></span><br><span class="line">lsof +D /path/to/directory  <span class="comment"># 查找占用指定目录及其子目录下任何文件的进程 (递归)</span></span><br><span class="line">lsof +L1                    <span class="comment"># 显示被删除但仍被占用的文件 (文件系统空间未释放)</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>示例：</strong></p>
+<ul>
+<li>检查 <code>/mnt/mydata</code> 目录是否被占用，导致无法 <code>umount</code>：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsof /mnt/mydata</span><br></pre></td></tr></table></figure></li>
+<li>检查哪个进程正在使用 <code>/var/log/nginx/access.log</code>：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsof /var/log/nginx/access.log</span><br></pre></td></tr></table></figure></li>
+<li>查找所有已删除但仍被进程持有的文件 (其磁盘空间不会被立即释放)：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">lsof | grep <span class="string">&quot;deleted&quot;</span></span><br><span class="line"><span class="comment"># 或者更精确地：</span></span><br><span class="line">lsof +L1</span><br></pre></td></tr></table></figure>
+当看到 <code>(deleted)</code> 标记时，说明文件已经被删除，但因为有进程还在打开它，所以实际的磁盘空间（inode和数据块）还未被回收。你需要找到并终止这些进程，或者重启这些进程，空间才能真正释放。</li>
+</ul>
+<h4 id="2-根据进程-ID-PID-查找打开的文件"><a href="#2-根据进程-ID-PID-查找打开的文件" class="headerlink" title="2. 根据进程 ID (PID) 查找打开的文件"></a>2. 根据进程 ID (PID) 查找打开的文件</h4><p>当你已经知道某个进程的 PID，想了解它打开了哪些文件时。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsof -p &lt;PID&gt;               <span class="comment"># 查找指定 PID 进程打开的所有文件</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>示例：</strong></p>
+<ul>
+<li>查找 PID 为 1234 的进程打开了哪些文件：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsof -p 1234</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h4 id="3-根据用户查找打开的文件"><a href="#3-根据用户查找打开的文件" class="headerlink" title="3. 根据用户查找打开的文件"></a>3. 根据用户查找打开的文件</h4><p>查找特定用户拥有或运行的进程打开的文件。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">lsof -u &lt;username&gt;          <span class="comment"># 查找指定用户所有进程打开的文件</span></span><br><span class="line">lsof -u root                <span class="comment"># 查找 root 用户打开的文件</span></span><br></pre></td></tr></table></figure>
+<p><strong>示例：</strong></p>
+<ul>
+<li>查看 <code>nginx</code> 用户打开了哪些文件：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsof -u nginx</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h4 id="4-根据命令名查找打开的文件"><a href="#4-根据命令名查找打开的文件" class="headerlink" title="4. 根据命令名查找打开的文件"></a>4. 根据命令名查找打开的文件</h4><p>查找特定命令名（或进程名）的进程打开的文件。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">lsof -c &lt;command_name&gt;      <span class="comment"># 查找指定命令名进程打开的文件</span></span><br><span class="line">lsof -c apache2             <span class="comment"># 查找所有 apache2 进程打开的文件</span></span><br></pre></td></tr></table></figure>
+<p><strong>示例：</strong></p>
+<ul>
+<li>查看 <code>mysqld</code> 进程打开了哪些文件：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsof -c mysqld</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h4 id="5-查找网络连接和端口占用"><a href="#5-查找网络连接和端口占用" class="headerlink" title="5. 查找网络连接和端口占用"></a>5. 查找网络连接和端口占用</h4><p>这是 <code>lsof</code> 的另一个强大功能，尤其在排查端口冲突时。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">lsof -i                   <span class="comment"># 列出所有打开的 IPv4 和 IPv6 网络文件 (sockets)</span></span><br><span class="line">lsof -i :&lt;port_number&gt;    <span class="comment"># 查找占用指定端口的进程 (TCP/UDP)</span></span><br><span class="line">lsof -i tcp:&lt;port_number&gt; <span class="comment"># 查找占用指定 TCP 端口的进程</span></span><br><span class="line">lsof -i udp:&lt;port_number&gt; <span class="comment"># 查找占用指定 UDP 端口的进程</span></span><br><span class="line">lsof -i @&lt;host&gt;           <span class="comment"># 查找与指定主机有网络连接的进程</span></span><br><span class="line">lsof -i tcp@&lt;host&gt;:&lt;port&gt; <span class="comment"># 查找与指定主机和端口有 TCP 连接的进程</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>示例：</strong></p>
+<ul>
+<li><p>哪个进程占用了 80 端口 (HTTP)？</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> lsof -i :80</span><br><span class="line"><span class="comment"># 通常会看到 nginx, apache, 或者其他 web 服务器进程</span></span><br></pre></td></tr></table></figure>
+<p>输出示例：</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">COMMAND</span>    PID     USER   FD   TYPE DEVICE SIZE/<span class="literal">OFF</span> NODE NAME</span><br><span class="line"><span class="attribute">nginx</span>      <span class="number">1234</span>    root    <span class="number">6</span>u  IPv4  <span class="number">67890</span>      <span class="number">0</span>t0  TCP *:http (LISTEN)</span><br><span class="line"><span class="attribute">nginx</span>      <span class="number">1235</span>    www     <span class="number">6</span>u  IPv4  <span class="number">67890</span>      <span class="number">0</span>t0  TCP *:http (LISTEN)</span><br></pre></td></tr></table></figure>
+<p>从输出中可以看到 <code>nginx</code> 进程，PID 为 1234 和 1235，正在监听 <code>*:http</code> (即 80 端口)。</p>
+</li>
+<li><p>哪个进程连接到数据库服务器的 3306 端口？</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> lsof -i :3306</span><br><span class="line"><span class="comment"># 或者更具体，如果知道数据库服务器 IP：</span></span><br><span class="line"><span class="comment"># sudo lsof -i tcp@192.168.1.10:3306</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>查看所有处于 <code>LISTEN</code> 状态的 TCP 端口：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> lsof -i -s TCP:LISTEN -P -n</span><br><span class="line"><span class="comment"># -P: 不将端口号转换为服务名</span></span><br><span class="line"><span class="comment"># -n: 不将 IP 地址转换为主机名</span></span><br><span class="line"><span class="comment"># -s TCP:LISTEN: 只显示 TCP 监听状态的 socket</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<h4 id="6-组合选项"><a href="#6-组合选项" class="headerlink" title="6. 组合选项"></a>6. 组合选项</h4><p><code>lsof</code> 的这些选项可以组合使用，以实现更精确的过滤。</p>
+<p><strong>示例：</strong></p>
+<ul>
+<li>查找 <code>root</code> 用户运行的，占用 22 端口 (SSH) 的进程：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> lsof -i :22 -u root</span><br><span class="line"><span class="comment"># 通常会看到 sshd 进程</span></span><br></pre></td></tr></table></figure></li>
+<li>查找当前目录下，被已删除但仍被进程占用的文件：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsof +L1 $(<span class="built_in">pwd</span>)</span><br></pre></td></tr></table></figure></li>
+</ul>
+<hr>
+<h3 id="四、文件占用问题排查与解决流程"><a href="#四、文件占用问题排查与解决流程" class="headerlink" title="四、文件占用问题排查与解决流程"></a>四、文件占用问题排查与解决流程</h3><p>当遇到文件或端口占用问题时，可以使用以下步骤进行排查和解决：</p>
+<ol>
+<li><p><strong>确定问题现象：</strong></p>
+<ul>
+<li>文件无法删除：<code>rm: cannot remove &#39;filename&#39;: Device or resource busy</code></li>
+<li>文件系统无法卸载：<code>umount: /mnt/data: target is busy</code></li>
+<li>服务启动失败，端口被占用：<code>Address already in use</code></li>
+</ul>
+</li>
+<li><p><strong>使用 <code>lsof</code> 定位：</strong><br>根据问题类型选择合适的 <code>lsof</code> 命令。</p>
+<ul>
+<li><p><strong>文件&#x2F;目录占用：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> lsof /path/to/problem</span><br><span class="line"><span class="comment"># 如果是目录，且怀疑子目录或文件被占用：</span></span><br><span class="line"><span class="built_in">sudo</span> lsof +D /path/to/problem</span><br></pre></td></tr></table></figure>
+<p>查看输出中的 <code>COMMAND</code> 和 <code>PID</code> 列， identify the responsible process.</p>
+</li>
+<li><p><strong>端口占用：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> lsof -i :&lt;port_number&gt;</span><br></pre></td></tr></table></figure>
+<p>同样，从输出中获取 <code>COMMAND</code> 和 <code>PID</code>。</p>
+</li>
+<li><p><strong>已删除文件仍占用空间：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> lsof +L1</span><br></pre></td></tr></table></figure>
+<p>重点关注带有 <code>(deleted)</code> 标记的行，找出对应的 <code>PID</code>。</p>
+</li>
+</ul>
+</li>
+<li><p><strong>分析 <code>lsof</code> 输出：</strong></p>
+<ul>
+<li><strong><code>COMMAND</code> 和 <code>PID</code>：</strong> 哪个进程导致的问题？</li>
+<li><strong><code>USER</code>：</strong> 谁拥有这个进程？这有助于确定权限和责任。</li>
+<li><strong><code>FD</code>：</strong> 文件描述符的类型（<code>cwd</code>, <code>txt</code>, <code>DEL</code>, <code>u</code>, <code>r</code>, <code>w</code>）告诉你进程是以什么方式打开文件的。特别是 <code>DEL</code>，表明文件已被删除但仍在内存中。</li>
+<li><strong><code>NAME</code>：</strong> 确认是否是你正在寻找的文件或连接。</li>
+</ul>
+</li>
+<li><p><strong>采取解决措施：</strong></p>
+<ul>
+<li><p><strong>正常关闭&#x2F;重启服务：</strong> 如果问题是由一个已知的应用程序或服务（如Nginx、MySQL）引起的，尝试优雅地关闭或重启该服务。这通常是最好的方法，因为它能确保数据的完整性。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> systemctl stop &lt;service_name&gt;</span><br><span class="line"><span class="comment"># 再次检查 lsof 是否已经释放</span></span><br><span class="line"><span class="built_in">sudo</span> systemctl start &lt;service_name&gt;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>强制终止进程：</strong> 如果无法正常关闭或重启，或者进程是恶意的&#x2F;僵尸进程，可以强制终止。<br><strong>警告：慎用！强制终止进程可能导致数据损坏或丢失！</strong> 尤其当文件是正在被写入的关键数据文件时。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> <span class="built_in">kill</span> &lt;PID&gt;                <span class="comment"># SIGTERM，尝试优雅终止</span></span><br><span class="line"><span class="built_in">sudo</span> <span class="built_in">kill</span> -9 &lt;PID&gt;             <span class="comment"># SIGKILL，强制终止，不给进程清理机会</span></span><br><span class="line"><span class="comment"># 再次检查 lsof 是否已经释放</span></span><br></pre></td></tr></table></figure>
+<p>终止进程后，磁盘空间应立即释放，如果问题是文件无法删除，现在应该可以删除了。</p>
+</li>
+<li><p><strong>检查共享库占用：</strong> 如果是可执行文件或共享库被占用 (TYPE 为 <code>TXT</code> 或 <code>REG</code> 并且 <code>NAME</code> 是 <code>.so</code> 文件)，通常需要停止（或重启）所有使用该库的进程。</p>
+</li>
+</ul>
+</li>
+</ol>
+<p><strong>示例场景：磁盘空间满，<code>df -h</code> 却没有找到大文件</strong></p>
+<ol>
+<li><strong>现象：</strong> <code>df -h</code> 显示 <code>/var</code> 分区 100% 使用，但 <code>du -sh /var</code> 看到实际占用空间远小于 100%。</li>
+<li><strong>怀疑：</strong> 有文件被删除，但其文件句柄仍被进程持有，导致空间未释放。</li>
+<li><strong><code>lsof</code> 定位：</strong><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> lsof +L1 | grep <span class="string">&quot;/var&quot;</span></span><br></pre></td></tr></table></figure>
+假设发现：<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">COMMAND</span> PID   USER   FD   TYPE DEVICE SIZE/<span class="literal">OFF</span>    NODE NAME</span><br><span class="line"><span class="attribute">nginx</span>   <span class="number">1234</span>  root   <span class="number">10</span>w  REG  <span class="number">253</span>,<span class="number">0</span>  <span class="number">123456789</span> <span class="number">1234567</span> /var/log/nginx/access.log (deleted)</span><br></pre></td></tr></table></figure>
+这表明 <code>/var/log/nginx/access.log</code> 这个文件已经被删除，但 PID 1234 的 <code>nginx</code> 进程还在写入它，所以空间没有释放。</li>
+<li><strong>解决：</strong> 最安全的方法是重启 <code>nginx</code> 服务。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> systemctl restart nginx</span><br></pre></td></tr></table></figure>
+重启后，<code>nginx</code> 会重新打开新的日志文件，旧的被删除文件的句柄会被释放，磁盘空间也会被回收。</li>
+</ol>
+<hr>
+<h3 id="五、注意事项"><a href="#五、注意事项" class="headerlink" title="五、注意事项"></a>五、注意事项</h3><ul>
+<li><strong>权限：</strong> 为了获得最完整的输出，请使用 <code>sudo lsof</code>。</li>
+<li><strong>输出量：</strong> 直接运行 <code>lsof</code> 输出巨大，务必配合管道和过滤条件。</li>
+<li><strong>误杀进程：</strong> 在 <code>kill</code> 进程之前，务必确认进程的身份和影响，避免误杀关键服务。</li>
+<li><strong>复杂场景：</strong> 对于复杂的网络连接问题，<code>netstat -tulnp</code> 或 <code>ss -tulnp</code> 也是非常有用的补充工具，它们更专注于网络套接字信息。</li>
+</ul>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Linux%20%E7%B3%BB%E7%BB%9F%E4%B8%AD%20crontab/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/Linux%20%E7%B3%BB%E7%BB%9F%E4%B8%AD%20crontab/" class="post-title-link" itemprop="url">Linux 系统中 crontab</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:47:30" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/Command/" itemprop="url" rel="index"><span itemprop="name">Command</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="Linux-系统中-crontab"><a href="#Linux-系统中-crontab" class="headerlink" title="Linux 系统中 crontab"></a>Linux 系统中 crontab</h3><hr>
+<h3 id="Crontab-的工作原理"><a href="#Crontab-的工作原理" class="headerlink" title="Crontab 的工作原理"></a>Crontab 的工作原理</h3><p><code>crontab</code>（cron table） 是 Linux&#x2F;Unix 系统用于设置周期性执行任务的工具。它的核心是 <code>cron</code> 服务（或称为 <code>crond</code> 守护进程），这个服务在系统启动时就会自动运行，并且会一直在后台持续运行，它的主要职责是：</p>
+<ol>
+<li><p><strong>读取定时任务配置：</strong> <code>cron</code> 服务会周期性地（通常是每分钟）扫描特定的配置文件，这些文件包含了用户定义的定时任务列表。主要的配置文件位置包括：</p>
+<ul>
+<li><strong>系统级别的定时任务：</strong><ul>
+<li><code>/etc/crontab</code>：系统主 cron 表，通常用于定义系统级的任务。</li>
+<li><code>/etc/cron.d/</code>：该目录下的所有文件都会被 <code>cron</code> 服务读取，每个文件可以定义独立的定时任务。</li>
+<li><code>/etc/cron.hourly/</code>, <code>/etc/cron.daily/</code>, <code>/etc/cron.weekly/</code>, <code>/etc/cron.monthly/</code>：这些目录下的脚本会分别每小时、每天、每周、每月被 <code>cron</code> 服务执行一次。</li>
+</ul>
+</li>
+<li><strong>用户级别的定时任务：</strong><ul>
+<li><code>/var/spool/cron/</code>：每个用户的 <code>crontab -e</code> 命令编辑的任务会存储在这个目录下，以用户的账户名命名（例如：<code>/var/spool/cron/root</code> 或 <code>/var/spool/cron/your_user_name</code>）。普通用户只能编辑自己的 <code>crontab</code> 文件。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>解析任务配置：</strong> <code>cron</code> 服务会解析配置中的时间字段和命令。每个任务条目都是一行，由时间字段和要执行的命令组成。</p>
+</li>
+<li><p><strong>定时器调度：</strong> <code>cron</code> 服务内部维护一个定时器，当时间到达某个任务预设的执行时间点时，它就会执行对应的命令。</p>
+</li>
+<li><p><strong>执行任务：</strong> 当触发执行时，<code>cron</code> 服务会：</p>
+<ul>
+<li><strong>fork 一个子进程：</strong> 这个子进程会继承 <code>cron</code> 守护进程的环境变量，但用户的 <code>crontab</code> 任务通常会在一个新的 shell 环境（通常是 <code>/bin/sh</code>）中执行。</li>
+<li><strong>将输出发送给用户：</strong> 任何任务的标准输出（stdout）和标准错误输出（stderr）默认会被 <code>cron</code> 服务捕获，并通过邮件发送给任务的拥有者（或由 <code>MAILTO</code> 变量指定的邮箱），除非输出被重定向到文件或<code>/dev/null</code>。这是运维中需要特别注意的一点，以免因为大量邮件而塞满邮箱。</li>
+<li><strong>环境变量：</strong> <code>cron</code> 任务的执行环境与交互式 Shell 环境不同，它的 PATH 变量可能不包含你习惯的所有路径。因此，在 <code>crontab</code> 中执行命令时，<strong>最好使用命令的绝对路径</strong>，或者在 <code>crontab</code> 文件的顶部设置 <code>PATH</code> 变量。</li>
+</ul>
+</li>
+</ol>
+<p><strong>总结工作流程：</strong> <code>cron</code> 服务是一个忠实的“闹钟管家”，它不停地检查时间，发现到了某个任务的预设执行时间，就“唤醒”一个子进程去执行那个任务，然后将执行结果（如果有的话）通过邮件通知你。</p>
+<hr>
+<h3 id="每天凌晨-3-点执行备份脚本的-Crontab-配置例子"><a href="#每天凌晨-3-点执行备份脚本的-Crontab-配置例子" class="headerlink" title="每天凌晨 3 点执行备份脚本的 Crontab 配置例子"></a>每天凌晨 3 点执行备份脚本的 Crontab 配置例子</h3><p>假设你有一个备份脚本，名为 <code>backup.sh</code>，存放在 <code>/usr/local/bin/</code> 目录下。我们将配置 <code>root</code> 用户的 <code>crontab</code> 来执行这个任务。</p>
+<h4 id="1-准备备份脚本-usr-local-bin-backup-sh"><a href="#1-准备备份脚本-usr-local-bin-backup-sh" class="headerlink" title="1. 准备备份脚本 (/usr/local/bin/backup.sh)"></a>1. 准备备份脚本 (<code>/usr/local/bin/backup.sh</code>)</h4><p>首先，确保你的备份脚本是可执行的，并且包含你需要的备份逻辑。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 备份目标目录</span></span><br><span class="line">BACKUP_DIR=<span class="string">&quot;/data/backup&quot;</span></span><br><span class="line"><span class="comment"># 要备份的源目录</span></span><br><span class="line">SOURCE_DIR=<span class="string">&quot;/var/www/html&quot;</span></span><br><span class="line"><span class="comment"># 备份文件名格式 (例如：site_backup_2023-10-27-03-00-00.tar.gz)</span></span><br><span class="line">TIMESTAMP=$(<span class="built_in">date</span> +%Y-%m-%d-%H-%M-%S)</span><br><span class="line">BACKUP_FILE=<span class="string">&quot;<span class="variable">$&#123;BACKUP_DIR&#125;</span>/site_backup_<span class="variable">$&#123;TIMESTAMP&#125;</span>.tar.gz&quot;</span></span><br><span class="line"><span class="comment"># 日志文件</span></span><br><span class="line">LOG_FILE=<span class="string">&quot;/var/log/backup.log&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建备份目录（如果不存在）</span></span><br><span class="line"><span class="built_in">mkdir</span> -p <span class="string">&quot;<span class="variable">$&#123;BACKUP_DIR&#125;</span>&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">echo</span> <span class="string">&quot;<span class="subst">$(date)</span>: Starting backup for <span class="variable">$&#123;SOURCE_DIR&#125;</span>...&quot;</span> &gt;&gt; <span class="string">&quot;<span class="variable">$&#123;LOG_FILE&#125;</span>&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 执行备份命令，这里以 tar 压缩为例</span></span><br><span class="line"><span class="comment"># -z: 使用 gzip 压缩</span></span><br><span class="line"><span class="comment"># -c: 创建归档文件</span></span><br><span class="line"><span class="comment"># -v: 显示详细过程</span></span><br><span class="line"><span class="comment"># -f: 指定归档文件名</span></span><br><span class="line"><span class="comment"># 如果备份文件很大，可以考虑加上 -P 避免路径前缀问题</span></span><br><span class="line">tar -czf <span class="string">&quot;<span class="variable">$&#123;BACKUP_FILE&#125;</span>&quot;</span> <span class="string">&quot;<span class="variable">$&#123;SOURCE_DIR&#125;</span>&quot;</span> 2&gt;&gt; <span class="string">&quot;<span class="variable">$&#123;LOG_FILE&#125;</span>&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 检查备份是否成功</span></span><br><span class="line"><span class="keyword">if</span> [ $? -eq 0 ]; <span class="keyword">then</span></span><br><span class="line">    <span class="built_in">echo</span> <span class="string">&quot;<span class="subst">$(date)</span>: Backup completed successfully: <span class="variable">$&#123;BACKUP_FILE&#125;</span>&quot;</span> &gt;&gt; <span class="string">&quot;<span class="variable">$&#123;LOG_FILE&#125;</span>&quot;</span></span><br><span class="line">    <span class="comment"># 可以添加删除旧备份的逻辑，例如保留最近7天的备份</span></span><br><span class="line">    find <span class="string">&quot;<span class="variable">$&#123;BACKUP_DIR&#125;</span>&quot;</span> -name <span class="string">&quot;site_backup_*.tar.gz&quot;</span> -mtime +7 -delete 2&gt;&gt; <span class="string">&quot;<span class="variable">$&#123;LOG_FILE&#125;</span>&quot;</span></span><br><span class="line">    <span class="built_in">echo</span> <span class="string">&quot;<span class="subst">$(date)</span>: Old backups cleaned up.&quot;</span> &gt;&gt; <span class="string">&quot;<span class="variable">$&#123;LOG_FILE&#125;</span>&quot;</span></span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">    <span class="built_in">echo</span> <span class="string">&quot;<span class="subst">$(date)</span>: Backup FAILED! Check logs for details.&quot;</span> &gt;&gt; <span class="string">&quot;<span class="variable">$&#123;LOG_FILE&#125;</span>&quot;</span></span><br><span class="line"><span class="keyword">fi</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">echo</span> <span class="string">&quot;<span class="subst">$(date)</span>: Backup script finished.&quot;</span> &gt;&gt; <span class="string">&quot;<span class="variable">$&#123;LOG_FILE&#125;</span>&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>重要步骤：</strong></p>
+<ul>
+<li><strong>赋予执行权限：</strong><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">chmod</span> +x /usr/local/bin/backup.sh</span><br></pre></td></tr></table></figure></li>
+<li><strong>测试脚本：</strong> 在设置 <code>crontab</code> 之前，务必手动运行一次脚本，确保它能正常工作，并且路径、权限等都没有问题。</li>
+</ul>
+<h4 id="2-配置-Crontab"><a href="#2-配置-Crontab" class="headerlink" title="2. 配置 Crontab"></a>2. 配置 Crontab</h4><p>使用 <code>crontab -e</code> 命令来编辑当前用户的 <code>crontab</code> 配置。对于系统级的备份任务，我通常建议使用 <code>root</code> 用户的 <code>crontab</code>，因为它拥有执行任何备份操作的权限。</p>
+<ol>
+<li><p><strong>打开 root 用户的 crontab 编辑器：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> crontab -e</span><br></pre></td></tr></table></figure>
+<p>（如果你已经在 root 账户下，直接 <code>crontab -e</code> 即可）</p>
+</li>
+<li><p><strong>添加一行配置：</strong><br>在打开的编辑器中（通常是 <code>vi</code> 或 <code>nano</code>），在文件的末尾添加以下一行：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">0 3 * * * /usr/local/bin/backup.sh &gt;&gt; /var/log/cron_backup.log 2&gt;&amp;1</span><br></pre></td></tr></table></figure>
+
+<p>保存并退出编辑器（在 <code>vi</code> 中是 <code>:wq</code>，在 <code>nano</code> 中是 <code>Ctrl+X</code>, <code>Y</code>, <code>Enter</code>）。</p>
+</li>
+</ol>
+<h4 id="Crontab-配置解释"><a href="#Crontab-配置解释" class="headerlink" title="Crontab 配置解释"></a>Crontab 配置解释</h4><p><code>crontab</code> 的时间格式有五个字段，后跟要执行的命令：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">分 时 日 月 周 命令</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong><code>分</code> (Minute):</strong> 0-59</li>
+<li><strong><code>时</code> (Hour):</strong> 0-23 (0 代表午夜)</li>
+<li><strong><code>日</code> (Day of Month):</strong> 1-31</li>
+<li><strong><code>月</code> (Month):</strong> 1-12 或 Jan-Dec</li>
+<li><strong><code>周</code> (Day of Week):</strong> 0-7 (0 或 7 代表星期天，1 代表星期一)</li>
+</ul>
+<p><strong>示例配置 <code>0 3 * * * /usr/local/bin/backup.sh &gt;&gt; /var/log/cron_backup.log 2&gt;&amp;1</code> 的含义：</strong></p>
+<ul>
+<li><strong><code>0</code> (分):</strong> 在每小时的第 0 分钟执行。</li>
+<li><strong><code>3</code> (时):</strong> 在每天的第 3 小时执行（即凌晨 3 点）。</li>
+<li><strong><code>*</code> (日):</strong> 每天都执行。</li>
+<li><strong><code>*</code> (月):</strong> 每月都执行。</li>
+<li><strong><code>*</code> (周):</strong> 每周的任何一天都执行。</li>
+<li><strong><code>/usr/local/bin/backup.sh</code>:</strong> 要执行的脚本的绝对路径。</li>
+<li><strong><code>&gt;&gt; /var/log/cron_backup.log 2&gt;&amp;1</code>:</strong> 这是重定向输出。<ul>
+<li><code>&gt;&gt; /var/log/cron_backup.log</code>: 将标准输出 (stdout) 追加到 <code>/var/log/cron_backup.log</code> 文件中。</li>
+<li><code>2&gt;&amp;1</code>: 将标准错误输出 (stderr) 重定向到与标准输出相同的位置。这样，无论脚本输出什么（包括错误信息），都会被记录到这个日志文件中，方便后续排查问题。</li>
+</ul>
+</li>
+</ul>
+<h4 id="3-验证-Crontab-配置"><a href="#3-验证-Crontab-配置" class="headerlink" title="3. 验证 Crontab 配置"></a>3. 验证 Crontab 配置</h4><ol>
+<li><p><strong>查看当前用户的 crontab 配置：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> crontab -l</span><br></pre></td></tr></table></figure>
+<p>你应该能看到你刚刚添加的那一行。</p>
+</li>
+<li><p><strong>检查 cron 服务状态：</strong><br>确保 <code>cron</code> 服务正在运行。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">systemctl status cron <span class="comment"># 对于 systemd 系统</span></span><br><span class="line"><span class="comment"># 或者</span></span><br><span class="line">service cron status   <span class="comment"># 对于旧的 init 系统</span></span><br></pre></td></tr></table></figure>
+<p>如果服务没有运行，请启动它：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">systemctl start cron</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h4 id="运维最佳实践与注意事项"><a href="#运维最佳实践与注意事项" class="headerlink" title="运维最佳实践与注意事项"></a>运维最佳实践与注意事项</h4><ol>
+<li><strong>使用绝对路径：</strong> 在 <code>crontab</code> 中始终使用命令和脚本的绝对路径，环境变量可能与你的交互式 Shell 不同。</li>
+<li><strong>日志记录：</strong> 务必将脚本的输出重定向到日志文件。这对于后续的故障排查至关重要。否则，所有输出都可能通过邮件发送给你，造成邮箱“爆炸”。</li>
+<li><strong>错误处理：</strong> 脚本内部应包含错误检查和适当的日志记录，以便在任务失败时能够快速定位问题。</li>
+<li><strong>权限：</strong> 确保 <code>crontab</code> 运行的用户（通常是 <code>root</code>）有足够的权限来执行脚本和访问所有必要的文件、目录。</li>
+<li><strong>环境变量：</strong> 如果脚本依赖特定的环境变量，可以在 <code>crontab</code> 文件的开头进行设置，例如：<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin</span><br><span class="line">MAILTO=&quot;your_email@example.com&quot; # 指定邮件接收者，默认发送给当前用户</span><br><span class="line">0 3 * * * /usr/local/bin/backup.sh &gt;&gt; /var/log/cron_backup.log 2&gt;&amp;1</span><br></pre></td></tr></table></figure></li>
+<li><strong>并行任务：</strong> 如果任务需要很长时间才能完成，要注意避免任务重复执行造成冲突（例如，上一个备份还没完成，下一个备份又开始了）。可以在脚本开头添加锁机制来防止这种情况。</li>
+<li><strong>系统时间：</strong> 确保 Linux 系统的时区和时间设置正确，否则定时任务可能不会在预期的时间执行。</li>
+</ol>
+<p>通过以上步骤，您就能成功配置一个每天凌晨 3 点执行的备份任务。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Linux%20%E7%B3%BB%E7%BB%9F%E4%B8%AD%E7%9A%84%E5%86%85%E6%A0%B8%E6%A8%A1%E5%9D%97%E7%AE%A1%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/Linux%20%E7%B3%BB%E7%BB%9F%E4%B8%AD%E7%9A%84%E5%86%85%E6%A0%B8%E6%A8%A1%E5%9D%97%E7%AE%A1%E7%90%86/" class="post-title-link" itemprop="url">Linux 系统中的内核模块管理</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:47:35" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/Command/" itemprop="url" rel="index"><span itemprop="name">Command</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.2k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="Linux-内核模块的管理"><a href="#Linux-内核模块的管理" class="headerlink" title="Linux 内核模块的管理"></a>Linux 内核模块的管理</h3><hr>
+<h3 id="一、Linux-内核模块的工作原理"><a href="#一、Linux-内核模块的工作原理" class="headerlink" title="一、Linux 内核模块的工作原理"></a>一、Linux 内核模块的工作原理</h3><p>Linux 内核采用模块化的设计思想，其核心功能是模块化实现的。</p>
+<ol>
+<li><strong>模块化设计：</strong> 内核自身只包含最核心的功能，而将许多非核心但必要的功能（如：网卡驱动、显卡驱动、文件系统驱动、USB 支持、加密算法等）设计成可以随时加载和卸载的模块。</li>
+<li><strong>动态加载&#x2F;卸载：</strong> 当系统需要某个功能时（例如，插入了一个USB设备，或是需要访问某种特定的文件系统），对应的内核模块会被动态加载到内核空间中运行；当该功能不再需要时，模块可以被卸载，从而释放内存资源。</li>
+<li><strong>优点：</strong><ul>
+<li><strong>减小内核镜像大小：</strong> 核心内核保持精简，只需要加载必需的模块。</li>
+<li><strong>提高灵活性：</strong> 无需重新编译整个内核就能添加或更新驱动、文件系统等功能。</li>
+<li><strong>节省内存：</strong> 不使用的模块可以卸载，释放内存。</li>
+<li><strong>方便调试：</strong> 可以在运行时加载新的或修改过的模块进行测试。</li>
+</ul>
+</li>
+<li><strong>模块文件：</strong> 内核模块通常以 <code>.ko</code>（kernel object）为扩展名，存储在 <code>/lib/modules/&lt;kernel-version&gt;/</code> 目录下，按照类别（如 <code>kernel/drivers</code>、<code>kernel/fs</code>、<code>kernel/net</code> 等）组织。</li>
+<li><strong>依赖关系：</strong> 很多内核模块之间存在依赖关系，例如一个USB鼠标驱动可能依赖于通用的USB核心驱动。加载模块时，系统会自动处理这些依赖关系。</li>
+<li><strong>符号表：</strong> 内核维护一个符号表，记录了所有已加载模块提供的函数和变量，供其他模块或内核核心部分调用。</li>
+</ol>
+<hr>
+<h3 id="二、查看内核模块信息"><a href="#二、查看内核模块信息" class="headerlink" title="二、查看内核模块信息"></a>二、查看内核模块信息</h3><p>在管理内核模块之前，首先要了解当前系统中已加载的模块以及可用的模块。</p>
+<h4 id="1-lsmod：列出当前已加载的内核模块"><a href="#1-lsmod：列出当前已加载的内核模块" class="headerlink" title="1. lsmod：列出当前已加载的内核模块"></a>1. <code>lsmod</code>：列出当前已加载的内核模块</h4><p>该命令会显示已加载模块的名称、大小以及它们被哪些其他模块依赖（引用）。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsmod</span><br></pre></td></tr></table></figure>
+
+<p><strong>示例输出：</strong></p>
+<figure class="highlight tap"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">Module                  Size  Used by</span><br><span class="line">nf_conntrack_netlink  <span class="number"> 32768 </span> 0</span><br><span class="line">nf_conntrack         <span class="number"> 163840 </span><span class="number"> 1 </span>nf_conntrack_netlink</span><br><span class="line">xt_conntrack          <span class="number"> 16384 </span><span class="number"> 1 </span>(autoinstall)</span><br><span class="line">ip_tables             <span class="number"> 32768 </span><span class="number"> 1 </span>(autoinstall)</span><br><span class="line">x_tables              <span class="number"> 40960 </span><span class="number"> 2 </span>xt_conntrack,ip_tables</span><br><span class="line">...</span><br><span class="line">snd_hda_codec_hdmi    <span class="number"> 65536 </span> 1</span><br><span class="line">snd_hda_codec_realtek<span class="number"> 126976 </span> 1</span><br><span class="line">snd_hda_codec_generic <span class="number"> 86016 </span><span class="number"> 1 </span>snd_hda_codec_realtek</span><br><span class="line">snd_hda_intel         <span class="number"> 61440 </span> 3</span><br><span class="line">snd_intel_dspcfg      <span class="number"> 24576 </span><span class="number"> 1 </span>snd_hda_intel</span><br><span class="line">snd_hda_codec        <span class="number"> 147456 </span><span class="number"> 4 </span>snd_hda_codec_hdmi,snd_hda_codec_realtek,snd_hda_codec_generic,snd_hda_intel</span><br><span class="line">snd_hwdep             <span class="number"> 16384 </span><span class="number"> 1 </span>snd_hda_codec</span><br><span class="line">snd_pcm              <span class="number"> 135168 </span><span class="number"> 4 </span>snd_hda_codec_hdmi,snd_hda_intel,snd_hda_codec</span><br><span class="line">snd_seq_device        <span class="number"> 16384 </span><span class="number"> 1 </span>snd_seq</span><br><span class="line">snd_timer             <span class="number"> 40960 </span><span class="number"> 1 </span>snd_pcm</span><br><span class="line">snd                   <span class="number"> 106496 </span>11 snd_hda_codec_hdmi,snd_hda_codec_realtek,snd_hda_codec_generic,snd_hda_intel,snd_intel_dspcfg,snd_hda_codec,snd_hwdep,snd_pcm,snd_seq_device,snd_timer</span><br><span class="line">soundcore             <span class="number"> 16384 </span><span class="number"> 1 </span>snd</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong><code>Module</code></strong>: 模块名称。</li>
+<li><strong><code>Size</code></strong>: 模块加载到内存后的大小（字节）。</li>
+<li><strong><code>Used by</code></strong>: 引用此模块的其他模块数量和名称。如果一个模块被其他模块引用，则不能直接卸载它，必须先卸载依赖它的模块。</li>
+</ul>
+<h4 id="2-modinfo：显示模块的详细信息"><a href="#2-modinfo：显示模块的详细信息" class="headerlink" title="2. modinfo：显示模块的详细信息"></a>2. <code>modinfo</code>：显示模块的详细信息</h4><p>用于查看特定模块的详细信息，包括其作者、描述、依赖关系、参数等。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">modinfo &lt;module_name&gt;</span><br><span class="line"><span class="comment"># 例如：</span></span><br><span class="line">modinfo bonding</span><br></pre></td></tr></table></figure>
+
+<p><strong>示例输出：</strong></p>
+<figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">filename:</span>       <span class="keyword">/lib/</span>modules/<span class="number">5.15</span><span class="number">.0</span><span class="number">-86</span>-generic<span class="keyword">/kernel/</span>drivers<span class="keyword">/net/</span>bonding/bonding.ko</span><br><span class="line"><span class="symbol">license:</span>        GPL</span><br><span class="line"><span class="symbol">description:</span>    Ethernet Channel Bonding Driver</span><br><span class="line"><span class="symbol">author:</span>         Thomas Davis, tadavis@lbl.gov and many others</span><br><span class="line"><span class="symbol">srcversion:</span>     DB84F66C208B81BEF92A28B</span><br><span class="line"><span class="symbol">alias:</span>          rtnl-link-bond</span><br><span class="line"><span class="symbol">alias:</span>          net-pf<span class="number">-16</span>-proto<span class="number">-17</span>-family-AF_PACKET</span><br><span class="line"><span class="symbol">depends:</span>      </span><br><span class="line"><span class="symbol">retpoline:</span>      Y</span><br><span class="line"><span class="symbol">intree:</span>         Y</span><br><span class="line"><span class="symbol">name:</span>           bonding</span><br><span class="line"><span class="symbol">vermagic:</span>       <span class="number">5.15</span><span class="number">.0</span><span class="number">-86</span>-generic SMP mod_unload modversions </span><br><span class="line"><span class="symbol">parm:</span>           max_bonds:Max number of bonding devices (int)</span><br><span class="line"><span class="symbol">parm:</span>           miimon:Link check interval in milliseconds (int)</span><br><span class="line"><span class="symbol">parm:</span>           mode:Bonding mode (<span class="number">0</span><span class="number">-7</span>, default <span class="number">0</span>) (int)</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong><code>filename</code></strong>: 模块在文件系统中的路径。</li>
+<li><strong><code>depends</code></strong>: 该模块所依赖的其他模块。</li>
+<li><strong><code>parm</code></strong>: 模块可以接受的参数，这些参数在加载模块时可以指定。</li>
+</ul>
+<hr>
+<h3 id="三、加载内核模块-modprobe-insmod"><a href="#三、加载内核模块-modprobe-insmod" class="headerlink" title="三、加载内核模块 (modprobe&#x2F;insmod)"></a>三、加载内核模块 (<code>modprobe</code>&#x2F;<code>insmod</code>)</h3><p>加载内核模块是将 <code>.ko</code> 文件加载到内核内存中，使其功能生效。</p>
+<h4 id="1-modprobe：推荐的加载方式-处理依赖关系"><a href="#1-modprobe：推荐的加载方式-处理依赖关系" class="headerlink" title="1. modprobe：推荐的加载方式 (处理依赖关系)"></a>1. <code>modprobe</code>：推荐的加载方式 (处理依赖关系)</h4><p><code>modprobe</code> 是加载内核模块的首选命令，因为它会自动处理模块的依赖关系，即在加载一个模块之前，它会自动先加载该模块所依赖的所有其他模块。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> modprobe &lt;module_name&gt;</span><br><span class="line"><span class="comment"># 例如，加载 i915 显卡驱动模块：</span></span><br><span class="line"><span class="built_in">sudo</span> modprobe i915</span><br><span class="line"><span class="comment"># 加载带参数的模块：</span></span><br><span class="line"><span class="built_in">sudo</span> modprobe &lt;module_name&gt; &lt;parameter&gt;=&lt;value&gt; &lt;parameter2&gt;=&lt;value2&gt;</span><br><span class="line"><span class="comment"># 例如，加载 bonding 模块并设置 mode 为 1 (Active-Backup)</span></span><br><span class="line"><span class="built_in">sudo</span> modprobe bonding mode=1 miimon=100</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>modprobe</code> 会根据 <code>/lib/modules/&lt;kernel-version&gt;/modules.dep</code> 文件来解析依赖关系。</li>
+<li>它还会根据 <code>/etc/modprobe.d/</code> 目录下的配置文件来处理模块的别名、黑名单、参数等。</li>
+</ul>
+<h4 id="2-insmod：直接加载单个模块-不处理依赖"><a href="#2-insmod：直接加载单个模块-不处理依赖" class="headerlink" title="2. insmod：直接加载单个模块 (不处理依赖)"></a>2. <code>insmod</code>：直接加载单个模块 (不处理依赖)</h4><p><code>insmod</code> (install module) 是一个更底层的命令，它只负责将指定的 <code>.ko</code> 文件加载到内核。它<strong>不会检查和加载模块的依赖关系</strong>，如果依赖模块未加载，<code>insmod</code> 会失败。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> insmod /path/to/module.ko</span><br><span class="line"><span class="comment"># 例如：</span></span><br><span class="line"><span class="built_in">sudo</span> insmod /lib/modules/$(<span class="built_in">uname</span> -r)/kernel/drivers/net/bonding/bonding.ko</span><br></pre></td></tr></table></figure>
+
+<p><strong>运维建议：</strong></p>
+<ul>
+<li>在大多数情况下，使用 <code>modprobe</code> 而不是 <code>insmod</code>。</li>
+<li>只有当你知道目标模块没有任何未加载的依赖，或者你正在调试特定的 <code>.ko</code> 文件时，才考虑使用 <code>insmod</code>。</li>
+</ul>
+<hr>
+<h3 id="四、卸载内核模块-rmmod"><a href="#四、卸载内核模块-rmmod" class="headerlink" title="四、卸载内核模块 (rmmod)"></a>四、卸载内核模块 (<code>rmmod</code>)</h3><p><code>rmmod</code> 命令用于从内核中移除一个已加载的模块。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> rmmod &lt;module_name&gt;</span><br><span class="line"><span class="comment"># 例如，卸载 bonding 模块：</span></span><br><span class="line"><span class="built_in">sudo</span> rmmod bonding</span><br></pre></td></tr></table></figure>
+
+<p><strong>注意事项：</strong></p>
+<ol>
+<li><strong>依赖关系：</strong> 如果一个模块被其他模块引用（<code>lsmod</code> <code>Used by</code> 列显示非0），或者被正在运行的硬件或软件占用，<code>rmmod</code> 将无法卸载它，并会报错“Module is in use”或“Resource busy”。</li>
+<li><strong>强制卸载：</strong> 某些情况下，可以使用 <code>-f</code> 选项强制卸载模块，但这<strong>不推荐</strong>，因为可能导致系统不稳定甚至崩溃，除非你非常清楚你在做什么。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> rmmod -f &lt;module_name&gt; <span class="comment"># 慎用！</span></span><br></pre></td></tr></table></figure></li>
+</ol>
+<hr>
+<h3 id="五、永久性地加载-禁用内核模块"><a href="#五、永久性地加载-禁用内核模块" class="headerlink" title="五、永久性地加载&#x2F;禁用内核模块"></a>五、永久性地加载&#x2F;禁用内核模块</h3><p>上面提到的 <code>modprobe</code> 和 <code>rmmod</code> 只是临时改变模块状态，系统重启后会恢复默认。要使更改永久生效，需要配置相关文件。</p>
+<h4 id="1-永久加载模块"><a href="#1-永久加载模块" class="headerlink" title="1. 永久加载模块"></a>1. 永久加载模块</h4><p>要在系统启动时自动加载模块，可以将模块名称添加到 <code>/etc/modules-load.d/</code> 目录下的文件中。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建一个新的配置文件 (例如，my_modules.conf)</span></span><br><span class="line"><span class="built_in">sudo</span> vim /etc/modules-load.d/my_modules.conf</span><br></pre></td></tr></table></figure>
+<p>在文件中添加模块名称，每行一个。</p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># /etc/modules-load.d/my_modules.conf</span></span><br><span class="line"><span class="keyword">bonding</span></span><br><span class="line"><span class="keyword"></span>vboxdrv</span><br></pre></td></tr></table></figure>
+<p>重启系统后，这些模块就会自动加载。</p>
+<h4 id="2-永久禁用（黑名单）模块"><a href="#2-永久禁用（黑名单）模块" class="headerlink" title="2. 永久禁用（黑名单）模块"></a>2. 永久禁用（黑名单）模块</h4><p>有时需要防止某个模块被自动加载（例如，有两个驱动为同一设备，需要禁用其中一个）。可以通过在 <code>/etc/modprobe.d/</code> 目录下创建配置文件来将模块列入黑名单。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建一个新的配置文件 (例如，blacklist-nouveau.conf)</span></span><br><span class="line"><span class="built_in">sudo</span> vim /etc/modprobe.d/blacklist-nouveau.conf</span><br></pre></td></tr></table></figure>
+<p>在文件中添加 <code>blacklist &lt;module_name&gt;</code>。</p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># /etc/modprobe.d/blacklist-nouveau.conf</span></span><br><span class="line"><span class="keyword">blacklist </span>nouveau</span><br></pre></td></tr></table></figure>
+<p>保存文件后，可能需要更新 <code>initramfs</code> (启动镜像) 以确保更改生效：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> update-initramfs -u</span><br></pre></td></tr></table></figure>
+<p>然后重启系统，<code>nouveau</code> 模块就不会被加载了。</p>
+<hr>
+<h3 id="六、更新模块依赖和缓存"><a href="#六、更新模块依赖和缓存" class="headerlink" title="六、更新模块依赖和缓存"></a>六、更新模块依赖和缓存</h3><p>在对模块文件进行手动更改（不常见）、升级内核或安装新内核后，可能需要更新模块依赖缓存。</p>
+<ul>
+<li><code>depmod -a</code>: 扫描所有模块并重建 <code>modules.dep</code> 和其他相关的映射文件。<code>modprobe</code> 依赖这些文件来解析模块依赖。这个命令通常在安装新内核时由包管理器自动运行。</li>
+</ul>
+<hr>
+<p>通过以上解释和命令，您应该能够熟练地查看和管理 Linux 系统中的内核模块了。这对于维护一个稳定、高效且功能完备的 Linux 环境至关重要。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+
+  
+  <nav class="pagination">
+    <a class="extend prev" rel="prev" href="/page/8/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/8/">8</a><span class="page-number current">9</span><a class="page-number" href="/page/10/">10</a><span class="space">&hellip;</span><a class="page-number" href="/page/28/">28</a><a class="extend next" rel="next" href="/page/10/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+  </nav>
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Local 存储前面我们有通过 hostPath 或者 emptyDir 的方式来持久化我们的数据，但是显然我们还需要更加可靠的存储来保存应用的持久化数据，这样容器在重建后，依然可以使用之前的数据。但是存储资源和 CPU 资源以及内存资源有很大不同，为了屏蔽底层的技术实现细节，让用户更加方便的使用，Kubernetes 便引入了 PV 和 PVC 两个重要的资源对象来实现对存储的管理。 概念PV">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Local 存储">
+<meta property="og:url" content="http://example.com/2025/09/11/Local%20%E5%AD%98%E5%82%A8/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="Local 存储前面我们有通过 hostPath 或者 emptyDir 的方式来持久化我们的数据，但是显然我们还需要更加可靠的存储来保存应用的持久化数据，这样容器在重建后，依然可以使用之前的数据。但是存储资源和 CPU 资源以及内存资源有很大不同，为了屏蔽底层的技术实现细节，让用户更加方便的使用，Kubernetes 便引入了 PV 和 PVC 两个重要的资源对象来实现对存储的管理。 概念PV">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/l1mhvl.jpg">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:48:36.312Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://mudutestmenu.mudu.tv/upload/l1mhvl.jpg">
+
+<link rel="canonical" href="http://example.com/2025/09/11/Local%20%E5%AD%98%E5%82%A8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Local 存储 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Local%20%E5%AD%98%E5%82%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Local 存储
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:48:36" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E5%AD%98%E5%82%A8/" itemprop="url" rel="index"><span itemprop="name">存储</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>11k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>10 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Local-存储"><a href="#Local-存储" class="headerlink" title="Local 存储"></a>Local 存储</h1><p>前面我们有通过 <code>hostPath</code> 或者 <code>emptyDir</code> 的方式来持久化我们的数据，但是显然我们还需要更加可靠的存储来保存应用的持久化数据，这样容器在重建后，依然可以使用之前的数据。但是存储资源和 CPU 资源以及内存资源有很大不同，为了屏蔽底层的技术实现细节，让用户更加方便的使用，Kubernetes 便引入了 <code>PV</code> 和 <code>PVC</code> 两个重要的资源对象来实现对存储的管理。</p>
+<h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><p><code>PV</code> 的全称是：<code>PersistentVolume</code>（持久化卷），是对底层共享存储的一种抽象，PV 由管理员进行创建和配置，它和具体的底层的共享存储技术的实现方式有关，比如 <code>Ceph</code>、<code>GlusterFS</code>、<code>NFS</code>、<code>hostPath</code> 等，都是通过插件机制完成与共享存储的对接。</p>
+<p><code>PVC</code> 的全称是：<code>PersistentVolumeClaim</code>（持久化卷声明），PVC 是用户存储的一种声明，PVC 和 Pod 比较类似，Pod 消耗的是节点，PVC 消耗的是 PV 资源，Pod 可以请求 CPU 和内存，而 PVC 可以请求特定的存储空间和访问模式。对于真正使用存储的用户不需要关心底层的存储实现细节，只需要直接使用 PVC 即可。</p>
+<p>但是通过 PVC 请求到一定的存储空间也很有可能不足以满足应用对于存储设备的各种需求，而且不同的应用程序对于存储性能的要求可能也不尽相同，比如读写速度、并发性能等，为了解决这一问题，Kubernetes 又为我们引入了一个新的资源对象：<code>StorageClass</code>，通过 <code>StorageClass</code> 的定义，管理员可以将存储资源定义为某种类型的资源，比如快速存储、慢速存储等，用户根据 StorageClass 的描述就可以非常直观的知道各种存储资源的具体特性了，这样就可以根据应用的特性去申请合适的存储资源了，此外 <code>StorageClass</code> 还可以为我们自动生成 PV，免去了每次手动创建的麻烦。</p>
+<h2 id="hostPath"><a href="#hostPath" class="headerlink" title="hostPath"></a>hostPath</h2><p>我们上面提到了 PV 是对底层存储技术的一种抽象，PV 一般都是由管理员来创建和配置的，我们首先来创建一个 <code>hostPath</code> 类型的 <code>PersistentVolume</code>。Kubernetes 支持 hostPath 类型的 PersistentVolume 使用节点上的文件或目录来模拟附带网络的存储，但是需要注意的是在生产集群中，我们不会使用 hostPath，集群管理员会提供网络存储资源，比如 NFS 共享卷或 Ceph 存储卷，集群管理员还可以使用 <code>StorageClasses</code> 来设置动态提供存储。因为 Pod 并不是始终固定在某个节点上面的，所以要使用 hostPath 的话我们就需要将 Pod 固定在某个节点上，这样显然就大大降低了应用的容错性。</p>
+<p>比如我们这里将测试的应用固定在节点 node1 上面，首先在该节点上面创建一个 <code>/data/k8s/test/hostpath</code> 的目录，然后在该目录中创建一个 <code>index.html</code> 的文件：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">echo &#x27;Hello from Kubernetes hostpath storage&#x27; &gt; /data/k8s/test/hostpath/index.html</span><br></pre></td></tr></table></figure>
+
+
+
+<p>然后接下来创建一个 hostPath 类型的 PV 资源对象：（pv-hostpath.yaml）</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PersistentVolume</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">pv-hostpath</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">local</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">storageClassName:</span> <span class="string">manual</span></span><br><span class="line">  <span class="attr">capacity:</span></span><br><span class="line">    <span class="attr">storage:</span> <span class="string">10Gi</span></span><br><span class="line">  <span class="attr">accessModes:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">ReadWriteOnce</span></span><br><span class="line">  <span class="attr">hostPath:</span></span><br><span class="line">    <span class="attr">path:</span> <span class="string">&#x27;/data/k8s/test/hostpath&#x27;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>配置文件中指定了该卷位于集群节点上的 <code>/data/k8s/test/hostpath</code> 目录，还指定了 10G 大小的空间和 <code>ReadWriteOnce</code> 的访问模式，这意味着该卷可以在单个节点上以读写方式挂载，另外还定义了名称为 <code>manual</code> 的 <code>StorageClass</code>，该名称用来将 <code>PersistentVolumeClaim</code> 请求绑定到该 <code>PersistentVolum</code>。下面是关于 PV 的这些配置属性的一些说明：</p>
+<ul>
+<li><p>Capacity（存储能力）：一般来说，一个 PV 对象都要指定一个存储能力，通过 PV 的 <code>capacity</code> 属性来设置的，目前只支持存储空间的设置，就是我们这里的 <code>storage=10Gi</code>，不过未来可能会加入 <code>IOPS</code>、吞吐量等指标的配置。</p>
+</li>
+<li><p>AccessModes（访问模式）：用来对 PV 进行访问模式的设置，用于描述用户应用对存储资源的访问权限，访问权限包括下面几种方式：</p>
+<ul>
+<li>ReadWriteOnce（RWO）：读写权限，但是只能被单个节点挂载</li>
+<li>ReadOnlyMany（ROX）：只读权限，可以被多个节点挂载</li>
+<li>ReadWriteMany（RWX）：读写权限，可以被多个节点挂载</li>
+</ul>
+<p>注意</p>
+<p>一些 PV 可能支持多种访问模式，但是在挂载的时候只能使用一种访问模式，多种访问模式是不会生效的。</p>
+<p>下图是一些常用的 Volume 插件支持的访问模式： <img data-src="https://mudutestmenu.mudu.tv/upload/l1mhvl.jpg" alt="pv access modes"></p>
+</li>
+</ul>
+<p>直接创建上面的资源对象：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl apply -f pv-hostpath.yaml</span><br><span class="line">persistentvolume/pv-hostpath created</span><br></pre></td></tr></table></figure>
+
+
+
+<p>创建完成后查看 PersistentVolume 的信息，输出结果显示该 <code>PersistentVolume</code> 的状态（STATUS） 为 <code>Available</code>。 这意味着它还没有被绑定给 <code>PersistentVolumeClaim</code>：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl get pv pv-hostpath</span><br><span class="line">NAME          CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS      CLAIM   STORAGECLASS   REASON   AGE</span><br><span class="line">pv-hostpath   10Gi       RWO            Retain           Available           manual                  58s</span><br></pre></td></tr></table></figure>
+
+
+
+<p>其中有一项 <code>RECLAIM POLICY</code> 的配置，同样我们可以通过 PV 的 <code>persistentVolumeReclaimPolicy</code>（回收策略）属性来进行配置，目前 PV 支持的策略有三种：</p>
+<ul>
+<li>Retain（保留）：保留数据，需要管理员手工清理数据</li>
+<li>Recycle（回收）：清除 PV 中的数据，效果相当于执行 <code>rm -rf /thevoluem/*</code></li>
+<li>Delete（删除）：与 PV 相连的后端存储完成 volume 的删除操作，当然这常见于云服务商的存储服务，比如 ASW EBS。</li>
+</ul>
+<p>不过需要注意的是，目前只有 <code>NFS</code> 和 <code>HostPath</code> 两种类型支持回收策略，当然一般来说还是设置为 <code>Retain</code> 这种策略保险一点。</p>
+<p>注意</p>
+<p><code>Recycle</code> 策略会通过运行一个 busybox 容器来执行数据删除命令，默认定义的 busybox 镜像是：<code>gcr.io/google_containers/busybox:latest</code>，并且 <code>imagePullPolicy: Always</code>，如果需要调整配置，需要增加<code>kube-controller-manager</code> 启动参数：<code>--pv-recycler-pod-template-filepath-hostpath</code> 来进行配置。</p>
+<p>关于 PV 的状态，实际上描述的是 PV 的生命周期的某个阶段，一个 PV 的生命周期中，可能会处于 4 种不同的阶段：</p>
+<ul>
+<li>Available（可用）：表示可用状态，还未被任何 PVC 绑定</li>
+<li>Bound（已绑定）：表示 PV 已经被 PVC 绑定</li>
+<li>Released（已释放）：PVC 被删除，但是资源还未被集群重新声明</li>
+<li>Failed（失败）： 表示该 PV 的自动回收失败</li>
+</ul>
+<p>现在我们创建完成了 PV，如果我们需要使用这个 PV 的话，就需要创建一个对应的 PVC 来和他进行绑定了，就类似于我们的服务是通过 Pod 来运行的，而不是 Node，只是 Pod 跑在 Node 上而已。</p>
+<p>现在我们来创建一个 <code>PersistentVolumeClaim</code>，Pod 使用 PVC 来请求物理存储，我们这里创建的 PVC 请求至少 3G 容量的卷，该卷至少可以为一个节点提供读写访问，下面是 PVC 的配置文件：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># pvc-hostpath.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PersistentVolumeClaim</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">pvc-hostpath</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">storageClassName:</span> <span class="string">manual</span></span><br><span class="line">  <span class="attr">accessModes:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">ReadWriteOnce</span></span><br><span class="line">  <span class="attr">resources:</span></span><br><span class="line">    <span class="attr">requests:</span></span><br><span class="line">      <span class="attr">storage:</span> <span class="string">3Gi</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>同样我们可以直接创建这个 PVC 对象：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl create -f pvc-hostpath.yaml</span><br><span class="line">persistentvolumeclaim/pvc-hostpath created</span><br></pre></td></tr></table></figure>
+
+
+
+<p>创建 PVC 之后，Kubernetes 就会去查找满足我们声明要求的 PV，比如 <code>storageClassName</code>、<code>accessModes</code> 以及容量这些是否满足要求，如果满足要求就会将 PV 和 PVC 绑定在一起。</p>
+<p>注意</p>
+<p>需要注意的是目前 PV 和 PVC 之间是一对一绑定的关系，也就是说一个 PV 只能被一个 PVC 绑定。</p>
+<p>我们现在再次查看 PV 的信息：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl get pv -l type=local</span><br><span class="line">NAME          CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                  STORAGECLASS   REASON   AGE</span><br><span class="line">pv-hostpath   10Gi       RWO            Retain           Bound    default/pvc-hostpath   manual                  81m</span><br></pre></td></tr></table></figure>
+
+
+
+<p>现在输出的 STATUS 为 <code>Bound</code>，查看 PVC 的信息：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl get pvc pvc-hostpath</span><br><span class="line">NAME           STATUS   VOLUME        CAPACITY   ACCESS MODES   STORAGECLASS   AGE</span><br><span class="line">pvc-hostpath   Bound    pv-hostpath   10Gi       RWO            manual         6m47s</span><br></pre></td></tr></table></figure>
+
+
+
+<p>输出结果表明该 PVC 绑定了到了上面我们创建的 <code>pv-hostpath</code> 这个 PV 上面了，我们这里虽然声明的 3G 的容量，但是由于 PV 里面是 10G，所以显然也是满足要求的。</p>
+<p>PVC 准备好过后，接下来我们就可以来创建 Pod 了，该 Pod 使用上面我们声明的 PVC 作为存储卷：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># pv-hostpath-pod.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">pv-hostpath-pod</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">volumes:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">pv-hostpath</span></span><br><span class="line">      <span class="attr">persistentVolumeClaim:</span></span><br><span class="line">        <span class="attr">claimName:</span> <span class="string">pvc-hostpath</span></span><br><span class="line">  <span class="attr">nodeSelector:</span></span><br><span class="line">    <span class="attr">kubernetes.io/hostname:</span> <span class="string">node1</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">task-pv-container</span></span><br><span class="line">      <span class="attr">image:</span> <span class="string">nginx</span></span><br><span class="line">      <span class="attr">ports:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">80</span></span><br><span class="line">      <span class="attr">volumeMounts:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">mountPath:</span> <span class="string">&#x27;/usr/share/nginx/html&#x27;</span></span><br><span class="line">          <span class="attr">name:</span> <span class="string">pv-hostpath</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>这里需要注意的是，由于我们创建的 PV 真正的存储在节点 node1 上面，所以我们这里必须把 Pod 固定在这个节点下面，另外可以注意到 Pod 的配置文件指定了 <code>PersistentVolumeClaim</code>，但没有指定 <code>PersistentVolume</code>，对 Pod 而言，<code>PVC</code> 就是一个存储卷。直接创建这个 Pod 对象即可：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl create -f pv-hostpath-pod.yaml</span><br><span class="line">pod/pv-hostpath-pod created</span><br><span class="line">➜ kubectl get pod pv-hostpath-pod</span><br><span class="line">NAME              READY   STATUS    RESTARTS   AGE</span><br><span class="line">pv-hostpath-pod   1/1     Running   0          105s</span><br></pre></td></tr></table></figure>
+
+
+
+<p>运行成功后，我们可以打开一个 shell 访问 Pod 中的容器：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl exec -it pv-hostpath-pod -- /bin/bash</span><br></pre></td></tr></table></figure>
+
+
+
+<p>在 shell 中，我们可以验证 nginx 的数据 是否正在从 hostPath 卷提供 index.html 文件：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">root@pv-hostpath-pod:/# apt-get update</span><br><span class="line">root@pv-hostpath-pod:/# apt-get install curl -y</span><br><span class="line">root@pv-hostpath-pod:/# curl localhost</span><br><span class="line">Hello from Kubernetes hostpath storage</span><br></pre></td></tr></table></figure>
+
+
+
+<p>我们可以看到输出结果是我们前面写到 hostPath 卷种的 index.html 文件中的内容，同样我们可以把 Pod 删除，然后再次重建再测试一次，可以发现内容还是我们在 hostPath 种设置的内容。</p>
+<p>我们在持久化容器数据的时候使用 PV&#x2F;PVC 有什么好处呢？比如我们这里之前直接在 Pod 下面也可以使用 hostPath 来持久化数据，为什么还要费劲去创建 PV、PVC 对象来引用呢？PVC 和 PV 的设计，其实跟<code>“面向对象”</code>的思想完全一致，PVC 可以理解为持久化存储的“接口”，它提供了对某种持久化存储的描述，但不提供具体的实现；而这个持久化存储的实现部分则由 PV 负责完成。这样做的好处是，作为应用开发者，我们只需要跟 PVC 这个“接口”打交道，而不必关心具体的实现是 hostPath、NFS 还是 Ceph。毕竟这些存储相关的知识太专业了，应该交给专业的人去做，这样对于我们的 Pod 来说就不用管具体的细节了，你只需要给我一个可用的 PVC 即可了，这样是不是就完全屏蔽了细节和解耦了啊，所以我们更应该使用 PV、PVC 这种方式。</p>
+<h2 id="Local-PV"><a href="#Local-PV" class="headerlink" title="Local PV"></a>Local PV</h2><p>上面我们创建了后端是 hostPath 类型的 PV 资源对象，我们也提到了，使用 hostPath 有一个局限性就是，我们的 Pod 不能随便漂移，需要固定到一个节点上，因为一旦漂移到其他节点上去了宿主机上面就没有对应的数据了，所以我们在使用 hostPath 的时候都会搭配 nodeSelector 来进行使用。但是使用 hostPath 明显也有一些好处的，因为 PV 直接使用的是本地磁盘，尤其是 SSD 盘，它的读写性能相比于大多数远程存储来说，要好得多，所以对于一些对磁盘 IO 要求比较高的应用比如 etcd 就非常实用了。不过呢，相比于正常的 PV 来说，使用了 hostPath 的这些节点一旦宕机数据就可能丢失，所以这就要求使用 hostPath 的应用必须具备数据备份和恢复的能力，允许你把这些数据定时备份在其他位置。</p>
+<p>所以在 hostPath 的基础上，Kubernetes 依靠 PV、PVC 实现了一个新的特性，这个特性的名字叫作：<code>Local Persistent Volume</code>，也就是我们说的 <code>Local PV</code>。</p>
+<p>其实 <code>Local PV</code> 实现的功能就非常类似于 <code>hostPath</code> 加上 <code>nodeAffinity</code>，比如，一个 Pod 可以声明使用类型为 Local 的 PV，而这个 PV 其实就是一个 hostPath 类型的 Volume。如果这个 hostPath 对应的目录，已经在节点 A 上被事先创建好了，那么，我只需要再给这个 Pod 加上一个 <code>nodeAffinity=nodeA</code>，不就可以使用这个 Volume 了吗？理论上确实是可行的，但是事实上，我们绝不应该把一个宿主机上的目录当作 PV 来使用，因为本地目录的存储行为是完全不可控，它所在的磁盘随时都可能被应用写满，甚至造成整个宿主机宕机。所以，一般来说 <code>Local PV</code> 对应的存储介质是一块额外挂载在宿主机的磁盘或者块设备，我们可以认为就是<code>“一个 PV 一块盘”</code>。</p>
+<p>另外一个 <code>Local PV</code> 和普通的 PV 有一个很大的不同在于 <code>Local PV</code> 可以保证 Pod 始终能够被正确地调度到它所请求的 <code>Local PV</code> 所在的节点上面，对于普通的 PV 来说，Kubernetes 都是先调度 Pod 到某个节点上，然后再持久化节点上的 Volume 目录，进而完成 Volume 目录与容器的绑定挂载，但是对于 <code>Local PV</code> 来说，节点上可供使用的磁盘必须是提前准备好的，因为它们在不同节点上的挂载情况可能完全不同，甚至有的节点可以没这种磁盘，所以，这时候，调度器就必须能够知道所有节点与 <code>Local PV</code> 对应的磁盘的关联关系，然后根据这个信息来调度 Pod，实际上就是在调度的时候考虑 Volume 的分布。</p>
+<p>接下来我们来测试下 <code>Local PV</code> 的使用，当然按照上面我们的分析我们应该给宿主机挂载并格式化一个可用的磁盘，我们这里就暂时将 node1 节点上的 <code>/data/k8s/localpv</code> 这个目录看成是挂载的一个独立的磁盘。现在我们来声明一个 <code>Local PV</code> 类型的 PV，如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># pv-local.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PersistentVolume</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">pv-local</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">capacity:</span></span><br><span class="line">    <span class="attr">storage:</span> <span class="string">5Gi</span></span><br><span class="line">  <span class="attr">volumeMode:</span> <span class="string">Filesystem</span></span><br><span class="line">  <span class="attr">accessModes:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">ReadWriteOnce</span></span><br><span class="line">  <span class="attr">persistentVolumeReclaimPolicy:</span> <span class="string">Delete</span></span><br><span class="line">  <span class="attr">storageClassName:</span> <span class="string">local-storage</span></span><br><span class="line">  <span class="attr">local:</span></span><br><span class="line">    <span class="attr">path:</span> <span class="string">/data/k8s/localpv</span> <span class="comment"># node1节点上的目录</span></span><br><span class="line">  <span class="attr">nodeAffinity:</span></span><br><span class="line">    <span class="attr">required:</span></span><br><span class="line">      <span class="attr">nodeSelectorTerms:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">matchExpressions:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">key:</span> <span class="string">kubernetes.io/hostname</span></span><br><span class="line">              <span class="attr">operator:</span> <span class="string">In</span></span><br><span class="line">              <span class="attr">values:</span></span><br><span class="line">                <span class="bullet">-</span> <span class="string">node1</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>和前面我们定义的 PV 不同，我们这里定义了一个 <code>local</code> 字段，表明它是一个 <code>Local PV</code>，而 path 字段，指定的正是这个 PV 对应的本地磁盘的路径，即：<code>/data/k8s/localpv</code>，这也就意味着如果 Pod 要想使用这个 PV，那它就必须运行在 node1 节点上。所以，在这个 PV 的定义里，添加了一个节点亲和性 <code>nodeAffinity</code> 字段指定 node1 这个节点。这样，调度器在调度 Pod 的时候，就能够知道一个 PV 与节点的对应关系，从而做出正确的选择。</p>
+<p>直接创建上面的资源对象：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl apply -f pv-local.yaml</span><br><span class="line">persistentvolume/pv-local created</span><br><span class="line">➜ kubectl get pv</span><br><span class="line">NAME      CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS  CLAIM      STORAGECLASS      REASON   AGE</span><br><span class="line">pv-local  5Gi        RWO            Delete           Available          local-storage              24s</span><br></pre></td></tr></table></figure>
+
+
+
+<p>可以看到，这个 PV 创建后，进入了 <code>Available</code>（可用）状态。这个时候如果按照前面提到的，我们要使用这个 <code>Local PV</code> 的话就需要去创建一个 PVC 和他进行绑定：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># pvc-local.yaml</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PersistentVolumeClaim</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">pvc-local</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">accessModes:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">ReadWriteOnce</span></span><br><span class="line">  <span class="attr">resources:</span></span><br><span class="line">    <span class="attr">requests:</span></span><br><span class="line">      <span class="attr">storage:</span> <span class="string">5Gi</span></span><br><span class="line">  <span class="attr">storageClassName:</span> <span class="string">local-storage</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>同样要注意声明的这些属性需要和上面的 PV 对应，直接创建这个资源对象：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl apply -f pvc-local.yaml</span><br><span class="line">persistentvolumeclaim/pvc-local created</span><br><span class="line">➜ kubectl get pvc</span><br><span class="line">NAME           STATUS   VOLUME        CAPACITY   ACCESS MODES   STORAGECLASS    AGE</span><br><span class="line">pvc-local      Bound    pv-local      5Gi        RWO            local-storage   38s</span><br></pre></td></tr></table></figure>
+
+
+
+<p>可以看到现在 PVC 和 PV 已经处于 <code>Bound</code> 绑定状态了。但实际上这是不符合我们的需求的，比如现在我们的 Pod 声明使用这个 pvc-local，并且我们也明确规定，这个 Pod 只能运行在 node2 这个节点上，如果按照上面我们这里的操作，这个 pvc-local 是不是就和我们这里的 pv-local 这个 <code>Local PV</code> 绑定在一起了，但是这个 PV 的存储卷又在 node1 这个节点上，显然就会出现冲突了，那么这个 Pod 的调度肯定就会失败了，所以我们在使用 <code>Local PV</code> 的时候，必须想办法延迟这个<code>“绑定”</code>操作。</p>
+<p>要怎么来实现这个延迟绑定呢？我们可以通过创建 <code>StorageClass</code> 来指定这个动作，在 StorageClass 种有一个 <code>volumeBindingMode=WaitForFirstConsumer</code> 的属性，就是告诉 Kubernetes 在发现这个 StorageClass 关联的 PVC 与 PV 可以绑定在一起，但不要现在就立刻执行绑定操作（即：设置 PVC 的 VolumeName 字段），而是要等到第一个声明使用该 PVC 的 Pod 出现在调度器之后，调度器再综合考虑所有的调度规则，当然也包括每个 PV 所在的节点位置，来统一决定，这个 Pod 声明的 PVC，到底应该跟哪个 PV 进行绑定。通过这个延迟绑定机制，原本实时发生的 PVC 和 PV 的绑定过程，就被延迟到了 Pod 第一次调度的时候在调度器中进行，从而保证了这个绑定结果不会影响 Pod 的正常调度。</p>
+<p>所以我们需要创建对应的 <code>StorageClass</code> 对象：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># local-storageclass.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">storage.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">StorageClass</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">local-storage</span></span><br><span class="line"><span class="attr">provisioner:</span> <span class="string">kubernetes.io/no-provisioner</span></span><br><span class="line"><span class="attr">volumeBindingMode:</span> <span class="string">WaitForFirstConsumer</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>这个 <code>StorageClass</code> 的名字，叫作 local-storage，也就是我们在 PV 中声明的，需要注意的是，在它的 <code>provisioner</code> 字段，我们指定的是 <code>no-provisioner</code>。这是因为我们这里是手动创建的 PV，所以不需要动态来生成 PV，另外这个 StorageClass 还定义了一个 <code>volumeBindingMode=WaitForFirstConsumer</code> 的属性，它是 <code>Local PV</code> 里一个非常重要的特性，即：<strong>延迟绑定</strong>。通过这个延迟绑定机制，原本实时发生的 PVC 和 PV 的绑定过程，就被延迟到了 Pod 第一次调度的时候在调度器中进行，从而保证了这个绑定结果不会影响 Pod 的正常调度。</p>
+<p>现在我们来创建这个 StorageClass 资源对象：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl apply -f local-storageclass.yaml</span><br><span class="line">storageclass.storage.k8s.io/local-storage created</span><br></pre></td></tr></table></figure>
+
+
+
+<p>现在我们重新删除上面声明的 PVC 对象，重新创建：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl delete -f pvc-local.yaml</span><br><span class="line">persistentvolumeclaim &quot;pvc-local&quot; deleted</span><br><span class="line">➜ kubectl create -f pvc-local.yaml</span><br><span class="line">persistentvolumeclaim/pvc-local created</span><br><span class="line">➜ kubectl get pvc</span><br><span class="line">NAME           STATUS    VOLUME        CAPACITY   ACCESS MODES   STORAGECLASS    AGE</span><br><span class="line">pvc-local      Pending                                           local-storage   3s</span><br></pre></td></tr></table></figure>
+
+
+
+<p>我们可以发现这个时候，集群中即使已经存在了一个可以与 PVC 匹配的 PV 了，但这个 PVC 依然处于 <code>Pending</code> 状态，也就是等待绑定的状态，这就是因为上面我们配置的是延迟绑定，需要在真正的 Pod 使用的时候才会来做绑定。</p>
+<p>同样我们声明一个 Pod 来使用这里的 pvc-local 这个 PVC，资源对象如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># pv-local-pod.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">pv-local-pod</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">volumes:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">example-pv-local</span></span><br><span class="line">      <span class="attr">persistentVolumeClaim:</span></span><br><span class="line">        <span class="attr">claimName:</span> <span class="string">pvc-local</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">example-pv-local</span></span><br><span class="line">      <span class="attr">image:</span> <span class="string">nginx</span></span><br><span class="line">      <span class="attr">ports:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">80</span></span><br><span class="line">      <span class="attr">volumeMounts:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">mountPath:</span> <span class="string">/usr/share/nginx/html</span></span><br><span class="line">          <span class="attr">name:</span> <span class="string">example-pv-local</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>直接创建这个 Pod：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl apply -f pv-local-pod.yaml</span><br><span class="line">pod/pv-local-pod created</span><br></pre></td></tr></table></figure>
+
+
+
+<p>创建完成后我们这个时候去查看前面我们声明的 PVC，会立刻变成 <code>Bound</code> 状态，与前面定义的 PV 绑定在了一起：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl get pvc</span><br><span class="line">NAME           STATUS   VOLUME        CAPACITY   ACCESS MODES   STORAGECLASS    AGE</span><br><span class="line">pvc-local      Bound    pv-local      5Gi        RWO            local-storage   4m59s</span><br></pre></td></tr></table></figure>
+
+
+
+<p>这时候，我们可以尝试在这个 Pod 的 Volume 目录里，创建一个测试文件，比如：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl exec -it pv-local-pod /bin/sh</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">cd</span> /usr/share/nginx/html</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">echo</span> <span class="string">&quot;Hello from Kubernetes local pv storage&quot;</span> &gt; test.txt</span></span><br><span class="line"><span class="meta prompt_">#</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>然后，登录到 node1 这台机器上，查看一下它的 <code>/data/k8s/localpv</code> 目录下的内容，你就可以看到刚刚创建的这个文件：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在node1节点上</span></span><br><span class="line">➜ ls /data/k8s/localpv</span><br><span class="line">test.txt</span><br><span class="line">➜ cat /data/k8s/localpv/test.txt</span><br><span class="line">Hello from Kubernetes local pv storage</span><br></pre></td></tr></table></figure>
+
+
+
+<p>如果重新创建这个 Pod 的话，就会发现，我们之前创建的测试文件，依然被保存在这个持久化 Volume 当中：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl delete -f pv-local-pod.yaml</span><br><span class="line">➜ kubectl apply -f pv-local-pod.yaml</span><br><span class="line">➜ kubectl exec -it pv-local-pod /bin/sh</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">ls</span> /usr/share/nginx/html</span></span><br><span class="line">test.txt</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">cat</span> /usr/share/nginx/html/test.txt</span></span><br><span class="line">Hello from Kubernetes local pv storage</span><br><span class="line"><span class="meta prompt_">#</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>到这里就说明基于本地存储的 Volume 是完全可以提供容器持久化存储功能的，对于 StatefulSet 这样的有状态的资源对象，也完全可以通过声明 Local 类型的 PV 和 PVC，来管理应用的存储状态。</p>
+<p>需要注意的是，我们上面手动创建 PV 的方式，即静态的 PV 管理方式，在删除 PV 时需要按如下流程执行操作：</p>
+<ul>
+<li>删除使用这个 PV 的 Pod</li>
+<li>从宿主机移除本地磁盘</li>
+<li>删除 PVC</li>
+<li>删除 PV</li>
+</ul>
+<p>如果不按照这个流程的话，这个 PV 的删除就会失败。</p>
+<p><a target="_blank" rel="noopener" href="https://docs.youdianzhishi.com/k8s/scheduler/qos/">
+</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/LocalDNS/" rel="prev" title="LocalDNS">
+      <i class="fa fa-chevron-left"></i> LocalDNS
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Linux%E7%9A%84%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9B%AE%E5%BD%95%E5%B1%82%E6%AC%A1/" rel="next" title="Linux的文件系统目录层次">
+      Linux的文件系统目录层次 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Local-%E5%AD%98%E5%82%A8"><span class="nav-number">1.</span> <span class="nav-text">Local 存储</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E5%BF%B5"><span class="nav-number">1.1.</span> <span class="nav-text">概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#hostPath"><span class="nav-number">1.2.</span> <span class="nav-text">hostPath</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Local-PV"><span class="nav-number">1.3.</span> <span class="nav-text">Local PV</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

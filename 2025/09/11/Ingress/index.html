@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Ingress前面我们学习了在 Kubernetes 集群内部使用 kube-dns 实现服务发现的功能，那么我们部署在 Kubernetes 集群中的应用如何暴露给外部的用户使用呢？我们知道可以使用 NodePort 和 LoadBlancer 类型的 Service 可以把应用暴露给外部用户使用，除此之外，Kubernetes 还为我们提供了一个非常重要的资源对象可以用来暴露服务给外部用户，那">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ingress">
+<meta property="og:url" content="http://example.com/2025/09/11/Ingress/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="Ingress前面我们学习了在 Kubernetes 集群内部使用 kube-dns 实现服务发现的功能，那么我们部署在 Kubernetes 集群中的应用如何暴露给外部的用户使用呢？我们知道可以使用 NodePort 和 LoadBlancer 类型的 Service 可以把应用暴露给外部用户使用，除此之外，Kubernetes 还为我们提供了一个非常重要的资源对象可以用来暴露服务给外部用户，那">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/q1mcnt.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/6s4hd5.png">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:39:56.569Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://mudutestmenu.mudu.tv/upload/q1mcnt.png">
+
+<link rel="canonical" href="http://example.com/2025/09/11/Ingress/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Ingress | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Ingress/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Ingress
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:39:56" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E7%BD%91%E7%BB%9C/" itemprop="url" rel="index"><span itemprop="name">网络</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>7.4k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>7 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Ingress"><a href="#Ingress" class="headerlink" title="Ingress"></a>Ingress</h1><p>前面我们学习了在 Kubernetes 集群内部使用 kube-dns 实现服务发现的功能，那么我们部署在 Kubernetes 集群中的应用如何暴露给外部的用户使用呢？我们知道可以使用 <code>NodePort</code> 和 <code>LoadBlancer</code> 类型的 Service 可以把应用暴露给外部用户使用，除此之外，Kubernetes 还为我们提供了一个非常重要的资源对象可以用来暴露服务给外部用户，那就是 <code>Ingress</code>。对于小规模的应用我们使用 NodePort 或许能够满足我们的需求，但是当你的应用越来越多的时候，你就会发现对于 NodePort 的管理就非常麻烦了，这个时候使用 Ingress 就非常方便了，可以避免管理大量的端口。</p>
+<h2 id="资源对象"><a href="#资源对象" class="headerlink" title="资源对象"></a>资源对象</h2><p><code>Ingress</code> 资源对象是 Kubernetes 内置定义的一个对象，是从 Kuberenets 集群外部访问集群的一个入口，将外部的请求转发到集群内不同的 Service 上，其实就相当于 nginx、haproxy 等负载均衡代理服务器，可能你会觉得我们直接使用 nginx 就实现了，但是只使用 nginx 这种方式有很大缺陷，每次有新服务加入的时候怎么改 Nginx 配置？不可能让我们去手动更改或者滚动更新前端的 Nginx Pod 吧？那我们再加上一个服务发现的工具比如 consul 如何？貌似是可以，对吧？Ingress 实际上就是这样实现的，只是服务发现的功能自己实现了，不需要使用第三方的服务了，然后再加上一个域名规则定义，路由信息的刷新依靠 Ingress Controller 来提供。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/q1mcnt.png" alt="ingress flow"></p>
+<p>Ingress Controller 可以理解为一个监听器，通过不断地监听 kube-apiserver，实时的感知后端 Service、Pod 的变化，当得到这些信息变化后，Ingress Controller 再结合 Ingress 的配置，更新反向代理负载均衡器，达到服务发现的作用。其实这点和服务发现工具 consul、 consul-template 非常类似。</p>
+<h2 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h2><p>一个常见的 Ingress 资源清单如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Ingress</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">demo-ingress</span></span><br><span class="line">  <span class="attr">annotations:</span></span><br><span class="line">    <span class="attr">nginx.ingress.kubernetes.io/rewrite-target:</span> <span class="string">/</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">rules:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">http:</span></span><br><span class="line">        <span class="attr">paths:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="attr">path:</span> <span class="string">/testpath</span></span><br><span class="line">            <span class="attr">pathType:</span> <span class="string">Prefix</span></span><br><span class="line">            <span class="attr">backend:</span></span><br><span class="line">              <span class="attr">service:</span></span><br><span class="line">                <span class="attr">name:</span> <span class="string">test</span></span><br><span class="line">                <span class="attr">port:</span></span><br><span class="line">                  <span class="attr">number:</span> <span class="number">80</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>上面这个 Ingress 资源的定义，配置了一个路径为 <code>/testpath</code> 的路由，所有 <code>/testpath/**</code> 的入站请求，会被 Ingress 转发至名为 test 的服务的 80 端口的 <code>/</code> 路径下。可以将 Ingress 狭义的理解为 Nginx 中的配置文件 <code>nginx.conf</code>。</p>
+<p>此外 Ingress 经常使用注解 <code>annotations</code> 来配置一些选项，当然这具体取决于 Ingress 控制器的实现方式，不同的 Ingress 控制器支持不同的注解。</p>
+<p>另外需要注意的是当前集群版本是 <code>v1.22</code>，这里使用的 apiVersion 是 <code>networking.k8s.io/v1</code>，所以如果是之前版本的 Ingress 资源对象需要进行迁移。 Ingress 资源清单的描述我们可以使用 <code>kubectl explain</code> 命令来了解：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl explain ingress.spec</span><br><span class="line">KIND:     Ingress</span><br><span class="line">VERSION:  networking.k8s.io/v1</span><br><span class="line"></span><br><span class="line">RESOURCE: spec &lt;Object&gt;</span><br><span class="line"></span><br><span class="line">DESCRIPTION:</span><br><span class="line">     Spec is the desired state of the Ingress. More info:</span><br><span class="line">     https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status</span><br><span class="line"></span><br><span class="line">     IngressSpec describes the Ingress the user wishes to exist.</span><br><span class="line"></span><br><span class="line">FIELDS:</span><br><span class="line">   defaultBackend       &lt;Object&gt;</span><br><span class="line">     DefaultBackend is the backend that should handle requests that don&#x27;t match</span><br><span class="line">     any rule. If Rules are not specified, DefaultBackend must be specified. If</span><br><span class="line">     DefaultBackend is not set, the handling of requests that do not match any</span><br><span class="line">     of the rules will be up to the Ingress controller.</span><br><span class="line"></span><br><span class="line">   ingressClassName     &lt;string&gt;</span><br><span class="line">     IngressClassName is the name of the IngressClass cluster resource. The</span><br><span class="line">     associated IngressClass defines which controller will implement the</span><br><span class="line">     resource. This replaces the deprecated `kubernetes.io/ingress.class`</span><br><span class="line">     annotation. For backwards compatibility, when that annotation is set, it</span><br><span class="line">     must be given precedence over this field. The controller may emit a warning</span><br><span class="line">     if the field and annotation have different values. Implementations of this</span><br><span class="line">     API should ignore Ingresses without a class specified. An IngressClass</span><br><span class="line">     resource may be marked as default, which can be used to set a default value</span><br><span class="line">     for this field. For more information, refer to the IngressClass</span><br><span class="line">     documentation.</span><br><span class="line"></span><br><span class="line">   rules        &lt;[]Object&gt;</span><br><span class="line">     A list of host rules used to configure the Ingress. If unspecified, or no</span><br><span class="line">     rule matches, all traffic is sent to the default backend.</span><br><span class="line"></span><br><span class="line">   tls  &lt;[]Object&gt;</span><br><span class="line">     TLS configuration. Currently the Ingress only supports a single TLS port,</span><br><span class="line">     443. If multiple members of this list specify different hosts, they will be</span><br><span class="line">     multiplexed on the same port according to the hostname specified through</span><br><span class="line">     the SNI TLS extension, if the ingress controller fulfilling the ingress</span><br><span class="line">     supports SNI.</span><br></pre></td></tr></table></figure>
+
+
+
+<p>从上面描述可以看出 Ingress 资源对象中有几个重要的属性：<code>defaultBackend</code>、<code>ingressClassName</code>、<code>rules</code>、<code>tls</code>。</p>
+<h3 id="rules"><a href="#rules" class="headerlink" title="rules"></a>rules</h3><p>其中核心部分是 <code>rules</code> 属性的配置，每个路由规则都在下面进行配置：</p>
+<ul>
+<li><code>host</code>：可选字段，上面我们没有指定 host 属性，所以该规则适用于通过指定 IP 地址的所有入站 HTTP 通信，如果提供了 host 域名，则 <code>rules</code> 则会匹配该域名的相关请求，此外 <code>host</code> 主机名可以是精确匹配（例如 <code>foo.bar.com</code>）或者使用通配符来匹配（例如 <code>*.foo.com</code>）。</li>
+<li><code>http.paths</code>：定义访问的路径列表，比如上面定义的 <code>/testpath</code>，每个路径都有一个由 <code>backend.service.name</code> 和 <code>backend.service.port.number</code> 定义关联的 Service 后端，在控制器将流量路由到引用的服务之前，<code>host</code> 和 <code>path</code> 都必须匹配传入的请求才行。</li>
+<li><code>backend</code>：该字段其实就是用来定义后端的 Service 服务的，与路由规则中 <code>host</code> 和 <code>path</code> 匹配的流量会将发送到对应的 backend 后端去。</li>
+</ul>
+<blockquote>
+<p>此外一般情况下在 Ingress 控制器中会配置一个 <code>defaultBackend</code> 默认后端，当请求不匹配任何 Ingress 中的路由规则的时候会使用该后端。<code>defaultBackend</code> 通常是 Ingress 控制器的配置选项，而非在 Ingress 资源中指定。</p>
+</blockquote>
+<h3 id="Resource"><a href="#Resource" class="headerlink" title="Resource"></a>Resource</h3><p><code>backend</code> 后端除了可以引用一个 Service 服务之外，还可以通过一个 <code>resource</code> 资源进行关联，<code>Resource</code> 是当前 Ingress 对象命名空间下引用的另外一个 Kubernetes 资源对象，但是需要注意的是 <code>Resource</code> 与 <code>Service</code> 配置是互斥的，只能配置一个，<code>Resource</code> 后端的一种常见用法是将所有入站数据导向带有静态资产的对象存储后端，如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Ingress</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">ingress-resource-backend</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">rules:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">http:</span></span><br><span class="line">        <span class="attr">paths:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="attr">path:</span> <span class="string">/icons</span></span><br><span class="line">            <span class="attr">pathType:</span> <span class="string">ImplementationSpecific</span></span><br><span class="line">            <span class="attr">backend:</span></span><br><span class="line">              <span class="attr">resource:</span></span><br><span class="line">                <span class="attr">apiGroup:</span> <span class="string">k8s.example.com</span></span><br><span class="line">                <span class="attr">kind:</span> <span class="string">StorageBucket</span></span><br><span class="line">                <span class="attr">name:</span> <span class="string">icon-assets</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>该 Ingress 资源对象描述了所有的 <code>/icons</code> 请求会被路由到同命名空间下的名为 <code>icon-assets</code> 的 <code>StorageBucket</code> 资源中去进行处理。</p>
+<h3 id="pathType"><a href="#pathType" class="headerlink" title="pathType"></a>pathType</h3><p>上面的示例中在定义路径规则的时候都指定了一个 <code>pathType</code> 的字段，事实上每个路径都需要有对应的路径类型，当前支持的路径类型有三种：</p>
+<ul>
+<li><code>ImplementationSpecific</code>：该路径类型的匹配方法取决于 <code>IngressClass</code>，具体实现可以将其作为单独的 pathType 处理或者与 <code>Prefix</code> 或 <code>Exact</code> 类型作相同处理。</li>
+<li><code>Exact</code>：精确匹配 URL 路径，且区分大小写。</li>
+<li><code>Prefix</code>：基于以 <code>/</code> 分隔的 URL 路径前缀匹配，匹配区分大小写，并且对路径中的元素逐个完成，路径元素指的是由 <code>/</code> 分隔符分隔的路径中的标签列表。</li>
+</ul>
+<p><code>Exact</code> 比较简单，就是需要精确匹配 URL 路径，对于 <code>Prefix</code> 前缀匹配，需要注意如果路径的最后一个元素是请求路径中最后一个元素的子字符串，则不会匹配，例如 <code>/foo/bar</code> 可以匹配 <code>/foo/bar/baz</code>, 但不匹配 <code>/foo/barbaz</code>，可以查看下表了解更多的匹配场景（来自官网）：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/6s4hd5.png" alt="示例"></p>
+<blockquote>
+<p>在某些情况下，Ingress 中的多条路径会匹配同一个请求，这种情况下最长的匹配路径优先，如果仍然有两条同等的匹配路径，则精确路径类型优先于前缀路径类型。</p>
+</blockquote>
+<h3 id="IngressClass"><a href="#IngressClass" class="headerlink" title="IngressClass"></a>IngressClass</h3><p>Kubernetes 1.18 起，正式提供了一个 <code>IngressClass</code> 资源，作用与 <code>kubernetes.io/ingress.class</code> 注解类似，因为可能在集群中有多个 Ingress 控制器，可以通过该对象来定义我们的控制器，例如：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">IngressClass</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">external-lb</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">controller:</span> <span class="string">nginx-ingress-internal-controller</span></span><br><span class="line">  <span class="attr">parameters:</span></span><br><span class="line">    <span class="attr">apiGroup:</span> <span class="string">k8s.example.com</span></span><br><span class="line">    <span class="attr">kind:</span> <span class="string">IngressParameters</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">external-lb</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>其中重要的属性是 <code>metadata.name</code> 和 <code>spec.controller</code>，前者是这个 <code>IngressClass</code> 的名称，需要设置在 Ingress 中，后者是 Ingress 控制器的名称。</p>
+<p>Ingress 中的 <code>spec.ingressClassName</code> 属性就可以用来指定对应的 IngressClass，并进而由 IngressClass 关联到对应的 Ingress 控制器，如：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Ingress</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">myapp</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">ingressClassName:</span> <span class="string">external-lb</span> <span class="comment"># 上面定义的 IngressClass 对象名称</span></span><br><span class="line">  <span class="attr">defaultBackend:</span></span><br><span class="line">    <span class="attr">service:</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">myapp</span></span><br><span class="line">      <span class="attr">port:</span></span><br><span class="line">        <span class="attr">number:</span> <span class="number">80</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>不过需要注意的是 <code>spec.ingressClassName</code> 与老版本的 <code>kubernetes.io/ingress.class</code> 注解的作用并不完全相同，因为 <code>ingressClassName</code> 字段引用的是 <code>IngressClass</code> 资源的名称，<code>IngressClass</code> 资源中除了指定了 Ingress 控制器的名称之外，还可能会通过 <code>spec.parameters</code> 属性定义一些额外的配置。</p>
+<p>比如 <code>parameters</code> 字段有一个 <code>scope</code> 和 <code>namespace</code> 字段，可用来引用特定于命名空间的资源，对 Ingress 类进行配置。 <code>scope</code> 字段默认为 <code>Cluster</code>，表示默认是集群作用域的资源。将 <code>scope</code> 设置为 <code>Namespace</code> 并设置 <code>namespace</code> 字段就可以引用某特定命名空间中的参数资源，比如：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">IngressClass</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">external-lb</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">controller:</span> <span class="string">nginx-ingress-internal-controller</span></span><br><span class="line">  <span class="attr">parameters:</span></span><br><span class="line">    <span class="attr">apiGroup:</span> <span class="string">k8s.example.com</span></span><br><span class="line">    <span class="attr">kind:</span> <span class="string">IngressParameters</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">external-lb</span></span><br><span class="line">    <span class="attr">namespace:</span> <span class="string">external-configuration</span></span><br><span class="line">    <span class="attr">scope:</span> <span class="string">Namespace</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>由于一个集群中可能有多个 Ingress 控制器，所以我们还可以将一个特定的 <code>IngressClass</code> 对象标记为集群默认是 Ingress 类。只需要将一个 IngressClass 资源的 <code>ingressclass.kubernetes.io/is-default-class</code> 注解设置为 true 即可，这样未指定 <code>ingressClassName</code> 字段的 Ingress 就会使用这个默认的 IngressClass。</p>
+<blockquote>
+<p>如果集群中有多个 <code>IngressClass</code> 被标记为默认，准入控制器将阻止创建新的未指定 <code>ingressClassName</code> 的 Ingress 对象。最好的方式还是确保集群中最多只能有一个 <code>IngressClass</code> 被标记为默认。</p>
+</blockquote>
+<h3 id="TLS"><a href="#TLS" class="headerlink" title="TLS"></a>TLS</h3><p>Ingress 资源对象还可以用来配置 Https 的服务，可以通过设定包含 TLS 私钥和证书的 Secret 来保护 Ingress。 Ingress 只支持单个 TLS 端口 443，如果 Ingress 中的 TLS 配置部分指定了不同的主机，那么它们将根据通过 SNI TLS 扩展指定的主机名 （如果 Ingress 控制器支持 SNI）在同一端口上进行复用。需要注意 TLS Secret 必须包含名为 <code>tls.crt</code> 和 <code>tls.key</code> 的键名，例如：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Secret</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">testsecret-tls</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">default</span></span><br><span class="line"><span class="attr">data:</span></span><br><span class="line">  <span class="attr">tls.crt:</span> <span class="string">base64</span> <span class="string">编码的</span> <span class="string">cert</span></span><br><span class="line">  <span class="attr">tls.key:</span> <span class="string">base64</span> <span class="string">编码的</span> <span class="string">key</span></span><br><span class="line"><span class="attr">type:</span> <span class="string">kubernetes.io/tls</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>在 Ingress 中引用此 Secret 将会告诉 Ingress 控制器使用 TLS 加密从客户端到负载均衡器的通道，我们需要确保创建的 TLS Secret 创建自包含 <code>https-example.foo.com</code> 的公用名称的证书，如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Ingress</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">tls-example-ingress</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">tls:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">hosts:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">https-example.foo.com</span></span><br><span class="line">      <span class="attr">secretName:</span> <span class="string">testsecret-tls</span></span><br><span class="line">  <span class="attr">rules:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">host:</span> <span class="string">https-example.foo.com</span></span><br><span class="line">      <span class="attr">http:</span></span><br><span class="line">        <span class="attr">paths:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="attr">path:</span> <span class="string">/</span></span><br><span class="line">            <span class="attr">pathType:</span> <span class="string">Prefix</span></span><br><span class="line">            <span class="attr">backend:</span></span><br><span class="line">              <span class="attr">service:</span></span><br><span class="line">                <span class="attr">name:</span> <span class="string">service1</span></span><br><span class="line">                <span class="attr">port:</span></span><br><span class="line">                  <span class="attr">number:</span> <span class="number">80</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>现在我们了解了如何定义 Ingress 资源对象了，但是仅创建 Ingress 资源本身没有任何效果。还需要部署 Ingress 控制器，例如 <code>ingress-nginx</code>，现在可以供大家使用的 Ingress 控制器有很多，比如 traefik、nginx-controller、Kubernetes Ingress Controller for Kong、HAProxy Ingress controller，当然你也可以自己实现一个 Ingress Controller，现在普遍用得较多的是 traefik 和 ingress-nginx，traefik 的性能比 ingress-nginx 差，但是配置使用要简单许多，我们这里会重点给大家介绍 ingress-nginx、traefik 以及 apisix 的使用。</p>
+<blockquote>
+<p>实际上社区目前还在开发一组高配置能力的 API，被称为 <a target="_blank" rel="noopener" href="https://gateway-api.sigs.k8s.io/">Service API</a>，新 API 会提供一种 Ingress 的替代方案，它的存在目的不是替代 Ingress，而是提供一种更具配置能力的新方案。</p>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Job%20%E4%B8%8E%20CronJob/" rel="prev" title="Job 与 CronJob">
+      <i class="fa fa-chevron-left"></i> Job 与 CronJob
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/ICMP/" rel="next" title="ICMP">
+      ICMP <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Ingress"><span class="nav-number">1.</span> <span class="nav-text">Ingress</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B5%84%E6%BA%90%E5%AF%B9%E8%B1%A1"><span class="nav-number">1.1.</span> <span class="nav-text">资源对象</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9A%E4%B9%89"><span class="nav-number">1.2.</span> <span class="nav-text">定义</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#rules"><span class="nav-number">1.2.1.</span> <span class="nav-text">rules</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Resource"><span class="nav-number">1.2.2.</span> <span class="nav-text">Resource</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#pathType"><span class="nav-number">1.2.3.</span> <span class="nav-text">pathType</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#IngressClass"><span class="nav-number">1.2.4.</span> <span class="nav-text">IngressClass</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TLS"><span class="nav-number">1.2.5.</span> <span class="nav-text">TLS</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="云原生可观测平台 OpenObserveOpenObserve（简称 O2）是一个用 Rust 开发的开源云原生可观测平台，专为日志、指标、追踪而构建，设计用于 PB 级工作。  与需要理解和调整大量配置置的 Elasticsearch 相比，它简单且易于操作。在 2 分钟内即可启动并运行 OpenObserve。对于使用 API 获取数据并执行搜索的用户来说，OpenObserve 可以无缝替代">
+<meta property="og:type" content="article">
+<meta property="og:title" content="云原生可观测平台 OpenObserve">
+<meta property="og:url" content="http://example.com/2025/09/11/%E4%BA%91%E5%8E%9F%E7%94%9F%E5%8F%AF%E8%A7%82%E6%B5%8B%E5%B9%B3%E5%8F%B0%20OpenObserve/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="云原生可观测平台 OpenObserveOpenObserve（简称 O2）是一个用 Rust 开发的开源云原生可观测平台，专为日志、指标、追踪而构建，设计用于 PB 级工作。  与需要理解和调整大量配置置的 Elasticsearch 相比，它简单且易于操作。在 2 分钟内即可启动并运行 OpenObserve。对于使用 API 获取数据并执行搜索的用户来说，OpenObserve 可以无缝替代">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/wlukje.png">
+<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1724479963977.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/89qru9.png">
+<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1724480272710.png">
+<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1724480321568.png">
+<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1724481289414.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/nln9vj.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/gmomqz.png">
+<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1724494812951.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/48nrag.png">
+<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1724550564527.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/joltik.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/9vqjlu.png">
+<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1724501160877.png">
+<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1724501849426.png">
+<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1724554766473.png">
+<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1724554959302.png">
+<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1724555070526.png">
+<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1724555750006.png">
+<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1724555851068.png">
+<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1724556188258.png">
+<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1724556356367.png">
+<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1724557329069.png">
+<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1724557440038.png">
+<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1724557663548.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/ybu3mr.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/ugwtlu.png">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:19:47.616Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://mudutestmenu.mudu.tv/upload/wlukje.png">
+
+<link rel="canonical" href="http://example.com/2025/09/11/%E4%BA%91%E5%8E%9F%E7%94%9F%E5%8F%AF%E8%A7%82%E6%B5%8B%E5%B9%B3%E5%8F%B0%20OpenObserve/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>云原生可观测平台 OpenObserve | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/%E4%BA%91%E5%8E%9F%E7%94%9F%E5%8F%AF%E8%A7%82%E6%B5%8B%E5%B9%B3%E5%8F%B0%20OpenObserve/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          云原生可观测平台 OpenObserve
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:19:47" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E5%8F%AF%E8%A7%82%E6%B5%8B/" itemprop="url" rel="index"><span itemprop="name">可观测</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>22k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>20 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="云原生可观测平台-OpenObserve"><a href="#云原生可观测平台-OpenObserve" class="headerlink" title="云原生可观测平台 OpenObserve"></a>云原生可观测平台 OpenObserve</h1><p><a target="_blank" rel="noopener" href="https://openobserve.ai/">OpenObserve（简称 O2）</a>是一个用 Rust 开发的开源云原生可观测平台，专为日志、指标、追踪而构建，设计用于 PB 级工作。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/wlukje.png" alt="OpenObserve"></p>
+<p>与需要理解和调整大量配置置的 Elasticsearch 相比，它简单且易于操作。在 2 分钟内即可启动并运行 OpenObserve。对于使用 API 获取数据并执行搜索的用户来说，OpenObserve 可以无缝替代 Elasticsearch。OpenObserve 带有自己的用户界面，无需单独安装。与 Elasticsearch 相比，使用 OpenObserve 可以将日志存储成本降低约 140 倍。</p>
+<p><img data-src="https://picdn.youdianzhishi.com/images/1724479963977.png" alt="与 ES 对比"></p>
+<h2 id="相关概念"><a href="#相关概念" class="headerlink" title="相关概念"></a>相关概念</h2><p>在详细了解 <code>O2</code> 之前，我们需要了解一些相关概念，这些概念是 <code>O2</code> 的基础。</p>
+<p><strong>Organizations（组织）</strong></p>
+<p>组织是 OpenObserve 中对各种流、用户、功能进行分组的逻辑实体。组织可以代表一个企业、企业的一个部门或一个应用程序。所有流、用户、功能等都限定在一个组织范围内。</p>
+<p><strong>Streams（流）</strong></p>
+<p>OpenObserve 中的流是共享相同源的事件序列（日志&#x2F;指标&#x2F;跟踪），例如来自特定应用程序的日志或来自企业的日志。比如日志就是一种流，用于记录来自应用程序的事件。</p>
+<p><strong>Functions（函数）</strong></p>
+<p>OpenObserve 中的函数可在摄取和查询期间使用，以帮助增强高级功能，如丰富、编辑、日志缩减、合规性等。函数是使用 <code>VRL</code> 脚本定义的。</p>
+<p><strong>Parquet</strong></p>
+<p><code>O2</code> 中的数据以 <code>parquet</code> 格式存储，这是一种列式存储格式，查询和存储效率很高。</p>
+<p><strong>Timestamp（时间戳）</strong></p>
+<p><code>_timestamp</code> 在 OpenObserve 中被视为时间戳列，如果 <code>_timestamp</code> 或 <code>@timestamp</code> 不存在于正在摄取的数据中，我们会将 <code>_timestamp</code> 添加到每个记录，其 <code>NOW</code> 值为微秒精度。</p>
+<p>对于键为 <code>_timestamp/@timestamp</code> 的输入数据，对于值我们支持以下数据类型&#x2F;格式：</p>
+<ul>
+<li>微秒</li>
+<li>字符串值</li>
+<li>RFC 3339 和 ISO 8601 日期和时间字符串，例如 <code>1996-12-19T16:39:57-08:00</code></li>
+<li>RFC 2822 日期和时间字符串，例如 <code>Tue, 1 Jul 2003 10:52:37 +0200</code></li>
+</ul>
+<p>如果用户想要支持 <code>_timestamp/@timestamp</code> 以外的键，用户可以使用 <code>ZO_COLUMN_TIMESTAMP</code> 配置来指定时间戳键。</p>
+<p><strong>User Roles（用户角色）</strong></p>
+<p>OpenObserve 中的用户可以具有 <code>admin</code> 或 <code>member</code> 角色。与具有 <code>member</code> 角色的用户相比，具有 <code>admin</code> 角色的用户拥有更大的权限，例如，具有 <code>admin</code> 角色的用户可以将其他用户添加到组织中。</p>
+<h2 id="架构"><a href="#架构" class="headerlink" title="架构"></a>架构</h2><p>OpenObserve 可以在单节点下运行，也可以在集群中以 HA 模式运行。</p>
+<h3 id="单节点模式"><a href="#单节点模式" class="headerlink" title="单节点模式"></a>单节点模式</h3><p>单节点模式也分几种架构，主要是数据存储的方式不同，主要有如下几种：</p>
+<p><strong>SQLite 和本地磁盘模式</strong></p>
+<p>如果你只需要进行简单使用和测试，或者对高可用性没有要求，可以使用此模式。当然你仍然可以在一台机器上每天处理超过 2 TB 的数据。在我们的测试中，使用默认配置，Mac M2 的处理速度为约 31 MB&#x2F;秒，即每分钟处理 1.8 GB，每天处理 2.6 TB。该模式也是运行 OpenObserve 的默认模式。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/89qru9.png" alt="SQLite本地模式"></p>
+<p><strong>SQLite 和对象存储模式</strong></p>
+<p>该模式和 OpenObserve 的默认模式基本上一致，只是数据存在了对象存储中，这样可以更好的支持高可用性，因为数据不会丢失。</p>
+<p><img data-src="https://picdn.youdianzhishi.com/images/1724480272710.png" alt="SQLite对象存储模式"></p>
+<h3 id="高可用模式"><a href="#高可用模式" class="headerlink" title="高可用模式"></a>高可用模式</h3><p>HA 模式不支持本地磁盘存储，该模式下，OpenObserve 主要包括 <code>Router</code>、<code>Querier</code>、<code>Ingester</code>、<code>Compactor</code> 和 <code>AlertManager</code> 节点（组件），这些节点都可以水平扩展以适应更高的流量。另外使用 Etcd 或 NATS 用作集群协调器并存储节点信息，还用于集群事件。MySQL&#x2F;PostgreSQL 用于存储组织、用户、函数、报警规则、流模式和文件列表（<code>parquet</code> 文件的索引）等元数据。对象存储（例如 s3、minio、gcs 等）存储 <code>parquet</code> 文件的数据。</p>
+<p><img data-src="https://picdn.youdianzhishi.com/images/1724480321568.png" alt="Etcd对象存储"></p>
+<p><strong>Ingester</strong></p>
+<p><code>Ingester</code> 用于接收摄取请求并将数据转换为 <code>parquet</code> 格式然后存储在对象存储中，它们在将数据传输到对象存储之前将数据临时存储在 <code>WAL</code> 中。</p>
+<blockquote>
+<p>OpenObserve 中摄取的数据默认根据年月日和小时进行分区，我们还可以指定用于对数据进行分区的分区键。</p>
+</blockquote>
+<p>数据摄取流程如下所示：</p>
+<p><img data-src="https://picdn.youdianzhishi.com/images/1724481289414.png" alt="Ingester Flow"></p>
+<ol>
+<li><p>从 HTTP &#x2F; gRPC API 请求接收数据。</p>
+</li>
+<li><p>逐行解析数据。</p>
+</li>
+<li><p>检查是否有任何用于转换数据的函数（摄取函数），按函数顺序调用每个摄取函数</p>
+</li>
+<li><p>检查时间戳字段，将时间戳转换为微秒；如果记录中不存在时间戳字段，则设置当前时间戳。</p>
+</li>
+<li><p>检查流 schema 以确定 schema 是否需要演变。在这里，如果我们发现需要更新 schema 以添加新字段或更改现有字段的数据类型，则获取 <code>lock</code> 来更新 schema。</p>
+</li>
+<li><p>评估实时报警（如果为流定义了任何报警）。</p>
+</li>
+<li><p>按小时桶中的时间戳写入</p>
+<figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">WAL</span></span><br></pre></td></tr></table></figure>
+
+<p>文件，然后将请求中的记录转换为</p>
+<figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">Arrow RecordBatch</span></span><br></pre></td></tr></table></figure>
+
+<p>并写入 </p>
+<figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">Memtable</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>为每个 <code>organization/stream_type</code> 创建 <code>Memtable</code>，如果仅为日志摄取数据，则只有一个 <code>Memtable</code>。</li>
+<li>WAL 文件和 <code>Metable</code> 是成对创建的，一个 WAL 文件有一个 <code>Memtable</code> 。WAL 文件位于 <code>data/wal/logs</code>。</li>
+</ul>
+</li>
+<li><p>当 <code>Memtable</code> 大小达到 <code>ZO_MAX_FILE_SIZE_IN_MEMORY = 256MB</code> 或 WAL 文件达到 <code>ZO_MAX_FILE_SIZE_ON_DISK = 128MB</code> 时，我们将 <code>Memtable</code> 移动到 <code>Immutable</code> 并创建一个新的 <code>Memtable</code> 和 WAL 文件用于写入数据。</p>
+</li>
+<li><p>每 <code>ZO_MEM_PERSIST_INTERVAL=5</code> 秒会将 <code>Immutable</code> 转储到本地磁盘。一个 <code>Immutable</code> 将生成多个 <code>parquet</code> 文件，因为它可能包含多个流和多个分区，<code>parquet</code> 文件位于 <code>data/wal/files</code>。</p>
+</li>
+<li><p>每 <code>ZO_FILE_PUSH_INTERVAL=10</code> 秒，我们检查本地 <code>parquet</code> 文件，如果任何分区总大小超过 <code>ZO_MAX_FILE_SIZE_ON_DISK=128MB</code> 或任何文件已在 <code>ZO_MAX_FILE_RETENTION_TIME=600</code> 秒前，分区中的所有此类小文件将被合并为一个大文件（每个大文件将最大为 <code>ZO_COMPACT_MAX_FILE_SIZE=256MB</code>) ，它将被移动到对象存储。</p>
+</li>
+</ol>
+<p>Ingester 包含三部分数据：</p>
+<ol>
+<li><code>Memtable</code> 中的数据</li>
+<li><code>Immutable</code> 中的数据</li>
+<li>WAL 中的 <code>parquet</code> 文件尚未上传到对象存储。</li>
+</ol>
+<p>这些数据都需要能够被查询到。</p>
+<p><strong>Router</strong></p>
+<p><code>Router</code>（路由器）将请求分发给 <code>ingester</code> 或 <code>querier</code>，它还通过浏览器提供 UI 界面，Router 实际上就是一个非常简单的代理，用于在摄取器和查询器之间发送适当的请求。</p>
+<p><strong>Querier</strong></p>
+<p><code>Querier</code>（查询器）用于查询数据，查询器节点是完全无状态的。数据查询流程如下：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/nln9vj.png" alt="Querier Flow"></p>
+<ol>
+<li>使用 http API 接收搜索请求。接收到查询请求的节点成为该查询的 <code>LEADER</code> 查询器。其他查询器都是 <code>WORKER</code> 查询器，用于查询。</li>
+<li><code>LEADER</code> 解析并验证 SQL。</li>
+<li><code>LEADER</code> 找到数据时间范围并从文件列表索引中获取文件列表。</li>
+<li><code>LEADER</code> 从集群元数据中获取查询器节点。</li>
+<li><code>LEADER</code> 对每个查询器要查询的文件列表进行分区。例如如果需要查询 100 个文件，并且有 5 个查询器节点，则每个查询器可以查询 20 个文件，<code>LEADER</code> 处理 20 个文件，<code>WORKERS</code> 各处理 20 个文件。</li>
+<li><code>LEADER</code> 调用每个 <code>WORKER</code> 查询器上运行的 gRPC 服务，将搜索查询分派到查询器节点。查询器间通信使用 gRPC 进行。</li>
+<li><code>LEADER</code> 收集、合并并将结果发送回用户。</li>
+</ol>
+<p>提示：</p>
+<ol>
+<li>默认情况下，查询器将在内存中缓存 <code>parquet</code> 文件。我们可以使用环境变量 <code>ZO_MEMORY_CACHE_MAX_SIZE</code> 配置查询器用于缓存的内存大小。默认缓存是使用特定查询器可用内存的 50% 来完成的。</li>
+<li>在分布式环境中，每个查询器节点只会缓存一部分数据。</li>
+<li>我们还可以选择在内存中缓存最新的 <code>parquet</code> 文件。当 <code>Ingester</code> 生成新的 <code>Parquet</code> 文件并将其上传到对象存储时，<code>Ingester</code> 将通知查询器缓存该文件。</li>
+</ol>
+<p><strong>Compactor</strong></p>
+<p><code>Compactor</code>（压缩器）会将小文件合并成大文件，使搜索更加高效。<code>Compactor</code> 还处理数据保留策略、full stream 删除和文件列表索引更新。</p>
+<p><strong>AlertManager</strong></p>
+<p><code>AlertManager</code> 运行标准报警查询、报告作业并发送通知。</p>
+<h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><p>由于 <code>O2</code> 用到的各个存储可选方案较多，这里我们选择使用 <code>PostgreSQL</code> 作为元数据存储，<code>Minio</code> 作为对象存储，<code>Nats</code> 作为集群协调器（建议使用 <code>Nats</code>，为了向后兼容，目前仍然支持 <code>Etcd</code>）。</p>
+<p>接下来同样我们使用 <code>Helm</code> 来安装 <code>O2</code>:</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">helm repo add openobserve https://charts.openobserve.ai</span><br><span class="line">helm repo update</span><br></pre></td></tr></table></figure>
+
+<p>官方的这个 Helm Chart 默认会部署 PostgreSQL，但是需要提前安装对应的 <code>cloudnative-pg operator</code>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">kubectl apply --server-side -f \</span><br><span class="line">  https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.23/releases/cnpg-1.23.1.yaml</span><br></pre></td></tr></table></figure>
+
+<p>然后我们就可以在 Helm Chart 中使用 PostgreSQL 了，此外为了启用 <code>Minio</code> 和 <code>Nats</code>，我们需要在 <code>values.yaml</code> 中进行配置，修改后的 <code>values.yaml</code> 如下所示</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># o2-values.yaml</span></span><br><span class="line"><span class="comment"># auth:</span></span><br><span class="line"><span class="comment">#   ZO_ROOT_USER_EMAIL: &quot;root@example.com&quot; # default user email</span></span><br><span class="line"><span class="comment">#   ZO_ROOT_USER_PASSWORD: &quot;Complexpass#123&quot;  # default user password</span></span><br><span class="line"></span><br><span class="line"><span class="attr">ingester:</span></span><br><span class="line">  <span class="attr">headless:</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">persistence:</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">storageClass:</span> <span class="string">&quot;nfs-client&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">querier:</span></span><br><span class="line">  <span class="attr">persistence:</span> <span class="comment"># If enabled it will be used for disk cache. Highly recommend to enable this for production</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">storageClass:</span> <span class="string">&quot;nfs-client&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">service:</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">NodePort</span></span><br><span class="line"></span><br><span class="line"><span class="attr">nats:</span></span><br><span class="line">  <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">container:</span></span><br><span class="line">    <span class="attr">image:</span></span><br><span class="line">      <span class="attr">repository:</span> <span class="string">library/nats</span></span><br><span class="line">      <span class="attr">registry:</span> <span class="string">dhub.kubesre.xyz</span></span><br><span class="line">  <span class="attr">config:</span></span><br><span class="line">    <span class="attr">cluster:</span></span><br><span class="line">      <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">      <span class="attr">replicas:</span> <span class="number">3</span></span><br><span class="line">    <span class="attr">jetstream:</span></span><br><span class="line">      <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">      <span class="attr">fileStore:</span></span><br><span class="line">        <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">        <span class="attr">pvc:</span></span><br><span class="line">          <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">          <span class="attr">size:</span> <span class="string">20Gi</span></span><br><span class="line">          <span class="attr">storageClassName:</span> <span class="string">&quot;nfs-client&quot;</span></span><br><span class="line">  <span class="attr">natsBox:</span></span><br><span class="line">    <span class="attr">container:</span></span><br><span class="line">      <span class="attr">image:</span></span><br><span class="line">        <span class="attr">registry:</span> <span class="string">dhub.kubesre.xyz</span></span><br><span class="line">  <span class="attr">reloader:</span></span><br><span class="line">    <span class="attr">image:</span></span><br><span class="line">      <span class="attr">registry:</span> <span class="string">dhub.kubesre.xyz</span></span><br><span class="line"></span><br><span class="line"><span class="attr">minio:</span></span><br><span class="line">  <span class="attr">enabled:</span> <span class="literal">true</span> <span class="comment"># if true then minio will be deployed as part of openobserve</span></span><br><span class="line">  <span class="attr">mode:</span> <span class="string">standalone</span> <span class="comment"># or distributed</span></span><br><span class="line">  <span class="attr">persistence:</span></span><br><span class="line">    <span class="attr">storageClass:</span> <span class="string">&quot;nfs-client&quot;</span></span><br><span class="line">  <span class="attr">consoleService:</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">NodePort</span></span><br><span class="line">    <span class="attr">nodePort:</span> <span class="number">32001</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Postgres is used for storing openobserve metadata.</span></span><br><span class="line"><span class="comment"># Make sure to install cloudnative-pg operator before enabling this</span></span><br><span class="line"><span class="attr">postgres:</span></span><br><span class="line">  <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">pgadmin:</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">spec:</span></span><br><span class="line">    <span class="attr">instances:</span> <span class="number">2</span> <span class="comment"># creates a primary and a replica. replica will become primary if the primary fails</span></span><br><span class="line">    <span class="attr">storage:</span></span><br><span class="line">      <span class="attr">size:</span> <span class="string">10Gi</span></span><br><span class="line">      <span class="attr">pvcTemplate:</span></span><br><span class="line">        <span class="attr">storageClassName:</span> <span class="string">&quot;nfs-client&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>然后我们就可以安装 <code>O2</code> 了：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">$ helm upgrade --install o2 openobserve/openobserve -f o2-values.yaml --namespace openobserve --create-namespace</span><br><span class="line">Release <span class="string">&quot;o2&quot;</span> does not exist. Installing it now.</span><br><span class="line">NAME: o2</span><br><span class="line">LAST DEPLOYED: Sat Aug 24 17:29:23 2024</span><br><span class="line">NAMESPACE: openobserve</span><br><span class="line">STATUS: deployed</span><br><span class="line">REVISION: 1</span><br><span class="line">NOTES:</span><br><span class="line">1. Get the application URL by running these commands:</span><br><span class="line">  <span class="built_in">export</span> NODE_PORT=$(kubectl get --namespace openobserve -o jsonpath=<span class="string">&quot;&#123;.spec.ports[0].nodePort&#125;&quot;</span> services o2-openobserve)</span><br><span class="line">  <span class="built_in">export</span> NODE_IP=$(kubectl get nodes --namespace openobserve -o jsonpath=<span class="string">&quot;&#123;.items[0].status.addresses[0].address&#125;&quot;</span>)</span><br><span class="line">  <span class="built_in">echo</span> http://<span class="variable">$NODE_IP</span>:<span class="variable">$NODE_PORT</span></span><br></pre></td></tr></table></figure>
+
+<p>安装完成后，我们可以通过 <code>kubectl get pods -n openobserve</code> 查看所有的 Pod 是否正常运行。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get pods -n openobserve</span></span><br><span class="line">NAME                                          READY   STATUS    RESTARTS      AGE</span><br><span class="line">o2-minio-5ff8c55559-g6255                     1/1     Running   0             43m</span><br><span class="line">o2-nats-0                                     2/2     Running   0             32m</span><br><span class="line">o2-nats-1                                     2/2     Running   0             33m</span><br><span class="line">o2-nats-2                                     2/2     Running   0             33m</span><br><span class="line">o2-nats-box-588fb755c4-6qxl2                  1/1     Running   0             43m</span><br><span class="line">o2-openobserve-alertmanager-95796f856-c6xlg   1/1     Running   0             43m</span><br><span class="line">o2-openobserve-compactor-7f9b8cdb6b-kr8sp     1/1     Running   0             31m</span><br><span class="line">o2-openobserve-ingester-0                     1/1     Running   0             32m</span><br><span class="line">o2-openobserve-postgres-1                     1/1     Running   0             43m</span><br><span class="line">o2-openobserve-postgres-2                     1/1     Running   0             42m</span><br><span class="line">o2-openobserve-querier-0                      1/1     Running   0             43m</span><br><span class="line">o2-openobserve-router-58dc4b8fd7-vl42p        1/1     Running   0             31m</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get svc -n openobserve</span></span><br><span class="line">NAME                               TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)                         AGE</span><br><span class="line">o2-minio                           ClusterIP   10.96.2.46    &lt;none&gt;        9000/TCP                        43m</span><br><span class="line">o2-minio-console                   NodePort    10.96.0.196   &lt;none&gt;        9001:32001/TCP                  43m</span><br><span class="line">o2-nats                            ClusterIP   10.96.2.18    &lt;none&gt;        4222/TCP                        43m</span><br><span class="line">o2-nats-headless                   ClusterIP   None          &lt;none&gt;        4222/TCP,6222/TCP,8222/TCP      43m</span><br><span class="line">o2-openobserve-alertmanager        ClusterIP   10.96.1.79    &lt;none&gt;        5080/TCP,5081/TCP,5082/TCP      43m</span><br><span class="line">o2-openobserve-compactor           ClusterIP   10.96.0.207   &lt;none&gt;        5080/TCP,5081/TCP               43m</span><br><span class="line">o2-openobserve-ingester            ClusterIP   10.96.2.154   &lt;none&gt;        5080/TCP,5081/TCP               43m</span><br><span class="line">o2-openobserve-ingester-headless   ClusterIP   None          &lt;none&gt;        5080/TCP,5081/TCP               43m</span><br><span class="line">o2-openobserve-postgres-r          ClusterIP   10.96.0.123   &lt;none&gt;        5432/TCP                        43m</span><br><span class="line">o2-openobserve-postgres-ro         ClusterIP   10.96.3.208   &lt;none&gt;        5432/TCP                        43m</span><br><span class="line">o2-openobserve-postgres-rw         ClusterIP   10.96.0.165   &lt;none&gt;        5432/TCP                        43m</span><br><span class="line">o2-openobserve-querier             ClusterIP   10.96.3.13    &lt;none&gt;        5080/TCP,5081/TCP               43m</span><br><span class="line">o2-openobserve-router              NodePort    10.96.3.228   &lt;none&gt;        5080:31984/TCP,5081:32212/TCP   43m</span><br></pre></td></tr></table></figure>
+
+<h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><p>安装完成后，我们可以通过 <code>http://&lt;NODE_IP&gt;:31984</code> 访问 <code>O2</code> 的 Web 界面，然后就可以开始使用了。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/gmomqz.png" alt="O2 Web"></p>
+<p>使用默认的用户名 <code>root@example.com</code> 和密码 <code>Complexpass#123</code> 登录，然后就可以看到 <code>O2</code> 的主界面了。</p>
+<p><img data-src="https://picdn.youdianzhishi.com/images/1724494812951.png" alt="O2 Home"></p>
+<p>因为现在我们还没有向 <code>O2</code> 中发送任何数据，所以暂时没有任何数据。我们可以切换到<strong>采集</strong>页面，里面就有各种遥测数据的采集方式。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/48nrag.png" alt="O2 采集"></p>
+<h3 id="示例数据导入"><a href="#示例数据导入" class="headerlink" title="示例数据导入"></a>示例数据导入</h3><p>这里我们可以先使用 JSON API 来加载一些示例日志数据来了解一下 OpenObserve 的基本使用方法。先使用下面命令下载示例日志数据：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ curl -L https://zinc-public-data.s3.us-west-2.amazonaws.com/zinc-enl/sample-k8s-logs/k8slog_json.json.zip -o k8slog_json.json.zip</span><br><span class="line">$ unzip k8slog_json.json.zip</span><br></pre></td></tr></table></figure>
+
+<p>然后使用下面命令将示例日志数据导入到 OpenObserve 中：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">$ curl http://&lt;NodeIP&gt;:31984/api/default/default/_json -i -u <span class="string">&quot;root@example.com:Complexpass#123&quot;</span> -d <span class="string">&quot;@k8slog_json.json&quot;</span></span><br><span class="line">HTTP/1.1 100 Continue</span><br><span class="line"></span><br><span class="line">HTTP/1.1 200 OK</span><br><span class="line">content-length: 71</span><br><span class="line">content-type: application/json</span><br><span class="line">x-api-node: o2-openobserve-ingester-0</span><br><span class="line">access-control-allow-credentials: <span class="literal">true</span></span><br><span class="line"><span class="built_in">date</span>: Sat, 24 Aug 2024 10:31:05 GMT</span><br><span class="line">vary: accept-encoding</span><br><span class="line"></span><br><span class="line">&#123;<span class="string">&quot;code&quot;</span>:200,<span class="string">&quot;status&quot;</span>:[&#123;<span class="string">&quot;name&quot;</span>:<span class="string">&quot;default&quot;</span>,<span class="string">&quot;successful&quot;</span>:3846,<span class="string">&quot;failed&quot;</span>:0&#125;]&#125;%</span><br></pre></td></tr></table></figure>
+
+<p>收据导入成功后，刷新页面即可看到有数据了：</p>
+<p><img data-src="https://picdn.youdianzhishi.com/images/1724550564527.png" alt="OpenObserve Web"></p>
+<p>在<strong>数据流</strong>页面可以看到我们导入的数据元信息：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/joltik.png" alt="Stream流"></p>
+<p>然后切换到<strong>日志</strong>页面，从左侧的下拉列表中选择索引为 <code>default</code>，就可以看到日志数据了：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/9vqjlu.png" alt="O2 Logs"></p>
+<p>现在我们就可以去根据直接的需求去查询日志了，比如要使用倒排索引搜索包含单词 <code>error</code> 的所有字段：</p>
+<ul>
+<li>在查询编辑器中使用 <code>match_all(&#39;error&#39;)</code></li>
+<li><code>match_all</code> 仅搜索配置为全文搜索的字段。默认字段集包括 <code>log</code>、<code>message</code>、<code>content</code>、<code>data</code>、<code>events</code>、<code>json</code>。如果你希望全文搜索时扫描更多字段，可以在数据流页面进行配置。在特定字段中进行全文搜索应该使用 <code>str_match</code> 函数。</li>
+</ul>
+<p>要在没有倒排索引的情况下搜索包含单词 <code>error</code> 的所有字段：</p>
+<ul>
+<li><code>match_all_raw(&#39;error&#39;)</code>，区分大小写。</li>
+<li><code>match_all_raw_ignore_case(error)</code>，这是不区分大小写的。</li>
+<li><code>match_all_raw</code> 函数仅搜索配置为全文搜索的字段。默认字段集是 <code>log</code>、<code>message</code>、<code>content</code>、<code>data</code>、<code>events</code>、<code>json</code>。如果希望全文搜索时扫描更多字段，可以在数据流设置下进行配置。应该使用 <code>str_match</code> 在指定字段中进行全文搜索。</li>
+</ul>
+<p>如果仅搜索 <code>log</code> 字段中的 <code>error</code>，可以使用 <code>str_match(log, &#39;error&#39;)</code>，这比 <code>match_all_raw</code> 更有效，因为它在单个字段中搜索。</p>
+<p>同样如果我们要搜索包含 <code>code</code> 为 200 的所有日志条目，则可以直接使用 <code>code=200</code> 查询即可，其中 <code>code</code> 是一个数字字段。如果要搜索 <code>code</code> 字段不包含任何值的所有日志条目，可以使用 <code>code is null</code>，但是需要注意使用 <code>code=&#39; &#39;</code> 不会产生正确的结果；同样的搜索 <code>code</code> 字段具有某个值的所有日志条目，则可以使用 <code>code is not null</code>，但是不能使用 <code>code!=&#39; &#39;</code>。另外也可以使用 <code>code &gt; 399</code> 或者 <code>code &gt;= 400</code> 来搜索 <code>code</code> 大于 399 或者大于等于 400 的所有日志条目。</p>
+<p>此外我们还可以勾选 <code>SQL 模式</code> 来使用 SQL 查询语句来查询日志数据：</p>
+<p><img data-src="https://picdn.youdianzhishi.com/images/1724501160877.png" alt="SQL Model"></p>
+<p>同样现在我们可以去 Minio 中查看数据是否已经被正确的存储，使用用户名 <code>rootuser</code> 和密码 <code>rootpass123</code> 即可登录成功。</p>
+<p><img data-src="https://picdn.youdianzhishi.com/images/1724501849426.png" alt="minio console"></p>
+<p>可以看到对象存储中已经有了我们的 <code>parquet</code> 文件数据。</p>
+<h3 id="采集-Kubernetes-观测数据"><a href="#采集-Kubernetes-观测数据" class="headerlink" title="采集 Kubernetes 观测数据"></a>采集 Kubernetes 观测数据</h3><p><code>O2</code> 还支持通过 OpenTelemetry 采集器导入数据。这里我们可以使用 <code>OpenTelemetry</code> 来采集 Kubernetes 集群的观测数据，首先我们需要安装 <code>OpenTelemetry</code> 的 <code>Operator</code>，由于 <code>OpenTelemetry</code> 的 <code>Operator</code> 依赖 <code>cert-manager</code>，所以我们需要先安装 <code>cert-manager</code>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.13.1/cert-manager.yaml</span><br></pre></td></tr></table></figure>
+
+<p>等待 <code>cert-manager</code> 安装完成后，我们就可以安装 <code>OpenTelemetry</code> 的 <code>Operator</code> 了：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl get pods -n cert-manager</span><br><span class="line">NAME                                       READY   STATUS    RESTARTS   AGE</span><br><span class="line">cert-manager-cainjector-65c7bff89d-rxjts   1/1     Running   0          64s</span><br><span class="line">cert-manager-cbcf9668d-tlz2k               1/1     Running   0          64s</span><br><span class="line">cert-manager-webhook-594cb9799b-c5sd8      1/1     Running   0          64s</span><br><span class="line">$ kubectl apply -f https://github.com/open-telemetry/opentelemetry-operator/releases/latest/download/opentelemetry-operator.yaml</span><br><span class="line">$ kubectl get pods -n opentelemetry-operator-system</span><br><span class="line">NAME                                                        READY   STATUS    RESTARTS   AGE</span><br><span class="line">opentelemetry-operator-controller-manager-fd5689558-lchr7   2/2     Running   0          61s</span><br></pre></td></tr></table></figure>
+
+<p>然后我们就可以来安装 OpenTelemetry 的 <code>Collector</code> 了，为了方便使用 O2 官方的 Helm Chart 已经提供了一个定制的 Chart 包，我们可以直接使用它，该采集器可以：</p>
+<ul>
+<li>从 K8s 集群中捕获日志、指标和 Events 事件并将其发送到 O2</li>
+<li>在集群中配置 <code>auto-instrumentation</code> 自动埋点，以捕获 <code>Java</code>、<code>.Net</code>、<code>nodejs</code>、<code>python</code> 和 <code>Go</code> 语言编写的应用程序的链路追踪</li>
+</ul>
+<p>使用我们这里安装的 O2 集群的认证信息覆盖默认的认证信息：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># o2c-values.yaml</span></span><br><span class="line"><span class="attr">exporters:</span></span><br><span class="line">  <span class="attr">otlphttp/openobserve:</span></span><br><span class="line">    <span class="attr">endpoint:</span> <span class="string">http://o2-openobserve-router.openobserve.svc.cluster.local:5080/api/default</span></span><br><span class="line">    <span class="attr">headers:</span></span><br><span class="line">      <span class="attr">Authorization:</span> <span class="string">Basic</span> <span class="string">cm9vdEBleGFtcGxlLmNvbTpScmtORWxpenhCWWV4Qzhr</span> <span class="comment"># 替换成自己的</span></span><br><span class="line">      <span class="attr">stream-name:</span> <span class="string">k8s_logs</span> <span class="comment"># 替换成自己的数据流名称</span></span><br><span class="line">  <span class="attr">otlphttp/openobserve_k8s_events:</span></span><br><span class="line">    <span class="attr">endpoint:</span> <span class="string">http://o2-openobserve-router.openobserve.svc.cluster.local:5080/api/default</span></span><br><span class="line">    <span class="attr">headers:</span></span><br><span class="line">      <span class="attr">Authorization:</span> <span class="string">Basic</span> <span class="string">cm9vdEBleGFtcGxlLmNvbTpScmtORWxpenhCWWV4Qzhr</span> <span class="comment"># 替换成自己的</span></span><br><span class="line">      <span class="attr">stream-name:</span> <span class="string">k8s_events</span></span><br><span class="line"></span><br><span class="line"><span class="attr">agent:</span></span><br><span class="line">  <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">tolerations:</span> <span class="comment"># 如果需要在 master 节点上运行，需要添加这个容忍</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">key:</span> <span class="string">&quot;node-role.kubernetes.io/control-plane&quot;</span></span><br><span class="line">      <span class="attr">operator:</span> <span class="string">&quot;Exists&quot;</span></span><br><span class="line">      <span class="attr">effect:</span> <span class="string">&quot;NoSchedule&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>其中 <code>endpoint</code> 地址为 <code>O2</code> 的 <code>router</code> 的 FQDN 地址，<code>Authorization</code> 中 <code>Basic</code> 后面 的值为<code>用户名:TOKEN</code>的 <code>base64</code> 编码（可以在 <code>O2</code> 采集页面获取），<code>stream-name</code> 为数据流名称。然后直接使用下面命令安装 <code>OpenTelemetry</code> 的 <code>Collector</code> 即可：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">$ helm upgrade --install o2c openobserve/openobserve-collector -f o2c-values.yaml --namespace openobserve-collector --create-namespace</span><br><span class="line">Release <span class="string">&quot;o2c&quot;</span> does not exist. Installing it now.</span><br><span class="line">NAME: o2c</span><br><span class="line">LAST DEPLOYED: Sun Aug 25 10:30:59 2024</span><br><span class="line">NAMESPACE: openobserve-collector</span><br><span class="line">STATUS: deployed</span><br><span class="line">REVISION: 1</span><br><span class="line">TEST SUITE: None</span><br><span class="line">NOTES:</span><br><span class="line">If everything proceeded without errors <span class="keyword">then</span> your cluster is now sending logs and metrics to OpenObserve.</span><br><span class="line"></span><br><span class="line">You can add following to your pods/namespaces to auto instrument your applications to send traces:</span><br><span class="line"></span><br><span class="line">  1. Java: instrumentation.opentelemetry.io/inject-java: <span class="string">&quot;openobserve-collector/openobserve-java&quot;</span></span><br><span class="line">  2. NodeJS: instrumentation.opentelemetry.io/inject-nodejs: <span class="string">&quot;openobserve-collector/openobserve-nodejs&quot;</span></span><br><span class="line">  3. Python: instrumentation.opentelemetry.io/inject-python: <span class="string">&quot;openobserve-collector/openobserve-python&quot;</span></span><br><span class="line">  4. DotNet: instrumentation.opentelemetry.io/inject-dotnet: <span class="string">&quot;openobserve-collector/openobserve-dotnet&quot;</span></span><br><span class="line">  5. Go: instrumentation.opentelemetry.io/inject-go: <span class="string">&quot;openobserve-collector/openobserve-go&quot;</span> , instrumentation.opentelemetry.io/otel-go-auto-target-exe: <span class="string">&quot;/path/to/container/executable&quot;</span></span><br><span class="line">  6. OpenTelemetry SDK environment variables only: instrumentation.opentelemetry.io/inject-sdk: <span class="string">&quot;true&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>我们可以查看 <code>OpenTelemetry</code> 的 <code>Collector</code> 是否正常运行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl get pods -n openobserve-collector</span><br><span class="line">NAME                                                              READY   STATUS    RESTARTS   AGE</span><br><span class="line">o2c-openobserve-collector-agent-collector-46r82                   1/1     Running   0          10m</span><br><span class="line">o2c-openobserve-collector-agent-collector-cbtnn                   1/1     Running   0          10m</span><br><span class="line">o2c-openobserve-collector-agent-collector-kkczz                   1/1     Running   0          10m</span><br><span class="line">o2c-openobserve-collector-gateway-collector-0                     1/1     Running   0          10m</span><br><span class="line">o2c-openobserve-collector-gateway-targetallocator-59c4468dxmfts   1/1     Running   0          10m</span><br></pre></td></tr></table></figure>
+
+<p>其实这里我们部署的采集器就是一个 <code>agent</code> 和一个 <code>gateway</code>，在前面的额 OpenTelemetry 章节已经学习过了，只是这里我们是将数据导出到了 <code>O2</code> 中。</p>
+<p>现在我们就可以去 <code>O2</code> 中查看我们的数据了，切换到<strong>数据流</strong>页面，可以看到我们的数据流已经被成功的导入了：</p>
+<p><img data-src="https://picdn.youdianzhishi.com/images/1724554766473.png" alt="K8s 数据流"></p>
+<p>可以看到现在我们的数据流中已经有了 <code>k8s_logs</code> 和 <code>k8s_events</code> 两个日志数据流，分别对应我们的日志和事件数据。除此之外还有很多 <code>metrics</code> 类型的数据流，可以看到指标中的每一个标签都是一个独立的 <code>stream</code> 数据流。</p>
+<p>我们可以切换到<strong>日志</strong>页面，选择数据流 <code>k8s_logs</code>，就可以看到我们采集的 K8s 集群的日志数据了：</p>
+<p><img data-src="https://picdn.youdianzhishi.com/images/1724554959302.png" alt="K8s Logs"></p>
+<p>同样我们选择数据流 <code>k8s_events</code>，就可以看到我们采集的 K8s 集群的事件数据了：</p>
+<p><img data-src="https://picdn.youdianzhishi.com/images/1724555070526.png" alt="K8s Events"></p>
+<p>对于指标数据流，我们可以切换到<strong>指标</strong>页面，选择数据流 <code>k8s_metrics</code>，就可以看到我们采集的 K8s 集群指标数据了：</p>
+<p><img data-src="https://picdn.youdianzhishi.com/images/1724555750006.png" alt="K8s Metrics"></p>
+<p>左侧我们可以选择一个指标，然后就可以看到这个指标的标签列表，然后我们就可以在右侧填写 PromQL 语句来查询数据了，比如我们这里查询每个命名空间的内存使用情况，则可以使用下面的 PromQL 语句：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sum(k8s_pod_memory_usage) by (k8s_namespace_name)</span><br></pre></td></tr></table></figure>
+
+<p>查询结果如下图所示：</p>
+<p><img data-src="https://picdn.youdianzhishi.com/images/1724555851068.png" alt="PromQL 查询"></p>
+<p>如果我们需要经常查询这个指标，这可以将其添加到仪表盘中，点击页面中的<strong>添加到仪表盘</strong>按钮即可，然后在<strong>仪表盘</strong>页面就可以看到我们的仪表盘了：</p>
+<p><img data-src="https://picdn.youdianzhishi.com/images/1724556188258.png" alt="仪表盘"></p>
+<p>和 Grafana 类似，我们也可以编辑面板，在面板右上角点击<code>Edit Panel</code>，就可以进入面板编辑页面了，点击最右侧的<strong>配置</strong>按钮，就可以编辑面板了，比如我们这里可以选择图例的单位、图例的显示名称等，编辑后可以点击<strong>应用</strong>按钮预览，如果满意可以点击<strong>保存</strong>按钮保存：</p>
+<p><img data-src="https://picdn.youdianzhishi.com/images/1724556356367.png" alt="编辑面板"></p>
+<p>同样我们也可以和 Grafana 一样配置一个变量，然后在面板上展示这个变量，比如我们这合理可以添加一个 <code>namespace</code> 变量，其值可以从 <code>k8s_namespace_phase</code> 这个数据流中获取，如下图所示：</p>
+<p><img data-src="https://picdn.youdianzhishi.com/images/1724557329069.png" alt="变量设置"></p>
+<p>当然现在我们需要去修改下面板的 PromQL 查询语句，需要将变量 <code>namespace</code> 传入，更改成：<code>sum(k8s_pod_memory_usage&#123;k8s_namespace_name =~ &quot;$namespace&quot;&#125;) by (k8s_namespace_name)</code> 即可：</p>
+<p><img data-src="https://picdn.youdianzhishi.com/images/1724557440038.png" alt="修改PromQL"></p>
+<p>现在我们就可以在面板上通过筛选 <code>namespace</code> 变量来查看不同命名空间的内存使用情况了：</p>
+<p><img data-src="https://picdn.youdianzhishi.com/images/1724557663548.png" alt="筛选面板"></p>
+<p>接下来还有链路追踪的数据，因为上面我们安装的 <code>OpenTelemetry</code> 的 <code>Collector</code> 已经自动为我们创建了自动埋点的 <code>Instrumentation</code> 对象，如下所示：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl get instrumentation -n openobserve-collector</span><br><span class="line">NAME                 AGE   ENDPOINT                                                                                          SAMPLER                    SAMPLER ARG</span><br><span class="line">openobserve-dotnet   99m   http://o2c-openobserve-collector-gateway-collector.openobserve-collector.svc.cluster.local:4318   parentbased_traceidratio   1</span><br><span class="line">openobserve-go       99m   http://o2c-openobserve-collector-gateway-collector.openobserve-collector.svc.cluster.local:4318   parentbased_traceidratio   1</span><br><span class="line">openobserve-java     99m   http://o2c-openobserve-collector-gateway-collector.openobserve-collector.svc.cluster.local:4318   parentbased_traceidratio   1</span><br><span class="line">openobserve-nodejs   99m   http://o2c-openobserve-collector-gateway-collector.openobserve-collector.svc.cluster.local:4317   parentbased_traceidratio   1</span><br><span class="line">openobserve-python   99m   http://o2c-openobserve-collector-gateway-collector.openobserve-collector.svc.cluster.local:4318   parentbased_traceidratio   1</span><br></pre></td></tr></table></figure>
+
+<p>可以看到上面的 <code>Instrumentation</code> 对象已经配置了端点地址、采样器和采样器参数，地址就是我们的 <code>OpenTelemetry</code> 的 <code>Collector</code> 的地址（<code>gateway</code> 类型的），采样器是 <code>parentbased_traceidratio</code>，参数是 <code>1</code>，表示采样率为 <code>1</code>。</p>
+<p>针对上面的这些语言编写的应用，我们就可以进行自动埋点，只需要在应用的 <code>Pod</code> 中添加对应的 <code>Annotation</code> 即可：</p>
+<ul>
+<li>Java: <code>instrumentation.opentelemetry.io/inject-java: &quot;openobserve-collector/openobserve-java&quot;</code></li>
+<li>DotNet: <code>instrumentation.opentelemetry.io/inject-dotnet: &quot;openobserve-collector/openobserve-dotnet&quot;</code></li>
+<li>NodeJS: <code>instrumentation.opentelemetry.io/inject-nodejs: &quot;openobserve-collector/openobserve-nodejs&quot;</code></li>
+<li>Python: <code>instrumentation.opentelemetry.io/inject-python: &quot;openobserve-collector/openobserve-python&quot;</code></li>
+<li>Go (Uses eBPF):<ul>
+<li><code>instrumentation.opentelemetry.io/inject-go: &quot;openobserve-collector/openobserve-go&quot;</code></li>
+<li><code>instrumentation.opentelemetry.io/otel-go-auto-target-exe: &quot;/path/to/container/executable&quot;</code></li>
+</ul>
+</li>
+</ul>
+<p>这里我们可以部署一个微服务 HOT Commerce 来演示在 Kubernetes 环境中如何使用 OpenTelemetry Operator 进行自动埋点，并将数据发送到 OpenObserve 中。</p>
+<p>这个应用包含 5 个简单的微服务，每个微服务都是用不同的编程语言编写的：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">                                                 /-&gt; review (python)</span><br><span class="line">                                                /</span><br><span class="line">frontend (go) -&gt; shop (nodejs) -&gt; product (java)</span><br><span class="line">                                                \</span><br><span class="line">                                                 \-&gt; price (dotnet)</span><br></pre></td></tr></table></figure>
+
+<p>该应用对应的 Kubernetes 资源清单文件如下：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># hotcommerce.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">price</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">hotcommerce</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">price</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">protocol:</span> <span class="string">TCP</span></span><br><span class="line">      <span class="attr">port:</span> <span class="number">80</span></span><br><span class="line">      <span class="attr">targetPort:</span> <span class="number">80</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">price</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">hotcommerce</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">1</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">price</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">price</span></span><br><span class="line">      <span class="attr">annotations:</span></span><br><span class="line">        <span class="attr">instrumentation.opentelemetry.io/inject-dotnet:</span> <span class="string">&quot;openobserve-collector/openobserve-dotnet&quot;</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">price</span></span><br><span class="line">          <span class="attr">image:</span> <span class="string">public.ecr.aws/zinclabs/sample-price-service-dotnet:3</span></span><br><span class="line">          <span class="attr">imagePullPolicy:</span> <span class="string">Always</span></span><br><span class="line">          <span class="attr">ports:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">80</span></span><br><span class="line">          <span class="attr">resources:</span></span><br><span class="line">            <span class="attr">limits:</span></span><br><span class="line">              <span class="attr">cpu:</span> <span class="string">&quot;1&quot;</span></span><br><span class="line">              <span class="attr">memory:</span> <span class="string">&quot;544Mi&quot;</span></span><br><span class="line">            <span class="attr">requests:</span></span><br><span class="line">              <span class="attr">cpu:</span> <span class="string">&quot;100m&quot;</span></span><br><span class="line">              <span class="attr">memory:</span> <span class="string">&quot;448Mi&quot;</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">review</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">hotcommerce</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">review</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">protocol:</span> <span class="string">TCP</span></span><br><span class="line">      <span class="attr">port:</span> <span class="number">80</span></span><br><span class="line">      <span class="attr">targetPort:</span> <span class="number">8004</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">review</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">hotcommerce</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">1</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">review</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">review</span></span><br><span class="line">      <span class="attr">annotations:</span></span><br><span class="line">        <span class="attr">instrumentation.opentelemetry.io/inject-python:</span> <span class="string">&quot;openobserve-collector/openobserve-python&quot;</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">review</span></span><br><span class="line">          <span class="attr">image:</span> <span class="string">public.ecr.aws/zinclabs/sample-review-service:51</span></span><br><span class="line">          <span class="attr">imagePullPolicy:</span> <span class="string">Always</span></span><br><span class="line">          <span class="attr">ports:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">8004</span></span><br><span class="line">          <span class="attr">resources:</span></span><br><span class="line">            <span class="attr">limits:</span></span><br><span class="line">              <span class="attr">cpu:</span> <span class="string">&quot;1&quot;</span></span><br><span class="line">              <span class="attr">memory:</span> <span class="string">&quot;544Mi&quot;</span></span><br><span class="line">            <span class="attr">requests:</span></span><br><span class="line">              <span class="attr">cpu:</span> <span class="string">&quot;100m&quot;</span></span><br><span class="line">              <span class="attr">memory:</span> <span class="string">&quot;448Mi&quot;</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">product</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">hotcommerce</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">product</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">protocol:</span> <span class="string">TCP</span></span><br><span class="line">      <span class="attr">port:</span> <span class="number">80</span></span><br><span class="line">      <span class="attr">targetPort:</span> <span class="number">8003</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">product</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">hotcommerce</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">1</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">product</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">product</span></span><br><span class="line">      <span class="attr">annotations:</span></span><br><span class="line">        <span class="attr">instrumentation.opentelemetry.io/inject-java:</span> <span class="string">&quot;openobserve-collector/openobserve-java&quot;</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">product</span></span><br><span class="line">          <span class="attr">image:</span> <span class="string">public.ecr.aws/zinclabs/sample-product-service-java:53</span></span><br><span class="line">          <span class="attr">imagePullPolicy:</span> <span class="string">Always</span></span><br><span class="line">          <span class="attr">env:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">REVIEW_SERVICE_URL</span></span><br><span class="line">              <span class="attr">value:</span> <span class="string">&quot;http://review.hotcommerce.svc.cluster.local&quot;</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">PRICE_SERVICE_URL</span></span><br><span class="line">              <span class="attr">value:</span> <span class="string">&quot;http://price.hotcommerce.svc.cluster.local&quot;</span></span><br><span class="line">          <span class="attr">ports:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">8003</span></span><br><span class="line">          <span class="attr">resources:</span></span><br><span class="line">            <span class="attr">limits:</span></span><br><span class="line">              <span class="attr">cpu:</span> <span class="string">&quot;1&quot;</span></span><br><span class="line">              <span class="attr">memory:</span> <span class="string">&quot;1048Mi&quot;</span></span><br><span class="line">            <span class="attr">requests:</span></span><br><span class="line">              <span class="attr">cpu:</span> <span class="string">&quot;100m&quot;</span></span><br><span class="line">              <span class="attr">memory:</span> <span class="string">&quot;1048Mi&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">shop</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">hotcommerce</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">shop</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">protocol:</span> <span class="string">TCP</span></span><br><span class="line">      <span class="attr">port:</span> <span class="number">80</span></span><br><span class="line">      <span class="attr">targetPort:</span> <span class="number">8002</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">shop</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">hotcommerce</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">1</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">shop</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">shop</span></span><br><span class="line">      <span class="attr">annotations:</span></span><br><span class="line">        <span class="attr">instrumentation.opentelemetry.io/inject-nodejs:</span> <span class="string">&quot;openobserve-collector/openobserve-nodejs&quot;</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">shop</span></span><br><span class="line">          <span class="attr">image:</span> <span class="string">public.ecr.aws/zinclabs/sample-shop-service-nodejs:51</span></span><br><span class="line">          <span class="attr">imagePullPolicy:</span> <span class="string">Always</span></span><br><span class="line">          <span class="attr">env:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">PRODUCT_SERVICE_URL</span></span><br><span class="line">              <span class="attr">value:</span> <span class="string">&quot;http://product.hotcommerce.svc.cluster.local&quot;</span></span><br><span class="line">          <span class="attr">ports:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">8002</span></span><br><span class="line">          <span class="attr">resources:</span></span><br><span class="line">            <span class="attr">limits:</span></span><br><span class="line">              <span class="attr">cpu:</span> <span class="string">&quot;1&quot;</span></span><br><span class="line">              <span class="attr">memory:</span> <span class="string">&quot;544Mi&quot;</span></span><br><span class="line">            <span class="attr">requests:</span></span><br><span class="line">              <span class="attr">cpu:</span> <span class="string">&quot;100m&quot;</span></span><br><span class="line">              <span class="attr">memory:</span> <span class="string">&quot;448Mi&quot;</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">frontend</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">hotcommerce</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">NodePort</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">frontend</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">protocol:</span> <span class="string">TCP</span></span><br><span class="line">      <span class="attr">port:</span> <span class="number">80</span></span><br><span class="line">      <span class="attr">targetPort:</span> <span class="number">8001</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">frontend</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">hotcommerce</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">1</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">frontend</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">frontend</span></span><br><span class="line">      <span class="attr">annotations:</span></span><br><span class="line">        <span class="attr">instrumentation.opentelemetry.io/inject-go:</span> <span class="string">&quot;openobserve-collector/openobserve-go&quot;</span></span><br><span class="line">        <span class="attr">instrumentation.opentelemetry.io/otel-go-auto-target-exe:</span> <span class="string">&quot;/app&quot;</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">frontend</span></span><br><span class="line">          <span class="attr">image:</span> <span class="string">public.ecr.aws/zinclabs/sample-frontend-service-go:51</span></span><br><span class="line">          <span class="attr">imagePullPolicy:</span> <span class="string">Always</span></span><br><span class="line">          <span class="attr">env:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">SHOP_SERVICE_URL</span></span><br><span class="line">              <span class="attr">value:</span> <span class="string">&quot;http://shop.hotcommerce.svc.cluster.local&quot;</span></span><br><span class="line">          <span class="attr">ports:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">8001</span></span><br><span class="line">          <span class="attr">resources:</span></span><br><span class="line">            <span class="attr">limits:</span></span><br><span class="line">              <span class="attr">cpu:</span> <span class="string">&quot;1&quot;</span></span><br><span class="line">              <span class="attr">memory:</span> <span class="string">&quot;543Mi&quot;</span></span><br><span class="line">            <span class="attr">requests:</span></span><br><span class="line">              <span class="attr">cpu:</span> <span class="string">&quot;100m&quot;</span></span><br><span class="line">              <span class="attr">memory:</span> <span class="string">&quot;438Mi&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>注意上面的每个 Deployment 应用中，我们都添加了对应的 <code>instrumentation.opentelemetry.io/inject-xxx</code> 的 <code>Annotation</code>，这样就可以实现自动埋点了。</p>
+<p>直接使用下面命令部署 HOT Commerce 应用即可：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">kubectl create ns hotcommerce</span><br><span class="line">kubectl apply -f hotcommerce.yaml</span><br></pre></td></tr></table></figure>
+
+<p>部署完成后，我们先查看所有的服务是否正常运行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl get pods -n hotcommerce</span><br><span class="line">NAME                        READY   STATUS    RESTARTS   AGE</span><br><span class="line">frontend-57c47854f7-8cwbp   1/1     Running   0          6m56s</span><br><span class="line">price-5d99b949b8-gzqr6      1/1     Running   0          6m56s</span><br><span class="line">product-85f94894f-7s8hw     1/1     Running   0          6m56s</span><br><span class="line">review-98bc7596f-ptbhk      1/1     Running   0          6m57s</span><br><span class="line">shop-966895886-hgpxt        1/1     Running   0          6m56s</span><br><span class="line">$ kubectl get svc -n hotcommerce</span><br><span class="line">NAME       TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)        AGE</span><br><span class="line">frontend   NodePort    10.96.3.25    &lt;none&gt;        80:30826/TCP   4m42s</span><br><span class="line">price      ClusterIP   10.96.1.147   &lt;none&gt;        80/TCP         4m43s</span><br><span class="line">product    ClusterIP   10.96.3.134   &lt;none&gt;        80/TCP         4m42s</span><br><span class="line">review     ClusterIP   10.96.1.22    &lt;none&gt;        80/TCP         4m43s</span><br><span class="line">shop       ClusterIP   10.96.2.4     &lt;none&gt;        80/TCP         4m42s</span><br></pre></td></tr></table></figure>
+
+<p>我们可以通过 <code>http://&lt;NodeIP&gt;:30826</code> 访问 <code>frontend</code> 服务了，当我们访问 <code>frontend</code> 服务时，<code>OpenTelemetry</code> 会自动为我们的应用程序生成链路追踪数据，并将其发送到 OpenTelemetry Collector，然后 Collector 会将数据发送到 OpenObserve 中。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ curl http://192.168.0.111:30826/item/1</span><br><span class="line">&#123;<span class="string">&quot;description&quot;</span>:<span class="string">&quot;This is a sample product.&quot;</span>,<span class="string">&quot;id&quot;</span>:1,<span class="string">&quot;in_stock&quot;</span>:10,<span class="string">&quot;name&quot;</span>:<span class="string">&quot;Sample Product&quot;</span>,<span class="string">&quot;price&quot;</span>:100,<span class="string">&quot;rating&quot;</span>:5,<span class="string">&quot;review&quot;</span>:<span class="string">&quot;This is a great product!&quot;</span>,<span class="string">&quot;warehouse_location&quot;</span>:<span class="string">&quot;A1-B2&quot;</span>&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后我们就可以在 <code>O2</code> 中查看到有 <code>traces</code> 类型的数据流了。切换到<strong>追踪</strong>页面，就可以看到我们采集到的链路追踪数据了：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/ybu3mr.png" alt="K8s Traces"></p>
+<p>点击一个 Trace ID，就可以查看这个链路追踪的详细信息了：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/ugwtlu.png" alt="Trace Detail"></p>
+<p>这里我们可以看到这个链路追踪的详细信息，包括每个服务的调用时间、调用耗时、调用结果等信息。</p>
+<p>到这里我们就实现了在 OpenObserve 中查看我们的 K8s 集群的观测数据，当然同样的对于非 K8s 集群的应用也可以直接将数据采集到 OpenObserve 中，比如 Fluentd、Vector、Prometheus、OpenTelemetry Collector 等。</p>
+<blockquote>
+<p>此外 O2 还有很多其他功能，比如报警、函数、前端性能监控等，可以关注后续文章。</p>
+</blockquote>
+<h2 id="参考文档"><a href="#参考文档" class="headerlink" title="参考文档"></a>参考文档</h2><ul>
+<li><code>https://openobserve.ai/docs/</code></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/" rel="prev" title="内核基础">
+      <i class="fa fa-chevron-left"></i> 内核基础
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F/" rel="next" title="代理模式">
+      代理模式 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BA%91%E5%8E%9F%E7%94%9F%E5%8F%AF%E8%A7%82%E6%B5%8B%E5%B9%B3%E5%8F%B0-OpenObserve"><span class="nav-number">1.</span> <span class="nav-text">云原生可观测平台 OpenObserve</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9B%B8%E5%85%B3%E6%A6%82%E5%BF%B5"><span class="nav-number">1.1.</span> <span class="nav-text">相关概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%B6%E6%9E%84"><span class="nav-number">1.2.</span> <span class="nav-text">架构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%95%E8%8A%82%E7%82%B9%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.2.1.</span> <span class="nav-text">单节点模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%AB%98%E5%8F%AF%E7%94%A8%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.2.2.</span> <span class="nav-text">高可用模式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85"><span class="nav-number">1.3.</span> <span class="nav-text">安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8"><span class="nav-number">1.4.</span> <span class="nav-text">使用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B%E6%95%B0%E6%8D%AE%E5%AF%BC%E5%85%A5"><span class="nav-number">1.4.1.</span> <span class="nav-text">示例数据导入</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%87%87%E9%9B%86-Kubernetes-%E8%A7%82%E6%B5%8B%E6%95%B0%E6%8D%AE"><span class="nav-number">1.4.2.</span> <span class="nav-text">采集 Kubernetes 观测数据</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E6%A1%A3"><span class="nav-number">1.5.</span> <span class="nav-text">参考文档</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

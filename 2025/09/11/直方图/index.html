@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="直方图在这一节中，我们将学习直方图指标，了解如何根据这些指标来计算分位数。Prometheus 中的直方图指标允许一个服务记录一系列数值的分布。直方图通常用于跟踪请求的延迟或响应大小等指标值，当然理论上它是可以跟踪任何根据某种分布而产生波动数值的大小。Prometheus 直方图是在客户端对数据进行的采样，它们使用的一些可配置的（例如延迟）bucket 桶对观察到的值进行计数，然后将这些 buck">
+<meta property="og:type" content="article">
+<meta property="og:title" content="直方图">
+<meta property="og:url" content="http://example.com/2025/09/11/%E7%9B%B4%E6%96%B9%E5%9B%BE/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="直方图在这一节中，我们将学习直方图指标，了解如何根据这些指标来计算分位数。Prometheus 中的直方图指标允许一个服务记录一系列数值的分布。直方图通常用于跟踪请求的延迟或响应大小等指标值，当然理论上它是可以跟踪任何根据某种分布而产生波动数值的大小。Prometheus 直方图是在客户端对数据进行的采样，它们使用的一些可配置的（例如延迟）bucket 桶对观察到的值进行计数，然后将这些 buck">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/xcsmp6.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/ii580b.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/gctpxj.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/gh5npf.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/dem2vz.png">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:20:23.850Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta property="article:tag" content="Prometheus">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://mudutestmenu.mudu.tv/upload/xcsmp6.png">
+
+<link rel="canonical" href="http://example.com/2025/09/11/%E7%9B%B4%E6%96%B9%E5%9B%BE/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>直方图 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/%E7%9B%B4%E6%96%B9%E5%9B%BE/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          直方图
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:20:23" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/" itemprop="url" rel="index"><span itemprop="name">k8s-monitor</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/Prometheus/" itemprop="url" rel="index"><span itemprop="name">Prometheus</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/Prometheus/Query-PromQL/" itemprop="url" rel="index"><span itemprop="name">Query PromQL</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.1k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="直方图"><a href="#直方图" class="headerlink" title="直方图"></a>直方图</h1><p>在这一节中，我们将学习直方图指标，了解如何根据这些指标来计算分位数。Prometheus 中的直方图指标允许一个服务记录一系列数值的分布。直方图通常用于跟踪<strong>请求的延迟或响应大小</strong>等指标值，当然理论上它是可以跟踪任何根据某种分布而产生波动数值的大小。Prometheus 直方图是在客户端对数据进行的采样，它们使用的一些可配置的（例如延迟）bucket 桶对观察到的值进行计数，然后将这些 bucket 作为单独的时间序列暴露出来。</p>
+<p>下图是一个非累积直方图的例子：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/xcsmp6.png" alt="非累积直方图"></p>
+<p>在 Prometheus 内部，直方图被实现为一组时间序列，每个序列代表指定桶的计数（例如<code>10ms以下的请求数</code>、<code>25ms以下的请求数</code>、<code>50ms以下的请求数</code>等）。 在 Prometheus 中每个 bucket 桶的计数器是累加的，这意味着较大值的桶也包括所有低数值的桶的计数。在作为直方图一部分的每个时间序列上，相应的桶由特殊的 <code>le</code> 标签表示。<code>le</code> 代表的是<strong>小于或等于</strong>。</p>
+<p>与上面相同的直方图在 Prometheus 中的累积直方图如下所示：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/ii580b.png" alt="Prometheus 直方图"></p>
+<p>可以看到在 Prometheus 中直方图的计数是累计的，这是很奇怪的，因为通常情况下非累积的直方图更容易理解。Prometheus 为什么要这么做呢？想象一下，如果直方图指标中加入了额外的标签，或者划分了更多的 bucket，那么样本数据的分析就会变得越来越复杂，如果直方图是累积的，在抓取指标时就可以根据需要丢弃某些 bucket，这样可以在降低 Prometheus 维护成本的同时，还可以粗略计算样本值的分位数。通过这种方法，用户不需要修改应用代码，便可以动态减少抓取到的样本数量。另外直方图还提供了 <code>_sum</code> 指标和 <code>_count</code> 指标，所以即使你丢弃了所有的 bucket，仍然可以通过这两个指标值来计算请求的平均响应时间。通过累积直方图的方式，还可以很轻松地计算某个 bucket 的样本数占所有样本数的比例。</p>
+<p>我们在演示的 demo 服务中暴露了一个直方图指标 <code>demo_api_request_duration_seconds_bucket</code>，用于跟踪 API 请求时长的分布，由于这个直方图为每个跟踪的维度导出了 26 个 bucket，因此这个指标有很多时间序列。我们可以先来看下来自一个服务实例的一个请求维度组合的直方图，查询语句如下所示：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">demo_api_request_duration_seconds_bucket&#123;instance=&quot;demo-service-0:10000&quot;, method=&quot;POST&quot;, path=&quot;/api/bar&quot;, status=&quot;200&quot;, job=&quot;demo&quot;&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>正常我们可以看到 26 个序列，每个序列代表一个 bucket，由 <code>le</code> 标签标识：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/gctpxj.png" alt="26个序列"></p>
+<p>直方图可以帮助我们了解这样的问题，比如<code>&quot;我有多少个请求超过了100ms的时间？&quot;</code> (当然需要直方图中配置了一个以 100ms 为边界的桶)，又比如<code>&quot;我99%的请求是在多少延迟下完成的？&quot;</code>，这类数值被称为<strong>百分位数</strong>或<strong>分位数</strong>。在 Prometheus 中这两个术语几乎是可以通用，只是百分位数指定在 0-100 范围内，而分位数表示在 0 和 1 之间，所以第 99 个百分位数相当于目标分位数 0.99。</p>
+<p>如果你的直方图桶粒度足够小，那么我们可以使用 <code>histogram_quantile(φ scalar, b instant-vector)</code> 函数用于计算历史数据指标一段时间内的分位数。该函数将目标分位数 (<code>0 ≤ φ ≤ 1</code>) 和直方图指标作为输入，就是大家平时讲的 <code>pxx</code>，<code>p50</code> 就是中位数，参数 <code>b</code> 一定是包含 <code>le</code> 这个标签的瞬时向量，不包含就无从计算分位数了，但是计算的分位数是一个预估值，并不完全准确，因为这个函数是假定每个区间内的样本分布是线性分布来计算结果值的，预估的准确度取决于 bucket 区间划分的粒度，粒度越大，准确度越低。</p>
+<p>回到我们的演示服务，我们可以尝试计算所有维度在所有时间内的第 90 个百分位数，也就是 90% 的请求的持续时间。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># BAD!</span><br><span class="line">histogram_quantile(0.9, demo_api_request_duration_seconds_bucket&#123;job=&quot;demo&quot;&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>但是这个查询方式是有一点问题的，当单个服务实例重新启动时，bucket 的 Counter 计数器会被重置，而且我们常常想看看<code>现在</code>的延迟是多少（比如在过去 5 分钟内），而不是整个时间内的指标。我们可以使用 <code>rate()</code> 函数应用于底层直方图计数器来实现这一点，该函数会自动处理 Counter 重置，又可以只计算每个桶在指定时间窗口内的平均增长。</p>
+<p>我们可以这样去计算过去 5 分钟内第 90 个百分位数的 API 延迟：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># GOOD!</span><br><span class="line">histogram_quantile(0.9, rate(demo_api_request_duration_seconds_bucket&#123;job=&quot;demo&quot;&#125;[5m]))</span><br></pre></td></tr></table></figure>
+
+<p>这个查询就好很多了。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/gh5npf.png" alt="API 延迟"></p>
+<p>这个查询会显示每个维度（job、instance、path、method 和 status）的第 90 个百分点，但是我们可能对单独的这些维度并不感兴趣，想把他们中的一些指标聚合起来，这个时候我们可以在查询的时候使用 Prometheus 的 <code>sum</code> 运算符与 <code>histogram_quantile()</code> 函数结合起来，计算出聚合的百分位，假设在我们想要聚合的维度之间，直方图桶的配置方式相同（桶的数量相同，上限相同），我们可以将不同维度之间具有相同 <code>le</code> 标签值的桶加在一起，得到一个聚合直方图。然后，我们可以使用该聚合直方图作为 <code>histogram_quantile()</code> 函数的输入。</p>
+<blockquote>
+<p>注意：这是假设直方图的桶在你要聚合的所有维度之间的配置是相同的，桶的配置也应该是相对静态的配置，不会一直变化，因为这会破坏你使用 <code>histogram_quantile()</code> 查看的时间范围内的结果。</p>
+</blockquote>
+<p>下面的查询计算了第 90 个百分位数的延迟，但只按 job、instance 和 path 维度进行聚合结果：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/dem2vz.png" alt="90百分位数"></p>
+<h2 id="练习"><a href="#练习" class="headerlink" title="练习"></a>练习</h2><p>1.构建一个查询，计算在 0.0001 秒内完成的 demo 服务 API 请求的总百分比，与过去 5 分钟内所有请求总数的平均值。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sum(rate(demo_api_request_duration_seconds_bucket&#123;le=&quot;0.0001&quot;&#125;[5m]))</span><br><span class="line">/</span><br><span class="line">sum(rate(demo_api_request_duration_seconds_bucket&#123;le=&quot;+Inf&quot;&#125;[5m])) * 100</span><br></pre></td></tr></table></figure>
+
+<p>或者可以使用下面的语句查询</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sum(rate(demo_api_request_duration_seconds_bucket&#123;le=&quot;0.0001&quot;&#125;[5m]))</span><br><span class="line">/</span><br><span class="line"> sum(rate(demo_api_request_duration_seconds_count[5m])) * 100</span><br></pre></td></tr></table></figure>
+
+<p>2.构建一个查询，计算 demo 服务 API 请求的第 50 个百分位延迟，按 status code 和 method 进行划分，在过去一分钟的平均值。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">histogram_quantile(0.5, sum by(status, method, le) (rate(demo_api_request_duration_seconds_bucket[1m])))</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+              <a href="/tags/Prometheus/" rel="tag"># Prometheus</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E7%A3%81%E7%9B%98%E7%AE%A1%E7%90%86/" rel="prev" title="磁盘管理">
+      <i class="fa fa-chevron-left"></i> 磁盘管理
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E7%9B%91%E6%8E%A7%20Pod/" rel="next" title="监控 Pod">
+      监控 Pod <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%9B%B4%E6%96%B9%E5%9B%BE"><span class="nav-number">1.</span> <span class="nav-text">直方图</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%83%E4%B9%A0"><span class="nav-number">1.1.</span> <span class="nav-text">练习</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

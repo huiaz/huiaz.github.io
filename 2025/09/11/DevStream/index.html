@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="DevOps 工具链管理器 DevStream 还真是神器DevStream 是一个开源的 DevOps 工具链管理器，因开发者而生，由开发者开发，为开发者服务。 想象你正在开始一个新的项目或组建一个新的团队。在写第一行代码之前，你需要一个能够高效运转 SDLC(软件开发生命周期)和承载开发至部署全过程的工具。 通常情况下，你需要以下几个部分来高效地工作。  项目管理软件或  issue 追溯工具">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DevStream">
+<meta property="og:url" content="http://example.com/2025/09/11/DevStream/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="DevOps 工具链管理器 DevStream 还真是神器DevStream 是一个开源的 DevOps 工具链管理器，因开发者而生，由开发者开发，为开发者服务。 想象你正在开始一个新的项目或组建一个新的团队。在写第一行代码之前，你需要一个能够高效运转 SDLC(软件开发生命周期)和承载开发至部署全过程的工具。 通常情况下，你需要以下几个部分来高效地工作。  项目管理软件或  issue 追溯工具">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/ooss8o.jpg">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/mjl37o.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/zswhg3.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/3bro7b.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/m39ck4.jpg">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/odq34d.jpg">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/905lff.jpg">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/zxiiua.jpg">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T12:42:57.218Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://mudutestmenu.mudu.tv/upload/ooss8o.jpg">
+
+<link rel="canonical" href="http://example.com/2025/09/11/DevStream/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>DevStream | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/DevStream/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          DevStream
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：20:42:57" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/Devops/" itemprop="url" rel="index"><span itemprop="name">Devops</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>20k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>18 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="DevOps-工具链管理器-DevStream-还真是神器"><a href="#DevOps-工具链管理器-DevStream-还真是神器" class="headerlink" title="DevOps 工具链管理器 DevStream 还真是神器"></a>DevOps 工具链管理器 DevStream 还真是神器</h1><p><a target="_blank" rel="noopener" href="https://github.com/devstream-io/devstream">DevStream</a> 是一个开源的 DevOps 工具链管理器，因开发者而生，由开发者开发，为开发者服务。</p>
+<p>想象你正在开始一个新的项目或组建一个新的团队。在写第一行代码之前，你需要一个能够高效运转 SDLC(软件开发生命周期)和承载开发至部署全过程的工具。</p>
+<p>通常情况下，你需要以下几个部分来高效地工作。</p>
+<ul>
+<li>项目管理软件或  <code>issue</code> 追溯工具（JIRA 等）</li>
+<li>源代码管理（GitHub、Bitbucket 等）</li>
+<li>持续集成（Jenkins、CircleCI、Travis CI 等）</li>
+<li>持续交付&#x2F;部署（Flux CD&#x2F;Flux2、Argo CD 等)</li>
+<li>密钥和证书的单一事实来源(A single source of truth)（密钥管理器，如 HashiCorp 的 Vault）</li>
+<li>集成化的日志和监控工具（例如，ELK、Prometheus&#x2F;Grafana）</li>
+<li>……</li>
+</ul>
+<p>实际的情况可能远不止这些，要找到合适的组件本身就不容易了，再将这些工具整合起来就更难了，需要花费大量的时间和精力。而 <code>DevStream</code> 就是为简化整合 DevOps 组件而构建的工具，有点类似于 <code>yum</code>、<code>apt</code> 这些软件包管理工具，<code>DevStream</code> 就是 DevOps 工具领域的软件包管理器。</p>
+<h2 id="核心概念"><a href="#核心概念" class="headerlink" title="核心概念"></a>核心概念</h2><p>DevOps 中通用的一些概念，比如 Git、Docker、Kubernetes、Continuous Integratoin、Continuous Delivery 和 GitOps，这些也是 DevStream 的核心概念。</p>
+<p><code>DevStream</code> 中涉及到几个自己的概念：Config（配置）、Tool（工具）、State（状态）、Resource（资源），这几个概念构成了 <code>DevStream</code> 的整个工作流，下面我们来具体了解下这几个概念。</p>
+<h3 id="Config（配置）"><a href="#Config（配置）" class="headerlink" title="Config（配置）"></a>Config（配置）</h3><p><code>DevStream</code> 通过配置文件来定义你的 DevOps 工具链，一共包括 3 个配置文件：</p>
+<ul>
+<li>main config file（主配置文件）</li>
+<li>variable config file（变量配置文件）</li>
+<li>tool config file（工具配置文件）</li>
+</ul>
+<p><strong>主配置文件</strong></p>
+<p>默认情况下，dtm（DevStream 的命令行工具）会尝试使用 <code>./config.yaml</code> 作为主配置文件。主配置文件主要包含 3 个部分：</p>
+<ul>
+<li><code>varFile</code>：var 文件的文件路径</li>
+<li><code>toolFile</code>：工具文件的文件路径</li>
+<li><code>state</code>：与状态相关的设置</li>
+</ul>
+<p>如下所示的 <code>config.yaml</code> 文件就是一个主配置文件：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># config.yaml</span></span><br><span class="line"><span class="attr">varFile:</span> <span class="string">variables.yaml</span></span><br><span class="line"></span><br><span class="line"><span class="attr">toolFile:</span> <span class="string">tools.yaml</span></span><br><span class="line"></span><br><span class="line"><span class="attr">state:</span></span><br><span class="line">  <span class="attr">backend:</span> <span class="string">local</span></span><br><span class="line">  <span class="attr">options:</span></span><br><span class="line">    <span class="attr">stateFile:</span> <span class="string">devstream.state</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>变量配置文件</strong></p>
+<p>变量配置文件是一个包含键值对的 YAML 文件，可以在工具配置文件中使用。</p>
+<p>如下所示的 <code>variables.yaml</code> 文件就是一个变量配置文件：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># variables.yaml</span></span><br><span class="line"><span class="attr">githubUsername:</span> <span class="string">cnych</span></span><br><span class="line"><span class="attr">repoName:</span> <span class="string">dtm-test-go</span></span><br><span class="line"><span class="attr">defaultBranch:</span> <span class="string">main</span></span><br><span class="line"><span class="attr">dockerhubUsername:</span> <span class="string">cnych</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>工具配置文件</strong></p>
+<p>工具配置文件包含工具列表。工具文件包含以下内容：</p>
+<ul>
+<li>目前只有一个配置块，即 <code>tools</code></li>
+<li><code>tools</code> 是一个字典列表</li>
+<li>每个字典都定义了一个由 <code>DevStream</code> 插件管理的 DevOps <strong>工具</strong></li>
+<li>每个字典（工具）都有以下必填字段：<ul>
+<li><code>name</code>：工具&#x2F;插件的名称，字符串，不带下划线</li>
+<li><code>instanceID</code>：该工具实例的 id</li>
+<li>一个配置文件中可以有重复的名称，也可以在一个配置文件中有重复的 <code>instanceID</code>，但是 <code>name + instanceID</code> 的组合在一个配置文件中必须是唯一的</li>
+</ul>
+</li>
+<li>每个工具都有一个可选字段，即 <code>options</code>，它是一个包含该特定插件参数的字典</li>
+<li>每个工具都有一个可选字段，即 <code>dependsOn</code>，用来定义相关依赖项</li>
+</ul>
+<p>如下所示的 <code>tools.yaml</code> 文件就定义了一个工具配置文件：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># tools.yaml</span></span><br><span class="line"><span class="attr">tools:</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">github-repo-scaffolding-golang</span></span><br><span class="line">  <span class="attr">instanceID:</span> <span class="string">default</span></span><br><span class="line">  <span class="attr">options:</span></span><br><span class="line">    <span class="attr">owner:</span> [[ <span class="string">githubUsername</span> ]]</span><br><span class="line">    <span class="attr">org:</span> <span class="string">&quot;&quot;</span></span><br><span class="line">    <span class="attr">repo:</span> [[ <span class="string">repoName</span> ]]</span><br><span class="line">    <span class="attr">branch:</span> [[ <span class="string">defaultBranch</span> ]]</span><br><span class="line">    <span class="attr">image_repo:</span> [[ <span class="string">dockerhubUsername</span> ]]<span class="string">/[[</span> <span class="string">repoName</span> <span class="string">]]</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">jira-github-integ</span></span><br><span class="line">  <span class="attr">instanceID:</span> <span class="string">default</span></span><br><span class="line">  <span class="attr">dependsOn:</span> [ <span class="string">&quot;github-repo-scaffolding-golang.default&quot;</span> ]</span><br><span class="line">  <span class="attr">options:</span></span><br><span class="line">    <span class="attr">owner:</span> [[ <span class="string">githubUsername</span> ]]</span><br><span class="line">    <span class="attr">repo:</span> [[ <span class="string">repoName</span> ]]</span><br><span class="line">    <span class="attr">jiraBaseUrl:</span> <span class="string">https://xxx.atlassian.net</span></span><br><span class="line">    <span class="attr">jiraUserEmail:</span> <span class="string">foo@bar.com</span></span><br><span class="line">    <span class="attr">jiraProjectKey:</span> <span class="string">zzz</span></span><br><span class="line">    <span class="attr">branch:</span> <span class="string">main</span></span><br></pre></td></tr></table></figure>
+
+<p>配置文件中的变量可以看到我们是通过 <code>[[ varNameHere ]]</code> 来定义的。<code>DevStream</code> 将使用提供的 var 文件来渲染上面的配置。</p>
+<p><strong>state</strong></p>
+<p>主配置文件中还包括一个 <code>state</code> 属性，<code>state</code> 部分指定存储 <code>DevStream</code> 状态的位置。到目前的 v0.6.0 版本开始，<code>DevStream</code> 同时支持 <code>local</code> 和 <code>s3</code> 后端存储来保存 <code>DevStream</code> 的状态。</p>
+<p>如果使用的是 <code>local</code> 模式，那么 <code>state.options.stateFile</code> 是必须配置的属性。如果使用 <code>s3</code> 这种后端存储模式，则对应的配置如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">varFile:</span> <span class="string">variables.yaml</span></span><br><span class="line"><span class="attr">toolFile:</span> <span class="string">tools.yaml</span></span><br><span class="line"><span class="attr">state:</span></span><br><span class="line">  <span class="attr">backend:</span> <span class="string">s3</span></span><br><span class="line">  <span class="attr">options:</span></span><br><span class="line">    <span class="attr">bucket:</span> <span class="string">devstream-remote-state</span></span><br><span class="line">    <span class="attr">region:</span> <span class="string">ap-southeast-1</span></span><br><span class="line">    <span class="attr">key:</span> <span class="string">devstream.state</span></span><br></pre></td></tr></table></figure>
+
+<p>其中 <code>state.options</code> 属性下的 <code>bucket</code>、<code>region</code> 和 <code>key</code> 都是 <code>s3</code> 后端的必填字段。在真正使用的时候我们需要通过环境变量来配置 AWS 的相关密钥信息：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">export AWS_ACCESS_KEY_ID=ID_HERE</span><br><span class="line">export AWS_SECRET_ACCESS_KEY=SECRET_HERE</span><br><span class="line">export AWS_DEFAULT_REGION=REGION_HERE</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>注意：同样我们也可以将多个 YAML 文件放在同一个文件中，并用三个破折号 (—) 分隔不同的文件。</p>
+</blockquote>
+<h3 id="Tool（工具）"><a href="#Tool（工具）" class="headerlink" title="Tool（工具）"></a>Tool（工具）</h3><ul>
+<li>每个工具对应着一个插件，可以用来安装、配置或集成一些 DevOps 工具。</li>
+<li>每个工具都有其名称、InstanceID 和选项。</li>
+<li>每个工具都可以有其依赖项，这些依赖项由 <code>dependsOn</code> 字段指定。</li>
+</ul>
+<p><code>dependsOn</code> 是一个字符串数组，每个元素都是一个依赖。每个依赖项都以 <code>TOOL_NAME.INSTANCE_ID</code> 的格式命名。</p>
+<h3 id="State（状态）"><a href="#State（状态）" class="headerlink" title="State（状态）"></a>State（状态）</h3><p>State 记录了您的 DevOps 工具链的当前状态，它包含每个工具的配置和当前状态。</p>
+<ul>
+<li>状态是一个 Map</li>
+<li>Map 中的每个状态都是一个包含名称、插件、选项和资源的结构</li>
+</ul>
+<h3 id="Resource（资源）"><a href="#Resource（资源）" class="headerlink" title="Resource（资源）"></a>Resource（资源）</h3><p>我们将创建的插件称为资源，插件的 <code>Read()</code> 接口将返回对该资源的描述，该描述又存储为状态的一部分。</p>
+<p><code>DevStream</code> 的整个工作流如下图所示：<img data-src="https://mudutestmenu.mudu.tv/upload/ooss8o.jpg" alt="img"></p>
+<ul>
+<li>首先获取工具状态</li>
+<li>如果状态中没找到工具，则调用 <code>Create()</code> 接口创建</li>
+<li>如果状态中找到了工具，则从状态中进行配置对比，如果有变化，则调用 <code>Update()</code> 接口进行更新</li>
+<li>如果没有变化则调用 <code>Read()</code> 接口从资源中获取描述信息</li>
+<li>如果没有对应的资源，则调用 <code>Create()</code> 接口创建资源</li>
+<li>如果有对应的资源，则从状态中进行资源对比，如果有变化，同样调用 <code>Update()</code> 接口更新</li>
+<li>如果没任何变化则忽略</li>
+</ul>
+<h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><p><code>DevStream</code> 的命令行工具叫 <code>dtm</code>，我们只需要下载该文件即可，前往 Release 页面 <a target="_blank" rel="noopener" href="https://github.com/devstream-io/devstream/releases">https://github.com/devstream-io/devstream/releases</a> 打开最新的版本，下载对应平台的安装包（目前只支持 Linux 和 MacOS 系统）。</p>
+<p>比如我这里是 Mac m1 平台，则下载 <a target="_blank" rel="noopener" href="https://devstream.gateway.scarf.sh/releases/v0.7.0/dtm-darwin-arm64">https://devstream.gateway.scarf.sh/releases/v0.7.0/dtm-darwin-arm64</a> 这个安装包，</p>
+<p>标记 dtm 为可执行文件，然后将其移动到 PATH 路径下面去：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mv dtm-darwin-arm64 dtm</span><br><span class="line">chmod +x dtm</span><br><span class="line">sudo mv dtm /usr/local/bin</span><br></pre></td></tr></table></figure>
+
+<p>现在我们可以通过执行 dtm 命令来验证是否安装成功。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/mjl37o.png" alt="img"></p>
+<h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><h3 id="基本命令"><a href="#基本命令" class="headerlink" title="基本命令"></a>基本命令</h3><p>安装完成后我们就可以使用 <code>dtm</code> 工具了，直接执行 <code>dtm</code> 命令会显示目前所有的可用命令。</p>
+<p>比如使用 <code>dtm list plugins</code> 命令可以查看目前 <code>DevStream</code> 支持的插件列表。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">dtm list plugins</span></span><br><span class="line">argocd</span><br><span class="line">argocdapp</span><br><span class="line">devlake</span><br><span class="line">github-repo-scaffolding-golang</span><br><span class="line">githubactions-golang</span><br><span class="line">githubactions-nodejs</span><br><span class="line">githubactions-python</span><br><span class="line">gitlab-ce-docker</span><br><span class="line">gitlab-repo-scaffolding-golang</span><br><span class="line">gitlabci-generic</span><br><span class="line">gitlabci-golang</span><br><span class="line">hashicorp-vault</span><br><span class="line">helm-generic</span><br><span class="line">jenkins</span><br><span class="line">jira-github-integ</span><br><span class="line">kube-prometheus</span><br><span class="line">openldap</span><br><span class="line">tekton</span><br><span class="line">trello</span><br><span class="line">trello-github-integ</span><br></pre></td></tr></table></figure>
+
+<p>使用 <code>dtm show config</code> 命令可以显示默认的配置信息，其实就是 3 个主要配置文件的配置样例，如下所示：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">dtm show config</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">defaultconfig.yaml sample:</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">var file path, you can <span class="built_in">set</span> it to absolute path or relative path.</span></span><br><span class="line">varFile: variables.yaml # here is a relative path. (defaults is ./variables.yaml)</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">tool file path, you can <span class="built_in">set</span> it to absolute path or relative path.</span></span><br><span class="line">toolFile: tools.yaml # here is a relative path.</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">state config</span></span><br><span class="line">state:</span><br><span class="line">  backend: local # backend can be local or s3</span><br><span class="line">  options:</span><br><span class="line">    stateFile: devstream.state</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">tools.yaml sample:</span></span><br><span class="line">tools:</span><br><span class="line">  - name: github-repo-scaffolding-golang</span><br><span class="line">    instanceID: default</span><br><span class="line">    options:</span><br><span class="line">      owner: [ [ githubUsername ] ]</span><br><span class="line">      org: &quot;&quot;</span><br><span class="line">      repo: [ [ repoName ] ]</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">variables.yaml sample:</span></span><br><span class="line">githubUsername: daniel-hutao</span><br><span class="line">repo: go-webapp-demo</span><br></pre></td></tr></table></figure>
+
+<p>此外我们还可以在 <code>show config</code> 命令后面添加一个 <code>--plugin</code> 参数，来显示指定插件的配置信息，比如我们查看 argocd 的配置，如下所示：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">dtm show config --plugin argocd</span></span><br><span class="line">tools:</span><br><span class="line"><span class="meta prompt_">  # </span><span class="language-bash">name of the tool</span></span><br><span class="line">  - name: argocd</span><br><span class="line">    # id of the tool instance</span><br><span class="line">    instanceID: default</span><br><span class="line">    # format: name.instanceID; If specified, dtm will make sure the dependency is applied first before handling this tool.</span><br><span class="line">    dependsOn: [ ]</span><br><span class="line">    # options for the plugin</span><br><span class="line">    options:</span><br><span class="line">      # need to create the namespace or not, default: false</span><br><span class="line">      create_namespace: true</span><br><span class="line">      repo:</span><br><span class="line">        # name of the Helm repo</span><br><span class="line">        name: argo</span><br><span class="line">        # url of the Helm repo</span><br><span class="line">        url: https://argoproj.github.io/argo-helm</span><br><span class="line">      # Helm chart information</span><br><span class="line">      chart:</span><br><span class="line">        # name of the chart</span><br><span class="line">        chart_name: argo/argo-cd</span><br><span class="line">        # release name of the chart</span><br><span class="line">        release_name: argocd</span><br><span class="line">        # k8s namespace where ArgoCD will be installed</span><br><span class="line">        namespace: argocd</span><br><span class="line">        # whether to wait for the release to be deployed or not</span><br><span class="line">        wait: true</span><br><span class="line">        # the time to wait for any individual Kubernetes operation (like Jobs for hooks). This defaults to 5m0s</span><br><span class="line">        timeout: 5m</span><br><span class="line">        # whether to perform a CRD upgrade during installation</span><br><span class="line">        upgradeCRDs: true</span><br><span class="line">        # custom configuration (Optional). You can refer to [ArgoCD values.yaml](https://github.com/argoproj/argo-helm/blob/master/charts/argo-cd/values.yaml)</span><br><span class="line">        values_yaml: |</span><br><span class="line">          controller:</span><br><span class="line">            service:</span><br><span class="line">              port: 8080</span><br></pre></td></tr></table></figure>
+
+<p>如果我们想要开发自己的插件，可以使用 <code>dtm develop</code> 命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">dtm develop</span></span><br><span class="line">Develop is used for develop a new plugin</span><br><span class="line"></span><br><span class="line">Usage:</span><br><span class="line">  dtm develop [command]</span><br><span class="line"></span><br><span class="line">Available Commands:</span><br><span class="line">  create-plugin   Create a new plugin</span><br><span class="line">  validate-plugin Validate a plugin</span><br><span class="line"></span><br><span class="line">Flags:</span><br><span class="line">  -h, --help   help for develop</span><br><span class="line"></span><br><span class="line">Global Flags:</span><br><span class="line">      --debug   debug level log</span><br><span class="line"></span><br><span class="line">Use &quot;dtm develop [command] --help&quot; for more information about a command.</span><br></pre></td></tr></table></figure>
+
+<p>其中包含 <code>create-plugin</code> 和 <code>validate-plugin</code> 两个子命令，一个用于创建一个新的插件，一个用于校验插件使用，比如创建一个名为 <code>plugin-demo</code> 的插件：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">dtm develop create-plugin</span></span><br><span class="line">2022-07-02 12:10:29 ✖ [FATAL]  the name must be not &quot;&quot;, you can specify it by --name flag</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">dtm develop create-plugin --name plugin-demo</span></span><br><span class="line">2022-07-02 12:10:45 ℹ [INFO]  Render template files finished.</span><br><span class="line">2022-07-02 12:10:45 ℹ [INFO]  Persist all files finished.</span><br><span class="line"></span><br><span class="line">The DevStream PMC (project management committee) sincerely thank you for your devotion and enthusiasm in creating new plugins!</span><br><span class="line"></span><br><span class="line">To make the process easy as a breeze, DevStream(dtm) has generated some templated source code files for you to flatten the learning curve and reduce manual copy-paste.</span><br><span class="line">In the generated templates, dtm has left some special marks in the format of &quot;TODO(dtm)&quot;.</span><br><span class="line">Please look for these TODOs by global search. Once you find them, you will know what to do with them. Also, please remember to check our documentation on creating a new plugin:</span><br><span class="line"></span><br><span class="line">**README_when_create_plugin.md**</span><br><span class="line"></span><br><span class="line">Source code files created.</span><br><span class="line"></span><br><span class="line">Happy hacking, buddy!</span><br><span class="line">Please give us feedback through GitHub issues if you encounter any difficulties. We guarantee that you will receive unrivaled help from our passionate community!</span><br></pre></td></tr></table></figure>
+
+<p>上面的命令会创建一个插件开发的脚手架，结构如下所示：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">tree .</span></span><br><span class="line">.</span><br><span class="line">├── README_when_create_plugin.md</span><br><span class="line">├── cmd</span><br><span class="line">│   └── plugin</span><br><span class="line">│       └── plugin-demo</span><br><span class="line">│           └── main.go</span><br><span class="line">├── docs</span><br><span class="line">│   └── plugins</span><br><span class="line">│       └── plugin-demo.md</span><br><span class="line">└── internal</span><br><span class="line">    └── pkg</span><br><span class="line">        ├── plugin</span><br><span class="line">        │   └── plugindemo</span><br><span class="line">        │       ├── create.go</span><br><span class="line">        │       ├── delete.go</span><br><span class="line">        │       ├── options.go</span><br><span class="line">        │       ├── plugindemo.go</span><br><span class="line">        │       ├── read.go</span><br><span class="line">        │       ├── update.go</span><br><span class="line">        │       └── validate.go</span><br><span class="line">        └── show</span><br><span class="line">            └── config</span><br><span class="line">                └── plugins</span><br><span class="line">                    └── plugin-demo.yaml</span><br><span class="line"></span><br><span class="line">12 directories, 11 files</span><br></pre></td></tr></table></figure>
+
+<p>然后可以根据我们自己的实际需求去开发对应的插件即可，开发完成后可以校验插件的有效性。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">dtm develop validate-plugin --name plugin-demo</span></span><br><span class="line">2022-07-02 12:13:05 ✔ [SUCCESS]  Plugin &lt;plugin-demo&gt; passed validation.</span><br></pre></td></tr></table></figure>
+
+<h3 id="实践"><a href="#实践" class="headerlink" title="实践"></a>实践</h3><p>接下来我们使用 <code>DevStream</code> 来实践下如何快速创建我们的 DevOps 工具链。</p>
+<p>首先创建一个名为 <code>devstream-demo</code> 的目录：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mkdir devstream-demo &amp;&amp; cd devstream-demo</span><br></pre></td></tr></table></figure>
+
+<p>然后在该目录下创建一个名为 <code>config.yaml</code> 的主配置文件，文件内容如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># config.yaml</span></span><br><span class="line"><span class="attr">varFile:</span> <span class="string">variables-gitops.yaml</span></span><br><span class="line"></span><br><span class="line"><span class="attr">toolFile:</span> <span class="string">tools-gitops.yaml</span></span><br><span class="line"></span><br><span class="line"><span class="attr">state:</span></span><br><span class="line">  <span class="attr">backend:</span> <span class="string">local</span></span><br><span class="line">  <span class="attr">options:</span></span><br><span class="line">    <span class="attr">stateFile:</span> <span class="string">devstream.state</span></span><br></pre></td></tr></table></figure>
+
+<p>在该主配置文件中我们指定了 <code>varFile</code> 和 <code>toolFile</code> 两个配置文件，已经使用了本地存储状态信息。</p>
+<p>同样在该目录下面创建对应的变量配置文件 <code>variables-gitops.yaml</code>，内容如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># variables-gitops.yaml</span></span><br><span class="line"><span class="attr">githubUsername:</span> <span class="string">cnych</span></span><br><span class="line"><span class="attr">repoName:</span> <span class="string">dtm-test-go</span></span><br><span class="line"><span class="attr">defaultBranch:</span> <span class="string">main</span></span><br><span class="line"></span><br><span class="line"><span class="attr">dockerhubUsername:</span> <span class="string">cnych</span></span><br><span class="line"></span><br><span class="line"><span class="attr">argocdNamespace:</span> <span class="string">argocd</span></span><br><span class="line"><span class="attr">argocdDeployTimeout:</span> <span class="string">5m</span></span><br></pre></td></tr></table></figure>
+
+<p>该配置文件中我们定义了一些后面工具中需要使用到的变量。</p>
+<p>接下来创建工具配置文件 <code>tools-gitops.yaml</code>，文件内容如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># tools-gitops.yaml</span></span><br><span class="line"><span class="attr">tools:</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">github-repo-scaffolding-golang</span></span><br><span class="line">  <span class="attr">instanceID:</span> <span class="string">default</span></span><br><span class="line">  <span class="attr">options:</span></span><br><span class="line">    <span class="attr">owner:</span> [[ <span class="string">githubUsername</span> ]]</span><br><span class="line">    <span class="attr">org:</span> <span class="string">&quot;&quot;</span></span><br><span class="line">    <span class="attr">repo:</span> [[ <span class="string">repoName</span> ]]</span><br><span class="line">    <span class="attr">branch:</span> [[ <span class="string">defaultBranch</span> ]]</span><br><span class="line">    <span class="attr">image_repo:</span> [[ <span class="string">dockerhubUsername</span> ]]<span class="string">/[[</span> <span class="string">repoName</span> <span class="string">]]</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">githubactions-golang</span></span><br><span class="line">  <span class="attr">instanceID:</span> <span class="string">default</span></span><br><span class="line">  <span class="attr">dependsOn:</span> [<span class="string">&quot;github-repo-scaffolding-golang.default&quot;</span>]</span><br><span class="line">  <span class="attr">options:</span></span><br><span class="line">    <span class="attr">owner:</span> <span class="string">$&#123;&#123;</span> <span class="string">github-repo-scaffolding-golang.default.outputs.owner</span> <span class="string">&#125;&#125;</span></span><br><span class="line">    <span class="attr">org:</span> <span class="string">&quot;&quot;</span></span><br><span class="line">    <span class="attr">repo:</span> <span class="string">$&#123;&#123;</span> <span class="string">github-repo-scaffolding-golang.default.outputs.repo</span> <span class="string">&#125;&#125;</span></span><br><span class="line">    <span class="attr">language:</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">go</span></span><br><span class="line">      <span class="attr">version:</span> <span class="string">&quot;1.17&quot;</span></span><br><span class="line">    <span class="attr">branch:</span> [[ <span class="string">defaultBranch</span> ]]</span><br><span class="line">    <span class="attr">build:</span></span><br><span class="line">      <span class="attr">enable:</span> <span class="literal">True</span></span><br><span class="line">      <span class="attr">command:</span> <span class="string">&quot;go build ./...&quot;</span></span><br><span class="line">    <span class="attr">test:</span></span><br><span class="line">      <span class="attr">enable:</span> <span class="literal">True</span></span><br><span class="line">      <span class="attr">command:</span> <span class="string">&quot;go test ./...&quot;</span></span><br><span class="line">      <span class="attr">coverage:</span></span><br><span class="line">        <span class="attr">enable:</span> <span class="literal">True</span></span><br><span class="line">        <span class="attr">profile:</span> <span class="string">&quot;-race -covermode=atomic&quot;</span></span><br><span class="line">        <span class="attr">output:</span> <span class="string">&quot;coverage.out&quot;</span></span><br><span class="line">    <span class="attr">docker:</span></span><br><span class="line">      <span class="attr">enable:</span> <span class="literal">True</span></span><br><span class="line">      <span class="attr">registry:</span></span><br><span class="line">        <span class="attr">type:</span> <span class="string">dockerhub</span></span><br><span class="line">        <span class="attr">username:</span> [[ <span class="string">dockerhubUsername</span> ]]</span><br><span class="line">        <span class="attr">repository:</span> <span class="string">$&#123;&#123;</span> <span class="string">github-repo-scaffolding-golang.default.outputs.repo</span> <span class="string">&#125;&#125;</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">argocd</span></span><br><span class="line">  <span class="attr">instanceID:</span> <span class="string">default</span></span><br><span class="line">  <span class="attr">options:</span></span><br><span class="line">    <span class="attr">create_namespace:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">repo:</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">argo</span></span><br><span class="line">      <span class="attr">url:</span> <span class="string">https://argoproj.github.io/argo-helm</span></span><br><span class="line">    <span class="attr">chart:</span></span><br><span class="line">      <span class="attr">chart_name:</span> <span class="string">argo/argo-cd</span></span><br><span class="line">      <span class="attr">release_name:</span> <span class="string">argocd</span></span><br><span class="line">      <span class="attr">namespace:</span> [[ <span class="string">argocdNamespace</span> ]]</span><br><span class="line">      <span class="attr">wait:</span> <span class="literal">true</span></span><br><span class="line">      <span class="attr">timeout:</span> [[ <span class="string">argocdDeployTimeout</span> ]]</span><br><span class="line">      <span class="attr">upgradeCRDs:</span> <span class="literal">true</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">argocdapp</span></span><br><span class="line">  <span class="attr">instanceID:</span> <span class="string">default</span></span><br><span class="line">  <span class="attr">dependsOn:</span> [<span class="string">&quot;argocd.default&quot;</span>, <span class="string">&quot;github-repo-scaffolding-golang.default&quot;</span>]</span><br><span class="line">  <span class="attr">options:</span></span><br><span class="line">    <span class="attr">app:</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">$&#123;&#123;</span> <span class="string">github-repo-scaffolding-golang.default.outputs.repo</span> <span class="string">&#125;&#125;</span></span><br><span class="line">      <span class="attr">namespace:</span> [[ <span class="string">argocdNamespace</span> ]]</span><br><span class="line">    <span class="attr">destination:</span></span><br><span class="line">      <span class="attr">server:</span> <span class="string">https://kubernetes.default.svc</span></span><br><span class="line">      <span class="attr">namespace:</span> <span class="string">default</span></span><br><span class="line">    <span class="attr">source:</span></span><br><span class="line">      <span class="attr">valuefile:</span> <span class="string">values.yaml</span></span><br><span class="line">      <span class="attr">path:</span> <span class="string">helm/$&#123;&#123;</span> <span class="string">github-repo-scaffolding-golang.default.outputs.repo</span> <span class="string">&#125;&#125;</span></span><br><span class="line">      <span class="attr">repoURL:</span> <span class="string">$&#123;&#123;</span> <span class="string">github-repo-scaffolding-golang.default.outputs.repoURL</span> <span class="string">&#125;&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>上面的配置文件中我们定义了 4 个工具，每个工具的 <code>name+instanceID</code> 需要唯一。</p>
+<p>其中第一个工具为 <a target="_blank" rel="noopener" href="https://docs.devstream.io/en/latest/plugins/github-repo-scaffolding-golang/">github-repo-scaffolding-golang</a> ，该插件使用一个 Golang Web 应用程序的脚手架代码去创建一个 GitHub 代码仓库，使用该插件之前需要配置一个名为 <code>GITHUB_TOKEN</code> 的环境变量，可以前往 <a target="_blank" rel="noopener" href="https://github.com/settings/tokens">https://github.com/settings/tokens</a> 创建一个 <code>Personal access tokens</code>，记得要有 repo 和 GitHub Actions 相关权限。</p>
+<p>第二个工具插件为 <a target="_blank" rel="noopener" href="https://docs.devstream.io/en/latest/plugins/githubactions-golang/">githubactions-golang</a> ，这个插件会创建一些 Golang GitHub Actions 的工作流，同样该插件依赖 <code>GITHUB_TOKEN</code> 这个环境变量，如果启用了 Docker 镜像构建&#x2F;推送，则还需要设置另外两个环境变量：<code>DOCKERHUB_USERNAME</code> 与 <code>DOCKERHUB_TOKEN</code>，Docker 的 Token 信息可以访问页面 <a target="_blank" rel="noopener" href="https://hub.docker.com/settings/security?generateToken=true">https://hub.docker.com/settings/security?generateToken=true</a> 去创建获取。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/zswhg3.png" alt="img"></p>
+<p>第三个插件是 <a target="_blank" rel="noopener" href="https://docs.devstream.io/en/latest/plugins/argocd/">argocd</a> ，该插件会使用 Helm chart 的方式在现有 Kubernetes 集群中安装 ArgoCD。</p>
+<p>第四个插件是 <a target="_blank" rel="noopener" href="https://docs.devstream.io/en/latest/plugins/argocdapp/">argocdapp</a> ，此插件会创建一个 ArgoCD Application 的自定义资源。需要注意使用该插件之前必须要保证 ArgoCD 已经安装。</p>
+<p>配置定义完之后，我们只需要在根目录下面执行 <code>dtm init</code>，该命令就会下载所有定义的相关插件，如果你使用的是 <code>s3</code> 来存储状态信息，则当再次执行该命令的时候会先从远程下载对应的状态信息。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">dtm init</span></span><br><span class="line">2022-07-02 12:36:03 ℹ [INFO]  Got Backend from config: local</span><br><span class="line">2022-07-02 12:36:03 ℹ [INFO]  Using dir &lt;.devstream&gt; to store plugins.</span><br><span class="line">2022-07-02 12:36:05 ℹ [INFO]  Downloading: [github-repo-scaffolding-golang-darwin-arm64_0.7.0.so] ...</span><br><span class="line"> 15.05 MiB / 15.05 MiB [=================================] 100.00% 3.30 MiB/s 4s</span><br><span class="line">2022-07-02 12:36:10 ✔ [SUCCESS]  [github-repo-scaffolding-golang-darwin-arm64_0.7.0.so] download succeeded.</span><br><span class="line">2022-07-02 12:36:11 ℹ [INFO]  Downloading: [github-repo-scaffolding-golang-darwin-arm64_0.7.0.md5] ...</span><br><span class="line"> 33 B / 33 B [===============================================] 100.00% 49 B/s 0s</span><br><span class="line">2022-07-02 12:36:11 ✔ [SUCCESS]  [github-repo-scaffolding-golang-darwin-arm64_0.7.0.md5] download succeeded.</span><br><span class="line">2022-07-02 12:36:11 ℹ [INFO]  Plugin: github-repo-scaffolding-golang-darwin-arm64_0.7.0.so doesn&#x27;t match with .md5 and will be downloaded.</span><br><span class="line">2022-07-02 12:36:12 ℹ [INFO]  Downloading: [github-repo-scaffolding-golang-darwin-arm64_0.7.0.so] ...</span><br><span class="line"> 15.05 MiB / 15.05 MiB [=================================] 100.00% 4.71 MiB/s 3s</span><br><span class="line">2022-07-02 12:36:15 ✔ [SUCCESS]  [github-repo-scaffolding-golang-darwin-arm64_0.7.0.so] download succeeded.</span><br><span class="line">2022-07-02 12:36:15 ℹ [INFO]  Downloading: [github-repo-scaffolding-golang-darwin-arm64_0.7.0.md5] ...</span><br><span class="line"> 33 B / 33 B [=========================================] 100.00% 133.44 KiB/s 0s</span><br><span class="line">2022-07-02 12:36:15 ✔ [SUCCESS]  [github-repo-scaffolding-golang-darwin-arm64_0.7.0.md5] download succeeded.</span><br><span class="line">2022-07-02 12:36:16 ℹ [INFO]  Downloading: [githubactions-golang-darwin-arm64_0.7.0.so] ...</span><br><span class="line"> 17.49 MiB / 17.49 MiB [=================================] 100.00% 4.05 MiB/s 4s</span><br><span class="line">2022-07-02 12:36:20 ✔ [SUCCESS]  [githubactions-golang-darwin-arm64_0.7.0.so] download succeeded.</span><br><span class="line">2022-07-02 12:36:21 ℹ [INFO]  Downloading: [githubactions-golang-darwin-arm64_0.7.0.md5] ...</span><br><span class="line"> 33 B / 33 B [=========================================] 100.00% 206.08 KiB/s 0s</span><br><span class="line">2022-07-02 12:36:21 ✔ [SUCCESS]  [githubactions-golang-darwin-arm64_0.7.0.md5] download succeeded.</span><br><span class="line">2022-07-02 12:36:21 ℹ [INFO]  Plugin: githubactions-golang-darwin-arm64_0.7.0.so doesn&#x27;t match with .md5 and will be downloaded.</span><br><span class="line">2022-07-02 12:36:22 ℹ [INFO]  Downloading: [githubactions-golang-darwin-arm64_0.7.0.so] ...</span><br><span class="line"> 17.49 MiB / 17.49 MiB [=================================] 100.00% 4.50 MiB/s 3s</span><br><span class="line">2022-07-02 12:36:25 ✔ [SUCCESS]  [githubactions-golang-darwin-arm64_0.7.0.so] download succeeded.</span><br><span class="line">2022-07-02 12:36:26 ℹ [INFO]  Downloading: [githubactions-golang-darwin-arm64_0.7.0.md5] ...</span><br><span class="line"> 33 B / 33 B [=========================================] 100.00% 104.90 KiB/s 0s</span><br><span class="line">2022-07-02 12:36:26 ✔ [SUCCESS]  [githubactions-golang-darwin-arm64_0.7.0.md5] download succeeded.</span><br><span class="line">2022-07-02 12:36:27 ℹ [INFO]  Downloading: [argocd-darwin-arm64_0.7.0.so] ...</span><br><span class="line"> 78.22 MiB / 78.22 MiB [================================] 100.00% 1.99 MiB/s 39s</span><br><span class="line">2022-07-02 12:37:06 ✔ [SUCCESS]  [argocd-darwin-arm64_0.7.0.so] download succeeded.</span><br><span class="line">2022-07-02 12:37:07 ℹ [INFO]  Downloading: [argocd-darwin-arm64_0.7.0.md5] ...</span><br><span class="line"> 33 B / 33 B [=========================================] 100.00% 186.01 KiB/s 0s</span><br><span class="line">2022-07-02 12:37:07 ✔ [SUCCESS]  [argocd-darwin-arm64_0.7.0.md5] download succeeded.</span><br><span class="line">2022-07-02 12:37:07 ℹ [INFO]  Plugin: argocd-darwin-arm64_0.7.0.so doesn&#x27;t match with .md5 and will be downloaded.</span><br><span class="line">2022-07-02 12:37:08 ℹ [INFO]  Downloading: [argocd-darwin-arm64_0.7.0.so] ...</span><br><span class="line"> 78.22 MiB / 78.22 MiB [================================] 100.00% 2.53 MiB/s 30s</span><br><span class="line">2022-07-02 12:37:39 ✔ [SUCCESS]  [argocd-darwin-arm64_0.7.0.so] download succeeded.</span><br><span class="line">2022-07-02 12:37:40 ℹ [INFO]  Downloading: [argocd-darwin-arm64_0.7.0.md5] ...</span><br><span class="line"> 33 B / 33 B [=========================================] 100.00% 136.46 KiB/s 0s</span><br><span class="line">2022-07-02 12:37:40 ✔ [SUCCESS]  [argocd-darwin-arm64_0.7.0.md5] download succeeded.</span><br><span class="line">2022-07-02 12:37:41 ℹ [INFO]  Downloading: [argocdapp-darwin-arm64_0.7.0.so] ...</span><br><span class="line"> 68.19 MiB / 68.19 MiB [================================] 100.00% 2.41 MiB/s 28s</span><br><span class="line">2022-07-02 12:38:09 ✔ [SUCCESS]  [argocdapp-darwin-arm64_0.7.0.so] download succeeded.</span><br><span class="line">2022-07-02 12:38:10 ℹ [INFO]  Downloading: [argocdapp-darwin-arm64_0.7.0.md5] ...</span><br><span class="line"> 33 B / 33 B [=========================================] 100.00% 256.96 KiB/s 0s</span><br><span class="line">2022-07-02 12:38:10 ✔ [SUCCESS]  [argocdapp-darwin-arm64_0.7.0.md5] download succeeded.</span><br><span class="line">2022-07-02 12:38:10 ℹ [INFO]  Plugin: argocdapp-darwin-arm64_0.7.0.so doesn&#x27;t match with .md5 and will be downloaded.</span><br><span class="line">2022-07-02 12:38:10 ℹ [INFO]  Downloading: [argocdapp-darwin-arm64_0.7.0.so] ...</span><br><span class="line"> 68.19 MiB / 68.19 MiB [================================] 100.00% 1.39 MiB/s 48s</span><br><span class="line">2022-07-02 12:38:59 ✔ [SUCCESS]  [argocdapp-darwin-arm64_0.7.0.so] download succeeded.</span><br><span class="line">2022-07-02 12:39:01 ℹ [INFO]  Downloading: [argocdapp-darwin-arm64_0.7.0.md5] ...</span><br><span class="line"> 33 B / 33 B [=========================================] 100.00% 120.98 KiB/s 0s</span><br><span class="line">2022-07-02 12:39:01 ✔ [SUCCESS]  [argocdapp-darwin-arm64_0.7.0.md5] download succeeded.</span><br><span class="line">2022-07-02 12:39:01 ✔ [SUCCESS]  Initialize finished.</span><br></pre></td></tr></table></figure>
+
+<p>当我们再次执行 <code>dtm init</code> 命令的时候可以看到没有任何相关操作，这是因为前面我们已经将相关的插件全部下载到了本地。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">dtm init</span></span><br><span class="line">2022-07-02 12:39:42 ℹ [INFO]  Got Backend from config: local</span><br><span class="line">2022-07-02 12:39:42 ℹ [INFO]  Using dir &lt;.devstream&gt; to store plugins.</span><br><span class="line">2022-07-02 12:39:42 ℹ [INFO]  Plugin: github-repo-scaffolding-golang-darwin-arm64_0.7.0.so already exists, no need to download.</span><br><span class="line">2022-07-02 12:39:42 ℹ [INFO]  Plugin: githubactions-golang-darwin-arm64_0.7.0.so already exists, no need to download.</span><br><span class="line">2022-07-02 12:39:43 ℹ [INFO]  Plugin: argocd-darwin-arm64_0.7.0.so already exists, no need to download.</span><br><span class="line">2022-07-02 12:39:43 ℹ [INFO]  Plugin: argocdapp-darwin-arm64_0.7.0.so already exists, no need to download.</span><br><span class="line">2022-07-02 12:39:43 ✔ [SUCCESS]  Initialize finished.</span><br></pre></td></tr></table></figure>
+
+<p>初始化完成后会在当前目录下面创建一个 <code>.devstream</code> 的目录，该目录下面就是保存下载下来的插件相关文件。</p>
+<p>接下来我们只需要在根目录下面执行 <code>dtm apply</code> 命令即可根据我们的配置文件创建或更新 DevOps 工具链了。</p>
+<p>首先要记得配置需要的环境变量，比如我们这里上面的定义几个插件需要配置下面的 3 个环境变量：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">export GITHUB_TOKEN=xxx</span><br><span class="line">export DOCKERHUB_USERNAME=cnych</span><br><span class="line">export DOCKERHUB_TOKEN=xxx</span><br></pre></td></tr></table></figure>
+
+<p>另外还需要一个在本地可访问的 Kubernetes 集群。</p>
+<p>配置完成后直接执行 <code>dtm apply</code> 命令即可：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">dtm apply</span></span><br><span class="line">2022-07-02 13:17:15 ℹ [INFO]  Apply started.</span><br><span class="line">2022-07-02 13:17:15 ℹ [INFO]  Got Backend from config: local</span><br><span class="line">2022-07-02 13:17:15 ℹ [INFO]  Using dir &lt;.devstream&gt; to store plugins.</span><br><span class="line">2022-07-02 13:17:15 ℹ [INFO]  Using local backend. State file: devstream.state.</span><br><span class="line">2022-07-02 13:17:17 ℹ [INFO]  Tool (argocd/default) found in config but doesn&#x27;t exist in the state, will be created.</span><br><span class="line">2022-07-02 13:17:17 ℹ [INFO]  Tool (argocdapp/default) found in config but doesn&#x27;t exist in the state, will be created.</span><br><span class="line">Continue? [y/n]</span><br><span class="line">Enter a value (Default is n): y</span><br><span class="line"></span><br><span class="line">2022-07-02 12:54:38 ℹ [INFO]  Start executing the plan.</span><br><span class="line">2022-07-02 12:54:38 ℹ [INFO]  Changes count: 4.</span><br><span class="line">2022-07-02 12:54:38 ℹ [INFO]  -------------------- [  Processing progress: 1/4.  ] --------------------</span><br><span class="line">2022-07-02 12:54:38 ℹ [INFO]  Processing: (github-repo-scaffolding-golang/default) -&gt; Create ...</span><br><span class="line">2022-07-02 12:54:43 ℹ [INFO]  The repo dtm-test-go has been created.</span><br><span class="line">2022-07-02 12:54:55 ✔ [SUCCESS]  Tool (github-repo-scaffolding-golang/default) Create done.</span><br><span class="line">2022-07-02 12:54:55 ℹ [INFO]  -------------------- [  Processing progress: 3/4.  ] -</span><br><span class="line">2022-07-02 13:17:19 ℹ [INFO]  Processing: (argocd/default) -&gt; Create ...</span><br><span class="line">2022-07-02 13:17:28 ℹ [INFO]  Creating or updating helm chart ...</span><br><span class="line">2022/07/02 13:17:33 creating 1 resource(s)</span><br><span class="line">2022/07/02 13:17:33 creating 1 resource(s)</span><br><span class="line">2022/07/02 13:17:33 creating 1 resource(s)</span><br><span class="line">2022/07/02 13:17:33 creating 1 resource(s)</span><br><span class="line">2022/07/02 13:17:33 Clearing discovery cache</span><br><span class="line">2022/07/02 13:17:33 beginning wait for 4 resources with timeout of 1m0s</span><br><span class="line">2022/07/02 13:17:39 creating 43 resource(s)</span><br><span class="line">2022/07/02 13:17:39 beginning wait for 43 resources with timeout of 5m0s</span><br><span class="line">2022/07/02 13:17:40 Deployment is not ready: argocd/argocd-applicationset-controller. 0 out of 1 expected pods are ready</span><br><span class="line">2022/07/02 13:17:42 Deployment is not ready: argocd/argocd-applicationset-controller. 0 out of 1 expected pods are ready</span><br><span class="line">......</span><br><span class="line">2022/07/02 13:19:44 Deployment is not ready: argocd/argocd-applicationset-controller. 0 out of 1 expected pods are ready</span><br><span class="line">2022/07/02 13:38:27 Deployment is not ready: argocd/argocd-dex-server. 0 out of 1 expected pods are ready</span><br><span class="line">2022/07/02 13:38:30 release installed successfully: argocd/argo-cd-4.9.11</span><br><span class="line">2022-07-02 13:38:30 ✔ [SUCCESS]  Tool (argocd/default) Create done.</span><br><span class="line">2022-07-02 13:38:30 ℹ [INFO]  -------------------- [  Processing progress: 4/4.  ] --------------------</span><br><span class="line">2022-07-02 13:38:30 ℹ [INFO]  Processing: (argocdapp/default) -&gt; Create ...</span><br><span class="line">2022-07-02 13:38:31 ℹ [INFO]  application.argoproj.io/dtm-test-go created</span><br><span class="line">2022-07-02 13:38:31 ✔ [SUCCESS]  Tool (argocdapp/default) Create done.</span><br><span class="line">2022-07-02 13:38:31 ℹ [INFO]  -------------------- [  Processing done.  ] --------------------</span><br><span class="line">2022-07-02 13:38:31 ✔ [SUCCESS]  All plugins applied successfully.</span><br><span class="line">2022-07-02 13:38:31 ✔ [SUCCESS]  Apply finished.</span><br></pre></td></tr></table></figure>
+
+<p>在 <code>apply</code> 的过程中会将执行的状态保存在定义的状态后端存储中，比如我们这里使用的是本地存储，则会在根目录的 <code>devstream.state</code> 文件中保存执行的状态，比如我们这里一共 4 个工具链，如果前两个执行完成，后面两个执行识别了，则会在该文件中保存前两个插件的状态，下一次重新 apply 的时候则只需要执行后面两个工具链即可。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/3bro7b.png" alt="img"></p>
+<p>我们上面定义的工具链最终会为我们在 GitHub 上创建一个 Golang Web 的脚手架应用代码仓库。<img data-src="https://mudutestmenu.mudu.tv/upload/m39ck4.jpg" alt="img"></p>
+<p>会使用 Github Actions 来进行 CI 操作，构建 Docker 镜像。<img data-src="https://mudutestmenu.mudu.tv/upload/odq34d.jpg" alt="img"></p>
+<p>CI 流程最后会推送镜像到 Docker Hub。<img data-src="https://mudutestmenu.mudu.tv/upload/905lff.jpg" alt="img"></p>
+<p>然后会在 Kubernetes 中部署 ArgoCD。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get pods -n argocd</span></span><br><span class="line">NAME                                                READY   STATUS    RESTARTS   AGE</span><br><span class="line">argocd-application-controller-0                     1/1     Running   0          5m55s</span><br><span class="line">argocd-applicationset-controller-64d8c477f4-2wrg6   1/1     Running   0          5m55s</span><br><span class="line">argocd-dex-server-dbdbf5499-krmfz                   1/1     Running   0          5m35s</span><br><span class="line">argocd-notifications-controller-b67c4bdb4-22t9l     1/1     Running   0          5m55s</span><br><span class="line">argocd-redis-df9db799b-8gbpv                        1/1     Running   0          5m55s</span><br><span class="line">argocd-repo-server-56769cdd47-zs65j                 1/1     Running   0          5m55s</span><br><span class="line">argocd-server-7d4745f689-w5pp7                      1/1     Running   0          5m55s</span><br></pre></td></tr></table></figure>
+
+<p>最后会通过 ArgoCD 来进行 CD 操作，将我们的示例应用部署到 Kubernetes 集群中去，其实就是创建了一个 ArgoCD 的 Application 对象。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get applications -n argocd</span></span><br><span class="line">NAME          SYNC STATUS   HEALTH STATUS</span><br><span class="line">dtm-test-go   Unknown       Healthy</span><br></pre></td></tr></table></figure>
+
+<p>我们也可以通过 ArgoCD 查看部署的应用详情。<img data-src="https://mudutestmenu.mudu.tv/upload/zxiiua.jpg" alt="img"></p>
+<p>最后如果想要删除整个工具链则只需要执行 <code>dtm delete</code> 命令即可。</p>
+<p>整个流程体验非常顺畅（除了因为某些原因访问 GitHub 超级慢之外），我们只需要根据需要在配置文件中定义对应的插件即可，关于插件的具体配置方式可以参考官方文档 <a target="_blank" rel="noopener" href="https://docs.devstream.io/en/latest/plugins/plugins-list/">https://docs.devstream.io/en/latest/plugins/plugins-list/</a> 了解更多相关信息。</p>
+<p>只需要在一个  <code>YAML</code> 配置文件中定义你所需要的 DevOps 工具，只需按一个命令就能建立起整个 DevOps 工具链和 SDLC 工作流了，所以说 <code>DevStream</code> 是神器完全不为过。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/GET%20%E5%92%8C%20POST%E8%AF%B7%E6%B1%82%E6%96%B9%E6%B3%95/" rel="prev" title="GET 和 POST请求方法">
+      <i class="fa fa-chevron-left"></i> GET 和 POST请求方法
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Descheduler/" rel="next" title="Descheduler">
+      Descheduler <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#DevOps-%E5%B7%A5%E5%85%B7%E9%93%BE%E7%AE%A1%E7%90%86%E5%99%A8-DevStream-%E8%BF%98%E7%9C%9F%E6%98%AF%E7%A5%9E%E5%99%A8"><span class="nav-number">1.</span> <span class="nav-text">DevOps 工具链管理器 DevStream 还真是神器</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5"><span class="nav-number">1.1.</span> <span class="nav-text">核心概念</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Config%EF%BC%88%E9%85%8D%E7%BD%AE%EF%BC%89"><span class="nav-number">1.1.1.</span> <span class="nav-text">Config（配置）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Tool%EF%BC%88%E5%B7%A5%E5%85%B7%EF%BC%89"><span class="nav-number">1.1.2.</span> <span class="nav-text">Tool（工具）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#State%EF%BC%88%E7%8A%B6%E6%80%81%EF%BC%89"><span class="nav-number">1.1.3.</span> <span class="nav-text">State（状态）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Resource%EF%BC%88%E8%B5%84%E6%BA%90%EF%BC%89"><span class="nav-number">1.1.4.</span> <span class="nav-text">Resource（资源）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85"><span class="nav-number">1.2.</span> <span class="nav-text">安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8"><span class="nav-number">1.3.</span> <span class="nav-text">使用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E5%91%BD%E4%BB%A4"><span class="nav-number">1.3.1.</span> <span class="nav-text">基本命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E8%B7%B5"><span class="nav-number">1.3.2.</span> <span class="nav-text">实践</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

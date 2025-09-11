@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="请解释 Kubernetes 中的 Service 和 Ingress 的区别，并描述各自的用途。	 🤔 分析过程：该问题旨在考察面试者对Kubernetes中两种核心网络资源——Service和Ingress的理解。核心考察点在于它们分别在哪个网络层级工作（L4 vs L7），各自解决了什么问题，以及它们如何协同工作。一个优秀的答案需要清晰地定义两者，对比其功能，并能结合实际应用场景说明何时使">
+<meta property="og:type" content="article">
+<meta property="og:title" content="k8s Service&amp;Ingress">
+<meta property="og:url" content="http://example.com/2025/09/11/k8s%20Service&Ingress/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="请解释 Kubernetes 中的 Service 和 Ingress 的区别，并描述各自的用途。	 🤔 分析过程：该问题旨在考察面试者对Kubernetes中两种核心网络资源——Service和Ingress的理解。核心考察点在于它们分别在哪个网络层级工作（L4 vs L7），各自解决了什么问题，以及它们如何协同工作。一个优秀的答案需要清晰地定义两者，对比其功能，并能结合实际应用场景说明何时使">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:44:10.727Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/k8s%20Service&Ingress/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>k8s Service&Ingress | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/k8s%20Service&Ingress/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          k8s Service&Ingress
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:44:10" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E9%9D%A2%E8%AF%95%E9%A2%98/" itemprop="url" rel="index"><span itemprop="name">面试题</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.6k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>2 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>请解释 Kubernetes 中的 Service 和 Ingress 的区别，并描述各自的用途。	</p>
+<h3 id="🤔-分析过程："><a href="#🤔-分析过程：" class="headerlink" title="🤔 分析过程："></a>🤔 分析过程：</h3><p>该问题旨在考察面试者对Kubernetes中两种核心网络资源——<code>Service</code>和<code>Ingress</code>的理解。核心考察点在于它们分别在哪个网络层级工作（L4 vs L7），各自解决了什么问题，以及它们如何协同工作。一个优秀的答案需要清晰地定义两者，对比其功能，并能结合实际应用场景说明何时使用哪一个。</p>
+<h3 id="💡-答案生成："><a href="#💡-答案生成：" class="headerlink" title="💡 答案生成："></a>💡 答案生成：</h3><h4 id="1-概念或定义"><a href="#1-概念或定义" class="headerlink" title="1. 概念或定义"></a>1. 概念或定义</h4><ul>
+<li><p><strong>Service (服务):</strong> 是Kubernetes中的一个核心API对象，它定义了一组逻辑上的Pod，并为它们提供了一个单一、稳定的访问入口（一个虚拟IP地址和DNS名称）。<strong>Service主要工作在网络模型的第四层（L4 - TCP&#x2F;UDP）</strong>，它关心的是如何将网络流量可靠地转发到后端的Pod，而不关心流量的具体内容。</p>
+</li>
+<li><p><strong>Ingress (入口):</strong> 是一个API对象，用于管理对集群内Service的外部访问，<strong>主要工作在网络模型的第七层（L7 - HTTP&#x2F;S）</strong>。Ingress可以提供基于主机名（Host-based）和URL路径（Path-based）的路由、TLS&#x2F;SSL终止以及负载均衡等高级功能。它本身不是一个服务，而是一组路由规则的集合，需要一个<strong>Ingress Controller</strong>来使这些规则生效。</p>
+</li>
+</ul>
+<h4 id="2-工作原理-机制"><a href="#2-工作原理-机制" class="headerlink" title="2. 工作原理&#x2F;机制"></a>2. 工作原理&#x2F;机制</h4><ul>
+<li><p><strong>Service 的工作原理:</strong></p>
+<ol>
+<li>当一个Service被创建时，它会获得一个虚拟的、稳定的IP地址（<code>ClusterIP</code>）。</li>
+<li><code>kube-proxy</code>组件在集群的每个节点上运行，它会监视Service和其后端Pod（Endpoints）的变化。</li>
+<li><code>kube-proxy</code>会根据这些信息，在节点上配置<code>iptables</code>规则或<code>IPVS</code>规则。</li>
+<li>当流量被发送到Service的<code>ClusterIP</code>时，节点的网络协议栈会根据这些规则，将流量进行负载均衡并转发（DNAT）到一个健康的后端Pod的实际IP地址上。</li>
+</ol>
+</li>
+<li><p><strong>Ingress 的工作原理:</strong></p>
+<ol>
+<li>管理员首先在集群中部署一个<strong>Ingress Controller</strong>（例如 NGINX Ingress Controller, Traefik, HAProxy Ingress等）。Ingress Controller本身是一个或一组Pod，其中运行着一个反向代理和负载均衡器。</li>
+<li>当用户创建一个Ingress资源（一个YAML文件，定义了路由规则）时，Ingress Controller会监听到这个资源的创建或变更。</li>
+<li>Ingress Controller会解析Ingress资源中的规则（例如，<code>host: foo.bar.com, path: /bar</code> 路由到 <code>service-a</code>）。</li>
+<li>然后，Ingress Controller会动态地更新其内部的反向代理配置（如<code>nginx.conf</code>），使其能够根据这些规则来路由外部流量。</li>
+<li>外部流量首先到达Ingress Controller的入口（通常是一个<code>LoadBalancer</code>类型的Service），然后由Ingress Controller根据HTTP请求的主机名和路径，将流量智能地转发到对应的后端Service。</li>
+</ol>
+</li>
+</ul>
+<h4 id="3-应用场景-作用-核心区别对比"><a href="#3-应用场景-作用-核心区别对比" class="headerlink" title="3. 应用场景&#x2F;作用 (核心区别对比)"></a>3. 应用场景&#x2F;作用 (核心区别对比)</h4><table>
+<thead>
+<tr>
+<th align="left">特性</th>
+<th align="left">Service</th>
+<th align="left">Ingress</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>工作层级</strong></td>
+<td align="left"><strong>L4 (TCP&#x2F;UDP)</strong></td>
+<td align="left"><strong>L7 (HTTP&#x2F;S)</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>主要作用</strong></td>
+<td align="left">在集群内部提供<strong>服务发现</strong>和<strong>负载均衡</strong></td>
+<td align="left">提供从集群外部到内部的<strong>HTTP&#x2F;S路由</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>路由能力</strong></td>
+<td align="left">只能根据IP和端口进行转发，无法识别HTTP路径或主机名</td>
+<td align="left">可根据HTTP主机名和URL路径进行智能路由</td>
+</tr>
+<tr>
+<td align="left"><strong>典型用途</strong></td>
+<td align="left">1. 集群内部微服务之间的通信<br>2. 通过<code>NodePort</code>或<code>LoadBalancer</code>暴露单个非HTTP服务</td>
+<td align="left">1. 使用一个公网IP暴露多个HTTP&#x2F;S服务<br>2. 实现灰度发布、蓝绿部署的流量切分<br>3. 集中进行TLS&#x2F;SSL证书管理和卸载</td>
+</tr>
+<tr>
+<td align="left"><strong>依赖关系</strong></td>
+<td align="left">Kubernetes核心组件，无需额外部署</td>
+<td align="left"><strong>必须依赖一个Ingress Controller</strong>才能工作</td>
+</tr>
+</tbody></table>
+<p><strong>简单来说：</strong> 你需要先有一个<code>Service</code>来暴露你的应用（哪怕只是<code>ClusterIP</code>类型），然后才能创建一个<code>Ingress</code>规则，告诉Ingress Controller“当某个URL被访问时，请把流量转发给这个<code>Service</code>”。</p>
+<h4 id="4-优势-劣势（如适用）"><a href="#4-优势-劣势（如适用）" class="headerlink" title="4. 优势&#x2F;劣势（如适用）"></a>4. 优势&#x2F;劣势（如适用）</h4><ul>
+<li><p><strong>Service (<code>LoadBalancer</code> 类型) 的劣势:</strong></p>
+<ul>
+<li><strong>成本高昂:</strong> 每暴露一个<code>LoadBalancer</code>类型的Service，通常都需要云服务商提供一个公网IP和一个负载均衡器实例，这会带来额外的成本。</li>
+<li><strong>功能单一:</strong> 只能做简单的L4流量转发，无法满足复杂的路由需求。</li>
+</ul>
+</li>
+<li><p><strong>Ingress 的优势:</strong></p>
+<ul>
+<li><strong>成本效益高:</strong> 只需一个公网IP（通过Ingress Controller的LoadBalancer），就可以为无数个后端Service提供入口，极大节省了IP资源和成本。</li>
+<li><strong>功能强大:</strong> 提供了丰富的L7路由能力，配置灵活，是现代化Web应用架构的事实标准。</li>
+</ul>
+</li>
+</ul>
+<h4 id="5-扩展知识-最佳实践"><a href="#5-扩展知识-最佳实践" class="headerlink" title="5. 扩展知识&#x2F;最佳实践"></a>5. 扩展知识&#x2F;最佳实践</h4><ul>
+<li><strong>Gateway API:</strong> Ingress正在被功能更强大、角色更清晰的<strong>Gateway API</strong>所逐步取代。Gateway API将路由功能分解为<code>GatewayClass</code>, <code>Gateway</code>和<code>HTTPRoute</code>等角色，使得基础设施团队、集群管理员和应用开发者可以更好地协同工作。了解Gateway API是展现你知识前沿性的一个加分项。</li>
+<li><strong>最佳实践:</strong> 在生产环境中，对于需要对外暴露的HTTP&#x2F;S服务，<strong>标准做法</strong>是使用<code>Ingress</code>。后端Service的类型应设置为<code>ClusterIP</code>，而不是<code>NodePort</code>，这样可以避免不必要地在节点上暴露端口，增强安全性。<code>Service (LoadBalancer)</code>通常只用于暴露单个TCP服务（如数据库、消息队列等）。</li>
+<li><strong>选择Ingress Controller:</strong> NGINX Ingress Controller因其稳定性和广泛的社区支持成为最常见的选择。Traefik在自动化和动态配置方面表现优异，尤其适合云原生环境。</li>
+</ul>
+<p><strong>结论：</strong> Service是实现集群内Pod间通信和负载均衡的L4抽象，而Ingress是管理外部HTTP&#x2F;S流量到内部服务的L7路由规则集合，两者协同工作，构成了Kubernetes强大的网络服务暴露能力。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/k8s%20Logs/" rel="prev" title="k8s Logs">
+      <i class="fa fa-chevron-left"></i> k8s Logs
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/k8s%20Rolling%20Update/" rel="next" title="k8s Rolling Update">
+      k8s Rolling Update <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%F0%9F%A4%94-%E5%88%86%E6%9E%90%E8%BF%87%E7%A8%8B%EF%BC%9A"><span class="nav-number">1.</span> <span class="nav-text">🤔 分析过程：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%F0%9F%92%A1-%E7%AD%94%E6%A1%88%E7%94%9F%E6%88%90%EF%BC%9A"><span class="nav-number">2.</span> <span class="nav-text">💡 答案生成：</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E6%A6%82%E5%BF%B5%E6%88%96%E5%AE%9A%E4%B9%89"><span class="nav-number">2.1.</span> <span class="nav-text">1. 概念或定义</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86-%E6%9C%BA%E5%88%B6"><span class="nav-number">2.2.</span> <span class="nav-text">2. 工作原理&#x2F;机制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF-%E4%BD%9C%E7%94%A8-%E6%A0%B8%E5%BF%83%E5%8C%BA%E5%88%AB%E5%AF%B9%E6%AF%94"><span class="nav-number">2.3.</span> <span class="nav-text">3. 应用场景&#x2F;作用 (核心区别对比)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-%E4%BC%98%E5%8A%BF-%E5%8A%A3%E5%8A%BF%EF%BC%88%E5%A6%82%E9%80%82%E7%94%A8%EF%BC%89"><span class="nav-number">2.4.</span> <span class="nav-text">4. 优势&#x2F;劣势（如适用）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-%E6%89%A9%E5%B1%95%E7%9F%A5%E8%AF%86-%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="nav-number">2.5.</span> <span class="nav-text">5. 扩展知识&#x2F;最佳实践</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

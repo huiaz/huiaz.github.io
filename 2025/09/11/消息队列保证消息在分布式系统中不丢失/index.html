@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="您好！保证消息在分布式系统中不丢失是后端开发中一个至关重要的课题，也是衡量一个消息队列系统可靠性的核心指标。作为后端开发专家，我深知这一挑战的复杂性，因为它涉及到消息流动的整个生命周期：从生产者发送，到消息队列存储，再到消费者处理。 要实现“消息不丢失”，我们通常需要采用端到端（End-to-End）的防护措施，在消息生产、消息存储和消息消费的每个环节都做好保障。  一、 生产者侧：确保消息成功发">
+<meta property="og:type" content="article">
+<meta property="og:title" content="消息队列保证消息在分布式系统中不丢失">
+<meta property="og:url" content="http://example.com/2025/09/11/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%BF%9D%E8%AF%81%E6%B6%88%E6%81%AF%E5%9C%A8%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E4%B8%AD%E4%B8%8D%E4%B8%A2%E5%A4%B1/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="您好！保证消息在分布式系统中不丢失是后端开发中一个至关重要的课题，也是衡量一个消息队列系统可靠性的核心指标。作为后端开发专家，我深知这一挑战的复杂性，因为它涉及到消息流动的整个生命周期：从生产者发送，到消息队列存储，再到消费者处理。 要实现“消息不丢失”，我们通常需要采用端到端（End-to-End）的防护措施，在消息生产、消息存储和消息消费的每个环节都做好保障。  一、 生产者侧：确保消息成功发">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:18:40.306Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="中间件">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%BF%9D%E8%AF%81%E6%B6%88%E6%81%AF%E5%9C%A8%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E4%B8%AD%E4%B8%8D%E4%B8%A2%E5%A4%B1/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>消息队列保证消息在分布式系统中不丢失 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%BF%9D%E8%AF%81%E6%B6%88%E6%81%AF%E5%9C%A8%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E4%B8%AD%E4%B8%8D%E4%B8%A2%E5%A4%B1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          消息队列保证消息在分布式系统中不丢失
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:18:40" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MQ/" itemprop="url" rel="index"><span itemprop="name">MQ</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.8k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>您好！保证消息在分布式系统中不丢失是后端开发中一个至关重要的课题，也是衡量一个消息队列系统可靠性的核心指标。作为后端开发专家，我深知这一挑战的复杂性，因为它涉及到消息流动的整个生命周期：从生产者发送，到消息队列存储，再到消费者处理。</p>
+<p>要实现“消息不丢失”，我们通常需要采用<strong>端到端（End-to-End）</strong>的防护措施，在消息生产、消息存储和消息消费的每个环节都做好保障。</p>
+<hr>
+<h3 id="一、-生产者侧：确保消息成功发送到消息队列"><a href="#一、-生产者侧：确保消息成功发送到消息队列" class="headerlink" title="一、 生产者侧：确保消息成功发送到消息队列"></a>一、 生产者侧：确保消息成功发送到消息队列</h3><p>消息的第一站就是从生产者发出，如果在这里就丢了，后续的任何保证都无从谈起。</p>
+<ol>
+<li><p><strong>可靠的消息发送机制：</strong></p>
+<ul>
+<li><strong>同步发送 (Sync Send)：</strong> 生产者发送消息后，等待消息队列（Broker）的确认响应（ACK）。如果收到 ACK，表示消息已成功写入Broker；如果未收到或收到失败响应，生产者可以进行重试（配置重试次数和间隔）。这是最常用的保证机制。</li>
+<li><strong>异步发送 + 回调 (Async Send + Callback)：</strong> 生产者发送消息后立即返回，但会提供一个回调函数。当Broker返回响应时，通过回调函数通知生产者发送结果。生产者在回调函数中判断发送成功或失败，失败时执行重试逻辑。</li>
+<li><strong>消息的持久化与重发（本地消息表&#x2F;事务消息）：</strong> 针对生产者在发送消息前或发送消息的过程中宕机导致消息丢失的极端情况。<ul>
+<li><strong>本地消息表方案：</strong> 生产者在发送消息前，先将消息内容和状态写入本地数据库，并开启本地事务。本地事务成功提交后，再发送消息到MQ。如果发送失败，通过定时任务扫描本地消息表，重发未发送成功的消息。</li>
+<li><strong>分布式事务消息（如 RocketMQ 的事务消息）：</strong> 这是一种更优雅的方案。生产者先发送一条“半消息”到 Broker，然后执行本地事务。根据本地事务的结果，向 Broker 发送 Commit 或 Rollback 指令。即使生产者在发送 Commit&#x2F;Rollback 前宕机，Broker 也会通过事务回查机制来询问生产者的本地事务状态，从而决定消息的最终是提交还是回滚。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>网络和连接稳定性：</strong> 确保生产者与 Broker 之间的网络连接稳定，客户端 SDK 通常会内置连接管理和自动重连机制。</p>
+</li>
+</ol>
+<hr>
+<h3 id="二、-消息队列（Broker）侧：确保消息可靠存储与传递"><a href="#二、-消息队列（Broker）侧：确保消息可靠存储与传递" class="headerlink" title="二、 消息队列（Broker）侧：确保消息可靠存储与传递"></a>二、 消息队列（Broker）侧：确保消息可靠存储与传递</h3><p>Broker 是消息的“中转站”和“保管员”，它的可靠性至关重要。</p>
+<ol>
+<li><p><strong>消息持久化（Message Persistence）：</strong></p>
+<ul>
+<li><strong>消息写入磁盘：</strong> 消息到达 Broker 后，必须立即写入到持久化存储（如磁盘文件，通常是日志文件或 Commit Log）而不是只停留在内存中。这样即使 Broker 宕机，重启后也能从磁盘恢复消息。</li>
+<li><strong>刷盘机制（Flush Disk）：</strong> 消息写入操作系统缓存后，需要及时强制刷入磁盘（<code>fsync</code> 或 <code>AIO</code>）。<ul>
+<li><strong>同步刷盘（Sync Flush）：</strong> 消息提交到 Broker 后，只有当消息真正写入磁盘后，Broker 才返回成功响应给生产者。可靠性最高，但性能较低。</li>
+<li><strong>异步刷盘（Async Flush）：</strong> 消息写入操作系统缓存后，Broker 立即返回成功响应给生产者，然后异步地将消息刷入磁盘。性能高，但若Broker在消息未刷盘前宕机，可能会丢失少量消息。在对消息丢失容忍度极低但对性能要求很高的情况下，通常会结合下面的主从同步复制。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>高可用与冗余（High Availability &amp; Redundancy）：</strong></p>
+<ul>
+<li><strong>集群部署：</strong> Broker 通常以集群模式部署，避免单点故障。</li>
+<li><strong>主从复制&#x2F;多副本机制：</strong><ul>
+<li><strong>同步复制（Synchronous Replication）：</strong> 主节点收到消息后，必须等待至少一个从节点成功复制并写入磁盘后，才向生产者返回成功。这是保证消息不丢失的<strong>最强机制</strong>，即使主节点宕机，消息也能在从节点找到。例如 RocketMQ 的 <code>SYNC_MASTER</code> 模式，Kafka 的 <code>acks=all</code> 级别。</li>
+<li><strong>异步复制（Asynchronous Replication）：</strong> 主节点收到消息并写入磁盘后，立即向生产者返回成功，然后异步地复制给从节点。性能更高，但如果在消息未同步到从节点前主节点宕机，可能会丢失少量消息。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>消息的排队和索引：</strong> MQ 内部的队列结构和高效的索引机制，确保消息能被正确存储、查找和发送给消费者。</p>
+</li>
+</ol>
+<hr>
+<h3 id="三、-消费者侧：确保消息成功处理并确认"><a href="#三、-消费者侧：确保消息成功处理并确认" class="headerlink" title="三、 消费者侧：确保消息成功处理并确认"></a>三、 消费者侧：确保消息成功处理并确认</h3><p>即使消息安全送达消费者，如果在消费者处理过程中或确认过程中出现问题，消息也可能“丢失”在业务逻辑层面。</p>
+<ol>
+<li><p><strong>消费者消息确认（Acknowledgement &#x2F; ACK）：</strong></p>
+<ul>
+<li><strong>手动 ACK：</strong> 这是保证消息不丢失的关键。消费者接收到消息后，先执行业务逻辑。只有当业务逻辑<strong>成功完成</strong>后，才向 Broker 发送确认（ACK）信号。</li>
+<li><strong>自动 ACK 的风险：</strong> 如果使用自动 ACK（收到消息即 ACK），那么在自动 ACK 之后，消费者处理业务逻辑失败或宕机，消息将不会被重试，从而丢失。因此，生产环境一般不推荐使用自动 ACK。</li>
+<li><strong>NACK&#x2F;重试机制：</strong> 如果消费者处理消息失败（例如，业务逻辑异常、数据库连接中断），不发送 ACK，或者发送 NACK 信号。Broker 会认为该消息未被成功处理，并在一定时间后进行重试投递（配置最大重试次数和重试间隔）。</li>
+</ul>
+</li>
+<li><p><strong>消费者幂等性（Idempotency）：</strong></p>
+<ul>
+<li>由于消息队列提供的是“<strong>至少一次（At Least Once）</strong>”的投递保证（因为重试机制的存在，可能会导致消息重复投递），因此消费者必须设计为幂等的。</li>
+<li><strong>幂等性</strong>意味着：多次执行同一个操作，产生的结果与执行一次操作的结果相同，不会产生副作用。</li>
+<li><strong>实现方式：</strong><ul>
+<li><strong>唯一 ID 校验：</strong> 给每条消息生成唯一的消息 ID 或业务 ID，消费者处理前先根据此 ID 查询是否已处理过。</li>
+<li><strong>状态机：</strong> 对于有状态的操作，记录当前状态，避免重复操作。</li>
+<li><strong>数据库唯一约束：</strong> 利用数据库的唯一索引或主键约束，插入重复数据时报错。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>死信队列（Dead Letter Queue, DLQ）：</strong></p>
+<ul>
+<li>当消息经过多次重试仍然无法被消费者成功处理时（例如，消息本身格式错误、业务逻辑存在 Bug 导致反复失败），为了不阻碍后续消息的消费，这些消息会被移到特殊的“死信队列”。</li>
+<li>死信队列中的消息不会再被普通消费者消费，等待开发人员后续进行分析、修复问题并手动处理或重新投递。这是对消息的<strong>最后一道防线</strong>，确保“难以处理”的消息不会被悄悄丢弃。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3 id="四、-总结：多层防护与权衡"><a href="#四、-总结：多层防护与权衡" class="headerlink" title="四、 总结：多层防护与权衡"></a>四、 总结：多层防护与权衡</h3><p>保证消息不丢失是一个系统工程，涉及生产、传输和消费的每个环节。没有银弹，需要结合多种策略共同作用：</p>
+<ul>
+<li><strong>生产者：</strong> 确保成功发送（同步&#x2F;异步ACK，重试，事务消息&#x2F;本地消息表）。</li>
+<li><strong>消息队列：</strong> 确保可靠存储（持久化，同步刷盘，主从同步复制集群）。</li>
+<li><strong>消费者：</strong> 确保成功处理（手动ACK，处理完再ACK，幂等性处理，死信队列）。</li>
+</ul>
+<p>在实际应用中，我们需要在<strong>消息的可靠性、系统的性能和资源的成本</strong>之间进行权衡。例如，同步刷盘和同步复制能提供最高的可靠性，但会显著降低消息吞吐量和增加延迟。因此，需要根据业务对消息丢失的容忍度来选择合适的策略和配置。</p>
+<p>作为后端开发人员，我们必须深入理解这些机制，并结合业务场景做出明智的设计决策。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/%E4%B8%AD%E9%97%B4%E4%BB%B6/" rel="tag"># 中间件</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E6%9C%89%E5%BA%8F/" rel="prev" title="消息队列如何保证有序">
+      <i class="fa fa-chevron-left"></i> 消息队列如何保证有序
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/" rel="next" title="消息队列">
+      消息队列 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E3%80%81-%E7%94%9F%E4%BA%A7%E8%80%85%E4%BE%A7%EF%BC%9A%E7%A1%AE%E4%BF%9D%E6%B6%88%E6%81%AF%E6%88%90%E5%8A%9F%E5%8F%91%E9%80%81%E5%88%B0%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97"><span class="nav-number">1.</span> <span class="nav-text">一、 生产者侧：确保消息成功发送到消息队列</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E3%80%81-%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%EF%BC%88Broker%EF%BC%89%E4%BE%A7%EF%BC%9A%E7%A1%AE%E4%BF%9D%E6%B6%88%E6%81%AF%E5%8F%AF%E9%9D%A0%E5%AD%98%E5%82%A8%E4%B8%8E%E4%BC%A0%E9%80%92"><span class="nav-number">2.</span> <span class="nav-text">二、 消息队列（Broker）侧：确保消息可靠存储与传递</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E3%80%81-%E6%B6%88%E8%B4%B9%E8%80%85%E4%BE%A7%EF%BC%9A%E7%A1%AE%E4%BF%9D%E6%B6%88%E6%81%AF%E6%88%90%E5%8A%9F%E5%A4%84%E7%90%86%E5%B9%B6%E7%A1%AE%E8%AE%A4"><span class="nav-number">3.</span> <span class="nav-text">三、 消费者侧：确保消息成功处理并确认</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%9B%E3%80%81-%E6%80%BB%E7%BB%93%EF%BC%9A%E5%A4%9A%E5%B1%82%E9%98%B2%E6%8A%A4%E4%B8%8E%E6%9D%83%E8%A1%A1"><span class="nav-number">4.</span> <span class="nav-text">四、 总结：多层防护与权衡</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Go 语言参数传递机制：总是值传递首先，要明确 Go 语言中所有的参数传递都是值传递。这意味着当您将一个变量作为参数传递给函数时，函数会收到该变量的一个副本。 对于切片而言，这个“副本”不是底层数组的副本，而是切片头（slice header）的副本。切片头包含三个字段：  指向底层数组的指针 (pointer): 指向切片数据所在的底层数组的起始位置。 长度 (length): 切片当前包含的元">
+<meta property="og:type" content="article">
+<meta property="og:title" content="切片作为函数">
+<meta property="og:url" content="http://example.com/2025/09/11/%E5%88%87%E7%89%87%E4%BD%9C%E4%B8%BA%E5%87%BD%E6%95%B0/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="Go 语言参数传递机制：总是值传递首先，要明确 Go 语言中所有的参数传递都是值传递。这意味着当您将一个变量作为参数传递给函数时，函数会收到该变量的一个副本。 对于切片而言，这个“副本”不是底层数组的副本，而是切片头（slice header）的副本。切片头包含三个字段：  指向底层数组的指针 (pointer): 指向切片数据所在的底层数组的起始位置。 长度 (length): 切片当前包含的元">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:15:25.936Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Go">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/%E5%88%87%E7%89%87%E4%BD%9C%E4%B8%BA%E5%87%BD%E6%95%B0/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>切片作为函数 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/%E5%88%87%E7%89%87%E4%BD%9C%E4%B8%BA%E5%87%BD%E6%95%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          切片作为函数
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:15:25" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/go/" itemprop="url" rel="index"><span itemprop="name">go</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.8k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="Go-语言参数传递机制：总是值传递"><a href="#Go-语言参数传递机制：总是值传递" class="headerlink" title="Go 语言参数传递机制：总是值传递"></a>Go 语言参数传递机制：总是值传递</h3><p>首先，要明确 Go 语言中所有的参数传递都是<strong>值传递</strong>。这意味着当您将一个变量作为参数传递给函数时，函数会收到该变量的一个<strong>副本</strong>。</p>
+<p>对于切片而言，这个“副本”不是底层数组的副本，而是<strong>切片头（slice header）的副本</strong>。切片头包含三个字段：</p>
+<ol>
+<li><strong>指向底层数组的指针 (pointer):</strong> 指向切片数据所在的底层数组的起始位置。</li>
+<li><strong>长度 (length):</strong> 切片当前包含的元素个数。</li>
+<li><strong>容量 (capacity):</strong> 从切片的第一个元素到其底层数组末尾的元素个数。</li>
+</ol>
+<p>函数接收到的是这个切片头的副本。这个副本中的指针，<strong>仍然指向原始切片所指向的那个底层数组</strong>。</p>
+<h3 id="主要注意事项和场景分析"><a href="#主要注意事项和场景分析" class="headerlink" title="主要注意事项和场景分析"></a>主要注意事项和场景分析</h3><p>基于上述理解，我们可以分析切片作为函数参数时的不同行为：</p>
+<hr>
+<h3 id="注意事项-1：修改切片元素-共享底层数组"><a href="#注意事项-1：修改切片元素-共享底层数组" class="headerlink" title="注意事项 1：修改切片元素 (共享底层数组)"></a>注意事项 1：修改切片元素 (共享底层数组)</h3><ul>
+<li><strong>行为：</strong> 如果在函数内部通过索引修改了切片中的元素，这些修改会反映到原始切片上。</li>
+<li><strong>原因：</strong> 因为函数内部的切片和外部的切片共享同一个底层数组。函数只是通过切片头的副本操作了同一块内存区域。</li>
+<li><strong>不需要返回：</strong> 在这种情况下，函数不需要返回切片，因为修改已经直接反映在原切片上。</li>
+</ul>
+<p><strong>示例：</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">modifyElements</span><span class="params">(s []<span class="type">int</span>)</span></span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;Inside modifyElements (before): len=%d, cap=%d, value=%v, addr (slice header)=%p, addr (first element)=%p\n&quot;</span>,</span><br><span class="line">		<span class="built_in">len</span>(s), <span class="built_in">cap</span>(s), s, &amp;s, s) <span class="comment">// 注意 &amp;s 是切片头副本的地址，s 是底层数组首地址</span></span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(s) &gt; <span class="number">0</span> &#123;</span><br><span class="line">		s[<span class="number">0</span>] = <span class="number">999</span> <span class="comment">// 修改底层数组的第一个元素</span></span><br><span class="line">		s[<span class="number">1</span>] = <span class="number">888</span> <span class="comment">// 修改底层数组的第二个元素</span></span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;Inside modifyElements (after): len=%d, cap=%d, value=%v\n&quot;</span>, <span class="built_in">len</span>(s), <span class="built_in">cap</span>(s), s)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	mySlice := []<span class="type">int</span>&#123;<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">40</span>&#125;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;Initial mySlice: len=%d, cap=%d, value=%v, addr (slice header)=%p, addr (first element)=%p\n&quot;</span>,</span><br><span class="line">		<span class="built_in">len</span>(mySlice), <span class="built_in">cap</span>(mySlice), mySlice, &amp;mySlice, mySlice)</span><br><span class="line"></span><br><span class="line">	modifyElements(mySlice) <span class="comment">// 传递切片头副本</span></span><br><span class="line"></span><br><span class="line">	fmt.Printf(<span class="string">&quot;After modifyElements: len=%d, cap=%d, value=%v\n&quot;</span>, <span class="built_in">len</span>(mySlice), <span class="built_in">cap</span>(mySlice), mySlice)</span><br><span class="line">	<span class="comment">// 输出: After modifyElements: len=4, cap=4, value=[999 888 30 40]</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="注意事项-2：修改切片长度或容量-未触发扩容"><a href="#注意事项-2：修改切片长度或容量-未触发扩容" class="headerlink" title="注意事项 2：修改切片长度或容量 (未触发扩容)"></a>注意事项 2：修改切片长度或容量 (未触发扩容)</h3><ul>
+<li><strong>行为：</strong> 如果在函数内部对切片进行了切片操作（如 <code>s = s[1:]</code>）或者 <code>append</code> 操作但<strong>未触发底层数组扩容</strong>，那么函数内部的切片头会更新，但原始切片头的长度和容量<strong>不会改变</strong>。</li>
+<li><strong>原因：</strong> 这是因为函数操作的是切片头的副本。虽然副本的长度和容量更新了，但原始的切片头仍然保持不变。虽然它们仍指向同一个底层数组，但它们的“视图”不同了。</li>
+<li><strong>需要返回：</strong> 如果您希望原始切片的长度或容量的改变生效，您<strong>必须</strong>返回新的切片。</li>
+</ul>
+<p><strong>示例：</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">growSliceWithoutRealloc</span><span class="params">(s []<span class="type">int</span>)</span></span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;Inside growSliceWithoutRealloc (before): len=%d, cap=%d, value=%v\n&quot;</span>, <span class="built_in">len</span>(s), <span class="built_in">cap</span>(s), s)</span><br><span class="line">	<span class="comment">// 假设容量足够，追加元素不会触发扩容</span></span><br><span class="line">	s = <span class="built_in">append</span>(s, <span class="number">50</span>, <span class="number">60</span>) <span class="comment">// 修改的是 s 这个局部变量（切片头副本）</span></span><br><span class="line">	fmt.Printf(<span class="string">&quot;Inside growSliceWithoutRealloc (after): len=%d, cap=%d, value=%v\n&quot;</span>, <span class="built_in">len</span>(s), <span class="built_in">cap</span>(s), s)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	mySlice := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">2</span>, <span class="number">5</span>) <span class="comment">// len=2, cap=5</span></span><br><span class="line">	mySlice[<span class="number">0</span>] = <span class="number">10</span></span><br><span class="line">	mySlice[<span class="number">1</span>] = <span class="number">20</span></span><br><span class="line">	<span class="comment">// 底层数组：[10 20 &lt;empty&gt; &lt;empty&gt; &lt;empty&gt;]</span></span><br><span class="line">	fmt.Printf(<span class="string">&quot;Initial mySlice: len=%d, cap=%d, value=%v\n&quot;</span>, <span class="built_in">len</span>(mySlice), <span class="built_in">cap</span>(mySlice), mySlice)</span><br><span class="line"></span><br><span class="line">	growSliceWithoutRealloc(mySlice)</span><br><span class="line"></span><br><span class="line">	fmt.Printf(<span class="string">&quot;After growSliceWithoutRealloc: len=%d, cap=%d, value=%v\n&quot;</span>, <span class="built_in">len</span>(mySlice), <span class="built_in">cap</span>(mySlice), mySlice)</span><br><span class="line">	<span class="comment">// 输出: Initial mySlice: len=2, cap=5, value=[10 20]</span></span><br><span class="line">	<span class="comment">//       Inside growSliceWithoutRealloc (before): len=2, cap=5, value=[10 20]</span></span><br><span class="line">	<span class="comment">//       Inside growSliceWithoutRealloc (after): len=4, cap=5, value=[10 20 50 60]</span></span><br><span class="line">	<span class="comment">//       After growSliceWithoutRealloc: len=2, cap=5, value=[10 20]  &lt;-- 原始切片未改变其长度/容量</span></span><br><span class="line">	<span class="comment">// 注意：虽然原始切片的值未更新，但底层数组实际上已被修改！</span></span><br><span class="line">	<span class="comment">// 如果您之后在mySlice上append，可能会覆盖 [50 60]！这正是陷阱所在。</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在上面的例子中，<code>growSliceWithoutRealloc</code> 内部追加了元素，实际上修改了底层数组。如果在 <code>main</code> 函数中，<code>mySlice</code> 再次进行 <code>append</code> 操作，它可能会覆盖掉函数内追加的 <code>50, 60</code>。这通常不是期望的行为。</p>
+<hr>
+<h3 id="注意事项-3：修改切片长度或容量-触发扩容"><a href="#注意事项-3：修改切片长度或容量-触发扩容" class="headerlink" title="注意事项 3：修改切片长度或容量 (触发扩容)"></a>注意事项 3：修改切片长度或容量 (触发扩容)</h3><ul>
+<li><strong>行为：</strong> 如果在函数内部 <code>append</code> 元素时，导致需要分配新的、更大的底层数组（即触发了扩容），那么函数内部的切片头会更新，指向新的底层数组。<strong>原始切片头仍然指向旧的底层数组。</strong></li>
+<li><strong>原因：</strong> 扩容意味着创建了一个全新的底层数组，函数内部的切片头副本现在指向新的内存地址，而原始切片头依然指向旧的内存地址。它们现在完全独立了（除了旧数组可能被新数组拷贝了一部分）。</li>
+<li><strong>必须返回：</strong> 这种情况下同样，您<strong>必须</strong>返回新的切片，否则原始切片将不会有任何变化，且函数内新建的切片会被垃圾回收。</li>
+</ul>
+<p><strong>示例：</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">growSliceWithRealloc</span><span class="params">(s []<span class="type">int</span>)</span></span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;Inside growSliceWithRealloc (before): len=%d, cap=%d, value=%v\n&quot;</span>, <span class="built_in">len</span>(s), <span class="built_in">cap</span>(s), s)</span><br><span class="line">	s = <span class="built_in">append</span>(s, <span class="number">500</span>, <span class="number">600</span>, <span class="number">700</span>) <span class="comment">// 假设会触发扩容 (例如，初始容量很小)</span></span><br><span class="line">	fmt.Printf(<span class="string">&quot;Inside growSliceWithRealloc (after): len=%d, cap=%d, value=%v\n&quot;</span>, <span class="built_in">len</span>(s), <span class="built_in">cap</span>(s), s)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	mySlice := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">0</span>, <span class="number">1</span>) <span class="comment">// len=0, cap=1</span></span><br><span class="line">	mySlice = <span class="built_in">append</span>(mySlice, <span class="number">10</span>, <span class="number">20</span>) <span class="comment">// mySlice: len=2, cap=2 (已扩容一次)</span></span><br><span class="line">	fmt.Printf(<span class="string">&quot;Initial mySlice: len=%d, cap=%d, value=%v\n&quot;</span>, <span class="built_in">len</span>(mySlice), <span class="built_in">cap</span>(mySlice), mySlice)</span><br><span class="line"></span><br><span class="line">	growSliceWithRealloc(mySlice) <span class="comment">// 这会触发扩容</span></span><br><span class="line"></span><br><span class="line">	fmt.Printf(<span class="string">&quot;After growSliceWithRealloc: len=%d, cap=%d, value=%v\n&quot;</span>, <span class="built_in">len</span>(mySlice), <span class="built_in">cap</span>(mySlice), mySlice)</span><br><span class="line">	<span class="comment">// 输出: Initial mySlice: len=2, cap=2, value=[10 20]</span></span><br><span class="line">	<span class="comment">//       Inside growSliceWithRealloc (before): len=2, cap=2, value=[10 20]</span></span><br><span class="line">	<span class="comment">//       Inside growSliceWithRealloc (after): len=5, cap=X, value=[10 20 500 600 700] (X是新容量，通常为4或8)</span></span><br><span class="line">	<span class="comment">//       After growSliceWithRealloc: len=2, cap=2, value=[10 20]  &lt;-- 原始切片完全未变（指向旧数组）</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="最佳实践"><a href="#最佳实践" class="headerlink" title="最佳实践"></a>最佳实践</h3><p>基于以上分析，Go 语言中处理切片作为函数参数的<strong>最佳实践</strong>是：</p>
+<ol>
+<li><p><strong>如果函数唯一的作用是修改切片中的现有元素（通过索引），并且不改变其长度或容量，则无需返回切片。</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">zeroOut</span><span class="params">(s []<span class="type">int</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">for</span> i := <span class="keyword">range</span> s &#123;</span><br><span class="line">        s[i] = <span class="number">0</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 调用: zeroOut(mySlice)</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>如果函数可能会改变切片的长度、容量（例如通过 <code>append</code> 或切片操作），那么它应该作为返回值返回新的切片。</strong> 这是一个非常常见的 Go 惯用法。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">appendAndReturn</span><span class="params">(s []<span class="type">int</span>, vals ...<span class="type">int</span>)</span></span> []<span class="type">int</span> &#123;</span><br><span class="line">    s = <span class="built_in">append</span>(s, vals...)</span><br><span class="line">    <span class="keyword">return</span> s</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 调用: mySlice = appendAndReturn(mySlice, 100, 200)</span></span><br></pre></td></tr></table></figure>
+<p>这样做会使代码意图明确，避免了上面提到的“隐式修改底层数组但原始切片头未更新”的陷阱。</p>
+</li>
+<li><p><strong>避免传递 <code>*[]T</code>（指向切片的指针）作为参数，除非您真的需要修改调用者作用域中的切片头本身，并且不希望通过返回值来实现。</strong> 这种模式较为罕见，通常没有直接返回切片清晰。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 不推荐，除非有特殊理由</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">appendByModifyingPointer</span><span class="params">(s *[]<span class="type">int</span>, val <span class="type">int</span>)</span></span> &#123;</span><br><span class="line">    *s = <span class="built_in">append</span>(*s, val) <span class="comment">// 直接修改caller的slice header</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 调用: appendByModifyingPointer(&amp;mySlice, 100)</span></span><br></pre></td></tr></table></figure></li>
+</ol>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><ul>
+<li>Go 语言中切片作为函数参数是<strong>值传递</strong>，传递的是切片头的副本。</li>
+<li>函数内部对切片元素的修改会反映到外部，因为它们共享底层数组。</li>
+<li>函数内部对切片长度或容量的修改（通过 <code>append</code> 或切片操作）<strong>不会</strong>反映到外部，除非您将修改后的切片作为返回值返回。</li>
+<li><strong>记住：如果函数会改变切片的长度或容量，请总是返回这个新的切片。这通常是最清晰和 Go 惯用的方式。</strong></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Go/" rel="tag"># Go</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E5%8D%95%E6%9C%BA%E6%A8%A1%E5%BC%8F/" rel="prev" title="单机模式">
+      <i class="fa fa-chevron-left"></i> 单机模式
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/" rel="next" title="分布式事务">
+      分布式事务 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Go-%E8%AF%AD%E8%A8%80%E5%8F%82%E6%95%B0%E4%BC%A0%E9%80%92%E6%9C%BA%E5%88%B6%EF%BC%9A%E6%80%BB%E6%98%AF%E5%80%BC%E4%BC%A0%E9%80%92"><span class="nav-number">1.</span> <span class="nav-text">Go 语言参数传递机制：总是值传递</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BB%E8%A6%81%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9%E5%92%8C%E5%9C%BA%E6%99%AF%E5%88%86%E6%9E%90"><span class="nav-number">2.</span> <span class="nav-text">主要注意事项和场景分析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9-1%EF%BC%9A%E4%BF%AE%E6%94%B9%E5%88%87%E7%89%87%E5%85%83%E7%B4%A0-%E5%85%B1%E4%BA%AB%E5%BA%95%E5%B1%82%E6%95%B0%E7%BB%84"><span class="nav-number">3.</span> <span class="nav-text">注意事项 1：修改切片元素 (共享底层数组)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9-2%EF%BC%9A%E4%BF%AE%E6%94%B9%E5%88%87%E7%89%87%E9%95%BF%E5%BA%A6%E6%88%96%E5%AE%B9%E9%87%8F-%E6%9C%AA%E8%A7%A6%E5%8F%91%E6%89%A9%E5%AE%B9"><span class="nav-number">4.</span> <span class="nav-text">注意事项 2：修改切片长度或容量 (未触发扩容)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9-3%EF%BC%9A%E4%BF%AE%E6%94%B9%E5%88%87%E7%89%87%E9%95%BF%E5%BA%A6%E6%88%96%E5%AE%B9%E9%87%8F-%E8%A7%A6%E5%8F%91%E6%89%A9%E5%AE%B9"><span class="nav-number">5.</span> <span class="nav-text">注意事项 3：修改切片长度或容量 (触发扩容)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="nav-number">6.</span> <span class="nav-text">最佳实践</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">7.</span> <span class="nav-text">总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

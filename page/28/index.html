@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta property="og:type" content="website">
+<meta property="og:title" content="Hui&#39;s Blog">
+<meta property="og:url" content="http://example.com/page/28/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:author" content="六一">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/page/28/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : true,
+    isPost : false,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content index posts-expand">
+            
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/%E9%99%90%E6%B5%81/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/%E9%99%90%E6%B5%81/" class="post-title-link" itemprop="url">限流</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:18:06" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/" itemprop="url" rel="index"><span itemprop="name">WEB</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/Nginx/" itemprop="url" rel="index"><span itemprop="name">Nginx</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.2k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="如何用-Nginx-做限流？"><a href="#如何用-Nginx-做限流？" class="headerlink" title="如何用 Nginx 做限流？"></a>如何用 Nginx 做限流？</h3><p>Nginx 主要通过其核心模块 <code>ngx_http_limit_req_module</code> 和 <code>ngx_http_limit_conn_module</code> 来实现限流。</p>
+<ul>
+<li>**<code>limit_req</code>**：限制单位时间内的请求速率（处理频率）。</li>
+<li>**<code>limit_conn</code>**：限制同一时间内的并发连接数。</li>
+</ul>
+<p>下面我们详细讲解如何配置和实现。</p>
+<h3 id="限流算法的种类和实现"><a href="#限流算法的种类和实现" class="headerlink" title="限流算法的种类和实现"></a>限流算法的种类和实现</h3><p>Nginx 主要支持基于令牌桶算法（Token Bucket）的请求速率限流和基于计数器算法的并发连接数限流。</p>
+<h4 id="1-基于请求速率的限流-limit-req-module-令牌桶算法"><a href="#1-基于请求速率的限流-limit-req-module-令牌桶算法" class="headerlink" title="1. 基于请求速率的限流 (limit_req_module) - 令牌桶算法"></a>1. 基于请求速率的限流 (<code>limit_req_module</code>) - 令牌桶算法</h4><p><strong>算法原理 (令牌桶):</strong></p>
+<p>想象有一个固定容量的“令牌桶”，系统会以恒定的速率往桶里添加令牌。每当一个请求到来，它必须从桶里取走一个令牌才能被处理。如果桶里没有令牌，请求就会被拒绝或等待。</p>
+<ul>
+<li><strong>优点：</strong> 允许短时间的突发流量（即桶里积累的令牌），但长期来看会限制平均速率。</li>
+<li><strong>缺点：</strong> 桶的容量决定了允许的突发流量大小，如果设置不当，可能无法有效应对极端的流量高峰。</li>
+</ul>
+<p><strong>Nginx 实现：</strong></p>
+<p>主要通过 <code>limit_req_zone</code> 和 <code>limit_req</code> 指令实现。</p>
+<p><strong>a. 定义限流区域 (<code>limit_req_zone</code>)</strong></p>
+<p>在 <code>http</code> 块中配置，定义一个共享内存区域来存储限流状态。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Syntax: limit_req_zone $variable zone=name:size rate=rate [sync];</span></span><br><span class="line"><span class="comment"># context: http</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 示例：</span></span><br><span class="line"><span class="attribute">limit_req_zone</span> <span class="variable">$binary_remote_addr</span> zone=mylimit:<span class="number">10m</span> rate=10r/s;</span><br><span class="line"><span class="comment"># $binary_remote_addr: 使用二进制形式的客户端IP地址作为键，节省内存。</span></span><br><span class="line"><span class="comment"># zone=mylimit:10m: 定义一个名为 mylimit 的共享内存区域，大小为 10MB。</span></span><br><span class="line"><span class="comment">#                  10MB 大概可以存储 16 万个 IP 地址的状态信息。</span></span><br><span class="line"><span class="comment"># rate=10r/s: 限制每个 IP 地址每秒最多 10 个请求（r/s = request per second）。</span></span><br><span class="line"><span class="comment">#             也可以是 rate=60r/m (每分钟 60 个请求)。</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>解析参数：</strong></p>
+<ul>
+<li><code>$binary_remote_addr</code>：这是限流的“键”。表示根据客户端的 IP 地址进行限流。你也可以使用 <code>$server_name</code>（根据域名）、<code>$request_uri</code>（根据请求URI）等变量作为键，取决于你想如何划分限流对象。使用 <code>$binary_remote_addr</code> 是非常常见的做法，因为它能有效识别不同的客户端。</li>
+<li><code>zone=mylimit:10m</code>：创建一个名为 <code>mylimit</code> 的共享内存区域，大小为 <code>10MB</code>。这个区域用于存储各个客户端 IP 的请求状态信息（如上次请求时间、当前令牌数量等）。</li>
+<li><code>rate=10r/s</code>：指定限流的速率。这里表示每个 IP 地址每秒最多处理 10 个请求。如果设置为 <code>10r/m</code>，则表示每分钟 10 个请求。</li>
+</ul>
+<p><strong>b. 应用限流策略 (<code>limit_req</code>)</strong></p>
+<p>在 <code>http</code>, <code>server</code>, 或 <code>location</code> 块中应用前面定义的限流区域。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Syntax: limit_req zone=name [burst=number] [nodelay | delay=number];</span></span><br><span class="line"><span class="comment"># context: http, server, location</span></span><br><span class="line"></span><br><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> your_domain.com;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> / &#123;</span><br><span class="line">        <span class="attribute">limit_req</span> zone=mylimit burst=<span class="number">5</span> nodelay; </span><br><span class="line">        <span class="comment"># 其他 proxy_pass 或 root 配置</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> /api/login &#123;</span><br><span class="line">        <span class="attribute">limit_req</span> zone=mylimit burst=<span class="number">10</span>; <span class="comment"># 允许登录接口有更大的突发，但延迟处理</span></span><br><span class="line">        <span class="comment"># proxy_pass ...</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>解析参数：</strong></p>
+<ul>
+<li><code>zone=mylimit</code>：引用前面定义的限流区域。</li>
+<li><code>burst=number</code>：<strong>爆发量</strong>。这个参数是令牌桶算法的关键。它定义了在达到平均速率限制之后，允许客户端额外发起的请求数量。<ul>
+<li>例如，<code>rate=10r/s burst=5</code> 意味着平均每秒只处理 10 个请求。但是，如果客户端突然在极短时间内发送了 15 个请求，前 10 个会立即处理，接下来的 5 个会被放入一个队列（如果 <code>nodelay</code> 没有设置），或被立即处理（如果 <code>nodelay</code> 或 <code>delay</code> 设置为 0）。如果超过 5 个突发，多余的请求就会被拒绝（返回 503 Service Unavailable）。</li>
+</ul>
+</li>
+<li><code>nodelay</code>：如果设置了 <code>burst</code>，且请求超出了 <code>rate</code> 限制但在 <code>burst</code> 范围内，<code>nodelay</code> 会让这些请求立即处理，而不是排队等待。这有助于处理突发流量，但如果突发量过大，后端可能因瞬时高压而崩溃。<ul>
+<li><strong>推荐使用场景：</strong> 对于希望立即处理突发请求，但又不想突破总速率的场景。</li>
+</ul>
+</li>
+<li><code>delay=number</code>：替代 <code>nodelay</code>，指定服务器将排队请求响应的延迟时间（秒数）。例如 <code>delay=1</code> 意味着如果请求被限制，将会延迟 1 秒响应，而不是直接拒绝。这可以平滑请求峰值。<ul>
+<li><strong>推荐使用场景：</strong> 对于希望平滑请求峰值，避免后端瞬间压力过大的场景。</li>
+<li><strong>注意：</strong> <code>burst</code> 和 <code>delay</code> 配合使用时，Nginx 只会延迟 <code>burst</code> 限制内的请求。超过 <code>burst</code> 的请求仍会被拒绝。</li>
+</ul>
+</li>
+</ul>
+<p><strong>Nginx 响应：</strong> 当请求被限流拒绝时，Nginx 默认会返回 <strong>HTTP 503 (Service Unavailable)</strong> 状态码。你也可以通过 <code>limit_req_log_level</code> 和 <code>limit_req_status</code> 指令进行自定义。</p>
+<h4 id="2-基于并发连接数的限流-limit-conn-module-计数器算法"><a href="#2-基于并发连接数的限流-limit-conn-module-计数器算法" class="headerlink" title="2. 基于并发连接数的限流 (limit_conn_module) - 计数器算法"></a>2. 基于并发连接数的限流 (<code>limit_conn_module</code>) - 计数器算法</h4><p><strong>算法原理 (计数器):</strong></p>
+<p>非常直接的算法。维护一个计数器，每当一个新连接到来时计数器加一，连接断开时减一。如果计数器达到预设的最大值，新的连接就会被拒绝。</p>
+<ul>
+<li><strong>优点：</strong> 简单高效，直接控制并发量。</li>
+<li><strong>缺点：</strong> 无法平滑处理流量，达到限制后直接拒绝。如果限流的粒度过粗，可能会误伤。</li>
+</ul>
+<p><strong>Nginx 实现：</strong></p>
+<p>主要通过 <code>limit_conn_zone</code> 和 <code>limit_conn</code> 指令实现。</p>
+<p><strong>a. 定义限流区域 (<code>limit_conn_zone</code>)</strong></p>
+<p>在 <code>http</code> 块中配置，定义一个共享内存区域来存储连接状态。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Syntax: limit_conn_zone $variable zone=name:size;</span></span><br><span class="line"><span class="comment"># context: http</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 示例：</span></span><br><span class="line"><span class="attribute">limit_conn_zone</span> <span class="variable">$binary_remote_addr</span> zone=conn_limit:<span class="number">10m</span>;</span><br><span class="line"><span class="comment"># $binary_remote_addr: 同样使用客户端IP作为键。</span></span><br><span class="line"><span class="comment"># zone=conn_limit:10m: 定义一个名为 conn_limit 的共享内存区域，大小为 10MB。</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>解析参数：</strong></p>
+<ul>
+<li><code>$binary_remote_addr</code>：基于客户端 IP 地址进行连接限流。</li>
+<li><code>zone=conn_limit:10m</code>：创建一个名为 <code>conn_limit</code> 的共享内存区域，存储连接数信息。</li>
+</ul>
+<p><strong>b. 应用限流策略 (<code>limit_conn</code>)</strong></p>
+<p>在 <code>http</code>, <code>server</code>, 或 <code>location</code> 块中应用。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Syntax: limit_conn zone=name number;</span></span><br><span class="line"><span class="comment"># context: http, server, location</span></span><br><span class="line"></span><br><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> your_domain.com;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> / &#123;</span><br><span class="line">        <span class="attribute">limit_conn</span> conn_limit <span class="number">10</span>; <span class="comment"># 限制每个 IP 同时只能有 10 个并发连接</span></span><br><span class="line">        <span class="comment"># proxy_pass ...</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> /download &#123;</span><br><span class="line">        <span class="attribute">limit_conn</span> conn_limit <span class="number">2</span>; <span class="comment"># 限制下载接口每个 IP 只能有 2 个并发连接，防止滥用下载</span></span><br><span class="line">        <span class="comment"># proxy_pass ...</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>解析参数：</strong></p>
+<ul>
+<li><code>zone=conn_limit</code>：引用前面定义的限流区域。</li>
+<li><code>10</code>：限制每个 <code>zone</code> 键值（在此例中是每个 IP 地址）同时只能建立 10 个并发连接。</li>
+</ul>
+<p><strong>Nginx 响应：</strong> 当连接被限流拒绝时，Nginx 默认会返回 <strong>HTTP 503 (Service Unavailable)</strong> 状态码。</p>
+<h3 id="总结和最佳实践："><a href="#总结和最佳实践：" class="headerlink" title="总结和最佳实践："></a>总结和最佳实践：</h3><ol>
+<li><p><strong>区分请求速率和并发连接：</strong></p>
+<ul>
+<li><code>limit_req</code> 针对的是“每秒&#x2F;每分钟发起多少次请求”。</li>
+<li><code>limit_conn</code> 针对的是“同时有多少个连接（会话）”。</li>
+<li>两者通常结合使用，以提供更全面的保护。</li>
+</ul>
+</li>
+<li><p><strong>合理设置 <code>burst</code> 和 <code>nodelay</code>&#x2F;<code>delay</code>：</strong></p>
+<ul>
+<li>对于大多数 Web 应用，<code>burst</code> 是必要的，它能允许正常的突发流量，避免误杀正常用户。</li>
+<li><code>nodelay</code> 会让突发请求立即处理，后端可能会承受瞬时高负载。</li>
+<li><code>delay</code> 会将突发请求排队，平滑流量尖峰，但可能会增加用户感知到的响应时间。根据应用场景权衡选择。通常在对响应时间不敏感的场景选择 <code>delay</code> 更好。</li>
+</ul>
+</li>
+<li><p><strong>细粒度限流：</strong></p>
+<ul>
+<li>尽可能在 <code>location</code> 块中根据具体接口或资源路径进行限流，而不是在全局 <code>server</code> 块中一刀切。例如，登录接口、文件上传接口、API 接口等可能需要不同的限流策略。</li>
+<li>可以根据 <code>$server_name</code> 对不同的虚拟主机进行限流。</li>
+</ul>
+</li>
+<li><p><strong>IP 白名单：</strong> 对于内部系统、监控系统或某些受信任的 IP 地址，可以使用 <code>geo</code> 或 <code>map</code> 模块结合 <code>limit_req</code> 指令实现白名单，让他们不受限流影响。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 在 http 块中定义</span></span><br><span class="line"><span class="attribute">geo</span> <span class="variable">$white_ip</span> &#123;</span><br><span class="line">    <span class="attribute">default</span> <span class="number">1</span>; <span class="comment"># 默认所有IP都需要限流</span></span><br><span class="line">    192.168.1.0/24 0; <span class="comment"># 白名单IP，不进行限流</span></span><br><span class="line">    127.0.0.1 0;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="attribute">limit_req_zone</span> <span class="variable">$binary_remote_addr</span> zone=mylimit:<span class="number">10m</span> rate=10r/s;</span><br><span class="line"></span><br><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="section">location</span> / &#123;</span><br><span class="line">        <span class="comment"># 只有当 $white_ip 为 1 时（即不在白名单内），才应用限流</span></span><br><span class="line">        <span class="attribute">if</span> (<span class="variable">$white_ip</span> = <span class="number">1</span>) &#123; </span><br><span class="line">            <span class="attribute">limit_req</span> zone=mylimit burst=<span class="number">5</span> nodelay;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="attribute">proxy_pass</span> http://localhost:8080;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>监控和调整：</strong> 限流参数并非一劳永逸。在实际生产环境中，需要持续监控系统的性能和流量模式，根据实际情况对限流参数进行调整和优化。Nginx 的 access log 和 error log 也会记录限流相关的信息，可以用于分析。</p>
+</li>
+</ol>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/%E9%9B%86%E5%90%88%E6%93%8D%E4%BD%9C/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/%E9%9B%86%E5%90%88%E6%93%8D%E4%BD%9C/" class="post-title-link" itemprop="url">集合操作</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:13:45" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/" itemprop="url" rel="index"><span itemprop="name">k8s-monitor</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/Prometheus/" itemprop="url" rel="index"><span itemprop="name">Prometheus</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/Prometheus/Query-PromQL/" itemprop="url" rel="index"><span itemprop="name">Query PromQL</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>1.4k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="集合操作"><a href="#集合操作" class="headerlink" title="集合操作"></a>集合操作</h1><p>有的时候我们需要过滤或将一组时间序列与另一组时间序列进行合并，Prometheus 提供了 3 个在瞬时向量之间操作的集合运算符。</p>
+<ul>
+<li><code>and（集合交集）</code>：比如对较高错误率触发报警，但是只有当对应的总错误率超过某个阈值的时候才会触发报警</li>
+<li><code>or（集合并集）</code>：对序列进行并集计算</li>
+<li><code>unless（除非）</code>：比如要对磁盘空间不足进行告警，除非它是只读文件系统。</li>
+</ul>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/w9csxv.png" alt="union"></p>
+<p>与算术和过滤二元运算符类似，这些集合运算符会尝试根据相同的标签集在左侧和右侧之间查找来匹配序列，除非你提供 <code>on()</code> 或 <code>ignoring()</code> 修饰符来指定应该如何找到匹配。</p>
+<blockquote>
+<p>注意：与算术和过滤二进制运算符相比，集合运算符没有 <code>group_left()</code> 或 <code>group_right()</code> 修饰符，因为集合运算符总是进行多对多的匹配，也就是说，它们总是允许任何一边的匹配序列与另一边的多个序列相匹配。</p>
+</blockquote>
+<p>对于 <code>and</code> 运算符，如果找到一个匹配的，左边的序列就会成为输出结果的一部分，如果右边没有匹配的序列，则不会输出任何结果。</p>
+<p>例如我们想筛选出第 90 个百分位延迟高于 50ms 的所有 HTTP 端点，但只针对每秒收到多个请求的维度组合，查询方式如下所示：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">  histogram_quantile(0.9, rate(demo_api_request_duration_seconds_bucket&#123;job=&quot;demo&quot;&#125;[5m])) &gt; 0.05</span><br><span class="line">and</span><br><span class="line">  rate(demo_api_request_duration_seconds_count&#123;job=&quot;demo&quot;&#125;[5m]) &gt; 1</span><br></pre></td></tr></table></figure>
+
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/2ko9od.png" alt="and 操作"></p>
+<p>有的时候我们也需要对两组时间序列进行合并操作，而不是交集，这个时候我们可以使用 <code>or</code> 集合运算符，产生的结果是运算符左侧的序列，加上来自右侧但左侧没有匹配标签集的时间序列。比如我们要列出所有低于 10 或者高于 30 的请求率，则可以用下面的表达式来查询：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">  rate(demo_api_request_duration_seconds_count&#123;job=&quot;demo&quot;&#125;[5m]) &lt; 10</span><br><span class="line">or</span><br><span class="line">  rate(demo_api_request_duration_seconds_count&#123;job=&quot;demo&quot;&#125;[5m]) &gt; 30</span><br></pre></td></tr></table></figure>
+
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/r4v3qp.png" alt="or 操作"></p>
+<p>我们可以看到在图中使用值过滤器和集合操作会导致时间序列在图中有断点现象，这取决于他们在图中的时间间隔下是否能够与过滤器进行匹配，所以一般情况下，我们建议只在告警规则中使用这种过滤操作。</p>
+<p>还有一个 <code>unless</code> 操作符，它只会保留左边的时间序列，如果右边不存在相等的标签集合的话。</p>
+<h2 id="练习"><a href="#练习" class="headerlink" title="练习"></a>练习</h2><p>1.构建一个查询，显示按 path、method、status（5 分钟内平均）划分的 demo API 请求的第 95 个百分位延迟，除非这个维度组合每秒收到的请求少于 1 个请求（5 分钟内平均）。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">histogram_quantile(0.95, sum by(path, method, status, le) (rate(demo_api_request_duration_seconds_bucket[5m])))</span><br><span class="line">unless</span><br><span class="line"> sum by(path, method, status) (rate(demo_api_request_duration_seconds_count[5m])) &lt; 1</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/%E9%9B%86%E7%BE%A4%E6%A8%A1%E5%BC%8F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/%E9%9B%86%E7%BE%A4%E6%A8%A1%E5%BC%8F/" class="post-title-link" itemprop="url">集群模式</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:14:05" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/" itemprop="url" rel="index"><span itemprop="name">k8s-monitor</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/VectoriaMetrics/" itemprop="url" rel="index"><span itemprop="name">VectoriaMetrics</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>14k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>12 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="集群模式"><a href="#集群模式" class="headerlink" title="集群模式"></a>集群模式</h1><p>对于低于每秒一百万个数据点的摄取率，建议使用单节点版本而不是集群版本。单节点版本可根据 CPU 内核、RAM 和可用存储空间的数量进行扩展。单节点版本比集群版本更容易配置和操作，所以在使用集群版本之前要三思而后行。上面我们介绍了 VM 的单节点版本的基本使用，接下来我们来介绍下如何使用集群版。</p>
+<p>集群版主要特点：</p>
+<ul>
+<li>支持单节点版本的所有功能。</li>
+<li>性能和容量水平扩展。</li>
+<li>支持时间序列数据的多个独立命名空间（多租户）。</li>
+<li>支持多副本。</li>
+</ul>
+<h2 id="组件服务"><a href="#组件服务" class="headerlink" title="组件服务"></a>组件服务</h2><p>前面我们了解了 VM 的基本架构，对于集群模式下主要包含以下几个服务：</p>
+<ul>
+<li><code>vmstorage</code>：存储原始数据并返回指定标签过滤器在给定时间范围内的查询数据，当 <code>-storageDataPath</code> 指向的目录包含的可用空间少于 <code>-storage.minFreeDiskSpaceBytes</code> 时，<code>vmstorage</code> 节点会自动切换到<strong>只读模式</strong>，<code>vminsert</code> 节点也会停止向此类节点发送数据并开始将数据重新路由到剩余的 <code>vmstorage</code> 节点。</li>
+<li><code>vminsert</code>：接受摄取的数据并根据指标名称及其所有标签的一致性哈希将其分散存储到 <code>vmstorage</code> 节点。</li>
+<li><code>vmselect</code>：通过从所有配置的 <code>vmstorage</code> 节点获取所需数据来执行查询。</li>
+</ul>
+<p>每个服务都可以进行独立扩展，<code>vmstorage</code> 节点之间互不了解、互不通信，并且不共享任何数据。这样可以增加集群的可用性，并且简化了集群的维护和扩展。</p>
+<p>最小集群必须包含以下节点：</p>
+<ul>
+<li>带有 <code>-retentionPeriod</code> 和 <code>-storageDataPath</code> 参数的单 <code>vmstorage</code> 节点</li>
+<li>带有 <code>-storageNode=&lt;vmstorage_host&gt;</code> 的单 <code>vminsert</code> 节点</li>
+<li>带有 <code>-storageNode=&lt;vmstorage_host&gt;</code> 的单 <code>vmselect</code> 节点</li>
+</ul>
+<p>但是我们建议为每个服务组件运行至少两个节点以实现高可用性，这样当单个节点暂时不可用时，集群会继续工作，而且其余节点还可以处理增加的工作负载。如果你的集群规模较大，那么可以运行多个小型的 <code>vmstorage</code> 节点，因为这样可以在某些 <code>vmstorage</code> 节点暂时不可用时减少剩余 <code>vmstorage</code> 节点上的工作负载增加。</p>
+<p>各个服务除了可以通过参数标志进行配置之外，也可以通过环境变量的方式进行配置：</p>
+<ul>
+<li><code>-envflag.enable</code> 标志必须设置</li>
+<li>每个标志中的 <code>.</code> 必须替换为 <code>_</code>，例如 <code>-insert.maxQueueDuration &lt;duration&gt;</code> 可以转换为 <code>insert_maxQueueDuration=&lt;duration&gt;</code></li>
+<li>对于重复的标志，可以使用另一种语法，通过使用 <code>,</code> 作为分隔符将不同的值连接成一个，例如 <code>-storageNode &lt;nodeA&gt; -storageNode &lt;nodeB&gt;</code> 将转换为 <code>-storageNode=&lt;nodeA&gt;,&lt;nodeB&gt;</code></li>
+<li>可以使用 <code>-envflag.prefix</code> 为环境变量设置前缀，例如设置了 <code>-envflag.prefix=VM*</code>，则环境变量参数必须以 <code>VM*</code> 开头</li>
+</ul>
+<h2 id="多租户"><a href="#多租户" class="headerlink" title="多租户"></a>多租户</h2><p>此外 VM 集群也支持多个独立的租户（也叫命名空间），租户由 <code>accountID</code> 或 <code>accountID:projectID</code> 来标识，它们被放在请求的 urls 中。</p>
+<ul>
+<li>每个 <code>accountID</code> 和 <code>projectID</code> 都由一个 [0 .. 2^32] 范围内的任意 32 位整数标识，如果缺少 <code>projectID</code>，则自动将其分配为 0。有关租户的其他信息，例如身份验证令牌、租户名称、限额、计费等，将存储在一个单独的关系型数据库中。此数据库必须由位于 VictoriaMetrics 集群前面的单独服务管理，例如 <code>vmauth</code> 或 <code>vmgateway</code>。</li>
+<li>当第一个数据点写入指定租户时，租户被自动创建。</li>
+<li>所有租户的数据均匀分布在可用的 <code>vmstorage</code> 节点中，当不同租户有不同的数据量和不同的查询负载时，这保证了 <code>vmstorage</code> 节点之间的均匀负载。</li>
+<li>数据库性能和资源使用不依赖于租户的数量，它主要取决于所有租户中活跃时间序列的总数。如果一个时间序列在过去一小时内至少收到一个样本，或者在过去一小时内被查询，则认为时间序列是活跃的。</li>
+<li>VictoriaMetrics 不支持在单个请求中查询多个租户。</li>
+</ul>
+<h2 id="集群大小调整和可扩展性"><a href="#集群大小调整和可扩展性" class="headerlink" title="集群大小调整和可扩展性"></a>集群大小调整和可扩展性</h2><p>VM 集群的性能和容量可以通过两种方式进行扩展：</p>
+<ul>
+<li>通过向集群中的现有节点添加更多资源（CPU、RAM、磁盘 IO、磁盘空间、网络带宽），也叫垂直可扩展性。</li>
+<li>通过向集群添加更多节点，又叫水平扩展性。</li>
+</ul>
+<p>对于集群扩展有一些通用的建议：</p>
+<ul>
+<li>向现有 <code>vmselect</code> 节点添加更多 CPU 和内存，可以提高复杂查询的性能，这些查询可以处理大量的时间序列和大量的原始样本。</li>
+<li>添加更多 <code>vmstorage</code> 节点可以增加集群可以处理的活跃时间序列的数量，这也提高了对高流失率(<code>churn rate</code>)的时间序列的查询性能。集群稳定性也会随着 <code>vmstorage</code> 节点数量的增加而提高，当一些 <code>vmstorage</code> 节点不可用时，活跃的 <code>vmstorage</code> 节点需要处理较低的额外工作负载。</li>
+<li>向现有 <code>vmstorage</code> 节点添加更多 CPU 和内存，可以增加集群可以处理的活跃时间序列的数量。与向现有 <code>vmstorage</code> 节点添加更多 CPU 和内存相比，最好添加更多 <code>vmstorage</code> 节点，因为更多的 <code>vmstorage</code> 节点可以提高集群稳定性，并提高对高流失率的时间序列的查询性能。</li>
+<li>添加更多的 <code>vminsert</code> 节点会提高数据摄取的最大速度，因为摄取的数据可以在更多的 <code>vminsert</code> 节点之间进行拆分。</li>
+<li>添加更多的 <code>vmselect</code> 节点可以提高查询的最大速度，因为传入的并发请求可能会在更多的 <code>vmselect</code> 节点之间进行拆分。</li>
+</ul>
+<h2 id="集群可用性"><a href="#集群可用性" class="headerlink" title="集群可用性"></a>集群可用性</h2><ul>
+<li><p>HTTP 负载均衡器需要停止将请求路由到不可用的 <code>vminsert</code> 和 <code>vmselect</code> 节点。</p>
+</li>
+<li><p>如果至少存在一个</p>
+<figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">vmstorage</span></span><br></pre></td></tr></table></figure>
+
+<p>节点，则集群仍然可用：</p>
+<ul>
+<li><code>vminsert</code> 将传入数据从不可用的 <code>vmstorage</code> 节点重新路由到健康的 <code>vmstorage</code> 节点</li>
+<li>如果至少有一个 <code>vmstorage</code> 节点可用，则 <code>vmselect</code> 会继续提供部分响应。如果优先考虑可用性的一致性，则将 <code>-search.denyPartialResponse</code> 标志传递给 <code>vmselect</code> 或将请求中的 <code>deny_partial_response=1</code> 查询参数传递给 <code>vmselect</code>。</li>
+</ul>
+</li>
+</ul>
+<h2 id="重复数据删除"><a href="#重复数据删除" class="headerlink" title="重复数据删除"></a>重复数据删除</h2><p>如果 <code>-dedup.minScrapeInterval</code> 命令行标志设置为大于 0 的时间，VictoriaMetrics 会去除重复数据点。例如，<code>-dedup.minScrapeInterval=60s</code> 将对同一时间序列上的数据点进行重复数据删除，如果它们位于同一离散的 60 秒存储桶内，最早的数据点将被保留。在时间戳相等的情况下，将保留任意数据点。</p>
+<p><code>-dedup.minScrapeInterval</code> 的推荐值是等于 Prometheus 配置中的 <code>scrape_interval</code> 的值，建议在所有抓取目标中使用一个 <code>scrape_interval</code> 配置。</p>
+<p>如果 HA 中多个相同配置的 <code>vmagent</code> 或 Prometheus 实例将数据写入同一个 VictoriaMetrics 实例，则重复数据删除会减少磁盘空间使用。这些 <code>vmagent</code> 或 Prometheus 实例在其配置中必须具有相同的 <code>external_labels</code> 部分，因此它们将数据写入相同的时间序列。</p>
+<h2 id="容量规划"><a href="#容量规划" class="headerlink" title="容量规划"></a>容量规划</h2><p>根据我们的案例研究，与竞争解决方案（Prometheus、Thanos、Cortex、TimescaleDB、InfluxDB、QuestDB、M3DB）相比，VictoriaMetrics 在生产工作负载上使用的 CPU、内存和存储空间更少。</p>
+<p>每种节点类型 - <code>vminsert</code>、<code>vmselect</code> 和 <code>vmstorage</code> 都可以在最合适的硬件上运行。集群容量随着可用资源的增加而线性扩展。每个节点类型所需的 CPU 和内存数量很大程度上取决于工作负载 - 活跃时间序列的数量、序列流失率、查询类型、查询 qps 等。建议为你的生产工作负载部署一个测试的 VictoriaMetrics 集群，并反复调整每个节点的资源和每个节点类型的节点数量，直到集群变得稳定。同样也建议为集群设置监控，有助于确定集群设置中的瓶颈问题。</p>
+<p>指定保留所需的存储空间（可以通过 <code>vmstorage</code> 中的 <code>-retentionPeriod</code> 命令行标志设置）可以从测试运行中的磁盘空间使用情况推断出来。例如，如果在生产工作负载上运行一天后的存储空间使用量为 10GB，那么对于 <code>-retentionPeriod=100d</code>（100 天保留期）来说，它至少需要 <code>10GB*100=1TB</code> 的磁盘空间。可以使用 VictoriaMetrics 集群的<a target="_blank" rel="noopener" href="https://grafana.com/grafana/dashboards/11176">官方 Grafana 仪表板</a>监控存储空间使用情况。</p>
+<p>建议留出以下数量的备用资源。</p>
+<ul>
+<li>所有节点类型中 50% 的空闲内存，以减少工作负载临时激增时因为 OOM 崩溃的可能性。</li>
+<li>所有节点类型中 50% 的空闲 CPU，以减少工作负载临时高峰期间的慢速概率。</li>
+<li><code>vmstorage</code> 节点上 <code>-storageDataPath</code> 命令行标志指向的目录中至少有 <strong>30%</strong> 的可用存储空间。</li>
+</ul>
+<p>VictoriaMetrics 集群的一些容量规划技巧：</p>
+<ul>
+<li>副本集将集群所需的资源量最多增加 N 倍，其中 N 是复制因子。</li>
+<li>可以通过添加更多 <code>vmstorage</code> 节点和&#x2F;或通过增加每个 <code>vmstorage</code> 节点的内存和 CPU 资源来增加活跃时间序列的集群容量。</li>
+<li>可以通过增加 <code>vmstorage</code> 节点的数量和&#x2F;或通过增加每个 <code>vmselect</code> 节点的内存和 CPU 资源来减少查询延迟。</li>
+<li>所有 <code>vminsert</code> 节点所需的 CPU 内核总数可以通过摄取率计算：<code>CPUs = ingestion_rate / 100K</code>。</li>
+<li><code>vminsert</code> 节点上的 <code>-rpc.disableCompression</code> 命令行标志可以增加摄取容量，但代价是 <code>vminsert</code> 和 <code>vmstorage</code> 之间的网络带宽使用率会更高。</li>
+</ul>
+<h2 id="复制和数据安全"><a href="#复制和数据安全" class="headerlink" title="复制和数据安全"></a>复制和数据安全</h2><p>默认情况下，VictoriaMetrics 的数据复制依赖 <code>-storageDataPath</code> 指向的底层存储来完成。</p>
+<p>但是我们也可以手动通过将 <code>-replicationFactor=N</code> 命令参数传递给 <code>vminsert</code> 来启用复制，即每份数据存入 N 个不同的节点，在查询的时候，同时查询多个节点，去重后返回给客户端。这写入的时候对输入的数据进行一致性 hash 计算，写入到 <code>storageIndex</code> 节点，假设 N&#x3D;2，则同时还要写入到 <code>storageIndex + 1</code> 节点。</p>
+<p>启用复制保证了多达 <code>N-1</code> 个 <code>vmstorage</code> 节点不可用，所有数据仍可用于查询。集群必须至少包含 <code>2*N-1</code> 个 <code>vmstorage</code> 节点，其中 <code>N</code> 是复制因子，以便在 <code>N-1</code> 个存储节点丢失时为新摄取的数据维持指定的复制因子。</p>
+<p>例如，当 <code>-replicationFactor=3</code> 传递给 <code>vminsert</code> 时，它将所有摄取的数据复制到 3 个不同的 <code>vmstorage</code> 节点，因此最多可以丢失 2 个 <code>vmstorage</code> 节点而不会丢失数据。<code>vmstorage</code> 节点的最小数量应该等于 <code>2*3-1 = 5</code>，因此当 2 个 <code>vmstorage</code> 节点丢失时，剩余的 3 个 <code>vmstorage</code> 节点可以为新摄取的数据提供服务。</p>
+<p>启用复制后，必须将 <code>-dedup.minScrapeInterval=1ms</code> 命令行标志传递给 <code>vmselect</code> 节点，当多达 <code>N-1</code> 个 <code>vmstorage</code> 节点响应缓慢和&#x2F;或暂时不可用时，可以将可选的 <code>-replicationFactor=N</code> 参数传递给 <code>vmselect</code> 以提高查询性能，因为 <code>vmselect</code> 不等待来自多达 <code>N-1</code> 个 <code>vmstorage</code> 节点的响应。有时，<code>vmselect</code> 节点上的 <code>-replicationFactor</code> 可能会导致部分响应。<code>-dedup.minScrapeInterval=1ms</code> 在查询期间对复制的数据进行重复数据删除，如果重复数据从配置相同的 <code>vmagent</code> 实例或 Prometheus 实例推送到 VictoriaMetrics，则必须根据重复数据删除文档将 <code>-dedup.minScrapeInterval</code> 设置为更大的值。 请注意，复制不会从灾难中保存，因此建议执行定期备份。另外 复制会增加资源使用率 - CPU、内存、磁盘空间、网络带宽 - 最多 <code>-replicationFactor</code> 倍。所以可以将复制转移 <code>-storageDataPath</code> 指向的底层存储来做保证，例如 Google Compute Engine 永久磁盘，该磁盘可以防止数据丢失和数据损坏，它还提供始终如一的高性能，并且可以在不停机的情况下调整大小。对于大多数用例来说，基于 HDD 的永久性磁盘应该足够了。</p>
+<h2 id="备份"><a href="#备份" class="headerlink" title="备份"></a>备份</h2><p>建议从即时快照执行定期备份，以防止意外数据删除等错误。必须为每个 <code>vmstorage</code> 节点执行以下步骤来创建备份：</p>
+<p>通过导航到 <code>/snapshot/create</code> HTTP handler 来创建一个即时快照。它将创建快照并返回其名称。</p>
+<ul>
+<li>可以通过访问 <code>/snapshot/create</code> 这个 HTTP handler 来创建即时快照，它将创建快照并返回其名称。</li>
+<li>使用 <code>vmbackup</code> 组件从 <code>&lt;-storageDataPath&gt;/snapshots/&lt;snapshot_name&gt;</code> 文件夹归档创建的快照。归档过程不会干扰 <code>vmstorage</code> 工作，因此可以在任何合适的时间执行。</li>
+<li>通过 <code>/snapshot/delete?snapshot=&lt;snapshot_name&gt;</code> 或 <code>/snapshot/delete_all</code> 删除未使用的快照，以释放占用的存储空间。</li>
+<li>无需在所有 <code>vmstorage</code> 节点之间同步备份。</li>
+</ul>
+<p>从备份恢复：</p>
+<ul>
+<li>使用 <code>kill -INT</code> 停止 <code>vmstorage</code> 节点。</li>
+<li>使用 <code>vmrestore</code> 组件将备份中的数据还原到 <code>-storageDataPath</code> 目录。</li>
+<li>启动 <code>vmstorage</code> 节点。</li>
+</ul>
+<h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><p>在了解了 VM 集群的一些配置细节后，接下来我们就来开始部署 VM 集群。</p>
+<p><strong>Helm</strong></p>
+<p>如果你已经对 VM 组件非常了解了，那么推荐使用 Helm Chart 的方式进行一键安装。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">☸ ➜ helm repo add vm https://victoriametrics.github.io/helm-charts/</span><br><span class="line">☸ ➜ helm repo update</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">导出默认的 values 值到 values.yaml 文件中</span></span><br><span class="line">☸ ➜ helm show values vm/victoria-metrics-cluster &gt; values.yaml</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">根据自己的需求修改 values.yaml 文件配置</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">执行下面的命令进行一键安装</span></span><br><span class="line">☸ ➜ helm install victoria-metrics vm/victoria-metrics-cluster -f values.yaml -n NAMESPACE</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">获取 vm 运行的 pods 列表</span></span><br><span class="line">☸ ➜ kubectl get pods -A | grep &#x27;victoria-metrics&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>我们这里选择手动方式进行部署，之所以选择手动部署的方式是为了能够了解各个组件的更多细节。</p>
+<p><strong>手动安装</strong></p>
+<p>由于 vmstorage 组件是无状态的，这里我们先使用 StatefulSet 进行部署，由于该组件也是可以进行扩展的，这里我们首先部署两个副本，对应的资源清单如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># cluster-vmstorage.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">cluster-vmstorage</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-vm</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">vmstorage</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">clusterIP:</span> <span class="string">None</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">port:</span> <span class="number">8482</span></span><br><span class="line">      <span class="attr">targetPort:</span> <span class="string">http</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">http</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">port:</span> <span class="number">8401</span></span><br><span class="line">      <span class="attr">targetPort:</span> <span class="string">vmselect</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">vmselect</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">port:</span> <span class="number">8400</span></span><br><span class="line">      <span class="attr">targetPort:</span> <span class="string">vminsert</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">vminsert</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">vmstorage</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">StatefulSet</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">vmstorage</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-vm</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">vmstorage</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">serviceName:</span> <span class="string">cluster-vmstorage</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">vmstorage</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">2</span></span><br><span class="line">  <span class="attr">podManagementPolicy:</span> <span class="string">OrderedReady</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">vmstorage</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">vmstorage</span></span><br><span class="line">          <span class="attr">image:</span> <span class="string">&#x27;victoriametrics/vmstorage:v1.77.0-cluster&#x27;</span></span><br><span class="line">          <span class="attr">imagePullPolicy:</span> <span class="string">&#x27;IfNotPresent&#x27;</span></span><br><span class="line">          <span class="attr">args:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">&#x27;--retentionPeriod=1&#x27;</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">&#x27;--storageDataPath=/storage&#x27;</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">--envflag.enable=true</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">--envflag.prefix=VM_</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">--loggerFormat=json</span></span><br><span class="line">          <span class="attr">ports:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">http</span></span><br><span class="line">              <span class="attr">containerPort:</span> <span class="number">8482</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">vminsert</span></span><br><span class="line">              <span class="attr">containerPort:</span> <span class="number">8400</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">vmselect</span></span><br><span class="line">              <span class="attr">containerPort:</span> <span class="number">8401</span></span><br><span class="line">          <span class="attr">livenessProbe:</span></span><br><span class="line">            <span class="attr">failureThreshold:</span> <span class="number">10</span></span><br><span class="line">            <span class="attr">initialDelaySeconds:</span> <span class="number">30</span></span><br><span class="line">            <span class="attr">periodSeconds:</span> <span class="number">30</span></span><br><span class="line">            <span class="attr">tcpSocket:</span></span><br><span class="line">              <span class="attr">port:</span> <span class="string">http</span></span><br><span class="line">            <span class="attr">timeoutSeconds:</span> <span class="number">5</span></span><br><span class="line">          <span class="attr">readinessProbe:</span></span><br><span class="line">            <span class="attr">failureThreshold:</span> <span class="number">3</span></span><br><span class="line">            <span class="attr">initialDelaySeconds:</span> <span class="number">5</span></span><br><span class="line">            <span class="attr">periodSeconds:</span> <span class="number">15</span></span><br><span class="line">            <span class="attr">timeoutSeconds:</span> <span class="number">5</span></span><br><span class="line">            <span class="attr">httpGet:</span></span><br><span class="line">              <span class="attr">path:</span> <span class="string">/health</span></span><br><span class="line">              <span class="attr">port:</span> <span class="string">http</span></span><br><span class="line">          <span class="attr">volumeMounts:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">storage</span></span><br><span class="line">              <span class="attr">mountPath:</span> <span class="string">/storage</span></span><br><span class="line">  <span class="attr">volumeClaimTemplates:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">metadata:</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">storage</span></span><br><span class="line">      <span class="attr">spec:</span></span><br><span class="line">        <span class="attr">storageClassName:</span> <span class="string">nfs-client</span></span><br><span class="line">        <span class="attr">accessModes:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="string">ReadWriteOnce</span></span><br><span class="line">        <span class="attr">resources:</span></span><br><span class="line">          <span class="attr">requests:</span></span><br><span class="line">            <span class="attr">storage:</span> <span class="string">&#x27;2Gi&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>首先需要创建一个 Headless 的 Service，因为后面的组件需要访问到每一个具体的 Pod，在 vmstorage 启动参数中通过 <code>--retentionPeriod</code> 参数指定指标数据保留时长，1 表示一个月，这也是默认的时长，然后通过 <code>--storageDataPath</code> 参数指定了数据存储路径，记得要将该目录进行持久化。</p>
+<p>同样直接应用该资源即可：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">☸ ➜ kubectl apply -f https://p8s.io/docs/victoriametrics/manifests/cluster-vmstorage.yaml</span><br><span class="line">☸ ➜ kubectl get pods -n kube-vm -l app=vmstorage</span><br><span class="line">NAME          READY   STATUS    RESTARTS   AGE</span><br><span class="line">vmstorage-0   1/1     Running   0          5m40s</span><br><span class="line">vmstorage-1   1/1     Running   0          3m31s</span><br><span class="line">☸ ➜ kubectl get svc -n kube-vm -l app=vmstorage</span><br><span class="line">NAME                TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)                      AGE</span><br><span class="line">cluster-vmstorage   ClusterIP   None         &lt;none&gt;        8482/TCP,8401/TCP,8400/TCP   5m46s</span><br></pre></td></tr></table></figure>
+
+<p>接着可以部署 vmselect 组件，由于该组件是无状态的，我们可以直接使用 Deployment 来进行管理，对应的资源清单文件如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># cluster-vmselect.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">vmselect</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-vm</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">vmselect</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">http</span></span><br><span class="line">      <span class="attr">port:</span> <span class="number">8481</span></span><br><span class="line">      <span class="attr">targetPort:</span> <span class="string">http</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">vmselect</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">NodePort</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">vmselect</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-vm</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">vmselect</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">vmselect</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">vmselect</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">vmselect</span></span><br><span class="line">          <span class="attr">image:</span> <span class="string">&#x27;victoriametrics/vmselect:v1.77.0-cluster&#x27;</span></span><br><span class="line">          <span class="attr">imagePullPolicy:</span> <span class="string">&#x27;IfNotPresent&#x27;</span></span><br><span class="line">          <span class="attr">args:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">&#x27;--cacheDataPath=/cache&#x27;</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">--storageNode=vmstorage-0.cluster-vmstorage.kube-vm.svc.cluster.local:8401</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">--storageNode=vmstorage-1.cluster-vmstorage.kube-vm.svc.cluster.local:8401</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">--envflag.enable=true</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">--envflag.prefix=VM_</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">--loggerFormat=json</span></span><br><span class="line">          <span class="attr">ports:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">http</span></span><br><span class="line">              <span class="attr">containerPort:</span> <span class="number">8481</span></span><br><span class="line">          <span class="attr">readinessProbe:</span></span><br><span class="line">            <span class="attr">httpGet:</span></span><br><span class="line">              <span class="attr">path:</span> <span class="string">/health</span></span><br><span class="line">              <span class="attr">port:</span> <span class="string">http</span></span><br><span class="line">            <span class="attr">initialDelaySeconds:</span> <span class="number">5</span></span><br><span class="line">            <span class="attr">periodSeconds:</span> <span class="number">15</span></span><br><span class="line">            <span class="attr">timeoutSeconds:</span> <span class="number">5</span></span><br><span class="line">            <span class="attr">failureThreshold:</span> <span class="number">3</span></span><br><span class="line">          <span class="attr">livenessProbe:</span></span><br><span class="line">            <span class="attr">tcpSocket:</span></span><br><span class="line">              <span class="attr">port:</span> <span class="string">http</span></span><br><span class="line">            <span class="attr">initialDelaySeconds:</span> <span class="number">5</span></span><br><span class="line">            <span class="attr">periodSeconds:</span> <span class="number">15</span></span><br><span class="line">            <span class="attr">timeoutSeconds:</span> <span class="number">5</span></span><br><span class="line">            <span class="attr">failureThreshold:</span> <span class="number">3</span></span><br><span class="line">          <span class="attr">volumeMounts:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">mountPath:</span> <span class="string">/cache</span></span><br><span class="line">              <span class="attr">name:</span> <span class="string">cache-volume</span></span><br><span class="line">      <span class="attr">volumes:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">cache-volume</span></span><br><span class="line">          <span class="attr">emptyDir:</span> &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其中最重要的部分是通过 <code>--storageNode</code> 参数指定所有的 vmstorage 节点地址，上面我们使用的 StatefulSet 部署的，所以可以直接使用 FQDN 的形式进行访问。直接应用上面的对象：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">☸ ➜ kubectl apply -f https://p8s.io/docs/victoriametrics/manifests/cluster-vmselect.yaml</span><br><span class="line">☸ ➜ kubectl get pods -n kube-vm -l app=vmselect</span><br><span class="line">NAME                       READY   STATUS    RESTARTS   AGE</span><br><span class="line">vmselect-bcb54965f-5rkml   1/1     Running   0          2m4s</span><br><span class="line">☸ ➜ kubectl get svc -n kube-vm -l app=vmselect</span><br><span class="line">NAME       TYPE       CLUSTER-IP       EXTERNAL-IP   PORT(S)          AGE</span><br><span class="line">vmselect   NodePort   10.107.227.214   &lt;none&gt;        8481:30595/TCP   3d20h</span><br></pre></td></tr></table></figure>
+
+<p>如果要进行查询，那么我们可以直接对外暴露 vmselect 这个 Service 服务即可，修改 Grafana 数据源地址为 <code>http://&lt;select-service&gt;/select/0/prometheus/</code>。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/qtjo24.png" alt="vmselect数据源"></p>
+<p>此外 vmui 也被集成到了 vmselect 组件中，我们可以通过路径 <code>http://&lt;vmselect&gt;/select/0/vmui/</code> 进行访问。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/now5m1.png" alt="vmui"></p>
+<p>接着就需要部署用来接收指标数据插入的 vminsert 组件，同样该组件是无状态的，其中最重要的也是需要通过 <code>--storageNode</code> 参数指定所有的 vmstorage 节点：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># cluster-vminsert.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">vminsert</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-vm</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">vminsert</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">http</span></span><br><span class="line">      <span class="attr">port:</span> <span class="number">8480</span></span><br><span class="line">      <span class="attr">targetPort:</span> <span class="string">http</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">vminsert</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">vminsert</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-vm</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">vminsert</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">vminsert</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">vminsert</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">vminsert</span></span><br><span class="line">          <span class="attr">image:</span> <span class="string">&#x27;victoriametrics/vminsert:v1.77.0-cluster&#x27;</span></span><br><span class="line">          <span class="attr">imagePullPolicy:</span> <span class="string">&#x27;IfNotPresent&#x27;</span></span><br><span class="line">          <span class="attr">args:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">--storageNode=vmstorage-0.cluster-vmstorage.kube-vm.svc.cluster.local:8400</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">--storageNode=vmstorage-1.cluster-vmstorage.kube-vm.svc.cluster.local:8400</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">--envflag.enable=true</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">--envflag.prefix=VM_</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">--loggerFormat=json</span></span><br><span class="line">          <span class="attr">ports:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">http</span></span><br><span class="line">              <span class="attr">containerPort:</span> <span class="number">8480</span></span><br><span class="line">          <span class="attr">readinessProbe:</span></span><br><span class="line">            <span class="attr">httpGet:</span></span><br><span class="line">              <span class="attr">path:</span> <span class="string">/health</span></span><br><span class="line">              <span class="attr">port:</span> <span class="string">http</span></span><br><span class="line">            <span class="attr">initialDelaySeconds:</span> <span class="number">5</span></span><br><span class="line">            <span class="attr">periodSeconds:</span> <span class="number">15</span></span><br><span class="line">            <span class="attr">timeoutSeconds:</span> <span class="number">5</span></span><br><span class="line">            <span class="attr">failureThreshold:</span> <span class="number">3</span></span><br><span class="line">          <span class="attr">livenessProbe:</span></span><br><span class="line">            <span class="attr">tcpSocket:</span></span><br><span class="line">              <span class="attr">port:</span> <span class="string">http</span></span><br><span class="line">            <span class="attr">initialDelaySeconds:</span> <span class="number">5</span></span><br><span class="line">            <span class="attr">periodSeconds:</span> <span class="number">15</span></span><br><span class="line">            <span class="attr">timeoutSeconds:</span> <span class="number">5</span></span><br><span class="line">            <span class="attr">failureThreshold:</span> <span class="number">3</span></span><br></pre></td></tr></table></figure>
+
+<p>由于本身是无状态的，所以可以根据需要增加副本数量，也可以配置 HPA 进行自动扩缩容。直接应用上面的资源清单：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">☸ ➜ kubectl apply -f https://p8s.io/docs/victoriametrics/manifests/cluster-vminsert.yaml</span><br><span class="line">☸ ➜ kubectl get pods -n kube-vm -l app=vminsert</span><br><span class="line">NAME                        READY   STATUS    RESTARTS   AGE</span><br><span class="line">vminsert-66c88cd497-l64ps   1/1     Running   0          2m27s</span><br><span class="line">☸ ➜ kubectl get svc -n kube-vm -l app=vminsert</span><br><span class="line">NAME       TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE</span><br><span class="line">vminsert   ClusterIP   10.96.125.134   &lt;none&gt;        8480/TCP   70s</span><br></pre></td></tr></table></figure>
+
+<p>集群模式的相关组件部署完成后，同样我们可以先去配置前面的 Prometheus，将其数据远程写入到 VM 中来，修改 <code>remote_write</code> 的地址为 <code>http://vminsert:8480/insert/0/prometheus/</code>，注意和单节点模式的 API 路径不一样，如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># vm-prom-config3.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ConfigMap</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">prometheus-config</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-vm</span></span><br><span class="line"><span class="attr">data:</span></span><br><span class="line">  <span class="attr">prometheus.yaml:</span> <span class="string">|</span></span><br><span class="line"><span class="string">    global:</span></span><br><span class="line"><span class="string">      scrape_interval: 15s</span></span><br><span class="line"><span class="string">      scrape_timeout: 15s</span></span><br><span class="line"><span class="string">    remote_write:    # 写入到远程 VM 存储，url 是远程写入接口地址</span></span><br><span class="line"><span class="string">    - url: http://vminsert:8480/insert/0/prometheus/</span></span><br><span class="line"><span class="string">      # queue_config:    # 如果 Prometheus 抓取指标很大，可以加调整 queue，但是会提高内存占用</span></span><br><span class="line"><span class="string">      #   max_samples_per_send: 10000  # 每次发送的最大样本数</span></span><br><span class="line"><span class="string">      #   capacity: 20000  </span></span><br><span class="line"><span class="string">      #   max_shards: 30   # 最大分片数，即并发量。</span></span><br><span class="line"><span class="string">    scrape_configs:</span></span><br><span class="line"><span class="string">    - job_name: &quot;nodes&quot;</span></span><br><span class="line"><span class="string">      static_configs:</span></span><br><span class="line"><span class="string">      - targets: [&#x27;192.168.0.109:9111&#x27;, &#x27;192.168.0.110:9111&#x27;, &#x27;192.168.0.111:9111&#x27;]</span></span><br><span class="line"><span class="string">      relabel_configs: # 通过 relabeling 从 __address__ 中提取 IP 信息，为了后面验证 VM 是否兼容 relabeling</span></span><br><span class="line"><span class="string">      - source_labels: [__address__]</span></span><br><span class="line"><span class="string">        regex: &quot;(.*):(.*)&quot;</span></span><br><span class="line"><span class="string">        replacement: &quot;$&#123;1&#125;&quot;</span></span><br><span class="line"><span class="string">        target_label: &#x27;ip&#x27;</span></span><br><span class="line"><span class="string">        action: replace</span></span><br></pre></td></tr></table></figure>
+
+<p>更新 Prometheus 配置，然后启动 Prometheus，前面的单机模式的 VM 可以先停掉：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">☸ ➜ kubectl apply -f https://p8s.io/docs/victoriametrics/manifests/vm-prom-config3.yaml</span><br><span class="line">☸ ➜ kubectl scale deploy victoria-metrics --replicas=0 -n kube-vm</span><br><span class="line">☸ ➜ kubectl scale deploy prometheus --replicas=1 -n kube-vm</span><br></pre></td></tr></table></figure>
+
+<p>配置成功后正常数据就可以开始写入到 vmstorage 了，查看 vmstorage 日志可以看到成功创建了 partition，证明现在已经在开始接收数据了：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">☸ ➜ kubectl logs -f vmstorage-0 -n kube-vm</span><br><span class="line">......</span><br><span class="line">&#123;&quot;ts&quot;:&quot;2022-05-06T08:35:15.786Z&quot;,&quot;level&quot;:&quot;info&quot;,&quot;caller&quot;:&quot;VictoriaMetrics/lib/storage/partition.go:206&quot;,&quot;msg&quot;:&quot;creating a partition \&quot;2022_05\&quot; with smallPartsPath=\&quot;/storage/data/small/2022_05\&quot;, bigPartsPath=\&quot;/storage/data/big/2022_05\&quot;&quot;&#125;</span><br><span class="line">&#123;&quot;ts&quot;:&quot;2022-05-06T08:35:15.802Z&quot;,&quot;level&quot;:&quot;info&quot;,&quot;caller&quot;:&quot;VictoriaMetrics/lib/storage/partition.go:222&quot;,&quot;msg&quot;:&quot;partition \&quot;2022_05\&quot; has been created&quot;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后可以去 Grafana 重新查看 Dashboard 是否正常：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/qs8naa.jpg" alt="node exporter"></p>
+<p>如果现在需要新增 <code>vmstorage</code> 节点，那么需要按照下面的步骤进行操作：</p>
+<ul>
+<li>使用与集群中现有节点相同的 <code>-retentionPeriod</code> 配置启动新的 <code>vmstorage</code> 节点。</li>
+<li>逐步重新启动所有的 <code>vmselect</code> 节点，添加新的 <code>-storageNode</code> 参数包含 <code>&lt;new_vmstorage_host&gt;</code>。</li>
+<li>逐步重新启动所有的 <code>vminsert</code> 节点，添加新的 <code>-storageNode</code> 参数包含 <code>&lt;new_vmstorage_host&gt;</code>。</li>
+</ul>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+
+  
+  <nav class="pagination">
+    <a class="extend prev" rel="prev" href="/page/27/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/27/">27</a><span class="page-number current">28</span>
+  </nav>
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

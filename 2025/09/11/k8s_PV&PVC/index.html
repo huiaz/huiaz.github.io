@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="描述在Kubernetes中如何配置持久化存储，并解释其工作原理。🤔 分析过程：此问题旨在考察对Kubernetes存储体系的深入理解，这是运行有状态应用（如数据库、消息队列）的必备知识。一个高质量的回答必须清晰地解释解耦这一核心思想，即应用的存储需求（开发者关心）与实际的存储实现（管理员关心）相分离。回答的关键是详细阐述三个核心API对象：PersistentVolume (PV)、Persi">
+<meta property="og:type" content="article">
+<meta property="og:title" content="k8s_PV&amp;PVC">
+<meta property="og:url" content="http://example.com/2025/09/11/k8s_PV&PVC/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="描述在Kubernetes中如何配置持久化存储，并解释其工作原理。🤔 分析过程：此问题旨在考察对Kubernetes存储体系的深入理解，这是运行有状态应用（如数据库、消息队列）的必备知识。一个高质量的回答必须清晰地解释解耦这一核心思想，即应用的存储需求（开发者关心）与实际的存储实现（管理员关心）相分离。回答的关键是详细阐述三个核心API对象：PersistentVolume (PV)、Persi">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:44:34.717Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/k8s_PV&PVC/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>k8s_PV&PVC | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/k8s_PV&PVC/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          k8s_PV&PVC
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:44:34" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E9%9D%A2%E8%AF%95%E9%A2%98/" itemprop="url" rel="index"><span itemprop="name">面试题</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>5.9k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="描述在Kubernetes中如何配置持久化存储，并解释其工作原理。"><a href="#描述在Kubernetes中如何配置持久化存储，并解释其工作原理。" class="headerlink" title="描述在Kubernetes中如何配置持久化存储，并解释其工作原理。"></a>描述在Kubernetes中如何配置持久化存储，并解释其工作原理。</h3><h3 id="🤔-分析过程："><a href="#🤔-分析过程：" class="headerlink" title="🤔 分析过程："></a>🤔 分析过程：</h3><p>此问题旨在考察对Kubernetes存储体系的深入理解，这是运行有状态应用（如数据库、消息队列）的必备知识。一个高质量的回答必须清晰地解释<strong>解耦</strong>这一核心思想，即<strong>应用的存储需求（开发者关心）</strong>与<strong>实际的存储实现（管理员关心）</strong>相分离。回答的关键是详细阐述三个核心API对象：<code>PersistentVolume</code> (PV)、<code>PersistentVolumeClaim</code> (PVC) 和 <code>StorageClass</code> (SC) 的角色及它们之间的交互，并能解释动态（Dynamic）和静态（Static）两种供给模式。</p>
+<h3 id="💡-答案生成："><a href="#💡-答案生成：" class="headerlink" title="💡 答案生成："></a>💡 答案生成：</h3><h4 id="1-概念或定义"><a href="#1-概念或定义" class="headerlink" title="1. 概念或定义"></a>1. 概念或定义</h4><p><strong>Kubernetes持久化存储</strong> 是一个API框架，它提供了一种标准的、与底层存储技术解耦的方式，来管理集群中存储资源的生命周期。其核心目标是让应用（在Pod中运行）的数据能够<strong>独立于Pod的生命周期而存在</strong>。当Pod崩溃、重启或迁移到其他节点时，其数据不会丢失，并且可以被新的Pod重新挂载和访问。</p>
+<p>这一框架主要由三个核心组件构成：</p>
+<ul>
+<li><strong>PersistentVolume (PV):</strong> 代表集群中的一块<strong>实际存储资源</strong>。它由管理员配置，或者由 <code>StorageClass</code> 动态创建。可以把它想象成一个已经接入集群的“网络硬盘”。</li>
+<li><strong>PersistentVolumeClaim (PVC):</strong> 代表开发者或应用对存储的<strong>一个请求</strong>。它声明了需要的存储大小、访问模式等。可以把它想象成一张“存储申请单”。</li>
+<li><strong>StorageClass (SC):</strong> 代表一个存储的<strong>“类别”或“模板”</strong>。它定义了当PVC请求时，应该如何动态地创建对应的PV（即使用哪种存储技术，如AWS EBS、GCP Persistent Disk、NFS等）。</li>
+</ul>
+<h4 id="2-工作原理-The-PV-PVC-and-SC-Subsystem"><a href="#2-工作原理-The-PV-PVC-and-SC-Subsystem" class="headerlink" title="2. 工作原理 (The PV, PVC, and SC Subsystem)"></a>2. 工作原理 (The PV, PVC, and SC Subsystem)</h4><p>Kubernetes的持久化存储机制巧妙地划分了<strong>管理员</strong>和<strong>开发者</strong>的职责：</p>
+<ol>
+<li><p><strong>管理员的职责 (供应存储):</strong></p>
+<ul>
+<li><strong>静态供给 (Static Provisioning):</strong> 管理员预先创建好一批PV。这些PV指向已经存在的存储设备（如一个已有的NFS共享目录或一个云厂商的硬盘）。</li>
+<li><strong>动态供给 (Dynamic Provisioning):</strong> 管理员不直接创建PV，而是创建并配置一个或多个<code>StorageClass</code>。每个<code>StorageClass</code>定义了一种存储类型（如“fast-ssd”、“slow-hdd”），并指定了如何自动创建PV的<strong>驱动（Provisioner）</strong>。这是云环境下的标准做法。</li>
+</ul>
+</li>
+<li><p><strong>开发者的职责 (请求存储):</strong></p>
+<ul>
+<li>开发者无需关心底层存储是什么。他们只需在应用的命名空间中创建一个PVC对象，声明需要多大的存储空间（<code>spec.resources.requests.storage</code>）、需要什么样的访问模式（<code>spec.accessModes</code>），以及（在动态供给模式下）希望使用哪个<code>StorageClass</code>（<code>spec.storageClassName</code>）。</li>
+</ul>
+</li>
+<li><p><strong>绑定过程 (The Binding Process):</strong></p>
+<ul>
+<li>当开发者创建了一个PVC后，Kubernetes控制平面会寻找一个能够满足这个PVC要求的PV。</li>
+<li>在<strong>静态供给</strong>中，它会寻找一个大小和访问模式都匹配的、尚未被绑定的PV。</li>
+<li>在<strong>动态供给</strong>中，如果PVC指定了一个<code>StorageClass</code>，<code>StorageClass</code>的驱动就会被触发，自动在后端存储系统（如AWS）上创建一个新的硬盘，并为这个硬盘创建一个对应的PV对象。</li>
+<li>一旦找到或创建了合适的PV，Kubernetes就会将PVC与该PV进行<strong>绑定（Bind）</strong>。此时，PVC的状态会变为<code>Bound</code>，并且在它被删除之前，会一直独占这个PV。</li>
+</ul>
+</li>
+<li><p><strong>在Pod中使用:</strong></p>
+<ul>
+<li>开发者在Pod的定义中，通过<code>volumes</code>字段引用PVC的名称。Pod启动时，Kubelet会根据PV的类型，将对应的物理存储挂载到节点上，然后再将其挂载到Pod内容器的指定路径（<code>volumeMounts</code>）。</li>
+</ul>
+</li>
+</ol>
+<h4 id="3-如何配置-YAML示例-动态供给"><a href="#3-如何配置-YAML示例-动态供给" class="headerlink" title="3. 如何配置 (YAML示例 - 动态供给)"></a>3. 如何配置 (YAML示例 - 动态供给)</h4><p>这是最常见的场景，以AWS EBS为例：</p>
+<p><strong>步骤 1: (管理员操作) 创建一个 StorageClass</strong><br>这个<code>StorageClass</code>定义了当有PVC请求时，会自动创建一个<code>gp2</code>类型的AWS EBS卷。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># sc-aws-gp2.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">storage.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">StorageClass</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">aws-gp2-standard</span></span><br><span class="line"><span class="attr">provisioner:</span> <span class="string">ebs.csi.aws.com</span>  <span class="comment"># 指定使用AWS EBS CSI驱动</span></span><br><span class="line"><span class="attr">volumeBindingMode:</span> <span class="string">WaitForFirstConsumer</span> <span class="comment"># 推荐：延迟PV的创建，直到Pod被调度，确保PV创建在正确的可用区</span></span><br><span class="line"><span class="attr">parameters:</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">gp2</span> <span class="comment"># 指定EBS卷类型为通用型SSD</span></span><br><span class="line"><span class="attr">reclaimPolicy:</span> <span class="string">Retain</span> <span class="comment"># 当PVC删除后，底层的EBS卷和PV将被保留，防止数据误删</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>步骤 2: (开发者操作) 创建一个 PersistentVolumeClaim</strong><br>开发者请求一个10GiB的、存储类别为<code>aws-gp2-standard</code>的存储空间。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># my-app-pvc.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PersistentVolumeClaim</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">my-app-pvc</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">my-app-ns</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">accessModes:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">ReadWriteOnce</span> <span class="comment"># 请求一个可被单个节点读写的卷</span></span><br><span class="line">  <span class="attr">storageClassName:</span> <span class="string">aws-gp2-standard</span> <span class="comment"># 指定使用哪个StorageClass</span></span><br><span class="line">  <span class="attr">resources:</span></span><br><span class="line">    <span class="attr">requests:</span></span><br><span class="line">      <span class="attr">storage:</span> <span class="string">10Gi</span> <span class="comment"># 请求10GiB的存储空间</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>步骤 3: (开发者操作) 在Pod中使用PVC</strong><br>在Pod中引用上面创建的PVC，并将其挂载到容器的<code>/var/app/data</code>目录。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># my-app-pod.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">my-stateful-app</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">my-app-ns</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">app-container</span></span><br><span class="line">      <span class="attr">image:</span> <span class="string">nginx</span></span><br><span class="line">      <span class="attr">ports:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">80</span></span><br><span class="line">      <span class="attr">volumeMounts:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">app-storage</span> <span class="comment"># 挂载点的名称</span></span><br><span class="line">          <span class="attr">mountPath:</span> <span class="string">/var/app/data</span> <span class="comment"># 挂载到容器内的路径</span></span><br><span class="line">  <span class="attr">volumes:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">app-storage</span> <span class="comment"># 卷的名称，需与volumeMounts中的名称匹配</span></span><br><span class="line">      <span class="attr">persistentVolumeClaim:</span></span><br><span class="line">        <span class="attr">claimName:</span> <span class="string">my-app-pvc</span> <span class="comment"># 引用我们创建的PVC</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="4-关键属性-Access-Modes-Reclaim-Policies"><a href="#4-关键属性-Access-Modes-Reclaim-Policies" class="headerlink" title="4. 关键属性 (Access Modes &amp; Reclaim Policies)"></a>4. 关键属性 (Access Modes &amp; Reclaim Policies)</h4><ul>
+<li><strong>Access Modes (访问模式):</strong> 定义了PV如何被节点挂载。<ul>
+<li><code>ReadWriteOnce</code> (RWO): 卷可以被<strong>单个节点</strong>以读写方式挂载。适用于大多数块存储（如AWS EBS, GCP PD）。</li>
+<li><code>ReadOnlyMany</code> (ROX): 卷可以被<strong>多个节点</strong>以只读方式挂载。</li>
+<li><code>ReadWriteMany</code> (RWX): 卷可以被<strong>多个节点</strong>以读写方式挂载。适用于文件存储（如NFS, AWS EFS, Ceph,GlusterFS）。</li>
+</ul>
+</li>
+<li><strong>Reclaim Policies (回收策略):</strong> 定义了当绑定的PVC被删除后，如何处理PV和其底层的存储。<ul>
+<li><code>Retain</code>: （推荐用于生产）保留PV和底层存储。管理员需要手动清理。</li>
+<li><code>Delete</code>: 自动删除PV和底层存储。方便，但有数据丢失风险。</li>
+</ul>
+</li>
+</ul>
+<h4 id="5-扩展知识-最佳实践"><a href="#5-扩展知识-最佳实践" class="headerlink" title="5. 扩展知识&#x2F;最佳实践"></a>5. 扩展知识&#x2F;最佳实践</h4><ul>
+<li><strong>StatefulSets:</strong> 对于需要稳定、唯一的网络标识符和持久化存储的有状态应用（如数据库集群），应使用<code>StatefulSet</code>控制器。它会自动为每个副本创建一个带有稳定名称的PVC，确保Pod重启后能连接回原来的存储。</li>
+<li><strong>CSI (Container Storage Interface):</strong> 这是目前Kubernetes存储插件的标准接口，它使得第三方存储厂商可以轻松地将其存储系统集成到Kubernetes中，而无需修改Kubernetes核心代码。</li>
+<li><strong>卷快照 (Volume Snapshots):</strong> Kubernetes也提供了标准的API对象（<code>VolumeSnapshot</code>, <code>VolumeSnapshotClass</code>）来创建和恢复存储卷的快照，为备份和恢复提供了标准化的操作方式。</li>
+</ul>
+<p><strong>结论：</strong> Kubernetes通过<code>PV</code>、<code>PVC</code>和<code>StorageClass</code>这三个核心对象，构建了一个强大的持久化存储抽象层。它将存储的供给与消费解耦，使得开发者可以简单地声明存储需求，而集群则能通过动态供给机制，自动、高效地满足这些需求，从而为在容器中运行有状态应用提供了坚实的基础。 </p>
+<hr>
+<h3 id="PersistentVolume-PV"><a href="#PersistentVolume-PV" class="headerlink" title="PersistentVolume (PV)"></a>PersistentVolume (PV)</h3><ul>
+<li><strong>定义：</strong> <code>PersistentVolume</code> (PV) 是 Kubernetes 集群中的一个资源，它代表了集群中<strong>由管理员（或存储提供商）预配好的一块网络存储。</strong></li>
+<li><strong>物理存储的承载者：</strong> 它实际上是底层存储（如 NFS 共享、iSCSI LUN、云存储卷，如 AWS EBS、Azure Disk、Google Persistent Disk 等）的抽象。</li>
+<li><strong>集群资源：</strong> PV 是一种集群层面的资源，独立于 Pod 的生命周期。即使 Pod 被删除或重建，PV 及其数据仍然保留。</li>
+<li><strong>生命周期：</strong> PV 有自己的生命周期，独立于 Pod。它可以在不同的 Pod 之间共享（如果文件系统和访问模式支持）。</li>
+<li><strong>创建与管理：</strong><ul>
+<li>通常由<strong>集群管理员</strong>手动创建和管理（静态预配）。</li>
+<li>也可以通过<strong>StorageClass</strong> 和 <code>Dynamic Provisioning</code>（动态预配）由 Kubernetes 自动创建。</li>
+</ul>
+</li>
+<li><strong>特性：</strong> PV 定义了存储的容量、访问模式（如 ReadWriteOnce、ReadOnlyMany、ReadWriteMany）、卷类型（NFS、HostPath、EBS 等）以及其他的存储属性。</li>
+</ul>
+<hr>
+<h3 id="PersistentVolumeClaim-PVC"><a href="#PersistentVolumeClaim-PVC" class="headerlink" title="PersistentVolumeClaim (PVC)"></a>PersistentVolumeClaim (PVC)</h3><ul>
+<li><strong>定义：</strong> <code>PersistentVolumeClaim</code> (PVC) 是应用程序对存储的<strong>请求或声明</strong>。它代表了用户（开发者）对特定大小和访问模式的存储的需求。</li>
+<li><strong>用户需求：</strong> 它本质上是 Pod 请求存储资源的方式，就像 Pod 请求 CPU 和内存一样。</li>
+<li><strong>命名空间资源：</strong> PVC 是命名空间范围的资源，它属于特定的命名空间。</li>
+<li><strong>与 PV 绑定：</strong> 当一个 PVC 被创建时，Kubernetes 会尝试从集群中<strong>匹配并绑定</strong>一个符合其要求的 PV。这个匹配过程基于容量、访问模式和 StorageClass 等。一旦绑定，PVC 和 PV 之间就建立了一对一的关系。</li>
+<li><strong>生命周期：</strong> PVC 的生命周期通常与应用程序部署相关联。当应用程序被删除时，其使用的 PVC 通常也会被删除（除非被配置为手动管理）。</li>
+<li><strong>创建与管理：</strong><ul>
+<li>通常由<strong>开发人员或应用程序部署工具</strong>（例如 Helm Chart）创建。</li>
+</ul>
+</li>
+<li><strong>特性：</strong> PVC 定义了用户所需的存储大小和访问模式。它<strong>不关心底层存储的具体实现</strong>，只关心所需的抽象特性。</li>
+</ul>
+<hr>
+<h3 id="主要区别总结"><a href="#主要区别总结" class="headerlink" title="主要区别总结"></a>主要区别总结</h3><table>
+<thead>
+<tr>
+<th align="left">特性</th>
+<th align="left">PersistentVolume (PV)</th>
+<th align="left">PersistentVolumeClaim (PVC)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>角色</strong></td>
+<td align="left">存储的<strong>提供者&#x2F;容量</strong></td>
+<td align="left">存储的<strong>请求者&#x2F;需求</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>使用者</strong></td>
+<td align="left">集群管理员或存储自动预配器</td>
+<td align="left">应用程序用户&#x2F;开发者</td>
+</tr>
+<tr>
+<td align="left"><strong>作用范围</strong></td>
+<td align="left"><strong>集群范围</strong>资源 (Cluster-scoped)</td>
+<td align="left"><strong>命名空间范围</strong>资源 (Namespaced-scoped)</td>
+</tr>
+<tr>
+<td align="left"><strong>生命周期</strong></td>
+<td align="left">独立于 Pod，可复用</td>
+<td align="left">通常与 Pod 应用相关，绑定后独占 PV，直到被删除</td>
+</tr>
+<tr>
+<td align="left"><strong>物理对应</strong></td>
+<td align="left">对应着实际的物理存储（NFS 共享、EBS 卷等）</td>
+<td align="left">不对应实际物理存储，只是对存储的请求</td>
+</tr>
+<tr>
+<td align="left"><strong>创建方式</strong></td>
+<td align="left">手动创建 (<code>static provisioning</code>) 或通过 StorageClass 动态创建 (<code>dynamic provisioning</code>)</td>
+<td align="left">由用户或应用程序创建</td>
+</tr>
+<tr>
+<td align="left"><strong>关心什么</strong></td>
+<td align="left">存储的底层细节、容量、卷类型、访问模式</td>
+<td align="left">存储的需求量、访问模式，不关心底层实现</td>
+</tr>
+<tr>
+<td align="left"><strong>比喻</strong></td>
+<td align="left">像一个数据中心的<strong>物理硬盘</strong>或<strong>存储配额</strong></td>
+<td align="left">像一个应用程序对<strong>“20GB 硬盘空间，可读写”</strong>的需求书</td>
+</tr>
+</tbody></table>
+<hr>
+<h3 id="PV-和-PVC-的工作流程"><a href="#PV-和-PVC-的工作流程" class="headerlink" title="PV 和 PVC 的工作流程"></a>PV 和 PVC 的工作流程</h3><ol>
+<li><strong>管理员&#x2F;云提供商</strong>准备好底层存储（例如，在 AWS 上创建一个 EBS 卷）。</li>
+<li><strong>管理员</strong>创建一个 <code>PersistentVolume</code> (PV) 对象，描述这个 EBS 卷的容量、访问模式等信息，并将其注册到 Kubernetes 集群中。或者，如果配置了 <code>StorageClass</code> 和 <code>Dynamic Provisioning</code>，用户无需手动创建 PV。</li>
+<li><strong>应用程序开发者</strong>创建一个 <code>PersistentVolumeClaim</code> (PVC) 对象，声明他们需要多大的存储空间和哪种访问模式（例如，5GB，ReadWriteOnce）。</li>
+<li>Kubernetes Master 会<strong>查找</strong>一个尚未绑定的、满足 PVC 要求的 PV，然后将 PVC 和 PV <strong>绑定</strong>起来。如果找不到合适的 PV 且配置了 <code>StorageClass</code>，则会<strong>动态创建一个</strong>新的 PV 并绑定。</li>
+<li><strong>Pod 定义</strong>中引用这个 PVC。当 Pod 启动时，Kubernetes 会将其 PVC 挂载到 Pod 内部指定的文件路径上。</li>
+<li>当 Pod 被删除时，PV 和 PVC 仍然存在。</li>
+<li>当 PVC 被删除时，通常会根据 PV 的 <code>reclaimPolicy</code>（回收策略，如 Delete、Retain、Recycle）来决定如何处理底层的 PV 和其数据。</li>
+</ol>
+<h3 id="回收策略-Reclaim-Policy"><a href="#回收策略-Reclaim-Policy" class="headerlink" title="回收策略 (Reclaim Policy)"></a>回收策略 (Reclaim Policy)</h3><ul>
+<li><strong>Retain (保留):</strong> 当 PVC 被删除时，PV 不会被删除，它仍然存在并保持 “Released” 状态，数据也保留。管理员需要手动处理（删除或清洗）这个 PV。这适用于需要手动备份数据或防止数据丢失的场景。</li>
+<li><strong>Delete (删除):</strong> 这是许多动态预配的 StorageClass 的默认策略。当 PVC 被删除时，相应的 PV 也会被删除，并且底层的存储资源（例如 EBS 卷）也会被删除。数据会丢失。</li>
+<li><strong>Recycle (回收):</strong> 已弃用，很少使用。它会在 PVC 删除后对 PV 进行基本的数据清洗（例如执行 <code>rm -rf</code>）并使其可用于新的 PVC。由于其安全性问题和不完全清除，已被 <code>Dynamic Provisioning</code> 取代。</li>
+</ul>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>PV 和 PVC 的分离提供了一个强大的存储编排模型：</p>
+<ul>
+<li><strong>职责分离：</strong> 存储管理员和应用开发者可以独立工作。</li>
+<li><strong>灵活性：</strong> 应用程序无需关心底层存储的实现细节。</li>
+<li><strong>持久性：</strong> 确保应用数据在 Pod 生命周期之外仍然存在。</li>
+<li><strong>自动化：</strong> 结合 StorageClass，实现了存储的自动化预配。</li>
+</ul>
+<p>作为运维工程师，你需要熟练掌握 PV 和 PVC 的管理，特别是要了解不同的访问模式、回收策略以及如何利用 StorageClass 来实现存储的动态管理，以满足不同应用程序的持久化需求。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/kafka%20%E6%97%B6%E9%97%B4%E8%BD%AE/" rel="prev" title="kafka 时间轮">
+      <i class="fa fa-chevron-left"></i> kafka 时间轮
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/k8s%20service/" rel="next" title="k8s service">
+      k8s service <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8F%8F%E8%BF%B0%E5%9C%A8Kubernetes%E4%B8%AD%E5%A6%82%E4%BD%95%E9%85%8D%E7%BD%AE%E6%8C%81%E4%B9%85%E5%8C%96%E5%AD%98%E5%82%A8%EF%BC%8C%E5%B9%B6%E8%A7%A3%E9%87%8A%E5%85%B6%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86%E3%80%82"><span class="nav-number">1.</span> <span class="nav-text">描述在Kubernetes中如何配置持久化存储，并解释其工作原理。</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%F0%9F%A4%94-%E5%88%86%E6%9E%90%E8%BF%87%E7%A8%8B%EF%BC%9A"><span class="nav-number">2.</span> <span class="nav-text">🤔 分析过程：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%F0%9F%92%A1-%E7%AD%94%E6%A1%88%E7%94%9F%E6%88%90%EF%BC%9A"><span class="nav-number">3.</span> <span class="nav-text">💡 答案生成：</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E6%A6%82%E5%BF%B5%E6%88%96%E5%AE%9A%E4%B9%89"><span class="nav-number">3.1.</span> <span class="nav-text">1. 概念或定义</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86-The-PV-PVC-and-SC-Subsystem"><span class="nav-number">3.2.</span> <span class="nav-text">2. 工作原理 (The PV, PVC, and SC Subsystem)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E5%A6%82%E4%BD%95%E9%85%8D%E7%BD%AE-YAML%E7%A4%BA%E4%BE%8B-%E5%8A%A8%E6%80%81%E4%BE%9B%E7%BB%99"><span class="nav-number">3.3.</span> <span class="nav-text">3. 如何配置 (YAML示例 - 动态供给)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-%E5%85%B3%E9%94%AE%E5%B1%9E%E6%80%A7-Access-Modes-Reclaim-Policies"><span class="nav-number">3.4.</span> <span class="nav-text">4. 关键属性 (Access Modes &amp; Reclaim Policies)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-%E6%89%A9%E5%B1%95%E7%9F%A5%E8%AF%86-%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="nav-number">3.5.</span> <span class="nav-text">5. 扩展知识&#x2F;最佳实践</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#PersistentVolume-PV"><span class="nav-number">4.</span> <span class="nav-text">PersistentVolume (PV)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#PersistentVolumeClaim-PVC"><span class="nav-number">5.</span> <span class="nav-text">PersistentVolumeClaim (PVC)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BB%E8%A6%81%E5%8C%BA%E5%88%AB%E6%80%BB%E7%BB%93"><span class="nav-number">6.</span> <span class="nav-text">主要区别总结</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#PV-%E5%92%8C-PVC-%E7%9A%84%E5%B7%A5%E4%BD%9C%E6%B5%81%E7%A8%8B"><span class="nav-number">7.</span> <span class="nav-text">PV 和 PVC 的工作流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%9E%E6%94%B6%E7%AD%96%E7%95%A5-Reclaim-Policy"><span class="nav-number">8.</span> <span class="nav-text">回收策略 (Reclaim Policy)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">9.</span> <span class="nav-text">总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

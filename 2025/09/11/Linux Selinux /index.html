@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="SELinux (Security-Enhanced Linux)SELinux 是 Linux 系统中一个非常强大的安全模块，它提供了强制访问控制（Mandatory Access Control, MAC）机制，极大地增强了系统的安全性。理解 SELinux 的工作原理和作用，对于构建健壮安全的 Linux 环境至关重要。  一、什么是 SELinux？SELinux 是美国国家安全局（NSA">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux Selinux">
+<meta property="og:url" content="http://example.com/2025/09/11/Linux%20Selinux%20/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="SELinux (Security-Enhanced Linux)SELinux 是 Linux 系统中一个非常强大的安全模块，它提供了强制访问控制（Mandatory Access Control, MAC）机制，极大地增强了系统的安全性。理解 SELinux 的工作原理和作用，对于构建健壮安全的 Linux 环境至关重要。  一、什么是 SELinux？SELinux 是美国国家安全局（NSA">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:48:01.631Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/Linux%20Selinux%20/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Linux Selinux | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Linux%20Selinux%20/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Linux Selinux
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:48:01" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/Command/" itemprop="url" rel="index"><span itemprop="name">Command</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>5.2k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="SELinux-Security-Enhanced-Linux"><a href="#SELinux-Security-Enhanced-Linux" class="headerlink" title="SELinux (Security-Enhanced Linux)"></a>SELinux (Security-Enhanced Linux)</h3><p>SELinux 是 Linux 系统中一个非常强大的安全模块，它提供了强制访问控制（Mandatory Access Control, MAC）机制，极大地增强了系统的安全性。理解 SELinux 的工作原理和作用，对于构建健壮安全的 Linux 环境至关重要。</p>
+<hr>
+<h3 id="一、什么是-SELinux？"><a href="#一、什么是-SELinux？" class="headerlink" title="一、什么是 SELinux？"></a>一、什么是 SELinux？</h3><p>SELinux 是美国国家安全局（NSA）和 Red Hat 公司合作开发的一个 Linux 内核安全模块。它在 Linux 标准的自主访问控制（Discretionary Access Control, DAC）权限模型之上，添加了一层更细粒度、更严格的访问控制机制。</p>
+<p><strong>DAC vs. MAC (SELinux):</strong></p>
+<ul>
+<li><strong>自主访问控制 (DAC)：</strong> 这是传统的 Linux 权限模型。文件的所有者可以决定谁可以访问他们的文件（读、写、执行）。例如，一个用户不能删除另一个用户的文件，除非对方赋予了删除权限。DAC 的弱点在于，如果一个应用程序被攻破，攻击者就可以以该应用程序的权限为所欲为，因为 DAC 只关心用户和进程的身份，不关心它们的行为。</li>
+<li><strong>强制访问控制 (MAC &#x2F; SELinux)：</strong> SELinux 不仅仅依赖于用户和文件所有者的身份。它为文件、目录、端口、进程等系统资源都分配了安全上下文（Security Context），然后根据预定义的策略规则，强制所有进程的访问行为都必须符合这些规则。即使是 <code>root</code> 用户或被入侵的应用程序，其行为也必须受到 SELinux 策略的约束。这意味着，如果一个 Web 服务器被攻破，即使攻击者获得了 Web 服务器进程的权限，SELinux 也可能阻止该进程去访问它不应该访问的文件（比如 <code>/etc/passwd</code>）或执行它不应该执行的操作（比如监听非 HTTP 端口），从而限制了攻击者的破坏范围。</li>
+</ul>
+<p>简而言之，SELinux 像一个守卫森严的门卫系统，它不仅仅看你有没有钥匙（DAC），它还要看你是什么身份（安全上下文），以及你在试图进入哪个房间（目标资源的安全上下文），并根据事先规定好的详细规则（策略）来决定是否允许你进入或操作。</p>
+<hr>
+<h3 id="二、SELinux-的作用"><a href="#二、SELinux-的作用" class="headerlink" title="二、SELinux 的作用"></a>二、SELinux 的作用</h3><p>SELinux 在 Linux 系统中的核心作用是<strong>增强系统的安全性，限制潜在的损害</strong>。具体体现在以下几个方面：</p>
+<ol>
+<li><p><strong>强制访问控制 (MAC)：</strong> 这是最核心的作用。SELinux 定义了详细的规则集（策略），规定了哪些进程可以访问哪些资源（文件、目录、套接字、端口等）。即使进程拥有 DAC 权限，如果没有对应的 SELinux 规则允许，访问也会被拒绝。</p>
+<ul>
+<li><strong>示例：</strong> 通常，HTTP 服务器（如 Apache 或 Nginx）只需要访问特定的 Web 根目录（如 <code>/var/www/html</code>）。即使攻击者利用 Web 服务器漏洞获得了执行代码的权限，SELinux 策略也能阻止 Web 服务器进程去读取 <code>/etc/shadow</code> 或修改 <code>/boot</code> 目录下的文件，因为策略明确禁止了这种行为。</li>
+</ul>
+</li>
+<li><p><strong>最小权限原则：</strong> SELinux 强制实施最小权限原则。进程只能拥有其正常运行所需的最小权限，而不是像 DAC 那样，一个进程拥有用户的所有权限。这大大缩小了攻击面。</p>
+</li>
+<li><p><strong>防止权限提升：</strong> 即使攻击者成功利用某个应用程序的漏洞，并且获得了该应用程序的进程权限，SELinux 也会阻止该进程进行未经授权的权限提升尝试，因为它的安全上下文定义了其能执行的操作范围。</p>
+</li>
+<li><p><strong>限制服务：</strong> 每个服务（如 Apache, Nginx, MySQL, SSHD）都有其自己的 SELinux 域（domain），并被分配特定的安全上下文。这些域中的进程只能访问与其角色和功能相关的资源。</p>
+<ul>
+<li><strong>示例：</strong> SSHD 进程通常只能监听 SSH 端口 (22)，读写用户主目录下的 SSH 相关文件。SELinux 会阻止它尝试监听 Web 端口或访问数据库文件。</li>
+</ul>
+</li>
+<li><p><strong>增强系统完整性：</strong> SELinux 可以防止未经授权的修改系统关键文件和二进制文件，即使是具有高权限的进程也需要符合策略。</p>
+</li>
+<li><p><strong>防止未知漏洞攻击（零日攻击）：</strong> 由于 SELinux 是基于行为而非身份进行控制，它可以在某种程度上抵御针对已知或未知漏洞的攻击。即使攻击者发明了一种新的攻击方式，只要这种攻击行为违反了事先定义的安全规则，SELinux 就会阻止它。这为系统提供了额外的防御层。</p>
+</li>
+<li><p><strong>细粒度控制：</strong> SELinux 能够针对非常具体的文件类型和进程类型进行控制。例如，它不仅可以限制 Web 服务器进程不能访问 <code>/etc/passwd</code>，还可以具体到 Web 服务器不能写入 <code>/var/www/html</code> 目录之外的任何文件，除非该文件明确被标记为可写。</p>
+</li>
+</ol>
+<hr>
+<h3 id="三、SELinux-的安全上下文"><a href="#三、SELinux-的安全上下文" class="headerlink" title="三、SELinux 的安全上下文"></a>三、SELinux 的安全上下文</h3><p>在 SELinux 中，所有文件、目录、进程、端口等都带有**安全上下文 (Security Context)**。安全上下文通常由三个或四个字段组成，用冒号 <code>:</code> 分隔：</p>
+<p><code>user:role:type[:level]</code></p>
+<ul>
+<li><strong><code>user</code> (用户身份)：</strong> SELinux 用户，通常与 Linux 用户账户不直接对应。如 <code>systeme_u</code> (系统用户), <code>staff_u</code> (管理人员), <code>user_u</code> (普通用户)。</li>
+<li><strong><code>role</code> (角色)：</strong> SELinux 角色，定义了用户可以执行的操作集合。如 <code>sysadm_r</code> (系统管理员角色), <code>system_r</code> (系统角色)。</li>
+<li><strong><code>type</code> (类型&#x2F;域)：</strong> 这是 SELinux 最重要的部分。它定义了文件或进程的类别。<ul>
+<li><strong>文件类型：</strong> 如 <code>httpd_sys_content_t</code> (Web 服务器内容类型), <code>var_log_t</code> (日志文件类型), <code>etc_t</code> (配置文件类型)。</li>
+<li><strong>进程域：</strong> 如 <code>httpd_t</code> (Apache 服务器进程域), <code>sshd_t</code> (SSH 服务进程域)。</li>
+<li>策略规则正是基于这些类型来定义允许或拒绝的访问。例如，策略会说 <code>httpd_t</code> 进程可以读取 <code>httpd_sys_content_t</code> 类型的文件。</li>
+</ul>
+</li>
+<li><strong><code>level</code> (级别)：</strong> 这是一个可选的多级别安全（MLS）或多类别安全（MCS）组件，用于更高级别的安全策略。如 <code>s0:c0.c1023</code>。</li>
+</ul>
+<p><strong>查看安全上下文：</strong></p>
+<ul>
+<li><code>ls -Z &lt;file/directory&gt;</code>：查看文件或目录的安全上下文。</li>
+<li><code>ps -Z &lt;PID&gt;</code> 或 <code>ps auxZ</code>：查看进程的安全上下文。</li>
+</ul>
+<p><strong>示例：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">ls</span> -Z /var/www/html/index.html</span><br><span class="line"><span class="comment"># 输出可能为：-rw-r--r--. username username system_u:object_r:httpd_sys_content_t:s0 /var/www/html/index.html</span></span><br><span class="line"></span><br><span class="line">ps -Z | grep httpd</span><br><span class="line"><span class="comment"># 输出可能为：system_u:system_r:httpd_t:s0     httpd</span></span><br></pre></td></tr></table></figure>
+<p>上面的输出表明 <code>index.html</code> 的类型是 <code>httpd_sys_content_t</code>，而 <code>httpd</code> 进程的类型是 <code>httpd_t</code>。SELinux 策略会定义 <code>httpd_t</code> 进程可以访问 <code>httpd_sys_content_t</code> 类型的文件。</p>
+<hr>
+<h3 id="四、SELinux-的工作模式"><a href="#四、SELinux-的工作模式" class="headerlink" title="四、SELinux 的工作模式"></a>四、SELinux 的工作模式</h3><p>SELinux 可以运行在三种模式下：</p>
+<ol>
+<li><strong><code>enforcing</code> (强制模式)：</strong> SELinux 策略生效，所有不符合策略规则的操作都会被拒绝。这是生产环境中的推荐模式。</li>
+<li><strong><code>permissive</code> (宽容模式)：</strong> SELinux 策略生效，但不会拒绝任何操作。不符合策略规则的操作会被记录到日志中（审计模式），但不会阻止其执行。此模式常用于调试 SELinux 策略或在部署服务前收集潜在的 SELinux 拒绝日志。</li>
+<li><strong><code>disabled</code> (禁用模式)：</strong> SELinux 完全禁用，不提供任何安全保护。不推荐在生产环境中使用此模式，因为它剥夺了 SELinux 提供的额外安全层。</li>
+</ol>
+<p><strong>查看当前模式：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sestatus</span><br></pre></td></tr></table></figure>
+
+<p><strong>临时切换模式：</strong></p>
+<ul>
+<li>切换到宽容模式：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> setenforce 0</span><br></pre></td></tr></table></figure></li>
+<li>切换到强制模式：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> setenforce 1</span><br></pre></td></tr></table></figure>
+<strong>注意：</strong> <code>setenforce</code> 命令只在当前运行时生效，系统重启后会恢复到配置文件的模式。</li>
+</ul>
+<p><strong>永久切换模式：</strong></p>
+<p>修改 SELinux 配置文件 <code>/etc/selinux/config</code>。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> vim /etc/selinux/config</span><br></pre></td></tr></table></figure>
+
+<p>将 <code>SELINUX=</code> 后面的值修改为 <code>enforcing</code>, <code>permissive</code>, 或 <code>disabled</code>。</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># This file controls the state of SELinux on the system.</span></span><br><span class="line"><span class="comment"># SELINUX= can take one of these three values:</span></span><br><span class="line"><span class="comment">#       enforcing - Enforce SELinux policies (default)</span></span><br><span class="line"><span class="comment">#       permissive - Permissive mode (don&#x27;t enforce, just warn)</span></span><br><span class="line"><span class="comment">#       disabled - SELinux disabled</span></span><br><span class="line"><span class="attr">SELINUX</span>=enforcing</span><br><span class="line"><span class="comment"># SELINUXTYPE= can take one of these three values:</span></span><br><span class="line"><span class="comment">#       targeted - Targeted processes are protected,</span></span><br><span class="line"><span class="comment">#                  the rest are left unprotected</span></span><br><span class="line"><span class="comment">#       minimum - Security for selected processes,</span></span><br><span class="line"><span class="comment">#                 plus the ability to customize your own policies</span></span><br><span class="line"><span class="comment">#       mls - Multi Level Security protection.</span></span><br><span class="line"><span class="attr">SELINUXTYPE</span>=targeted</span><br></pre></td></tr></table></figure>
+<p>修改后，需要<strong>重启系统</strong>才能使永久配置生效。</p>
+<hr>
+<h3 id="五、SELinux-的管理与故障排除"><a href="#五、SELinux-的管理与故障排除" class="headerlink" title="五、SELinux 的管理与故障排除"></a>五、SELinux 的管理与故障排除</h3><p>SELinux 的强大也意味着它可能在配置不当时导致服务无法正常运行，因为它会拒绝看似合理的行为。</p>
+<ol>
+<li><p><strong>审核日志：</strong> 当 SELinux 拒绝一个操作时，它会将事件记录到审计日志中。这是排除 SELinux 相关问题最关键的途径。</p>
+<ul>
+<li><strong>CentOS&#x2F;RHEL:</strong> 日志通常在 <code>/var/log/audit/audit.log</code></li>
+<li><strong>Ubuntu&#x2F;Debian:</strong> 日志通常在 <code>/var/log/kern.log</code> 或 <code>/var/log/syslog</code>，或者需要安装 <code>auditd</code> 服务。</li>
+<li>使用 <code>ausearch</code> 工具筛选 SELinux 拒绝事件：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> ausearch -m AVC -ts today</span><br><span class="line"><span class="comment"># 或者使用 sealert 工具进行分析:</span></span><br><span class="line"><span class="built_in">sudo</span> yum install setroubleshoot-server <span class="comment"># RHEL/CentOS</span></span><br><span class="line"><span class="built_in">sudo</span> apt install setroubleshoot-server <span class="comment"># Ubuntu/Debian</span></span><br><span class="line"><span class="built_in">sudo</span> sealert -a /var/log/audit/audit.log</span><br></pre></td></tr></table></figure>
+<code>sealert</code> 会提供更友好的拒绝事件描述，并经常给出解决建议（例如，<code>semanage fcontext</code> 或 <code>setsebool</code> 命令）。</li>
+</ul>
+</li>
+<li><p><strong>管理安全上下文：</strong></p>
+<ul>
+<li><strong><code>chcon</code>：</strong> 临时改变文件或目录的安全上下文。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> <span class="built_in">chcon</span> -t httpd_sys_content_t /path/to/web/files</span><br></pre></td></tr></table></figure>
+<strong>注意：</strong> <code>chcon</code> 是临时的，文件系统重新标签或文件被更新后会恢复，不建议用于持久化配置。</li>
+<li><strong><code>restorecon</code>：</strong> 恢复文件或目录到其默认的安全上下文（根据策略文件中的定义）。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> restorecon -Rv /var/www/html/</span><br></pre></td></tr></table></figure></li>
+<li><strong><code>semanage fcontext</code>：</strong> 永久性地修改文件或目录的默认安全上下文映射。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 将 /data/webcontent 目录及其下的所有文件都标记为 httpd_sys_content_t 类型</span></span><br><span class="line"><span class="built_in">sudo</span> semanage fcontext -a -t httpd_sys_content_t <span class="string">&quot;/data/webcontent(/.*)?&quot;</span></span><br><span class="line"><span class="built_in">sudo</span> restorecon -Rv /data/webcontent/</span><br></pre></td></tr></table></figure>
+<strong>注意：</strong> <code>semanage</code> 命令在 RHEL&#x2F;CentOS 上可用，Ubuntu 默认没有 <code>semanage</code>，需要安装 <code>policycoreutils-python-utils</code> 包。</li>
+</ul>
+</li>
+<li><p><strong>布尔值 (Booleans)：</strong> SELinux 提供了许多布尔值来打开或关闭特定的策略规则，而无需重新编译整个策略。</p>
+<ul>
+<li><strong>查看所有布尔值及其状态：</strong><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">getsebool -a</span><br></pre></td></tr></table></figure></li>
+<li><strong>临时设置布尔值：</strong><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> setsebool httpd_can_network_connect on <span class="comment"># 允许httpd连接网络</span></span><br></pre></td></tr></table></figure></li>
+<li><strong>永久设置布尔值：</strong> 使用 <code>-P</code> 参数。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> setsebool -P httpd_can_network_connect on</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>SELinux 是 Linux 系统安全的重要基石。它通过强制访问控制，为系统提供了强大的第二道防线，即使是高权限用户或被入侵的应用程序，其行为也受到严格约束。虽然学习曲线较陡峭，且在排查问题时可能增加复杂性，但其在提升系统安全性，特别是防止零日漏洞攻击和限制攻击范围方面的作用是无可替代的。在生产环境中，**强烈建议启用并正确配置 SELinux (enforcing 模式)**。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Linux%20strace%20%E5%91%BD%E4%BB%A4/" rel="prev" title="Linux strace">
+      <i class="fa fa-chevron-left"></i> Linux strace
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Linux%20pidstat/" rel="next" title="Linux pidstat">
+      Linux pidstat <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#SELinux-Security-Enhanced-Linux"><span class="nav-number">1.</span> <span class="nav-text">SELinux (Security-Enhanced Linux)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E4%BB%80%E4%B9%88%E6%98%AF-SELinux%EF%BC%9F"><span class="nav-number">2.</span> <span class="nav-text">一、什么是 SELinux？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E3%80%81SELinux-%E7%9A%84%E4%BD%9C%E7%94%A8"><span class="nav-number">3.</span> <span class="nav-text">二、SELinux 的作用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E3%80%81SELinux-%E7%9A%84%E5%AE%89%E5%85%A8%E4%B8%8A%E4%B8%8B%E6%96%87"><span class="nav-number">4.</span> <span class="nav-text">三、SELinux 的安全上下文</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%9B%E3%80%81SELinux-%E7%9A%84%E5%B7%A5%E4%BD%9C%E6%A8%A1%E5%BC%8F"><span class="nav-number">5.</span> <span class="nav-text">四、SELinux 的工作模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%94%E3%80%81SELinux-%E7%9A%84%E7%AE%A1%E7%90%86%E4%B8%8E%E6%95%85%E9%9A%9C%E6%8E%92%E9%99%A4"><span class="nav-number">6.</span> <span class="nav-text">五、SELinux 的管理与故障排除</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">7.</span> <span class="nav-text">总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

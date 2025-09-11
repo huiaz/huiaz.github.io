@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Nginx 高并发在处理高并发场景时，很多运维同学会遇到这些痛点：  并发量一上来就502&#x2F;504 CPU使用率飙升，但吞吐量上不去 连接数达到瓶颈，新请求被拒绝 响应时间越来越慢，用户体验极差  第一部分：Nginx核心配置优化 1、工作进程与连接数配置 12345678910# 工作进程数 &#x3D; CPU核心数worker_processes auto;# 每个进程的最大连接数worke">
+<meta property="og:type" content="article">
+<meta property="og:title" content="性能优化">
+<meta property="og:url" content="http://example.com/2025/09/11/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="Nginx 高并发在处理高并发场景时，很多运维同学会遇到这些痛点：  并发量一上来就502&#x2F;504 CPU使用率飙升，但吞吐量上不去 连接数达到瓶颈，新请求被拒绝 响应时间越来越慢，用户体验极差  第一部分：Nginx核心配置优化 1、工作进程与连接数配置 12345678910# 工作进程数 &#x3D; CPU核心数worker_processes auto;# 每个进程的最大连接数worke">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T12:42:57.199Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>性能优化 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          性能优化
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：20:42:57" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/" itemprop="url" rel="index"><span itemprop="name">WEB</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/Nginx/" itemprop="url" rel="index"><span itemprop="name">Nginx</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>12k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>11 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Nginx-高并发"><a href="#Nginx-高并发" class="headerlink" title="Nginx 高并发"></a>Nginx 高并发</h1><p>在处理高并发场景时，很多运维同学会遇到这些痛点：</p>
+<ul>
+<li>并发量一上来就502&#x2F;504</li>
+<li>CPU使用率飙升，但吞吐量上不去</li>
+<li>连接数达到瓶颈，新请求被拒绝</li>
+<li>响应时间越来越慢，用户体验极差</li>
+</ul>
+<p><strong>第一部分：Nginx核心配置优化</strong></p>
+<p><strong>1、工作进程与连接数配置</strong></p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 工作进程数 = CPU核心数</span></span><br><span class="line"><span class="attribute">worker_processes</span> auto;</span><br><span class="line"><span class="comment"># 每个进程的最大连接数</span></span><br><span class="line"><span class="attribute">worker_connections</span> <span class="number">65535</span>;</span><br><span class="line"><span class="comment"># 工作进程优先级（-20到20，数值越小优先级越高）</span></span><br><span class="line"><span class="attribute">worker_priority</span> -<span class="number">10</span>;</span><br><span class="line"><span class="comment"># CPU亲和性绑定，避免进程在CPU间切换</span></span><br><span class="line"><span class="attribute">worker_cpu_affinity</span> auto;</span><br><span class="line"><span class="comment"># 工作进程打开文件数限制</span></span><br><span class="line"><span class="attribute">worker_rlimit_nofile</span> <span class="number">100000</span>;</span><br></pre></td></tr></table></figure>
+
+<p><strong>实战经验：</strong>worker_connections 不是越大越好，需要考虑内存消耗。每个连接大约消耗232-248字节内存。</p>
+<p><strong>2、事件驱动模型优化</strong></p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">events</span> &#123;   </span><br><span class="line">	<span class="comment"># 使用epoll事件驱动（Linux最优选择）    </span></span><br><span class="line">	<span class="attribute">use</span> <span class="literal">epoll</span>;        </span><br><span class="line">	<span class="comment"># 允许同时接受多个连接    </span></span><br><span class="line">	<span class="attribute">multi_accept</span> <span class="literal">on</span>;        </span><br><span class="line">	<span class="comment"># 连接数配置    </span></span><br><span class="line">	<span class="attribute">worker_connections</span> <span class="number">65535</span>;        </span><br><span class="line">	<span class="comment"># 接受连接后立即禁用accpet锁    </span></span><br><span class="line">	<span class="attribute">accept_mutex</span> <span class="literal">off</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>3、HTTP核心配置优化</strong></p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">http</span> &#123;</span><br><span class="line">    <span class="comment"># **** 高效文件传输配置 ****</span></span><br><span class="line">    <span class="attribute">sendfile</span>            <span class="literal">on</span>;</span><br><span class="line">    <span class="attribute">tcp_nopush</span>          <span class="literal">on</span>;</span><br><span class="line">    <span class="attribute">tcp_nodelay</span>         <span class="literal">on</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment"># **** 连接超时配置 ****</span></span><br><span class="line">    <span class="attribute">keepalive_timeout</span>   <span class="number">60</span>;</span><br><span class="line">    <span class="attribute">keepalive_requests</span>  <span class="number">10000</span>;</span><br><span class="line">    <span class="attribute">client_header_timeout</span> <span class="number">10</span>;</span><br><span class="line">    <span class="attribute">client_body_timeout</span> <span class="number">10</span>;</span><br><span class="line">    <span class="attribute">send_timeout</span>        <span class="number">10</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment"># **** 缓冲区大小优化 ****</span></span><br><span class="line">    <span class="attribute">client_header_buffer_size</span> <span class="number">4k</span>;</span><br><span class="line">    <span class="attribute">large_client_header_buffers</span> <span class="number">8</span> <span class="number">8k</span>;</span><br><span class="line">    <span class="attribute">client_body_buffer_size</span> <span class="number">128k</span>;</span><br><span class="line">    <span class="attribute">client_max_body_size</span> <span class="number">50m</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment"># **** Gzip 压缩配置 ****</span></span><br><span class="line">    <span class="attribute">gzip</span>                <span class="literal">on</span>;</span><br><span class="line">    <span class="attribute">gzip_vary</span>           <span class="literal">on</span>;</span><br><span class="line">    <span class="attribute">gzip_min_length</span>     <span class="number">1000</span>;</span><br><span class="line">    <span class="attribute">gzip_comp_level</span>     <span class="number">6</span>;</span><br><span class="line">    <span class="attribute">gzip_types</span></span><br><span class="line">        text/plain</span><br><span class="line">        text/css</span><br><span class="line">        text/javascript</span><br><span class="line">        application/javascript</span><br><span class="line">        application/json</span><br><span class="line">        application/xml;</span><br><span class="line"></span><br><span class="line">    <span class="comment"># **** 安全性/通用配置 ****</span></span><br><span class="line">    <span class="comment"># 隐藏Nginx版本信息</span></span><br><span class="line">    <span class="attribute">server_tokens</span>       <span class="literal">off</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>第二部分：高级性能优化配置</strong></p>
+<p><strong>1、连接池和缓存优化</strong></p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">http</span> &#123;</span><br><span class="line">    <span class="comment"># **** 上游服务器连接池配置 ****</span></span><br><span class="line">    <span class="section">upstream</span> backend &#123;</span><br><span class="line">        <span class="attribute">keepalive</span>           <span class="number">300</span>;</span><br><span class="line">        <span class="attribute">keepalive_requests</span>  <span class="number">10000</span>;</span><br><span class="line">        <span class="attribute">keepalive_timeout</span>   <span class="number">60s</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 后端服务器列表</span></span><br><span class="line">        <span class="attribute">server</span> <span class="number">192.168.1.100:8080</span> weight=<span class="number">3</span> max_fails=<span class="number">3</span> fail_timeout=<span class="number">10s</span>;</span><br><span class="line">        <span class="attribute">server</span> <span class="number">192.168.1.101:8080</span> weight=<span class="number">2</span> max_fails=<span class="number">3</span> fail_timeout=<span class="number">10s</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment"># **** 文件缓存配置 (open_file_cache) ****</span></span><br><span class="line">    <span class="attribute">open_file_cache</span>        max=<span class="number">100000</span> inactive=<span class="number">20s</span>;</span><br><span class="line">    <span class="attribute">open_file_cache_valid</span>  <span class="number">30s</span>;</span><br><span class="line">    <span class="attribute">open_file_cache_min_uses</span> <span class="number">2</span>;</span><br><span class="line">    <span class="attribute">open_file_cache_errors</span> <span class="literal">on</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment"># **** FastCGI 缓存配置 (适用于PHP等) ****</span></span><br><span class="line">    <span class="attribute">fastcgi_cache_path</span> /var/cache/nginx levels=<span class="number">1</span>:<span class="number">2</span> keys_zone=fcgi:<span class="number">100m</span> inactive=<span class="number">60m</span>;</span><br><span class="line">    <span class="attribute">fastcgi_cache_key</span>  <span class="string">&quot;<span class="variable">$scheme</span><span class="variable">$request_method</span><span class="variable">$host</span><span class="variable">$request_uri</span>&quot;</span>;</span><br><span class="line">    <span class="attribute">fastcgi_cache_use_stale</span> <span class="literal">error</span> timeout invalid_header http_500;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>2、限流和防护配置</strong></p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">http</span> &#123;</span><br><span class="line">    <span class="comment"># **** 请求速率限制区域定义 ****</span></span><br><span class="line">    <span class="comment"># 为API设置每IP每秒100个请求的限制</span></span><br><span class="line">    <span class="attribute">limit_req_zone</span> <span class="variable">$binary_remote_addr</span> zone=api:<span class="number">10m</span> rate=100r/s;</span><br><span class="line">    <span class="comment"># 为登录接口设置每IP每秒5个请求的限制</span></span><br><span class="line">    <span class="attribute">limit_req_zone</span> <span class="variable">$binary_remote_addr</span> zone=login:<span class="number">10m</span> rate=5r/s;</span><br><span class="line"></span><br><span class="line">    <span class="comment"># **** 连接数限制区域定义 ****</span></span><br><span class="line">    <span class="comment"># 为每个IP地址设置一个连接限制区域</span></span><br><span class="line">    <span class="attribute">limit_conn_zone</span> <span class="variable">$binary_remote_addr</span> zone=perip:<span class="number">10m</span>;</span><br><span class="line">    <span class="comment"># 为每个server_name设置一个连接限制区域</span></span><br><span class="line">    <span class="attribute">limit_conn_zone</span> <span class="variable">$server_name</span> zone=perserver:<span class="number">10m</span>;</span><br><span class="line"></span><br><span class="line">    <span class="section">server</span> &#123;</span><br><span class="line">        <span class="comment"># **** 全局请求和连接限流规则应用 ****</span></span><br><span class="line">        <span class="comment"># 对所有请求应用api限流，允许200个突发，不延迟处理</span></span><br><span class="line">        <span class="attribute">limit_req</span>  zone=api burst=<span class="number">200</span> nodelay;</span><br><span class="line">        <span class="comment"># 每个IP地址最多20个并发连接</span></span><br><span class="line">        <span class="attribute">limit_conn</span> perip <span class="number">20</span>;</span><br><span class="line">        <span class="comment"># 每个server_name最多2000个并发连接</span></span><br><span class="line">        <span class="attribute">limit_conn</span> perserver <span class="number">2000</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment"># **** 静态资源长缓存配置 ****</span></span><br><span class="line">        <span class="section">location</span> <span class="regexp">~* \.(jpg|jpeg|png|gif|ico|css|js)$</span> &#123;</span><br><span class="line">            <span class="attribute">expires</span>       <span class="number">1y</span>;</span><br><span class="line">            <span class="attribute">add_header</span>    Cache-Control <span class="string">&quot;public, immutable&quot;</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment"># **** API接口优化及代理配置 ****</span></span><br><span class="line">        <span class="section">location</span> /api/ &#123;</span><br><span class="line">            <span class="comment"># 对/api/路径应用更严格的api限流，允许50个突发，不延迟</span></span><br><span class="line">            <span class="attribute">limit_req</span>  zone=api burst=<span class="number">50</span> nodelay;</span><br><span class="line"></span><br><span class="line">            <span class="attribute">proxy_pass</span>          http://backend;</span><br><span class="line">            <span class="attribute">proxy_http_version</span>  <span class="number">1</span>.<span class="number">1</span>;</span><br><span class="line">            <span class="attribute">proxy_set_header</span>    Connection <span class="string">&quot;&quot;</span>; <span class="comment"># 对于HTTP/1.1，禁用长连接，防止后端连接耗尽</span></span><br><span class="line">            <span class="attribute">proxy_connect_timeout</span> <span class="number">5s</span>;</span><br><span class="line">            <span class="attribute">proxy_send_timeout</span>  <span class="number">10s</span>;</span><br><span class="line">            <span class="attribute">proxy_read_timeout</span>  <span class="number">10s</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>第三部分：操作系统内核参数优化</strong></p>
+<p>高并发场景下，操作系统层面的优化同样重要。以下是经过实战验证的内核参数配置：</p>
+<p><strong>1、网络参数优化</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">--- START: sysctl.conf 配置更新脚本 ---</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">提示用户即将修改 /etc/sysctl.conf 文件</span></span><br><span class="line">echo &quot;正在向 /etc/sysctl.conf 追加以下系统内核参数优化配置...&quot;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">使用EOF块向 /etc/sysctl.conf 追加配置</span></span><br><span class="line">cat &gt;&gt; /etc/sysctl.conf &lt;&lt; &#x27;EOF&#x27;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">============================================</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">=== Nginx/高并发场景优化建议配置区块 ===</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">============================================</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">**** 网络核心参数优化 (net.core) ****</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">增大Socket监听队列的最大长度，在高并发下防止连接丢失</span></span><br><span class="line">net.core.somaxconn           = 65535</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">增大SYN backlog队列限制，处理突发流量</span></span><br><span class="line">net.core.netdev_max_backlog  = 30000</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">TCP接收缓冲区默认大小</span></span><br><span class="line">net.core.rmem_default        = 262144</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">TCP接收缓冲区最大大小</span></span><br><span class="line">net.core.rmem_max            = 16777216</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">TCP发送缓冲区默认大小</span></span><br><span class="line">net.core.wmem_default        = 262144</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">TCP发送缓冲区最大大小</span></span><br><span class="line">net.core.wmem_max            = 16777216</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">**** TCP/IPv4 参数优化 (net.ipv4.tcp) ****</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">增大SYN队列长度，提高抗SYN Flood攻击能力</span></span><br><span class="line">net.ipv4.tcp_max_syn_backlog = 65535</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">开启SYN Cookies，防止SYN Flood攻击</span></span><br><span class="line">net.ipv4.tcp_syncookies      = 1</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">开启TCP TIME_WAIT状态的重用，缩短其等待时间</span></span><br><span class="line">net.ipv4.tcp_tw_reuse        = 1</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">缩短TCP FIN等待时间</span></span><br><span class="line">net.ipv4.tcp_fin_timeout     = 15</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">TCP Keepalive探测起始时间（秒）</span></span><br><span class="line">net.ipv4.tcp_keepalive_time  = 600</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">TCP Keepalive探测次数</span></span><br><span class="line">net.ipv4.tcp_keepalive_probes = 3</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">TCP Keepalive探测间隔时间（秒）</span></span><br><span class="line">net.ipv4.tcp_keepalive_intvl = 15</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">**** 连接跟踪表大小优化 (net.netfilter) ****</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">增大连接跟踪表的最大尺寸，避免连接溢出</span></span><br><span class="line">net.netfilter.nf_conntrack_max = 1048576</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">兼容旧版内核或不同系统</span></span><br><span class="line">net.nf_conntrack_max           = 1048576</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">**** 文件描述符限制 (fs) ****</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">系统级别的最大文件描述符数</span></span><br><span class="line">fs.file-max                  = 1048576</span><br><span class="line"></span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line">echo &quot;配置已追加到 /etc/sysctl.conf。正在应用新的系统内核参数...&quot;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">应用配置，使之立即生效。生产环境建议重启或手动检查。</span></span><br><span class="line">sysctl -p</span><br><span class="line"></span><br><span class="line">echo &quot;系统内核参数已应用。&quot;</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">--- END: sysctl.conf 配置更新脚本 ---</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>2、进程和内存参数</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># --- START: limits.conf 配置更新脚本 ---</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 提示用户即将修改 /etc/security/limits.conf 文件</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">&quot;正在向 /etc/security/limits.conf 追加以下用户进程限制优化配置...&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 使用EOF块向 /etc/security/limits.conf 追加配置</span></span><br><span class="line"><span class="built_in">cat</span> &gt;&gt; /etc/security/limits.conf &lt;&lt; <span class="string">&#x27;EOF&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># ==================================================</span></span><br><span class="line"><span class="comment"># === Nginx/高并发场景优化建议配置区块 (limits) ===</span></span><br><span class="line"><span class="comment"># ==================================================</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># **** 通用用户进程限制 ****</span></span><br><span class="line"><span class="comment"># 设置所有用户（*）能够打开的最大文件描述符数 (nofile)</span></span><br><span class="line"><span class="comment"># type   item        value</span></span><br><span class="line"><span class="comment"># soft： 柔性限制，系统警告但不阻止</span></span><br><span class="line"><span class="comment"># hard： 刚性限制，系统强制阻止</span></span><br><span class="line"><span class="comment"># nofile：可打开的最大文件描述符数</span></span><br><span class="line"><span class="comment"># nproc： 进程最大数量</span></span><br><span class="line">*       soft    nofile      1048576</span><br><span class="line">*       hard    nofile      1048576</span><br><span class="line">*       soft    <span class="built_in">nproc</span>       1048576</span><br><span class="line">*       hard    <span class="built_in">nproc</span>       1048576</span><br><span class="line"></span><br><span class="line"><span class="comment"># **** Nginx 用户特殊配置 ****</span></span><br><span class="line"><span class="comment"># 专为Nginx用户设置的文件描述符限制，通常与全局设置保持一致或更高</span></span><br><span class="line"><span class="comment"># type   item        value</span></span><br><span class="line">nginx   soft    nofile      1048576</span><br><span class="line">nginx   hard    nofile      1048576</span><br><span class="line"></span><br><span class="line">EOF</span><br><span class="line"></span><br><span class="line"><span class="built_in">echo</span> <span class="string">&quot;配置已追加到 /etc/security/limits.conf。请注意，这些更改通常在用户下次登录或服务重启后生效。&quot;</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">&quot;对于Nginx服务，可能需要重启Nginx服务以使新的限制生效。&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># --- END: limits.conf 配置更新脚本 ---</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>第四部分：实战监控与调优</strong></p>
+<p><strong>1、性能监控脚本</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">!/bin/bash</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"></span></span><br><span class="line"><span class="language-bash"><span class="comment"># 文件名: nginx_monitor.sh</span></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">描述: 收集并显示Nginx服务器的关键性能指标和系统概览。</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">      该脚本旨在提供快速诊断，帮助运维人员监控Nginx的运行状况。</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"></span></span><br><span class="line"><span class="language-bash"><span class="comment"># 使用方法:</span></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">  <span class="built_in">chmod</span> +x nginx_monitor.sh</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">  ./nginx_monitor.sh</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"></span></span><br><span class="line"><span class="language-bash"><span class="comment"># 前置条件:</span></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">  - ss, netstat, ps, <span class="built_in">uptime</span>, free, curl 工具已安装。</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">  - Nginx的stub_status模块已启用，并配置在 http://localhost/nginx_status 可访问。</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">    (例如: location /nginx_status &#123; stub_status on; allow 127.0.0.1; deny all; &#125;)</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash"></span></span><br><span class="line"><span class="language-bash"></span><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">--- 脚本设置 ---</span></span><br><span class="line">set -e          # 任何命令失败立即终止脚本</span><br><span class="line">set -u          # 尝试使用未定义的变量时报错</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">set</span> -o pipefail <span class="comment"># 管道中任何命令失败都终止脚本 (可选，根据需求决定是否启用)</span></span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">定义分隔符，使输出更清晰</span></span><br><span class="line">SEPARATOR=&quot;---------------------------------------------------&quot;</span><br><span class="line"></span><br><span class="line">echo -e &quot;\n=== Nginx/系统性能监控报告 ($(date &#x27;+%Y-%m-%d %H:%M:%S&#x27;)) ===&quot;</span><br><span class="line">echo &quot;$&#123;SEPARATOR&#125;&quot;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">--- 1. Nginx 连接状态摘要 (ss -s) ---</span></span><br><span class="line">echo -e &quot;\n--- Nginx TCP 连接状态摘要 ---&quot;</span><br><span class="line">echo &quot;  (显示各类TCP连接的总数)&quot;</span><br><span class="line">ss -s</span><br><span class="line">echo &quot;$&#123;SEPARATOR&#125;&quot;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">--- 2. 活跃/建立的TCP连接数 (netstat/awk) ---</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">注意: 这个统计通常包括所有TCP连接，而不仅仅是Nginx的。</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">如果需要只统计Nginx相关的连接，可以结合Nginx监听端口进行过滤。</span></span><br><span class="line">echo -e &quot;\n--- 当前TCP连接状态分布 ---&quot;</span><br><span class="line">echo &quot;  (显示当前系统TCP连接按状态分类的数量)&quot;</span><br><span class="line">netstat -n | awk &#x27;/^tcp/ &#123;++state_count[$NF]&#125; END &#123;for (state in state_count) print state, state_count[state]&#125;&#x27;</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">另一个获取活跃连接数的示例 (更直接，但只统计ESTABLISHED状态):</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">echo</span> -e <span class="string">&quot;\n--- ESTABLISHED (活跃) TCP连接总数 ---&quot;</span></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">ss -tan | grep ESTAB | <span class="built_in">wc</span> -l</span></span><br><span class="line">echo &quot;$&#123;SEPARATOR&#125;&quot;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">--- 3. Nginx 进程状态 ---</span></span><br><span class="line">echo -e &quot;\n--- Nginx 进程概览 ---&quot;</span><br><span class="line">echo &quot;  (显示所有Nginx相关进程的详细信息)&quot;</span><br><span class="line">ps aux | grep &quot;[n]ginx&quot; # 使用方括号避免grep自行匹配，更可靠</span><br><span class="line">echo &quot;$&#123;SEPARATOR&#125;&quot;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">--- 4. 系统负载情况 ---</span></span><br><span class="line">echo -e &quot;\n--- 系统平均负载和运行时间 ---&quot;</span><br><span class="line">echo &quot;  (显示1、5、15分钟的平均负载以及系统运行时间)&quot;</span><br><span class="line">uptime</span><br><span class="line">echo &quot;$&#123;SEPARATOR&#125;&quot;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">--- 5. 内存使用情况 ---</span></span><br><span class="line">echo -e &quot;\n--- 内存使用统计 ---&quot;</span><br><span class="line">echo &quot;  (以人类可读的格式显示物理内存和交换空间使用情况)&quot;</span><br><span class="line">free -h</span><br><span class="line">echo &quot;$&#123;SEPARATOR&#125;&quot;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">--- 6. Nginx 内部状态统计 (stub_status) ---</span></span><br><span class="line">echo -e &quot;\n--- Nginx 内部状态页面 ---&quot;</span><br><span class="line">echo &quot;  (需要Nginx配置stub_status模块，例如在 http://localhost/nginx_status )&quot;</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">确保Nginx的stub_status模块已启用并在指定URL可访问</span></span><br><span class="line">if curl -s http://localhost/nginx_status &amp;&gt;/dev/null; then</span><br><span class="line">    curl -s http://localhost/nginx_status</span><br><span class="line">else</span><br><span class="line">    echo &quot;错误: 无法获取Nginx状态。请检查Nginx是否运行，以及stub_status模块是否配置在 http://localhost/nginx_status。&quot;</span><br><span class="line">fi</span><br><span class="line">echo &quot;$&#123;SEPARATOR&#125;&quot;</span><br><span class="line"></span><br><span class="line">echo -e &quot;\n=== 监控报告结束 ===&quot;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>2、性能测试命令</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">wrk压测工具使用</span></span><br><span class="line">wrk -t20 -c1000 -d60s --latency http://your-domain.com/</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">ab压测命令</span></span><br><span class="line">ab -n 100000 -c 1000 http://your-domain.com/</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">系统资源监控</span></span><br><span class="line">top -p $(pgrep nginx | tr &#x27;\n&#x27; &#x27;,&#x27; | sed &#x27;s/,$//&#x27;)</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>第五部分：高并发架构最佳实践</strong></p>
+<p><strong>1、多层缓存策略</strong></p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># --- 步骤 1: 定义 L2 代理缓存区域 ---</span></span><br><span class="line"><span class="comment"># 这通常放在 http &#123;&#125; 块内，在 server &#123;&#125; 块之外</span></span><br><span class="line"><span class="comment"># -------------------------------------</span></span><br><span class="line"><span class="section">http</span> &#123;</span><br><span class="line">    <span class="comment"># ... 其他 http 配置 ...</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 定义一个名为 &#x27;my_cache&#x27; 的代理缓存区域。</span></span><br><span class="line">    <span class="comment"># path: /var/cache/nginx/my_cache - 缓存数据存放的路径</span></span><br><span class="line">    <span class="comment"># levels: 1:2 - 缓存目录的层级结构（例如: /var/cache/nginx/my_cache/b/7c/hashkey）</span></span><br><span class="line">    <span class="comment"># keys_zone: 10m - 用于存储缓存键和元数据的共享内存区域大小，10MB足以存储大量键</span></span><br><span class="line">    <span class="comment"># max_size: 10g - 磁盘上缓存的最大容量，达到此限制时，会自动删除最不活跃的缓存</span></span><br><span class="line">    <span class="comment"># inactive: 60m - 如果在这段时间内没有被访问，缓存项将被删除 (即使未达到max_size)</span></span><br><span class="line">    <span class="comment"># use_temp_path: off - 建议关闭，防止缓存文件在临时目录中转移，提高性能和避免 inode 耗尽</span></span><br><span class="line">    <span class="attribute">proxy_cache_path</span> /var/cache/nginx/my_cache levels=<span class="number">1</span>:<span class="number">2</span> keys_zone=my_cache:<span class="number">10m</span> max_size=<span class="number">10g</span> inactive=<span class="number">60m</span> use_temp_path=<span class="literal">off</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment"># ... 其他 http 配置 ...</span></span><br><span class="line"></span><br><span class="line">    <span class="section">server</span> &#123;</span><br><span class="line">        <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">        <span class="attribute">server_name</span> your-domain.com;</span><br><span class="line">        <span class="attribute">root</span> /var/www/html; <span class="comment"># 定义网站的根目录，用于L1缓存</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># --- 步骤 2: 实现 L1 和 L2 缓存层 ---</span></span><br><span class="line">        <span class="comment"># -----------------------------------</span></span><br><span class="line">        <span class="section">location</span> / &#123;</span><br><span class="line">            <span class="comment"># L1 缓存: 本地文件系统直读</span></span><br><span class="line">            <span class="comment"># 尝试按顺序查找文件：</span></span><br><span class="line">            <span class="comment">#   1. $uri: 尝试直接匹配请求的URI作为文件 (例如: /index.html)</span></span><br><span class="line">            <span class="comment">#   2. $uri/: 尝试匹配URI对应的目录下的index文件 (例如: /dir/ -&gt; /dir/index.html)</span></span><br><span class="line">            <span class="comment">#   3. @proxy: 如果以上都找不到，则内部跳转到 @proxy 命名location (进入L2缓存层)</span></span><br><span class="line">            <span class="attribute">try_files</span> <span class="variable">$uri</span> <span class="variable">$uri</span>/ <span class="variable">@proxy</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment"># L2 缓存: Nginx 代理缓存</span></span><br><span class="line">        <span class="comment"># 这个命名location只会被 try_files 或内部重定向触发</span></span><br><span class="line">        <span class="section">location</span> <span class="variable">@proxy</span> &#123;</span><br><span class="line">            <span class="comment"># 启用名为 &#x27;my_cache&#x27; 的代理缓存区域</span></span><br><span class="line">            <span class="attribute">proxy_cache</span> my_cache;</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 定义不同HTTP状态码的缓存有效期</span></span><br><span class="line">            <span class="comment"># 200 (OK) 和 302 (Found) 状态码缓存 1 小时</span></span><br><span class="line">            <span class="attribute">proxy_cache_valid</span> <span class="number">200</span> <span class="number">302</span> <span class="number">1h</span>;</span><br><span class="line">            <span class="comment"># 404 (Not Found) 状态码缓存 1 分钟，避免对不存在资源的重复请求冲击后端</span></span><br><span class="line">            <span class="attribute">proxy_cache_valid</span> <span class="number">404</span> <span class="number">1m</span>;</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 后端服务器地址组名或单个地址</span></span><br><span class="line">            <span class="comment"># 例如: http://backend_cluster;</span></span><br><span class="line">            <span class="comment"># upstream backend_cluster &#123; server 127.0.0.1:8080; server 127.0.0.1:8081; &#125;</span></span><br><span class="line">            <span class="attribute">proxy_pass</span> http://backend;</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 缓存锁 (Cache Lock): 防止缓存击穿</span></span><br><span class="line">            <span class="comment"># 当多个客户端同时请求一个未命中缓存的资源时，只有一个请求会穿透到后端</span></span><br><span class="line">            <span class="comment"># 其他请求会被锁定，直到第一个请求从后端获取到数据并写入缓存。</span></span><br><span class="line">            <span class="attribute">proxy_cache_lock</span> <span class="literal">on</span>;</span><br><span class="line">            <span class="comment"># 缓存锁超时时间：如果第一个获取数据的请求在5秒内没有完成，其他等待的请求也会穿透到后端</span></span><br><span class="line">            <span class="attribute">proxy_cache_lock_timeout</span> <span class="number">5s</span>;</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 可选: 添加 X-Cache-Status 响应头，方便调试和验证缓存是否命中</span></span><br><span class="line">            <span class="comment"># MISS: 未命中缓存</span></span><br><span class="line">            <span class="comment"># HIT: 命中缓存</span></span><br><span class="line">            <span class="comment"># EXPIRED: 缓存过期，但仍提供服务，同时异步更新</span></span><br><span class="line">            <span class="comment"># UPDATING: 缓存正在更新</span></span><br><span class="line">            <span class="comment"># STALE: 提供过期缓存</span></span><br><span class="line">            <span class="attribute">add_header</span> X-Cache-Status <span class="variable">$upstream_cache_status</span>;</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 可选: 设置转发给后端服务器的请求头</span></span><br><span class="line">            <span class="attribute">proxy_set_header</span> Host <span class="variable">$host</span>;</span><br><span class="line">            <span class="attribute">proxy_set_header</span> X-Real-IP <span class="variable">$remote_addr</span>;</span><br><span class="line">            <span class="attribute">proxy_set_header</span> X-Forwarded-For <span class="variable">$proxy_add_x_forwarded_for</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 这里可以配置其他的 location 块，比如专门处理 PHP 请求等</span></span><br><span class="line">        <span class="comment"># location ~ \.php$ &#123;</span></span><br><span class="line">        <span class="comment">#     include fastcgi_params;</span></span><br><span class="line">        <span class="comment">#     fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;</span></span><br><span class="line">        <span class="comment"># &#125;</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><strong>2、负载均衡策略</strong></p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 定义一个名为 &#x27;backend&#x27; 的上游服务器组</span></span><br><span class="line"><span class="section">upstream</span> backend &#123;</span><br><span class="line">    <span class="comment"># --- 负载均衡策略 ---</span></span><br><span class="line">    <span class="comment"># hash $remote_addr consistent; # 示例：一致性哈希，按客户端IP调度，实现会话粘性</span></span><br><span class="line">    <span class="comment"># 启用一致性哈希时，请注意其对服务器增减敏感性（虽然consistent会缓解）</span></span><br><span class="line">    <span class="comment"># 如果不指定，默认是轮询 (round-robin)</span></span><br><span class="line">    <span class="comment"># ip_hash; # 另一个实现会话粘性的方法，基于客户端IP哈希，但不保证一致性</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># --- 健康检查 (注意: 基础Nginx版本不自带复杂的健康检查) ---</span></span><br><span class="line">    <span class="comment"># Nginx Plus 或第三方模块 (如 Tengine) 提供更高级的健康检查功能。</span></span><br><span class="line">    <span class="comment"># 基础 Nginx 的健康检查体现在 server 指令的 max_fails 和 fail_timeout。</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 定义后端服务器</span></span><br><span class="line">    <span class="comment"># server &lt;address&gt; [parameters];</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 主服务器组</span></span><br><span class="line">    <span class="attribute">server</span> <span class="number">192.168.1.100:8080</span> weight=<span class="number">3</span> max_fails=<span class="number">3</span> fail_timeout=<span class="number">30s</span>;</span><br><span class="line">    <span class="attribute">server</span> <span class="number">192.168.1.101:8080</span> weight=<span class="number">3</span> max_fails=<span class="number">3</span> fail_timeout=<span class="number">30s</span>;</span><br><span class="line">    <span class="attribute">server</span> <span class="number">192.168.1.102:8080</span> weight=<span class="number">2</span> max_fails=<span class="number">3</span> fail_timeout=<span class="number">30s</span> backup; <span class="comment"># 备用服务器</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 可选: 连接池，减少与后端频繁创建/关闭连接的开销</span></span><br><span class="line">    <span class="comment"># keepalive 64; # 允许每个worker进程与后端服务器保持64个空闲长连接</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 可选: zone 用于动态配置和共享状态</span></span><br><span class="line">    <span class="comment"># zone backend_zone 128k;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 可选: 服务器宕机后的重试策略</span></span><br><span class="line">    <span class="comment"># proxy_next_upstream error timeout http_500 http_502 http_503 http_504;</span></span><br><span class="line">    <span class="comment"># proxy_next_upstream_tries 3;</span></span><br><span class="line">    <span class="comment"># proxy_next_upstream_timeout 10s;</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>第六部分：故障排查与性能调优</strong></p>
+<p><strong>常见问题及解决方案</strong></p>
+<p><strong>1、502 Bad Gateway</strong></p>
+<ul>
+<li>检查upstream服务状态</li>
+<li>调整proxy_connect_timeout</li>
+<li>增加worker_processes</li>
+</ul>
+<p><strong>2、连接数不够</strong></p>
+<ul>
+<li>调整worker_connections</li>
+<li>检查系统文件描述符限制</li>
+<li>优化keepalive配置</li>
+</ul>
+<p><strong>3、内存占用过高</strong></p>
+<ul>
+<li>调整缓存配置</li>
+<li>检查日志文件大小</li>
+<li>优化gzip配置</li>
+</ul>
+<p><strong>性能调优checklist</strong></p>
+<ul>
+<li>CPU核心数与worker_processes匹配</li>
+<li>文件描述符限制已调整</li>
+<li>内核网络参数已优化</li>
+<li>启用了适当的缓存策略</li>
+<li>配置了合理的超时时间</li>
+<li>实施了请求限流措施</li>
+<li>监控系统已部署</li>
+</ul>
+<p><strong>总结</strong></p>
+<p>通过本文的全面优化，你的Nginx服务器应该能够：</p>
+<ul>
+<li>支持10万+并发连接</li>
+<li>响应时间控制在100ms以内</li>
+<li>CPU使用率保持在合理范围</li>
+<li>内存使用更加高效ß</li>
+</ul>
+<p>记住，性能优化是一个持续的过程，需要根据实际业务场景不断调整。建议在生产环境应用前，先在测试环境进行充分验证。</p>
+<p><strong>实战提醒：</strong>配置修改后记得重载配置（nginx -s reload），并监控系统状态，确保优化效果符合预期。</p>
+<p>![图片](data:image&#x2F;svg+xml,%3C%3Fxml version&#x3D;’1.0’ encoding&#x3D;’UTF-8’%3F%3E%3Csvg width&#x3D;’1px’ height&#x3D;’1px’ viewBox&#x3D;’0 0 1 1’ version&#x3D;’1.1’ xmlns&#x3D;’<a target="_blank" rel="noopener" href="http://www.w3.org/2000/svg">http://www.w3.org/2000/svg</a>‘ xmlns:xlink&#x3D;’<a target="_blank" rel="noopener" href="http://www.w3.org/1999/xlink'%3E%3Ctitle%3E%3C/title%3E%3Cg">http://www.w3.org/1999/xlink&#39;%3E%3Ctitle%3E%3C/title%3E%3Cg</a> stroke&#x3D;’none’ stroke-width&#x3D;’1’ fill&#x3D;’none’ fill-rule&#x3D;’evenodd’ fill-opacity&#x3D;’0’%3E%3Cg transform&#x3D;’translate(-249.000000, -126.000000)’ fill&#x3D;’%23FFFFFF’%3E%3Crect x&#x3D;’249’ y&#x3D;’126’ width&#x3D;’1’ height&#x3D;’1’%3E%3C&#x2F;rect%3E%3C&#x2F;g%3E%3C&#x2F;g%3E%3C&#x2F;svg%3E)</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E6%8C%87%E6%A0%87%E7%B1%BB%E5%9E%8B/" rel="prev" title="指标类型">
+      <i class="fa fa-chevron-left"></i> 指标类型
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E5%BA%94%E7%94%A8%E7%9B%91%E6%8E%A7/" rel="next" title="应用监控">
+      应用监控 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Nginx-%E9%AB%98%E5%B9%B6%E5%8F%91"><span class="nav-number">1.</span> <span class="nav-text">Nginx 高并发</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

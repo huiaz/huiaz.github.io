@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="NFS 共享存储前面我们学习了 hostPath 与 Local PV 两种本地存储方式，但是平时我们的应用更多的是无状态服务，可能会同时发布在不同的节点上，这个时候本地存储就不适用了，往往就需要使用到共享存储了，比如最简单常用的网络共享存储 NFS，本节课我们就来介绍下如何在 Kubernetes 下面使用 NFS 共享存储。 安装我们这里为了演示方便，先使用相对简单的 NFS 这种存储资源，接">
+<meta property="og:type" content="article">
+<meta property="og:title" content="NFS 共享存储">
+<meta property="og:url" content="http://example.com/2025/09/11/NFS%20%E5%85%B1%E4%BA%AB%E5%AD%98%E5%82%A8/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="NFS 共享存储前面我们学习了 hostPath 与 Local PV 两种本地存储方式，但是平时我们的应用更多的是无状态服务，可能会同时发布在不同的节点上，这个时候本地存储就不适用了，往往就需要使用到共享存储了，比如最简单常用的网络共享存储 NFS，本节课我们就来介绍下如何在 Kubernetes 下面使用 NFS 共享存储。 安装我们这里为了演示方便，先使用相对简单的 NFS 这种存储资源，接">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/3ov1bv.png">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:50:24.302Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://mudutestmenu.mudu.tv/upload/3ov1bv.png">
+
+<link rel="canonical" href="http://example.com/2025/09/11/NFS%20%E5%85%B1%E4%BA%AB%E5%AD%98%E5%82%A8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>NFS 共享存储 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/NFS%20%E5%85%B1%E4%BA%AB%E5%AD%98%E5%82%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          NFS 共享存储
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:50:24" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E5%AD%98%E5%82%A8/" itemprop="url" rel="index"><span itemprop="name">存储</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>11k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>10 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="NFS-共享存储"><a href="#NFS-共享存储" class="headerlink" title="NFS 共享存储"></a>NFS 共享存储</h1><p>前面我们学习了 hostPath 与 Local PV 两种本地存储方式，但是平时我们的应用更多的是无状态服务，可能会同时发布在不同的节点上，这个时候本地存储就不适用了，往往就需要使用到共享存储了，比如最简单常用的网络共享存储 NFS，本节课我们就来介绍下如何在 Kubernetes 下面使用 NFS 共享存储。</p>
+<h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><p>我们这里为了演示方便，先使用相对简单的 NFS 这种存储资源，接下来我们在节点 <code>192.168.31.31</code> 上来安装 NFS 服务，数据目录：<code>/var/lib/k8s/data/</code></p>
+<p>关闭防火墙</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜ systemctl stop firewalld.service</span><br><span class="line">➜ systemctl disable firewalld.service</span><br></pre></td></tr></table></figure>
+
+
+
+<p>安装配置 nfs</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">➜ yum -y install nfs-utils rpcbind</span><br></pre></td></tr></table></figure>
+
+
+
+<p>共享目录设置权限：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜ mkdir -p /var/lib/k8s/data</span><br><span class="line">➜ chmod 755 /var/lib/k8s/data/</span><br></pre></td></tr></table></figure>
+
+
+
+<p>配置 nfs，nfs 的默认配置文件在 <code>/etc/exports</code> 文件下，在该文件中添加下面的配置信息：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜ vi /etc/exports</span><br><span class="line">/var/lib/k8s/data  *(rw,sync,no_root_squash)</span><br></pre></td></tr></table></figure>
+
+
+
+<p>配置说明：</p>
+<ul>
+<li><code>/var/lib/k8s/data</code>：是共享的数据目录</li>
+<li>*：表示任何人都有权限连接，当然也可以是一个网段，一个 IP，也可以是域名</li>
+<li>rw：读写的权限</li>
+<li>sync：表示文件同时写入硬盘和内存</li>
+<li>no_root_squash：当登录 NFS 主机使用共享目录的使用者是 root 时，其权限将被转换成为匿名使用者，通常它的 UID 与 GID，都会变成 nobody 身份</li>
+</ul>
+<p>当然 nfs 的配置还有很多，感兴趣的同学可以在网上去查找一下。</p>
+<p>启动服务 nfs 需要向 rpc 注册，rpc 一旦重启了，注册的文件都会丢失，向他注册的服务都需要重启 注意启动顺序，先启动 rpcbind</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">➜ systemctl start rpcbind.service</span><br><span class="line">➜ systemctl enable rpcbind</span><br><span class="line">➜ systemctl status rpcbind</span><br><span class="line">● rpcbind.service - RPC bind service</span><br><span class="line">   Loaded: loaded (/usr/lib/systemd/system/rpcbind.service; disabled; vendor preset: enabled)</span><br><span class="line">   Active: active (running) since Tue 2018-07-10 20:57:29 CST; 1min 54s ago</span><br><span class="line">  Process: 17696 ExecStart=/sbin/rpcbind -w $RPCBIND_ARGS (code=exited, status=0/SUCCESS)</span><br><span class="line"> Main PID: 17697 (rpcbind)</span><br><span class="line">    Tasks: 1</span><br><span class="line">   Memory: 1.1M</span><br><span class="line">   CGroup: /system.slice/rpcbind.service</span><br><span class="line">           └─17697 /sbin/rpcbind -w</span><br><span class="line"></span><br><span class="line">Jul 10 20:57:29 master systemd[1]: Starting RPC bind service...</span><br><span class="line">Jul 10 20:57:29 master systemd[1]: Started RPC bind service.</span><br></pre></td></tr></table></figure>
+
+
+
+<p>看到上面的 Started 证明启动成功了。</p>
+<p>然后启动 nfs 服务：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">➜ systemctl start nfs.service</span><br><span class="line">➜ systemctl enable nfs</span><br><span class="line">➜ systemctl status nfs</span><br><span class="line">● nfs-server.service - NFS server and services</span><br><span class="line">   Loaded: loaded (/usr/lib/systemd/system/nfs-server.service; enabled; vendor preset: disabled)</span><br><span class="line">  Drop-In: /run/systemd/generator/nfs-server.service.d</span><br><span class="line">           └─order-with-mounts.conf</span><br><span class="line">   Active: active (exited) since Tue 2018-07-10 21:35:37 CST; 14s ago</span><br><span class="line"> Main PID: 32067 (code=exited, status=0/SUCCESS)</span><br><span class="line">   CGroup: /system.slice/nfs-server.service</span><br><span class="line"></span><br><span class="line">Jul 10 21:35:37 master systemd[1]: Starting NFS server and services...</span><br><span class="line">Jul 10 21:35:37 master systemd[1]: Started NFS server and services.</span><br></pre></td></tr></table></figure>
+
+
+
+<p>同样看到 Started 则证明 NFS Server 启动成功了。</p>
+<p>另外我们还可以通过下面的命令确认下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">➜ rpcinfo -p|grep nfs</span><br><span class="line">    100003    3   tcp   2049  nfs</span><br><span class="line">    100003    4   tcp   2049  nfs</span><br><span class="line">    100227    3   tcp   2049  nfs_acl</span><br><span class="line">    100003    3   udp   2049  nfs</span><br><span class="line">    100003    4   udp   2049  nfs</span><br><span class="line">    100227    3   udp   2049  nfs_acl</span><br></pre></td></tr></table></figure>
+
+
+
+<p>查看具体目录挂载权限：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜ cat /var/lib/nfs/etab</span><br><span class="line">/var/lib/k8s/data       *(rw,sync,wdelay,hide,nocrossmnt,secure,no_root_squash,no_all_squash,no_subtree_check,secure_locks,acl,no_pnfs,anonuid=65534,anongid=65534,sec=sys,rw,secure,no_root_squash,no_all_squash)</span><br></pre></td></tr></table></figure>
+
+
+
+<p>到这里我们就把 nfs server 给安装成功了，然后就是前往节点安装 nfs 的客户端来验证，安装 nfs 当前也需要先关闭防火墙：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜ systemctl stop firewalld.service</span><br><span class="line">➜ systemctl disable firewalld.service</span><br></pre></td></tr></table></figure>
+
+
+
+<p>然后安装 nfs</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">➜ yum -y install nfs-utils rpcbind</span><br></pre></td></tr></table></figure>
+
+
+
+<p>安装完成后，和上面的方法一样，先启动 rpc、然后启动 nfs：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">➜ systemctl start rpcbind.service</span><br><span class="line">➜ systemctl enable rpcbind.service</span><br><span class="line">➜ systemctl start nfs.service</span><br><span class="line">➜ systemctl enable nfs.service</span><br></pre></td></tr></table></figure>
+
+
+
+<p>挂载数据目录 客户端启动完成后，我们在客户端来挂载下 nfs 测试下，首先检查下 nfs 是否有共享目录：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">➜ showmount -e 192.168.31.31</span><br><span class="line">Export list for 192.168.31.31:</span><br><span class="line">/var/lib/k8s/data *</span><br></pre></td></tr></table></figure>
+
+
+
+<p>然后我们在客户端上新建目录：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">➜ mkdir -p /root/course/kubeadm/data</span><br></pre></td></tr></table></figure>
+
+
+
+<p>将 nfs 共享目录挂载到上面的目录：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">➜ mount -t nfs 192.168.31.31:/var/lib/k8s/data /root/course/kubeadm/data</span><br></pre></td></tr></table></figure>
+
+
+
+<p>挂载成功后，在客户端上面的目录中新建一个文件，然后我们观察下 nfs 服务端的共享目录下面是否也会出现该文件：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">➜ touch /root/course/kubeadm/data/test.txt</span><br></pre></td></tr></table></figure>
+
+
+
+<p>然后在 nfs 服务端查看：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">➜ ls -ls /var/lib/k8s/data/</span><br><span class="line">total 4</span><br><span class="line">4 -rw-r--r--. 1 root root 4 Jul 10 21:50 test.txt</span><br></pre></td></tr></table></figure>
+
+
+
+<p>如果上面出现了 test.txt 的文件，那么证明我们的 nfs 挂载成功了。</p>
+<h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><p>前面我们已经了解到了 PV、PVC、StorgeClass 的使用，那么我们的 NFS 又应该如何在 Kubernetes 中使用呢？</p>
+<p>同样创建一个如下所示 nfs 类型的 PV 资源对象：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># nfs-volume.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PersistentVolume</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nfs-pv</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">storageClassName:</span> <span class="string">manual</span></span><br><span class="line">  <span class="attr">capacity:</span></span><br><span class="line">    <span class="attr">storage:</span> <span class="string">1Gi</span></span><br><span class="line">  <span class="attr">accessModes:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">ReadWriteOnce</span></span><br><span class="line">  <span class="attr">persistentVolumeReclaimPolicy:</span> <span class="string">Retain</span></span><br><span class="line">  <span class="attr">nfs:</span></span><br><span class="line">    <span class="attr">path:</span> <span class="string">/var/lib/k8s/data/</span> <span class="comment"># 指定nfs的挂载点</span></span><br><span class="line">    <span class="attr">server:</span> <span class="number">192.168</span><span class="number">.31</span><span class="number">.31</span> <span class="comment"># 指定nfs服务地址</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PersistentVolumeClaim</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nfs-pvc</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">storageClassName:</span> <span class="string">manual</span></span><br><span class="line">  <span class="attr">accessModes:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">ReadWriteOnce</span></span><br><span class="line">  <span class="attr">resources:</span></span><br><span class="line">    <span class="attr">requests:</span></span><br><span class="line">      <span class="attr">storage:</span> <span class="string">1Gi</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>我们知道用户真正使用的是 PVC，而要使用 PVC 的前提就是必须要先和某个符合条件的 PV 进行一一绑定，比如存储容器、访问模式，以及 PV 和 PVC 的 storageClassName 字段必须一样，这样才能够进行绑定，当 PVC 和 PV 绑定成功后就可以直接使用这个 PVC 对象了：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># nfs-pod.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">test-volumes</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">volumes:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">nfs</span></span><br><span class="line">      <span class="attr">persistentVolumeClaim:</span></span><br><span class="line">        <span class="attr">claimName:</span> <span class="string">nfs-pvc</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">web</span></span><br><span class="line">      <span class="attr">image:</span> <span class="string">nginx</span></span><br><span class="line">      <span class="attr">ports:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">web</span></span><br><span class="line">          <span class="attr">containerPort:</span> <span class="number">80</span></span><br><span class="line">      <span class="attr">volumeMounts:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">nfs</span></span><br><span class="line">          <span class="attr">subPath:</span> <span class="string">test-volumes</span></span><br><span class="line">          <span class="attr">mountPath:</span> <span class="string">&#x27;/usr/share/nginx/html&#x27;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>直接创建上面的资源对象即可：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl apply -f volume.yaml</span><br><span class="line">➜ kubectl apply -f pod.yaml</span><br><span class="line">➜ kubectl get pv nfs-pv</span><br><span class="line">NAME     CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM             STORAGECLASS   REASON   AGE</span><br><span class="line">nfs-pv   1Gi        RWO            Retain           Bound    default/nfs-pvc   manual                  119s</span><br><span class="line">➜ kubectl get pvc nfs-pvc</span><br><span class="line">NAME      STATUS   VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   AGE</span><br><span class="line">nfs-pvc   Bound    nfs-pv   1Gi        RWO            manual         2m5s</span><br><span class="line">➜ kubectl get pods test-volumes -o wide</span><br><span class="line">NAME           READY   STATUS    RESTARTS   AGE     IP             NODE    NOMINATED NODE   READINESS GATES</span><br><span class="line">test-volumes   1/1     Running   0          2m30s   10.244.2.174   node2   &lt;none&gt;           &lt;none&gt;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>由于我们这里 PV 中的数据为空，所以挂载后会将 nginx 容器中的 <code>/usr/share/nginx/html</code> 目录覆盖，那么访问应用的时候就没有内容了：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">➜ curl http://10.244.2.174</span><br><span class="line">&lt;html&gt;</span><br><span class="line">&lt;head&gt;&lt;title&gt;403 Forbidden&lt;/title&gt;&lt;/head&gt;</span><br><span class="line">&lt;body&gt;</span><br><span class="line">&lt;center&gt;&lt;h1&gt;403 Forbidden&lt;/h1&gt;&lt;/center&gt;</span><br><span class="line">&lt;hr&gt;&lt;center&gt;nginx/1.21.5&lt;/center&gt;</span><br><span class="line">&lt;/body&gt;</span><br><span class="line">&lt;/html&gt;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>我们可以在 PV 目录中添加一些内容：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在 nfs 服务器上面执行</span></span><br><span class="line">➜ echo &quot;nfs pv content&quot; &gt; /var/lib/k8s/data/test-volumes/index.html</span><br><span class="line">➜ curl http://10.244.2.174</span><br><span class="line">nfs pv content</span><br></pre></td></tr></table></figure>
+
+
+
+<p>然后重新访问就有数据了，而且当我们的 Pod 应用挂掉或者被删掉重新启动后数据还是存在的，因为数据已经持久化了。</p>
+<p>上面的示例中需要我们手动去创建 PV 来和 PVC 进行绑定，有的场景下面需要自动创建 PV，这个时候就需要使用到 StorageClass 了，并且需要一个对应的 provisioner 来自动创建 PV，比如这里我们使用的 NFS 存储，则可以使用 <a target="_blank" rel="noopener" href="https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner">nfs-subdir-external-provisioner</a> 这个 Provisioner，它使用现有的和已配置的 NFS 服务器来支持通过 PVC 动态配置 PV，持久卷配置为 <code>$&#123;namespace&#125;-$&#123;pvcName&#125;-$&#123;pvName&#125;</code>，首先我们使用 Helm Chart 来安装：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜ helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/</span><br><span class="line">➜ helm upgrade --install nfs-subdir-external-provisioner nfs-subdir-external-provisioner/nfs-subdir-external-provisioner --set nfs.server=192.168.31.31 --set nfs.path=/var/lib/k8s/data --set image.repository=cnych/nfs-subdir-external-provisioner --set storageClass.defaultClass=true -n kube-system</span><br></pre></td></tr></table></figure>
+
+
+
+<p>上面的命令会在 <code>kube-system</code> 命名空间下安装 <code>nfs-subdir-external-provisioner</code>，并且会创建一个名为 <code>nfs-client</code> 默认的 StorageClass：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl get sc</span><br><span class="line">NAME                   PROVISIONER                                     RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE</span><br><span class="line">local-storage          kubernetes.io/no-provisioner                    Delete          WaitForFirstConsumer   false                  2d20h</span><br><span class="line">➜ nfs-client (default)   cluster.local/nfs-subdir-external-provisioner   Delete          Immediate              true                   38d</span><br><span class="line">➜ kubectl get sc nfs-client -o yaml</span><br><span class="line">apiVersion: storage.k8s.io/v1</span><br><span class="line">kind: StorageClass</span><br><span class="line">metadata:</span><br><span class="line">  ......</span><br><span class="line">  name: nfs-client</span><br><span class="line">parameters:</span><br><span class="line">  archiveOnDelete: &quot;true&quot;</span><br><span class="line">provisioner: cluster.local/nfs-subdir-external-provisioner</span><br><span class="line">reclaimPolicy: Delete</span><br><span class="line">volumeBindingMode: Immediate</span><br><span class="line">allowVolumeExpansion: true</span><br></pre></td></tr></table></figure>
+
+
+
+<p>这样当以后我们创建的 PVC 中如果没有指定具体的 <code>StorageClass</code> 的时候，则会使用上面的 SC 自动创建一个 PV。比如我们创建一个如下所示的 PVC：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># nfs-sc-pvc</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PersistentVolumeClaim</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nfs-sc-pvc</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="comment"># storageClassName: nfs-client  # 不指定则使用默认的 SC</span></span><br><span class="line">  <span class="attr">accessModes:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">ReadWriteOnce</span></span><br><span class="line">  <span class="attr">resources:</span></span><br><span class="line">    <span class="attr">requests:</span></span><br><span class="line">      <span class="attr">storage:</span> <span class="string">1Gi</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>直接创建上面的 PVC 资源对象后就会自动创建一个 PV 与其进行绑定：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl get pvc nfs-sc-pvc</span><br><span class="line">NAME        STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE</span><br><span class="line">nfs-sc-pvc   Bound    pvc-ed8e2fb7-897d-465f-8735-81d52c91d074   1Gi        RWO            nfs-client     15s</span><br></pre></td></tr></table></figure>
+
+
+
+<p>对应自动创建的 PV 如下所示：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl get pv pvc-ed8e2fb7-897d-465f-8735-81d52c91d074 -o yaml</span><br><span class="line">apiVersion: v1</span><br><span class="line">kind: PersistentVolume</span><br><span class="line">metadata:</span><br><span class="line">  annotations:</span><br><span class="line">    pv.kubernetes.io/provisioned-by: cluster.local/nfs-subdir-external-provisioner</span><br><span class="line">  creationTimestamp: &quot;2022-02-13T09:44:13Z&quot;</span><br><span class="line">  finalizers:</span><br><span class="line">  - kubernetes.io/pv-protection</span><br><span class="line">  name: pvc-ed8e2fb7-897d-465f-8735-81d52c91d074</span><br><span class="line">  resourceVersion: &quot;3954045&quot;</span><br><span class="line">  uid: 6d66e6ea-888b-4bc0-bab0-9aca3a536cb5</span><br><span class="line">spec:</span><br><span class="line">  accessModes:</span><br><span class="line">  - ReadWriteOnce</span><br><span class="line">  capacity:</span><br><span class="line">    storage: 1Gi</span><br><span class="line">  claimRef:</span><br><span class="line">    apiVersion: v1</span><br><span class="line">    kind: PersistentVolumeClaim</span><br><span class="line">    name: nfs-sc-pvc</span><br><span class="line">    namespace: default</span><br><span class="line">    resourceVersion: &quot;3954040&quot;</span><br><span class="line">    uid: ed8e2fb7-897d-465f-8735-81d52c91d074</span><br><span class="line">  nfs:</span><br><span class="line">    path: /var/lib/k8s/data/default-nfs-sc-pvc-pvc-ed8e2fb7-897d-465f-8735-81d52c91d074</span><br><span class="line">    server: 192.168.31.31</span><br><span class="line">  persistentVolumeReclaimPolicy: Delete</span><br><span class="line">  storageClassName: nfs-client</span><br><span class="line">  volumeMode: Filesystem</span><br><span class="line">status:</span><br><span class="line">  phase: Bound</span><br></pre></td></tr></table></figure>
+
+
+
+<p>挂载的 nfs 目录为 <code>/var/lib/k8s/data/default-nfs-sc-pvc-pvc-ed8e2fb7-897d-465f-8735-81d52c91d074</code>，和上面的 <code>$&#123;namespace&#125;-$&#123;pvcName&#125;-$&#123;pvName&#125;</code> 规范一致的。</p>
+<h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2><p>我们只是在 volumes 中指定了我们上面创建的 PVC 对象，当这个 Pod 被创建之后， kubelet 就会把这个 PVC 对应的这个 NFS 类型的 Volume（PV）挂载到这个 Pod 容器中的目录中去。前面我们也提到了这样的话对于普通用户来说完全就不用关心后面的具体存储在 NFS 还是 Ceph 或者其他了，只需要直接使用 PVC 就可以了，因为真正的存储是需要很多相关的专业知识的，这样就完全职责分离解耦了。</p>
+<p>普通用户直接使用 PVC 没有问题，但是也会出现一个问题，那就是当普通用户创建一个 PVC 对象的时候，这个时候系统里面并没有合适的 PV 来和它进行绑定，因为 PV 大多数情况下是管理员给我们创建的，这个时候启动 Pod 肯定就会失败了，如果现在管理员如果去创建一个对应的 PV 的话，PVC 和 PV 当然就可以绑定了，然后 Pod 也会自动的启动成功，这是因为在 Kubernetes 中有一个专门处理持久化存储的控制器 Volume Controller，这个控制器下面有很多个控制循环，其中一个就是用于 PV 和 PVC 绑定的 <code>PersistentVolumeController</code>。</p>
+<p><code>PersistentVolumeController</code> 会不断地循环去查看每一个 PVC，是不是已经处于 Bound（已绑定）状态。如果不是，那它就会遍历所有的、可用的 PV，并尝试将其与未绑定的 PVC 进行绑定，这样，Kubernetes 就可以保证用户提交的每一个 PVC，只要有合适的 PV 出现，它就能够很快进入绑定状态。而所谓将一个 PV 与 PVC 进行<strong>绑定</strong>，其实就是将这个 PV 对象的名字，填在了 PVC 对象的 <code>spec.volumeName</code> 字段上。</p>
+<p>PV 和 PVC 绑定上了，那么又是如何将容器里面的数据进行持久化的呢，我们知道 Docker 的 Volume 挂载其实就是<strong>将一个宿主机上的目录和一个容器里的目录绑定挂载在了一起</strong>，具有持久化功能当然就是指的宿主机上面的这个目录了，当容器被删除或者在其他节点上重建出来以后，这个目录里面的内容依然存在，所以一般情况下实现持久化是需要一个远程存储的，比如 NFS、Ceph 或者云厂商提供的磁盘等等。所以接下来需要做的就是持久化宿主机目录这个过程。</p>
+<p>当 Pod 被调度到一个节点上后，节点上的 kubelet 组件就会为这个 Pod 创建它的 Volume 目录，默认情况下 kubelet 为 Volume 创建的目录在 kubelet 工作目录下面：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/var/lib/kubelet/pods/&lt;Pod的ID&gt;/volumes/kubernetes.io~&lt;Volume类型&gt;/&lt;Volume名字&gt;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>比如上面我们创建的 Pod 对应的 Volume 目录完整路径为：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/var/lib/kubelet/pods/d4fcdb11-baf7-43d9-8d7d-3ede24118e08/volumes/kubernetes.io~nfs/nfs-pv</span><br></pre></td></tr></table></figure>
+
+
+
+<p>!!! info “提示” 要获取 Pod 的唯一标识 uid，可通过命令 <code>kubectl get pod pod名 -o jsonpath=&#123;.metadata.uid&#125;</code> 获取。</p>
+<p>然后就需要根据我们的 Volume 类型来决定需要做什么操作了，假如后端存储使用的 Ceph RBD，那么 kubelet 就需要先将 Ceph 提供的 RBD 挂载到 Pod 所在的宿主机上面，这个阶段在 Kubernetes 中被称为 <strong>Attach 阶段</strong>。Attach 阶段完成后，为了能够使用这个块设备，kubelet 还要进行第二个操作，即：<strong>格式化</strong>这个块设备，然后将它<strong>挂载</strong>到宿主机指定的挂载点上。这个挂载点，也就是上面我们提到的 Volume 的宿主机的目录。将块设备格式化并挂载到 Volume 宿主机目录的操作，在 Kubernetes 中被称为 <strong>Mount 阶段</strong>。但是对于我们这里使用的 NFS 就更加简单了， 因为 NFS 存储并没有一个设备需要挂载到宿主机上面，所以这个时候 kubelet 就会直接进入第二个 <code>Mount</code> 阶段，相当于直接在宿主机上面执行如下的命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mount -t nfs 192.168.31.31:/var/lib/k8s/data/ /var/lib/kubelet/pods/d4fcdb11-baf7-43d9-8d7d-3ede24118e08/volumes/kubernetes.io~nfs/nfs-pv</span><br></pre></td></tr></table></figure>
+
+
+
+<p>同样可以在测试的 Pod 所在节点查看 Volume 的挂载信息：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">➜ findmnt /var/lib/kubelet/pods/d4fcdb11-baf7-43d9-8d7d-3ede24118e08/volumes/kubernetes.io~nfs/nfs-pv</span><br><span class="line">TARGET                                                                               SOURCE                 FSTYPE OPTIONS</span><br><span class="line">/var/lib/kubelet/pods/d4fcdb11-baf7-43d9-8d7d-3ede24118e08/volumes/kubernetes.io~nfs/nfs-pv</span><br><span class="line">                                                                                     192.168.31.31:/var/lib/k8s/data/ nfs4   rw,relatime,</span><br></pre></td></tr></table></figure>
+
+
+
+<p>我们可以看到这个 Volume 被挂载到了 NFS（192.168.31.31:&#x2F;var&#x2F;lib&#x2F;k8s&#x2F;data&#x2F;）下面，以后我们在这个目录里写入的所有文件，都会被保存在远程 NFS 服务器上。</p>
+<p>这样在经过了上面的阶段过后，我们就得到了一个持久化的宿主机上面的 Volume 目录了，接下来 kubelet 只需要把这个 Volume 目录挂载到容器中对应的目录即可，这样就可以为 Pod 里的容器挂载这个持久化的 Volume 了，这一步其实也就相当于执行了如下所示的命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">docker 或者 nerdctl</span></span><br><span class="line">docker run -v /var/lib/kubelet/pods/&lt;Pod的ID&gt;/volumes/kubernetes.io~&lt;Volume类型&gt;/&lt;Volume名字&gt;:/&lt;容器内的目标目录&gt; 我的镜像 ...</span><br></pre></td></tr></table></figure>
+
+
+
+<p>整个存储的架构可以用下图来说明： <img data-src="https://mudutestmenu.mudu.tv/upload/3ov1bv.png" alt="存储架构"></p>
+<ul>
+<li>PV Controller：负责 PV&#x2F;PVC 的绑定，并根据需求进行数据卷的 Provision&#x2F;Delete 操作</li>
+<li>AD Controller：负责存储设备的 Attach&#x2F;Detach 操作，将设备挂载到目标节点</li>
+<li>Volume Manager：管理卷的 Mount&#x2F;Unmount 操作、卷设备的格式化等操作</li>
+<li>Volume Plugin：扩展各种存储类型的卷管理能力，实现第三方存储的各种操作能力和 Kubernetes 存储系统结合</li>
+</ul>
+<p>我们上面使用的 NFS 就属于 <code>In-Tree</code> 这种方式，<code>In-Tree</code> 就是在 Kubernetes 源码内部实现的，和 Kubernetes 一起发布、管理的，但是更新迭代慢、灵活性比较差，另外一种方式 <code>Out-Of-Tree</code> 是独立于 Kubernetes 的，目前主要有 <code>CSI</code> 和 <code>FlexVolume</code> 两种机制，开发者可以根据自己的存储类型实现不同的存储插件接入到 Kubernetes 中去，其中 <code>CSI</code> 是现在也是以后主流的方式，接下来我们会主要介绍 <code>CSI</code> 这种存储插件的使用。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Longhorn/" rel="prev" title="Longhorn">
+      <i class="fa fa-chevron-left"></i> Longhorn
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/NAT/" rel="next" title="NAT">
+      NAT <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#NFS-%E5%85%B1%E4%BA%AB%E5%AD%98%E5%82%A8"><span class="nav-number">1.</span> <span class="nav-text">NFS 共享存储</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85"><span class="nav-number">1.1.</span> <span class="nav-text">安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8"><span class="nav-number">1.2.</span> <span class="nav-text">使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8E%9F%E7%90%86"><span class="nav-number">1.3.</span> <span class="nav-text">原理</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

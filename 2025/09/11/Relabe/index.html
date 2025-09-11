@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Relabeling 重新标记Relabeling 重新标记用于配置 Prometheus 元信息的方式，它是转换和过滤 Prometheus 中 label 标签对象的核心，本章节我们将了解 Relabeling 规则的工作原理，并能够将它们应用于不同的场景中。 概述Prometheus 发现、抓取和处理不同类型的 label 标签对象，根据标签值操作或过滤这些对象非常有用，比如：  只监视具有">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Relabe">
+<meta property="og:url" content="http://example.com/2025/09/11/Relabe/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="Relabeling 重新标记Relabeling 重新标记用于配置 Prometheus 元信息的方式，它是转换和过滤 Prometheus 中 label 标签对象的核心，本章节我们将了解 Relabeling 规则的工作原理，并能够将它们应用于不同的场景中。 概述Prometheus 发现、抓取和处理不同类型的 label 标签对象，根据标签值操作或过滤这些对象非常有用，比如：  只监视具有">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/9244dg.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/aupaw0.png">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:53:45.451Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta property="article:tag" content="Prometheus">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://mudutestmenu.mudu.tv/upload/9244dg.png">
+
+<link rel="canonical" href="http://example.com/2025/09/11/Relabe/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Relabe | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Relabe/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Relabe
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:53:45" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/" itemprop="url" rel="index"><span itemprop="name">k8s-monitor</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/Prometheus/" itemprop="url" rel="index"><span itemprop="name">Prometheus</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/Prometheus/%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0/" itemprop="url" rel="index"><span itemprop="name">服务发现</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>7k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>6 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Relabeling-重新标记"><a href="#Relabeling-重新标记" class="headerlink" title="Relabeling 重新标记"></a>Relabeling 重新标记</h1><p>Relabeling 重新标记用于配置 Prometheus 元信息的方式，它是转换和过滤 Prometheus 中 label 标签对象的核心，本章节我们将了解 Relabeling 规则的工作原理，并能够将它们应用于不同的场景中。</p>
+<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>Prometheus 发现、抓取和处理不同类型的 label 标签对象，根据标签值操作或过滤这些对象非常有用，比如：</p>
+<ul>
+<li>只监视具有特定服务发现注解的某些目标，通常在服务发现中使用</li>
+<li>向目标抓取请求添加 HTTP 查询参数</li>
+<li>仅存储从指定目标中提取样本的子集</li>
+<li>将抓取序列的两个标签值合并为一个标签</li>
+</ul>
+<p>Relabeling 是作为一系列转换步骤实现的，我们可以在 Prometheus 的配置文件中应用这些步骤来过滤或修改标记对象，我们可以对一下类型的标记对象应用 Relabeling 操作：</p>
+<ul>
+<li>发现的抓取目标（<code>relabel_configs</code>）</li>
+<li>抓取的单个样本（<code>metric_relabel_configs</code>）</li>
+<li>发送给 Alertmanager 的报警（<code>alert_relabel_configs</code>）</li>
+<li>写到远程存储的样本（<code>write_relabel_configs</code>）</li>
+</ul>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/9244dg.png" alt="relabel configs"></p>
+<blockquote>
+<p>平时在配置监控目标的时候我们更多的会使用 <code>relabel_configs</code> 与 <code>metric_relabel_configs</code> 两个配置，采集数据之前，通过 <code>relabel_configs</code>，采集数据之后，写入存储之前，通过 <code>metric_relabel_configs</code> 进行配置。</p>
+</blockquote>
+<p>所有这些 relabeling 配置块都是相同类型的 <code>relabel_config</code>，每个配置块都由一个规则列表组成，这些规则依次应用与每个标记的对象。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/aupaw0.png" alt="relabeling rules"></p>
+<p>例如，一个 relabeling 规则可以根据正则表达式的匹配来保留或丢弃一个对象，可以修改其标签，也可以将一整组标签映射到另一组。一旦一个 relabeling 步骤决定放弃一个有标签的对象，就不会对这个对象执行进一步的 relabeling 步骤，它将从输出列表中删除。</p>
+<h2 id="隐藏的标签与元数据"><a href="#隐藏的标签与元数据" class="headerlink" title="隐藏的标签与元数据"></a>隐藏的标签与元数据</h2><p>以双下划线<code>__</code>开头的标签属于特殊的标签，它们在重新标记后会被删除。标记对象的来源最初可以附加这些<strong>隐藏</strong>的标签，以提供关于标记对象的额外元数据，这些特殊的标签可以在 relabeling 阶段被用来对对象的标签进行修改。</p>
+<p>对于抓取指标，其中就包含一些隐藏的标签，可以用来控制目标应该如何被抓取。</p>
+<ul>
+<li><code>__address__</code>：包含应该被抓取目标的地址，它最初默认为服务发现机制提供的 <code>&lt;host&gt;:&lt;port&gt;</code>，如果在此之前没有明确地将实例标签 instance 设置为其他值，那么在 relabeling 之后，Prometheus 会将 instance 标签设置为 <code>__address__</code> 的值。</li>
+<li><code>__scheme__</code>：抓取目标的请求模式，包括 http 与 https，默认为 http。</li>
+<li><code>__metrics_path__</code>：表示用于采集指标的 HTTP 路径，默认为 <code>/metrics</code>。</li>
+<li><code>__param_&lt;name&gt;</code>: 包含 HTTP 查询参数名称和它们的值。</li>
+</ul>
+<p>上面的这些标签都可以使用 relabeling 规则来设置或覆盖，这样就可以为抓取目标进行自定义抓取行为。</p>
+<p>此外，服务发现机制也可以提供一组以 <code>__meta_</code> 开头的标签，包含关于目标的特定发现元数据。例如，当发现 Kubernetes 集群中的 pod 时，Kubernetes 服务发现引擎将为每个 pod 目标提供一个 <code>__meta_kubernetes_pod_name</code> 的标签，包含被发现的 pod 的名字，以及一个 <code>__meta_kubernetes_pod_ready</code> 标签，表明 pod 是否处于就绪状态，关于服务发现生成的元标签可以查看官方文档 <a target="_blank" rel="noopener" href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config</a> 了解更多。</p>
+<p>如果一个 relabeling 步骤需要将一个值保存到一个临时标签中（以便在随后的步骤中处理），那么我们可以使用 <code>__tmp</code> 标签名称前缀进行标记，以 <code>__tmp</code> 开通的标签是不会被 Prometheus 本身使用的。</p>
+<h2 id="规则"><a href="#规则" class="headerlink" title="规则"></a>规则</h2><p>Relabeling 规则主要由以下的一些配置属性组成，但对于每种类型的操作，只使用这些字段的一个子集。</p>
+<ul>
+<li><code>action</code>：执行的 relabeling 动作，可选值包括 <code>replace</code>、<code>keep</code>、<code>drop</code>、<code>hashmod</code>、<code>labelmap</code>、<code>labeldrop</code> 或者 <code>labelkeep</code>，默认值为 <code>replace</code>。</li>
+<li><code>separator</code>：分隔符，一个字符串，用于在连接源标签 <code>source_labels</code> 时分隔它们，默认为<code>;</code>。</li>
+<li><code>source_labels</code>：源标签，使用配置的分隔符串联的标签名称列表，并与提供的正则表达式进行匹配。</li>
+<li><code>target_label</code>：目标标签，当使用 replace 或者 hashmod 动作时，应该被覆盖的标签名。</li>
+<li><code>regex</code>：正则表达式，用于匹配串联的源标签，默认为 <code>(.*)</code>，匹配任何源标签。</li>
+<li><code>modulus</code>：模数，串联的源标签哈希值的模，主要用于 Prometheus 水平分片。</li>
+<li><code>replacement</code>：replacement 字符串，写在目标标签上，用于替换 relabeling 动作，它可以参考由 regex 捕获的正则表达式捕获组。</li>
+</ul>
+<h3 id="设置或替换标签值"><a href="#设置或替换标签值" class="headerlink" title="设置或替换标签值"></a>设置或替换标签值</h3><p>Relabeling 的一个常见操作就是设置或者覆盖一个标签的值，我们可以通过 <code>replace</code> 这个操作来完成，如果没有指定 <code>action</code> 字段，则默认就是 <code>replace</code>。</p>
+<p>一个 <code>replace</code> 动作的规则配置方式如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">action:</span> <span class="string">replace</span></span><br><span class="line"><span class="attr">source_labels:</span> [<span class="string">&lt;source</span> <span class="string">label</span> <span class="string">name</span> <span class="string">list&gt;</span>]</span><br><span class="line"><span class="attr">separator:</span> <span class="string">&lt;source</span> <span class="string">labels</span> <span class="string">separator&gt;</span> <span class="comment"># 默认为 &#x27;;&#x27;</span></span><br><span class="line"><span class="attr">regex:</span> <span class="string">&lt;regular</span> <span class="string">expression&gt;</span> <span class="comment"># 默认为 &#x27;(.*)&#x27; (匹配任何值))</span></span><br><span class="line"><span class="attr">replacement:</span> <span class="string">&lt;replacement</span> <span class="string">string&gt;</span> <span class="comment"># 默认为 &#x27;$1&#x27; (使用第一个捕获组作为 replacement)</span></span><br><span class="line"><span class="attr">target_label:</span> <span class="string">&lt;target</span> <span class="string">label&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>该操作按顺序执行以下步骤：</p>
+<ul>
+<li>使用提供的 separator 分隔符将 source_labels 中的标签列表值连接起来</li>
+<li>测试 regex 中的正则表达式是否与上一步连接的字符串匹配，如果不匹配，就跳到下一个 relabeling 规则，不替换任何东西</li>
+<li>如果正则匹配，就提取正则表达式捕获组中的值，并将 replacement 字符串中对这些组的引用($1, $2, …)用它们的值替换</li>
+<li>把经过正则表达式替换的 replacement 字符串作为 target_label 标签的新值存储起来</li>
+</ul>
+<p>下面我们来简单看一看 <code>replace</code> 操作的示例。</p>
+<p><strong>设置一个固定的标签值</strong></p>
+<p>最简单的 replace 例子就是将一个标签设置为一个固定的值，比如你可以把 <code>env</code> 标签设置为 <code>production</code>：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">action:</span> <span class="string">replace</span></span><br><span class="line"><span class="attr">replacement:</span> <span class="string">production</span></span><br><span class="line"><span class="attr">target_label:</span> <span class="string">env</span></span><br></pre></td></tr></table></figure>
+
+<p>这里我们并没有设置规则的大部分属性，这是因为大部分的默认值已经可以满足这里的需求了，这里会将替换的字符串 <code>production</code> 作为 target_label 标签 <code>env</code> 的新值存储起来，也就是将 <code>env</code> 标签的值设置为 <code>production</code>。</p>
+<p><strong>替换抓取任务端口</strong></p>
+<p>另一个稍微复杂的示例是重写一个被抓取任务实例的端口，我们可以用一个固定的 80 端口来替换 <code>__address__</code> 标签的端口：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">action:</span> <span class="string">replace</span></span><br><span class="line"><span class="attr">source_labels:</span> [<span class="string">__address__</span>]</span><br><span class="line"><span class="attr">regex:</span> <span class="string">([^:]+)(?::\d+)?</span> <span class="comment"># 第一个捕获组匹配的是 host，第二个匹配的是 port 端口。</span></span><br><span class="line"><span class="attr">replacement:</span> <span class="string">&#x27;$1:80&#x27;</span></span><br><span class="line"><span class="attr">target_label:</span> <span class="string">__address__</span></span><br></pre></td></tr></table></figure>
+
+<p>这里我们替换的源标签为 <code>__address__</code>，然后通过正则表达式 <code>([^:]+)(?::\d+)?</code> 进行匹配，这里有两个捕获组，第一个匹配的是 host($1)，第二个匹配的是端口($2)，所以在 <code>replacement</code> 字符串中我们保留第一个捕获组 $1，然后将端口更改为 80，这样就可以将 <code>__address__</code> 的实例端口更改为 80 端口，然后重新写会 <code>__address__</code> 这个目标标签。</p>
+<h3 id="保留或丢弃对象"><a href="#保留或丢弃对象" class="headerlink" title="保留或丢弃对象"></a>保留或丢弃对象</h3><p>Relabeling 另一个常见的用例就是过滤有标签的对象，<code>keep</code> 或 <code>drop</code> 这两个动作可以来完成，使用这两个操作，可以帮助我们完成如下的一些操作：</p>
+<ul>
+<li>来自服务发现的哪些目标应该被抓取</li>
+<li>从目标中抓取哪些指定的序列样本，或将其发送到远程存储</li>
+<li>哪些报警要发送到 Alertmanager</li>
+</ul>
+<p>一个 <code>keep</code> 动作的配置规则如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">action:</span> <span class="string">keep</span></span><br><span class="line"><span class="attr">source_labels:</span> [<span class="string">&lt;source</span> <span class="string">label</span> <span class="string">name</span> <span class="string">list&gt;</span>]</span><br><span class="line"><span class="attr">separator:</span> <span class="string">&lt;source</span> <span class="string">labels</span> <span class="string">separator&gt;</span> <span class="comment"># 默认为 &#x27;;&#x27;</span></span><br><span class="line"><span class="attr">regex:</span> <span class="string">&lt;regular</span> <span class="string">expression&gt;</span> <span class="comment"># 默认为 &#x27;(.*)&#x27; (匹配任何值)</span></span><br></pre></td></tr></table></figure>
+
+<p><code>keep</code> 操作同样按顺序执行如下步骤：</p>
+<ul>
+<li>使用 separator 分隔符将 source_labels 中列出的标签值连接起来</li>
+<li>测试 regex 中的正则表达式是否与上一步的连接字符串匹配</li>
+<li>如果不匹配，该对象将从最终输出列表中删除</li>
+<li>如果匹配，则保留该对象</li>
+</ul>
+<p><code>drop</code> 动作和 <code>keep</code> 类似，只是它是删除一个对象而不是保留。</p>
+<p>同样接下来看一看 <code>keep</code> 和 <code>drop</code> 的示例。</p>
+<p><strong>只抓取具有注解的目标</strong></p>
+<p>在服务发现的时候，我们可能只想抓取那些具有特定元数据标签的目标，例如，下面的配置让我们只抓取 Kubernetes 中具有 <code>example.io/should_be_scraped=true</code> 这个 annotation 的目标。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">action:</span> <span class="string">keep</span></span><br><span class="line"><span class="attr">source_labels:</span></span><br><span class="line">  [<span class="string">__meta_kubernetes_service_annotation_example_io_should_be_scraped</span>]</span><br><span class="line"><span class="attr">regex:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p>Kubernetes 服务发现机制下面会将 labels 标签与 annotation 作为元信息输出到 Prometheus，这些元信息都包含 <code>__meta_</code> 前缀，这里我们的配置就是保留具有 <code>example.io/should_be_scraped</code> 这个 annotation 标签，且值为 <code>true</code> 的目标。</p>
+<p><strong>只存储特定的指标</strong></p>
+<p>当使用 <code>metric_relabel_configs</code> 来控制目标的抓取方式时，我们可以使用下面的规则来只存储指标名称以 <code>api_</code> 或 <code>http_</code> 开头的指标。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">action:</span> <span class="string">keep</span></span><br><span class="line"><span class="attr">source_labels:</span> [<span class="string">__name__</span>]</span><br><span class="line"><span class="attr">regex:</span> <span class="string">&#x27;(api_|http_).*&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="标签集映射"><a href="#标签集映射" class="headerlink" title="标签集映射"></a>标签集映射</h3><p>有时我们可能想把源标签的值映射到一组新的标签中去，这个时候就可以使用 <code>labelmap</code> 这个动作了。<code>labelmap</code> 最常用的使用场景就是从服务发现中获取一组隐藏的或临时的元数据标签，并将它们映射到新的目标标签中。</p>
+<p><code>labelmap</code> 动作的配置规则如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">action:</span> <span class="string">labelmap</span></span><br><span class="line"><span class="attr">regex:</span> <span class="string">&lt;regular</span> <span class="string">expression&gt;</span> <span class="comment"># 默认为 &#x27;(.*)&#x27;</span></span><br><span class="line"><span class="attr">replacement:</span> <span class="string">&lt;replacement</span> <span class="string">string&gt;</span> <span class="comment"># 默认为 &#x27;$1&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>和前面的一些 action 不同，<code>labelmap</code> 是对标签名而不是标签值进行重新匹配和操作。<code>labelmap</code> 按顺序执行以下步骤：</p>
+<ul>
+<li>将 regex 中的正则表达式与所有标签名进行匹配</li>
+<li>将匹配的标签名的任何匹配值复制到由 <code>replacement</code> 字符串决定的新的标签名中</li>
+</ul>
+<p>下面我们看一个使用 <code>labelmap</code> 映射 Kubernetes Service 标签的示例。当使用基于 Kubernetes 的服务发现来发现 pod 端点时，我们可能希望每个端点的最终目标标签也包含 Kubernetes Service 标签，这样可以更好的区分端点数据。Kubernetes 服务发现机制会将这些标签添加到 Prometheus 中去，标签名称格式为 <code>__meta_kubernetes_service_label_&lt;labelname&gt;</code>，我们可以提取这些元数据标签中的 <code>&lt;labelname&gt;</code> 部分，并将相应的标签值映射到一组以 <code>k8s_</code> 为前缀的新标签名称上，如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">action:</span> <span class="string">labelmap</span></span><br><span class="line"><span class="attr">regex:</span> <span class="string">__meta_kubernetes_service_label_(.+)</span></span><br><span class="line"><span class="attr">replacement:</span> <span class="string">&#x27;k8s_$1&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>通过上面的 <code>labelmap</code> 操作，regex 正则表达式中匹配标签名，然后将标签名对应的值复制到 <code>k8s_$1</code> 的新标签中，<code>$1</code> 就是匹配的标签名这个捕获组。</p>
+<h3 id="保留或删除标签"><a href="#保留或删除标签" class="headerlink" title="保留或删除标签"></a>保留或删除标签</h3><p>有的时候我们也有保留或删除一些标签的需求，比如有的目标在时间序列上提供了许多额外的标签，这些标签用途不大，这个时候我们就可以使用 <code>labelkeep</code> 和 <code>labeldrop</code> 这两个操作，使用这两个操作可以有选择地保留或删除一些标签。</p>
+<p><code>labelkeep</code> 的配置规则如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">action:</span> <span class="string">labelkeep</span></span><br><span class="line"><span class="attr">regex:</span> <span class="string">&lt;regular</span> <span class="string">expression&gt;</span> <span class="comment"># 默认为&#x27;(.*)&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>一样 <code>labelkeep</code> 按顺序执行下面的步骤：</p>
+<ul>
+<li>首先将 regex 中的正则表达式与所有标签名称进行匹配</li>
+<li>它只保留那些匹配的标签</li>
+</ul>
+<p><code>labeldrop</code> 与 <code>labelkeep</code> 类似，只是它是删除那些匹配正则表达式的标签而不是保留。</p>
+<p>下面我们看一看 <code>labelkeep/labeldrop</code> 操作的简单示例。</p>
+<p><strong>从报警中删除高可用副本标签</strong></p>
+<p>当运行两个相同的 Prometheus 作高可用的时候，通常两个服务器都被配置为有一个外部标签（通过全局配置选项 <code>external_labels</code>），表明它们代表哪个副本，例如：<code>replica: A</code> 和 <code>replica: B</code>，在从两个副本向同一个 Alertmanager 实例发送报警之前，Prometheus 需要删除这个副本标签，这样 Alertmanager 就不会把收到的报警看成不同的报警了，否则可能我们会收到两个同样的报警通知。这个时候我们就可以使用 <code>labeldrop</code> 来实现这个操作。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">action:</span> <span class="string">labeldrop</span></span><br><span class="line"><span class="attr">regex:</span> <span class="string">replica</span></span><br></pre></td></tr></table></figure>
+
+<p>这条配置规则很简单的，就是匹配 <code>replica</code> 这个标签，然后执行 <code>labeldrop</code> 删除标签动作即可。</p>
+<p><strong>删除指标中不需要的标签</strong></p>
+<p>有的时候我们抓取的指标在每个时间序列上都附加了一些额外的标签，这些标签对于我们来说用处不大，还会增加 Prometheus 的存储压力，所以我们可以想办法删除不需要的额外标签。</p>
+<p>比如现在我们想要删除一 <code>info_</code> 开头的标签，我们可以使用下面的配置规则来完成。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">action:</span> <span class="string">labeldrop</span></span><br><span class="line"><span class="attr">regex:</span> <span class="string">info_.*</span></span><br></pre></td></tr></table></figure>
+
+<p>同样也只是配置一个要删除的目标标签的正则表达式即可，只要匹配了的标签都会执行 <code>labeldrop</code> 操作将该标签进行删除。</p>
+<h3 id="标签值哈希和分片"><a href="#标签值哈希和分片" class="headerlink" title="标签值哈希和分片"></a>标签值哈希和分片</h3><p>在一些场景下我们可能需要运行多个几乎相同的 Prometheus 副本来横向扩展，每个副本只抓取部分目标，这样可以降低 Prometheus 的压力，在这种情况下 <code>hashmod</code> 操作有助于我们对目标进行分片操作。</p>
+<p><code>hashmod</code> 的配置规则如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">action:</span> <span class="string">hashmod</span></span><br><span class="line"><span class="attr">source_labels:</span> [<span class="string">&lt;source</span> <span class="string">label</span> <span class="string">name</span> <span class="string">list&gt;</span>]</span><br><span class="line"><span class="attr">modulus:</span> <span class="string">&lt;modulus</span> <span class="string">value&gt;</span></span><br><span class="line"><span class="attr">target_label:</span> <span class="string">&lt;target</span> <span class="string">label&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>该操作按顺序执行下面的步骤：</p>
+<ul>
+<li>首先使用分隔符将源标签集 source_labels 的值连接起来</li>
+<li>计算连接后的字符串的哈希值</li>
+<li>将 <code>modulus</code> 中提供的模数应用于哈希值，以将哈希值限制在 0 和<code>modulus-1</code>之间</li>
+<li>将上一步的模数值存储在 target_label 目标标签中</li>
+</ul>
+<p>使用 <code>hashmod</code> 的主要场景是将一个服务的整体目标进行分片，用于水平扩展 Prometheus，通过首先根据每个目标的一个或多个标签计算基于哈希的模数来实现的，然后只保留具有特定输出模数值的目标。比如为了根据 <code>instance</code> 标签对目标进行分片，只保留分片 2 的实例，我们可以把 <code>hashmod</code> 和 <code>keep</code> 结合起来操作。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">action:</span> <span class="string">hashmod</span></span><br><span class="line">  <span class="attr">source_labels:</span> [<span class="string">instance</span>]</span><br><span class="line">  <span class="attr">modulus:</span> <span class="number">10</span></span><br><span class="line">  <span class="attr">target_label:</span> <span class="string">__tmp_hashmod</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">action:</span> <span class="string">keep</span></span><br><span class="line">  <span class="attr">source_labels:</span> [<span class="string">__tmp_hashmod</span>]</span><br><span class="line">  <span class="attr">regex:</span> <span class="number">2</span></span><br></pre></td></tr></table></figure>
+
+<p>首先通过 <code>hashmod</code> 操作对 <code>instance</code> 标签进去哈希操作，将取模后的值存储在临时标签 <code>__tmp_hashmod</code> 中，然后通过第二个 <code>keep</code> 操作，只保留分片数为 2 的指标，这样就达到了分片的目的。</p>
+<p>到这里我们基本上就了解了 relabeling 的使用，接下来我们可以来了解下服务发现在 Prometheus 中的使用。、</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+              <a href="/tags/Prometheus/" rel="tag"># Prometheus</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/ReplicaSet/" rel="prev" title="ReplicaSet">
+      <i class="fa fa-chevron-left"></i> ReplicaSet
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/RIR%20%E5%8D%8F%E8%AE%AE/" rel="next" title="RIR 协议">
+      RIR 协议 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Relabeling-%E9%87%8D%E6%96%B0%E6%A0%87%E8%AE%B0"><span class="nav-number">1.</span> <span class="nav-text">Relabeling 重新标记</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9A%90%E8%97%8F%E7%9A%84%E6%A0%87%E7%AD%BE%E4%B8%8E%E5%85%83%E6%95%B0%E6%8D%AE"><span class="nav-number">1.2.</span> <span class="nav-text">隐藏的标签与元数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A7%84%E5%88%99"><span class="nav-number">1.3.</span> <span class="nav-text">规则</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE%E6%88%96%E6%9B%BF%E6%8D%A2%E6%A0%87%E7%AD%BE%E5%80%BC"><span class="nav-number">1.3.1.</span> <span class="nav-text">设置或替换标签值</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BF%9D%E7%95%99%E6%88%96%E4%B8%A2%E5%BC%83%E5%AF%B9%E8%B1%A1"><span class="nav-number">1.3.2.</span> <span class="nav-text">保留或丢弃对象</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%87%E7%AD%BE%E9%9B%86%E6%98%A0%E5%B0%84"><span class="nav-number">1.3.3.</span> <span class="nav-text">标签集映射</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BF%9D%E7%95%99%E6%88%96%E5%88%A0%E9%99%A4%E6%A0%87%E7%AD%BE"><span class="nav-number">1.3.4.</span> <span class="nav-text">保留或删除标签</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%87%E7%AD%BE%E5%80%BC%E5%93%88%E5%B8%8C%E5%92%8C%E5%88%86%E7%89%87"><span class="nav-number">1.3.5.</span> <span class="nav-text">标签值哈希和分片</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="ReplicaSet (简称 RS) 和 ReplicationController (简称 RC) 的区别从功能上讲，ReplicaSet 和 ReplicationController 的核心目标是一致的：  确保指定数量的 Pod 副本始终在运行。 当 Pod 发生故障、删除或节点失效时，它们会自动创建新的 Pod 以维持所需数量。 当副本数量过多时，它们会终止多余的 Pod。  但它们之间">
+<meta property="og:type" content="article">
+<meta property="og:title" content="k8s ReplicaSet">
+<meta property="og:url" content="http://example.com/2025/09/11/k8s%20ReplicaSet/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="ReplicaSet (简称 RS) 和 ReplicationController (简称 RC) 的区别从功能上讲，ReplicaSet 和 ReplicationController 的核心目标是一致的：  确保指定数量的 Pod 副本始终在运行。 当 Pod 发生故障、删除或节点失效时，它们会自动创建新的 Pod 以维持所需数量。 当副本数量过多时，它们会终止多余的 Pod。  但它们之间">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:43:46.715Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/k8s%20ReplicaSet/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>k8s ReplicaSet | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/k8s%20ReplicaSet/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          k8s ReplicaSet
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:43:46" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E9%9D%A2%E8%AF%95%E9%A2%98/" itemprop="url" rel="index"><span itemprop="name">面试题</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>2 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="ReplicaSet-简称-RS-和-ReplicationController-简称-RC-的区别"><a href="#ReplicaSet-简称-RS-和-ReplicationController-简称-RC-的区别" class="headerlink" title="ReplicaSet (简称 RS) 和 ReplicationController (简称 RC) 的区别"></a>ReplicaSet (简称 RS) 和 ReplicationController (简称 RC) 的区别</h3><p>从功能上讲，ReplicaSet 和 ReplicationController 的核心目标是<strong>一致的</strong>：</p>
+<ul>
+<li><strong>确保指定数量的 Pod 副本始终在运行。</strong></li>
+<li><strong>当 Pod 发生故障、删除或节点失效时，它们会自动创建新的 Pod 以维持所需数量。</strong></li>
+<li><strong>当副本数量过多时，它们会终止多余的 Pod。</strong></li>
+</ul>
+<p>但它们之间存在关键的区别，主要体现在<strong>Selector (选择器)</strong> 的支持上。</p>
+<hr>
+<h4 id="1-ReplicationController-RC"><a href="#1-ReplicationController-RC" class="headerlink" title="1. ReplicationController (RC)"></a>1. ReplicationController (RC)</h4><ul>
+<li><strong>出现时间：</strong> 这是 Kubernetes 最早引入的控制器之一 (Kubernetes v1.0 之前)。</li>
+<li><strong>选择器 (Selector) 限制：</strong> 只支持<strong>基于等值（Equality-based）</strong>的选择器。这意味着你只能通过精确匹配标签的值来选择 Pod。<ul>
+<li>例如：<code>selector: app=nginx</code>，它会选择所有带有 <code>app: nginx</code> 标签的 Pod。</li>
+<li>它<strong>不支持</strong>集合基（Set-based）的选择器，例如 <code>app in (nginx, apache)</code> 或 <code>version notin (v1, v2)</code>。</li>
+</ul>
+</li>
+<li><strong>Pod 模板（Pod Template）：</strong> 负责创建新的 Pod，但不会创建与自身标签匹配的 Pod。</li>
+<li><strong>用途：</strong> 随着 Kubernetes 的发展，RC 逐渐被弃用，被功能更强大的 ReplicaSet 取代。</li>
+</ul>
+<hr>
+<h4 id="2-ReplicaSet-RS"><a href="#2-ReplicaSet-RS" class="headerlink" title="2. ReplicaSet (RS)"></a>2. ReplicaSet (RS)</h4><ul>
+<li><strong>出现时间：</strong> Kubernetes v1.2 引入，作为 ReplicationController 的<strong>下一代和推荐替代品</strong>。</li>
+<li><strong>选择器 (Selector) 功能增强：</strong> 支持<strong>集合基（Set-based）</strong>选择器。这是 RS 相对于 RC 最主要也是最重要的改进。<ul>
+<li>例如：<ul>
+<li><code>selector: matchLabels: &#123;app: nginx&#125;</code> （仍然支持等值匹配，因为等值匹配是集合匹配的子集）</li>
+<li><code>selector: matchExpressions:</code><ul>
+<li><code>- &#123;key: tier, operator: In, values: [frontend, backend]&#125;</code></li>
+<li><code>- &#123;key: version, operator: NotIn, values: [v1beta1]&#125;</code></li>
+<li><code>- &#123;key: environment, operator: Exists&#125;</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>这种更灵活的选择器能力使得 ReplicaSet 可以匹配更复杂的 Pod 标签条件，更好地管理 Pod。</li>
+</ul>
+</li>
+<li><strong>Pod 模板（Pod Template）：</strong> 可以创建一个 Pod 模板，但不会创建与自身标签匹配的 Pod。</li>
+<li><strong>独立使用：</strong> ReplicaSet 可以独立使用，但通常不建议直接独立使用。</li>
+<li><strong>与 Desployment 的关系：</strong> ReplicaSet 主要由 <strong>Deployment</strong> 资源自动化管理。当我们创建一个 Deployment 时，Deployment 会在底层自动创建和管理 ReplicaSet。这是 ReplicaSet 最常见的用法。Deployment 负责滚动更新、回滚等高级功能，而 ReplicaSet 则负责维护Pod副本数量的稳定。</li>
+</ul>
+<hr>
+<h3 id="总结比较表格"><a href="#总结比较表格" class="headerlink" title="总结比较表格"></a>总结比较表格</h3><table>
+<thead>
+<tr>
+<th align="left">特性</th>
+<th align="left">ReplicationController (RC)</th>
+<th align="left">ReplicaSet (RS)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>引入时间</strong></td>
+<td align="left">早期版本 (v1.0 之前)</td>
+<td align="left">v1.2 及之后</td>
+</tr>
+<tr>
+<td align="left"><strong>选择器支持</strong></td>
+<td align="left"><strong>仅支持基于等值</strong> (<code>key=value</code>)</td>
+<td align="left"><strong>支持等值和集合基</strong> (<code>key in (v1,v2)</code>, <code>key exists</code>)</td>
+</tr>
+<tr>
+<td align="left"><strong>功能</strong></td>
+<td align="left">确保Pod副本数</td>
+<td align="left">确保Pod副本数</td>
+</tr>
+<tr>
+<td align="left"><strong>用途场景</strong></td>
+<td align="left">已被取代，不推荐直接使用</td>
+<td align="left"><strong>通常由 Deployment 管理</strong>，极少直接独立使用</td>
+</tr>
+<tr>
+<td align="left"><strong>推荐程度</strong></td>
+<td align="left"><strong>不推荐</strong></td>
+<td align="left"><strong>推荐</strong> (作为 Deployment 的一部分)</td>
+</tr>
+</tbody></table>
+<hr>
+<h3 id="实际运维中的意义"><a href="#实际运维中的意义" class="headerlink" title="实际运维中的意义"></a>实际运维中的意义</h3><p>作为运维工程师，你需要知道：</p>
+<ol>
+<li><strong>几乎所有情况下，你都应该使用 Deployment 而不是直接使用 ReplicaSet 或 ReplicationController。</strong> Deployment 提供了自动化的滚动更新、回滚、暂停&#x2F;继续等高级功能，这些功能是 ReplicaSet 和 ReplicationController 不具备的，但它们是现代化应用部署和管理所必需的。</li>
+<li><strong>Deployment 在底层会自动为你创建和管理 ReplicaSet。</strong> 当你执行一次滚动更新时，Deployment 会生成一个新的 ReplicaSet 来管理新版本的 Pod，并逐步减少旧 ReplicaSet 的 Pod 数量，直到新版本完全取代旧版本。</li>
+<li><strong>了解 ReplicaSet 的存在对于排查问题很重要。</strong> 当 Deployment 出现问题时，你需要知道它背后是由 ReplicaSet 来控制 Pod 的数量和状态的。你可以通过 <code>kubectl get rs</code> 和 <code>kubectl describe deploy &lt;deployment-name&gt;</code> 来查看 Deployment 控制的 ReplicaSet 及其状态。</li>
+</ol>
+<p>因此，理解 RC 和 RS 的区别，特别是 RS 强大的选择器以及它与 Deployment 之间的关系，对于高效地管理和排查 Kubernetes 集群中的应用程序是至关重要的。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/k8s%20ResourceQuota/" rel="prev" title="k8s ResourceQuota">
+      <i class="fa fa-chevron-left"></i> k8s ResourceQuota
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/ingress-nginx/" rel="next" title="ingress-nginx">
+      ingress-nginx <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#ReplicaSet-%E7%AE%80%E7%A7%B0-RS-%E5%92%8C-ReplicationController-%E7%AE%80%E7%A7%B0-RC-%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-number">1.</span> <span class="nav-text">ReplicaSet (简称 RS) 和 ReplicationController (简称 RC) 的区别</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-ReplicationController-RC"><span class="nav-number">1.1.</span> <span class="nav-text">1. ReplicationController (RC)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-ReplicaSet-RS"><span class="nav-number">1.2.</span> <span class="nav-text">2. ReplicaSet (RS)</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%E6%AF%94%E8%BE%83%E8%A1%A8%E6%A0%BC"><span class="nav-number">2.</span> <span class="nav-text">总结比较表格</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E9%99%85%E8%BF%90%E7%BB%B4%E4%B8%AD%E7%9A%84%E6%84%8F%E4%B9%89"><span class="nav-number">3.</span> <span class="nav-text">实际运维中的意义</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

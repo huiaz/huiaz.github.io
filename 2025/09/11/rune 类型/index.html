@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="rune 类型的定义rune 是 Go 语言中的一个内置类型，它的定义非常简单： 1type rune &#x3D; int32  也就是说，rune 在底层就是一个 int32 类型的别名。但它有着特殊的语义含义。 rune 的意义：Unicode 码点rune 类型的主要意义在于它代表一个 Unicode 码点（Code Point）。 什么是 Unicode 码点？Unicode 是一个国际标准，旨在">
+<meta property="og:type" content="article">
+<meta property="og:title" content="rune 类型">
+<meta property="og:url" content="http://example.com/2025/09/11/rune%20%E7%B1%BB%E5%9E%8B/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="rune 类型的定义rune 是 Go 语言中的一个内置类型，它的定义非常简单： 1type rune &#x3D; int32  也就是说，rune 在底层就是一个 int32 类型的别名。但它有着特殊的语义含义。 rune 的意义：Unicode 码点rune 类型的主要意义在于它代表一个 Unicode 码点（Code Point）。 什么是 Unicode 码点？Unicode 是一个国际标准，旨在">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:54:34.187Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Go">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/rune%20%E7%B1%BB%E5%9E%8B/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>rune 类型 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/rune%20%E7%B1%BB%E5%9E%8B/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          rune 类型
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:54:34" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/go/" itemprop="url" rel="index"><span itemprop="name">go</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.8k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="rune-类型的定义"><a href="#rune-类型的定义" class="headerlink" title="rune 类型的定义"></a>rune 类型的定义</h2><p><code>rune</code> 是 Go 语言中的一个内置类型，它的定义非常简单：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> <span class="type">rune</span> = <span class="type">int32</span></span><br></pre></td></tr></table></figure>
+
+<p>也就是说，<code>rune</code> 在底层就是一个 <code>int32</code> 类型的别名。但它有着特殊的语义含义。</p>
+<h2 id="rune-的意义：Unicode-码点"><a href="#rune-的意义：Unicode-码点" class="headerlink" title="rune 的意义：Unicode 码点"></a>rune 的意义：Unicode 码点</h2><p><code>rune</code> 类型的主要意义在于它<strong>代表一个 Unicode 码点（Code Point）</strong>。</p>
+<h3 id="什么是-Unicode-码点？"><a href="#什么是-Unicode-码点？" class="headerlink" title="什么是 Unicode 码点？"></a>什么是 Unicode 码点？</h3><p>Unicode 是一个国际标准，旨在为世界上所有的文字和符号提供一个唯一的数字标识。这个唯一的数字就叫做<strong>码点（Code Point）</strong>。</p>
+<p>例如：</p>
+<ul>
+<li>字母 ‘A’ 的 Unicode 码点是 U+0041</li>
+<li>汉字 ‘中’ 的 Unicode 码点是 U+4E2D</li>
+<li>表情符号 ‘😀’ 的 Unicode 码点是 U+1F600</li>
+</ul>
+<h2 id="为什么需要-rune-类型？"><a href="#为什么需要-rune-类型？" class="headerlink" title="为什么需要 rune 类型？"></a>为什么需要 rune 类型？</h2><p>这要从 Go 语言中字符串的内部表示说起。</p>
+<h3 id="Go-字符串的内部表示"><a href="#Go-字符串的内部表示" class="headerlink" title="Go 字符串的内部表示"></a>Go 字符串的内部表示</h3><p>在 Go 语言中，<strong>字符串底层是以 UTF-8 编码的字节序列（<code>[]byte</code>）存储的</strong>。</p>
+<p>UTF-8 是一种可变长度的编码方式：</p>
+<ul>
+<li>ASCII 字符（如英文字母、数字）占用 1 个字节</li>
+<li>大部分常用汉字占用 3 个字节</li>
+<li>一些生僻字符或表情符号可能占用 4 个字节</li>
+</ul>
+<h3 id="问题的出现"><a href="#问题的出现" class="headerlink" title="问题的出现"></a>问题的出现</h3><p>当我们需要遍历字符串或获取字符串长度时，这种可变长度的编码方式会带来问题：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    s := <span class="string">&quot;Hello世界&quot;</span></span><br><span class="line">  </span><br><span class="line">    <span class="comment">// len(s) 返回的是字节数，不是字符数</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;字节长度:&quot;</span>, <span class="built_in">len</span>(s)) <span class="comment">// 输出: 11 (5个英文字母 + 2个汉字*3字节)</span></span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 使用传统的 range 遍历字符串</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;按字节遍历:&quot;</span>)</span><br><span class="line">    <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; <span class="built_in">len</span>(s); i++ &#123;</span><br><span class="line">        fmt.Printf(<span class="string">&quot;索引 %d: 字节 %v\n&quot;</span>, i, s[i])</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 输出:</span></span><br><span class="line">    <span class="comment">// 索引 0: 字节 72 (H)</span></span><br><span class="line">    <span class="comment">// 索引 1: 字节 101 (e)</span></span><br><span class="line">    <span class="comment">// 索引 2: 字节 108 (l)</span></span><br><span class="line">    <span class="comment">// 索引 3: 字节 108 (l)</span></span><br><span class="line">    <span class="comment">// 索引 4: 字节 111 (o)</span></span><br><span class="line">    <span class="comment">// 索引 5: 字节 228 (世的第一个字节)</span></span><br><span class="line">    <span class="comment">// 索引 6: 字节 184 (世的第二个字节)</span></span><br><span class="line">    <span class="comment">// 索引 7: 字节 173 (世的第三个字节)</span></span><br><span class="line">    <span class="comment">// 索引 8: 字节 231 (界的第一个字节)</span></span><br><span class="line">    <span class="comment">// 索引 9: 字节 149 (界的第二个字节)</span></span><br><span class="line">    <span class="comment">// 索引 10: 字节 140 (界的第三个字节)</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，按字节遍历并不能正确处理多字节的 Unicode 字符。</p>
+<h3 id="rune-如何解决这个问题"><a href="#rune-如何解决这个问题" class="headerlink" title="rune 如何解决这个问题"></a>rune 如何解决这个问题</h3><p>使用 <code>rune</code> 类型，我们可以正确地处理 Unicode 字符：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    s := <span class="string">&quot;Hello世界&quot;</span></span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 将字符串转换为 []rune 切片</span></span><br><span class="line">    runes := []<span class="type">rune</span>(s)</span><br><span class="line">    fmt.Println(<span class="string">&quot;rune 长度(字符数):&quot;</span>, <span class="built_in">len</span>(runes)) <span class="comment">// 输出: 7 (5个英文字母 + 2个汉字)</span></span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 按 rune 遍历</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;按 rune 遍历:&quot;</span>)</span><br><span class="line">    <span class="keyword">for</span> i, r := <span class="keyword">range</span> runes &#123;</span><br><span class="line">        fmt.Printf(<span class="string">&quot;索引 %d: rune %U 字符 %c\n&quot;</span>, i, r, r)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 输出:</span></span><br><span class="line">    <span class="comment">// 索引 0: rune U+0048 字符 H</span></span><br><span class="line">    <span class="comment">// 索引 1: rune U+0065 字符 e</span></span><br><span class="line">    <span class="comment">// 索引 2: rune U+006C 字符 l</span></span><br><span class="line">    <span class="comment">// 索引 3: rune U+006C 字符 l</span></span><br><span class="line">    <span class="comment">// 索引 4: rune U+006F 字符 o</span></span><br><span class="line">    <span class="comment">// 索引 5: rune U+4E16 字符 世</span></span><br><span class="line">    <span class="comment">// 索引 6: rune U+754C 字符 界</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="rune-的主要用途"><a href="#rune-的主要用途" class="headerlink" title="rune 的主要用途"></a>rune 的主要用途</h2><h3 id="1-正确处理-Unicode-字符串长度"><a href="#1-正确处理-Unicode-字符串长度" class="headerlink" title="1. 正确处理 Unicode 字符串长度"></a>1. 正确处理 Unicode 字符串长度</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    s := <span class="string">&quot;Go语言真棒！😀&quot;</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;字节长度: %d\n&quot;</span>, <span class="built_in">len</span>(s))           <span class="comment">// 字节长度: 17</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;字符长度: %d\n&quot;</span>, <span class="built_in">len</span>([]<span class="type">rune</span>(s)))   <span class="comment">// 字符长度: 8</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-字符串索引和切片操作"><a href="#2-字符串索引和切片操作" class="headerlink" title="2. 字符串索引和切片操作"></a>2. 字符串索引和切片操作</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    s := <span class="string">&quot;Hello世界&quot;</span></span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 获取前5个字符（而不是前5个字节）</span></span><br><span class="line">    runes := []<span class="type">rune</span>(s)</span><br><span class="line">    firstFiveChars := <span class="type">string</span>(runes[:<span class="number">5</span>])</span><br><span class="line">    fmt.Println(firstFiveChars) <span class="comment">// 输出: Hello</span></span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 获取第6个字符（第一个汉字）</span></span><br><span class="line">    sixthChar := <span class="type">string</span>(runes[<span class="number">5</span>])</span><br><span class="line">    fmt.Println(sixthChar) <span class="comment">// 输出: 世</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="3-字符处理和遍历"><a href="#3-字符处理和遍历" class="headerlink" title="3. 字符处理和遍历"></a>3. 字符处理和遍历</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    s := <span class="string">&quot;Go语言😀&quot;</span></span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 正确的字符遍历方式</span></span><br><span class="line">    <span class="keyword">for</span> i, r := <span class="keyword">range</span> s &#123; <span class="comment">// range string 直接返回 rune 和字节索引</span></span><br><span class="line">        fmt.Printf(<span class="string">&quot;字节索引 %d: 字符 %c (rune %U)\n&quot;</span>, i, r, r)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 输出:</span></span><br><span class="line">    <span class="comment">// 字节索引 0: 字符 G (rune U+0047)</span></span><br><span class="line">    <span class="comment">// 字节索引 1: 字符 o (rune U+006F)</span></span><br><span class="line">    <span class="comment">// 字节索引 2: 字符 语 (rune U+8BED)</span></span><br><span class="line">    <span class="comment">// 字节索引 5: 字符 言 (rune U+8A00)</span></span><br><span class="line">    <span class="comment">// 字节索引 8: 字符 😀 (rune U+1F600)</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-字符检测和转换"><a href="#4-字符检测和转换" class="headerlink" title="4. 字符检测和转换"></a>4. 字符检测和转换</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;unicode&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    runes := []<span class="type">rune</span>(<span class="string">&quot;Hello世界123&quot;</span>)</span><br><span class="line">  </span><br><span class="line">    <span class="keyword">for</span> _, r := <span class="keyword">range</span> runes &#123;</span><br><span class="line">        <span class="keyword">switch</span> &#123;</span><br><span class="line">        <span class="keyword">case</span> unicode.IsLetter(r):</span><br><span class="line">            fmt.Printf(<span class="string">&quot;%c 是字母\n&quot;</span>, r)</span><br><span class="line">        <span class="keyword">case</span> unicode.IsDigit(r):</span><br><span class="line">            fmt.Printf(<span class="string">&quot;%c 是数字\n&quot;</span>, r)</span><br><span class="line">        <span class="keyword">case</span> unicode.IsSpace(r):</span><br><span class="line">            fmt.Printf(<span class="string">&quot;%c 是空格\n&quot;</span>, r)</span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">            fmt.Printf(<span class="string">&quot;%c 是其他字符\n&quot;</span>, r)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p><code>rune</code> 类型在 Go 语言中的核心意义是：</p>
+<ol>
+<li><strong>正确表示 Unicode 字符</strong>：每个 <code>rune</code> 代表一个完整的 Unicode 码点。</li>
+<li><strong>解决多字节字符处理问题</strong>：使我们能够准确计算字符串中的字符数、正确遍历字符串、以及进行字符级别的操作。</li>
+<li><strong>国际化支持</strong>：使得 Go 程序能够正确处理各种语言的文本，包括中文、日文、韩文、阿拉伯文以及各种表情符号。</li>
+</ol>
+<p>理解 <code>rune</code> 类型对于任何需要处理文本的 Go 程序员来说都是至关重要的，尤其是在构建国际化应用时。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Go/" rel="tag"># Go</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/shell-awk/" rel="prev" title="shell-awk">
+      <i class="fa fa-chevron-left"></i> shell-awk
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/python-%E5%A2%9E%E9%87%8F%E5%A4%87%E4%BB%BD/" rel="next" title="python-增量备份">
+      python-增量备份 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#rune-%E7%B1%BB%E5%9E%8B%E7%9A%84%E5%AE%9A%E4%B9%89"><span class="nav-number">1.</span> <span class="nav-text">rune 类型的定义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#rune-%E7%9A%84%E6%84%8F%E4%B9%89%EF%BC%9AUnicode-%E7%A0%81%E7%82%B9"><span class="nav-number">2.</span> <span class="nav-text">rune 的意义：Unicode 码点</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF-Unicode-%E7%A0%81%E7%82%B9%EF%BC%9F"><span class="nav-number">2.1.</span> <span class="nav-text">什么是 Unicode 码点？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81-rune-%E7%B1%BB%E5%9E%8B%EF%BC%9F"><span class="nav-number">3.</span> <span class="nav-text">为什么需要 rune 类型？</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Go-%E5%AD%97%E7%AC%A6%E4%B8%B2%E7%9A%84%E5%86%85%E9%83%A8%E8%A1%A8%E7%A4%BA"><span class="nav-number">3.1.</span> <span class="nav-text">Go 字符串的内部表示</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%97%AE%E9%A2%98%E7%9A%84%E5%87%BA%E7%8E%B0"><span class="nav-number">3.2.</span> <span class="nav-text">问题的出现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#rune-%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3%E8%BF%99%E4%B8%AA%E9%97%AE%E9%A2%98"><span class="nav-number">3.3.</span> <span class="nav-text">rune 如何解决这个问题</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#rune-%E7%9A%84%E4%B8%BB%E8%A6%81%E7%94%A8%E9%80%94"><span class="nav-number">4.</span> <span class="nav-text">rune 的主要用途</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E6%AD%A3%E7%A1%AE%E5%A4%84%E7%90%86-Unicode-%E5%AD%97%E7%AC%A6%E4%B8%B2%E9%95%BF%E5%BA%A6"><span class="nav-number">4.1.</span> <span class="nav-text">1. 正确处理 Unicode 字符串长度</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%AD%97%E7%AC%A6%E4%B8%B2%E7%B4%A2%E5%BC%95%E5%92%8C%E5%88%87%E7%89%87%E6%93%8D%E4%BD%9C"><span class="nav-number">4.2.</span> <span class="nav-text">2. 字符串索引和切片操作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E5%AD%97%E7%AC%A6%E5%A4%84%E7%90%86%E5%92%8C%E9%81%8D%E5%8E%86"><span class="nav-number">4.3.</span> <span class="nav-text">3. 字符处理和遍历</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E5%AD%97%E7%AC%A6%E6%A3%80%E6%B5%8B%E5%92%8C%E8%BD%AC%E6%8D%A2"><span class="nav-number">4.4.</span> <span class="nav-text">4. 字符检测和转换</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">5.</span> <span class="nav-text">总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

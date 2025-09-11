@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Pod 拓扑分布约束在 k8s 集群调度中，亲和性相关的概念本质上都是控制 Pod 如何被调度 – 堆叠或打散。podAffinity 以及 podAntiAffinity 两个特性对 Pod 在不同拓扑域的分布进行了一些控制，podAffinity 可以将无数个 Pod 调度到特定的某一个拓扑域，这是堆叠的体现；podAntiAffinity 则可以控制一个拓扑域只存在一个 Pod，这是打散的体">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Pod 拓扑分布约束">
+<meta property="og:url" content="http://example.com/2025/09/11/Pod%20%E6%8B%93%E6%89%91%E5%88%86%E5%B8%83%E7%BA%A6%E6%9D%9F/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="Pod 拓扑分布约束在 k8s 集群调度中，亲和性相关的概念本质上都是控制 Pod 如何被调度 – 堆叠或打散。podAffinity 以及 podAntiAffinity 两个特性对 Pod 在不同拓扑域的分布进行了一些控制，podAffinity 可以将无数个 Pod 调度到特定的某一个拓扑域，这是堆叠的体现；podAntiAffinity 则可以控制一个拓扑域只存在一个 Pod，这是打散的体">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/39urvj.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/l6cnjy.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/h8snpn.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/2j2o65.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/7sxwhl.png">
+<meta property="og:image" content="https://picdn.youdianzhishi.com/images/20210325154257.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/f0qage.png">
+<meta property="og:image" content="https://picdn.youdianzhishi.com/images/20220119162204.png">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:51:49.448Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://mudutestmenu.mudu.tv/upload/39urvj.png">
+
+<link rel="canonical" href="http://example.com/2025/09/11/Pod%20%E6%8B%93%E6%89%91%E5%88%86%E5%B8%83%E7%BA%A6%E6%9D%9F/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Pod 拓扑分布约束 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Pod%20%E6%8B%93%E6%89%91%E5%88%86%E5%B8%83%E7%BA%A6%E6%9D%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Pod 拓扑分布约束
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:51:49" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E8%B0%83%E5%BA%A6%E5%99%A8/" itemprop="url" rel="index"><span itemprop="name">调度器</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>5.9k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Pod-拓扑分布约束"><a href="#Pod-拓扑分布约束" class="headerlink" title="Pod 拓扑分布约束"></a>Pod 拓扑分布约束</h1><p>在 k8s 集群调度中，<strong>亲和性</strong>相关的概念本质上都是控制 Pod 如何被调度 – <strong>堆叠或打散</strong>。<code>podAffinity</code> 以及 <code>podAntiAffinity</code> 两个特性对 Pod 在不同拓扑域的分布进行了一些控制，<code>podAffinity</code> 可以将无数个 Pod 调度到特定的某一个拓扑域，这是<strong>堆叠</strong>的体现；<code>podAntiAffinity</code> 则可以控制一个拓扑域只存在一个 Pod，这是<strong>打散</strong>的体现。但这两种情况都太极端了，在不少场景下都无法达到理想的效果，例如为了实现容灾和高可用，将业务 Pod 尽可能均匀的分布在不同可用区就很难实现。</p>
+<p><code>PodTopologySpread（Pod 拓扑分布约束）</code> 特性的提出正是为了对 Pod 的调度分布提供更精细的控制，以提高服务可用性以及资源利用率，<code>PodTopologySpread</code> 由 <code>EvenPodsSpread</code> 特性门所控制，在 v1.16 版本第一次发布，并在 v1.18 版本进入 beta 阶段默认启用。</p>
+<h2 id="使用规范"><a href="#使用规范" class="headerlink" title="使用规范"></a>使用规范</h2><p>在 Pod 的 Spec 规范中新增了一个 <code>topologySpreadConstraints</code> 字段即可配置拓扑分布约束，如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">topologySpreadConstraints:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">maxSkew:</span> <span class="string">&lt;integer&gt;</span></span><br><span class="line">      <span class="attr">topologyKey:</span> <span class="string">&lt;string&gt;</span></span><br><span class="line">      <span class="attr">whenUnsatisfiable:</span> <span class="string">&lt;string&gt;</span></span><br><span class="line">      <span class="attr">labelSelector:</span> <span class="string">&lt;object&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>由于这个新增的字段是在 Pod spec 层面添加，因此更高层级的控制 (Deployment、DaemonSet、StatefulSet) 也能使用 <code>PodTopologySpread</code> 功能。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/39urvj.png" alt="Pod拓扑分布约束"></p>
+<p>让我们结合上图来理解 <code>topologySpreadConstraints</code> 中各个字段的含义和作用：</p>
+<ul>
+<li><p><code>labelSelector</code>: 用来查找匹配的 Pod，我们能够计算出每个拓扑域中匹配该 label selector 的 Pod 数量，在上图中，假如 label selector 是 <code>app:foo</code>，那么 zone1 的匹配个数为 2， zone2 的匹配个数为 0。</p>
+</li>
+<li><p><code>topologyKey</code>: 是 Node label 的 key，如果两个 Node 的 label 同时具有该 key 并且值相同，就说它们在同一个拓扑域。在上图中，指定 <code>topologyKey</code> 为 zone， 则具有 <code>zone=zone1</code> 标签的 Node 被分在一个拓扑域，具有 <code>zone=zone2</code> 标签的 Node 被分在另一个拓扑域。</p>
+</li>
+<li><pre><code>maxSkew
+<figure class="highlight asciidoc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="meta">:这个属性理解起来不是很直接，它描述了 Pod在不同拓扑域中不均匀分布的最大程度（指定拓扑类型中任意两个拓扑域中匹配的 Pod 之间的最大允许差值），它必须大于零。每个拓扑域都有一个 skew 值，计算的公式是:</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+skew[i] = 拓扑域[i]中匹配的 Pod 个数 - min&#123;其他拓扑域中匹配的 Pod 个数&#125;
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">。在上图中，我们新建一个带有</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+app=foo
+<figure class="highlight crmsh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">  标签的 Pod：</span><br><span class="line"></span><br><span class="line">  - 如果该 Pod 被调度到 zone1，那么 zone1 中 <span class="keyword">Node</span> <span class="title">的 skew</span> 值变为 <span class="number">3</span>，zone2 中 <span class="keyword">Node</span> <span class="title">的 skew</span> 值变为 <span class="number">0</span> (zone1 有 <span class="number">3</span> 个匹配的 Pod，zone2 有 <span class="number">0</span> 个匹配的 Pod )</span><br><span class="line">  - 如果该 Pod 被调度到 zone2，那么 zone1 中 <span class="keyword">Node</span> <span class="title">的 skew</span> 值变为 <span class="number">2</span>，zone2 中 <span class="keyword">Node</span> <span class="title">的 skew</span> 值变为 <span class="number">1</span>(zone2 有 <span class="number">1</span> 个匹配的 Pod，拥有全局最小匹配 Pod 数的拓扑域正是 zone2 自己 )，则它满足`maxSkew: <span class="number">1</span>` 的约束（差值为 <span class="number">1</span>）</span><br><span class="line"></span><br><span class="line">- ```</span><br><span class="line">  whenUnsatisfiable</span><br></pre></td></tr></table></figure>
+
+: 描述了如果 Pod 不满足分布约束条件该采取何种策略：
+
+- **DoNotSchedule** (默认) 告诉调度器不要调度该 Pod，因此也可以叫作硬策略；
+- **ScheduleAnyway** 告诉调度器根据每个 Node 的 skew 值打分排序后仍然调度，因此也可以叫作软策略。
+</code></pre>
+</li>
+</ul>
+<h2 id="单个拓扑约束"><a href="#单个拓扑约束" class="headerlink" title="单个拓扑约束"></a>单个拓扑约束</h2><p>假设你拥有一个 4 节点集群，其中标记为  <code>foo:bar</code> 的 3 个 Pod 分别位于 node1、node2 和 node3 中：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/l6cnjy.png" alt="单个 TopologySpreadConstraint"></p>
+<p>如果希望新来的 Pod 均匀分布在现有的可用区域，则可以按如下设置其约束：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">mypod</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">foo:</span> <span class="string">bar</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">topologySpreadConstraints:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">maxSkew:</span> <span class="number">1</span></span><br><span class="line">      <span class="attr">topologyKey:</span> <span class="string">zone</span></span><br><span class="line">      <span class="attr">whenUnsatisfiable:</span> <span class="string">DoNotSchedule</span></span><br><span class="line">      <span class="attr">labelSelector:</span></span><br><span class="line">        <span class="attr">matchLabels:</span></span><br><span class="line">          <span class="attr">foo:</span> <span class="string">bar</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">pause</span></span><br><span class="line">      <span class="attr">image:</span> <span class="string">k8s.gcr.io/pause:3.1</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p><code>topologyKey: zone</code> 意味着均匀分布将只应用于存在标签键值对为 <code>zone:&lt;any value&gt;</code> 的节点。 <code>whenUnsatisfiable: DoNotSchedule</code> 告诉调度器如果新的 Pod 不满足约束，则不可调度。如果调度器将新的 Pod 放入 “zoneA”，Pods 分布将变为 <code>[3, 1]</code>，因此实际的偏差为 <code>2(3 - 1)</code>，这违反了  <code>maxSkew: 1</code> 的约定。此示例中，新 Pod 只能放置在 “zoneB” 上：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/h8snpn.png" alt="zoneB"></p>
+<p>或者</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/2j2o65.png" alt="zoneB"></p>
+<p>你可以调整 Pod 约束以满足各种要求：</p>
+<ul>
+<li>将  <code>maxSkew</code> 更改为更大的值，比如 “2”，这样新的 Pod 也可以放在 “zoneA” 上。</li>
+<li>将  <code>topologyKey</code> 更改为 “node”，以便将 Pod 均匀分布在节点上而不是区域中。 在上面的例子中，如果  <code>maxSkew</code> 保持为 “1”，那么传入的 Pod 只能放在 “node4” 上。</li>
+<li>将  <code>whenUnsatisfiable: DoNotSchedule</code> 更改为  <code>whenUnsatisfiable: ScheduleAnyway</code>， 以确保新的 Pod 可以被调度。</li>
+</ul>
+<h2 id="多个拓扑约束"><a href="#多个拓扑约束" class="headerlink" title="多个拓扑约束"></a>多个拓扑约束</h2><p>上面是单个 Pod 拓扑分布约束的情况，下面的例子建立在前面例子的基础上来对多个 Pod 拓扑分布约束进行说明。假设你拥有一个 4 节点集群，其中 3 个标记为  <code>foo:bar</code> 的 Pod 分别位于 node1、node2 和 node3 上：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/7sxwhl.png" alt="多个 TopologySpreadConstraint"></p>
+<p>我们可以使用 2 个 <code>TopologySpreadConstraint</code> 来控制 Pod 在区域和节点两个维度上的分布：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># two-constraints.yaml</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">mypod</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">foo:</span> <span class="string">bar</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">topologySpreadConstraints:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">maxSkew:</span> <span class="number">1</span></span><br><span class="line">      <span class="attr">topologyKey:</span> <span class="string">zone</span></span><br><span class="line">      <span class="attr">whenUnsatisfiable:</span> <span class="string">DoNotSchedule</span></span><br><span class="line">      <span class="attr">labelSelector:</span></span><br><span class="line">        <span class="attr">matchLabels:</span></span><br><span class="line">          <span class="attr">foo:</span> <span class="string">bar</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">maxSkew:</span> <span class="number">1</span></span><br><span class="line">      <span class="attr">topologyKey:</span> <span class="string">node</span></span><br><span class="line">      <span class="attr">whenUnsatisfiable:</span> <span class="string">DoNotSchedule</span></span><br><span class="line">      <span class="attr">labelSelector:</span></span><br><span class="line">        <span class="attr">matchLabels:</span></span><br><span class="line">          <span class="attr">foo:</span> <span class="string">bar</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">pause</span></span><br><span class="line">      <span class="attr">image:</span> <span class="string">k8s.gcr.io/pause:3.1</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>在这种情况下，为了匹配第一个约束，新的 Pod 只能放置在 “zoneB” 中；而在第二个约束中， 新的 Pod 只能放置在 “node4” 上，最后两个约束的结果加在一起，唯一可行的选择是放置 在 “node4” 上。</p>
+<p>多个约束之间是可能存在冲突的，假设有一个跨越 2 个区域的 3 节点集群：</p>
+<p><img data-src="https://picdn.youdianzhishi.com/images/20210325154257.png" alt="冲突"></p>
+<p>如果对集群应用 <code>two-constraints.yaml</code>，会发现 “mypod” 处于  <code>Pending</code> 状态，这是因为为了满足第一个约束，”mypod” 只能放在 “zoneB” 中，而第二个约束要求 “mypod” 只能放在 “node2” 上，Pod 调度无法满足这两种约束，所以就冲突了。</p>
+<p>为了克服这种情况，你可以增加  <code>maxSkew</code> 或修改其中一个约束，让其使用  <code>whenUnsatisfiable: ScheduleAnyway</code>。</p>
+<h2 id="与-NodeSelector-NodeAffinity-一起使用"><a href="#与-NodeSelector-NodeAffinity-一起使用" class="headerlink" title="与 NodeSelector&#x2F;NodeAffinity 一起使用"></a>与 NodeSelector&#x2F;NodeAffinity 一起使用</h2><p>仔细观察可能你会发现我们并没有类似于 <code>topologyValues</code> 的字段来限制 Pod 将被调度到哪些拓扑去，默认情况会搜索所有节点并按 <code>topologyKey</code> 对其进行分组。有时这可能不是理想的情况，比如假设有一个集群，其节点标记为 <code>env=prod</code>、<code>env=staging</code>和 <code>env=qa</code>，现在你想跨区域将 Pod 均匀地放置到 <code>qa</code> 环境中，是否可行?</p>
+<p>答案是肯定的，我们可以结合 <code>NodeSelector</code> 或 <code>NodeAffinity</code> 一起使用，<code>PodTopologySpread</code> 会计算满足选择器的节点之间的传播约束。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/f0qage.png" alt="高级用法-1"></p>
+<p>如上图所示我们可以通过指定 <code>spec.affinity.nodeAffinity</code> 将<strong>搜索范围</strong>限制为 <code>qa</code> 环境，在该范围内 Pod 将被调度到一个满足 <code>topologySpreadConstraints</code> 的区域，这里就只能被调度到 <code>zone=zone2</code> 的节点上去了。</p>
+<h2 id="集群默认约束"><a href="#集群默认约束" class="headerlink" title="集群默认约束"></a>集群默认约束</h2><p>除了为单个 Pod 设置拓扑分布约束，也可以为集群设置默认的拓扑分布约束，默认拓扑分布约束在且仅在以下条件满足 时才会应用到 Pod 上：</p>
+<ul>
+<li>Pod 没有在其  <code>.spec.topologySpreadConstraints</code> 设置任何约束；</li>
+<li>Pod 隶属于某个服务、副本控制器、ReplicaSet 或 StatefulSet。</li>
+</ul>
+<p>你可以在  <a target="_blank" rel="noopener" href="https://kubernetes.io/zh/docs/reference/scheduling/config/#profiles">调度方案（Schedulingg Profile）</a>中将默认约束作为  <code>PodTopologySpread</code> 插件参数的一部分来进行设置。 约束的设置采用和前面 Pod 中的规范一致，只是  <code>labelSelector</code> 必须为空。配置的示例可能看起来像下面这个样子：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">kubescheduler.config.k8s.io/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">KubeSchedulerConfiguration</span></span><br><span class="line"></span><br><span class="line"><span class="attr">profiles:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">pluginConfig:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">PodTopologySpread</span></span><br><span class="line">        <span class="attr">args:</span></span><br><span class="line">          <span class="attr">defaultConstraints:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">maxSkew:</span> <span class="number">1</span></span><br><span class="line">              <span class="attr">topologyKey:</span> <span class="string">topology.kubernetes.io/zone</span></span><br><span class="line">              <span class="attr">whenUnsatisfiable:</span> <span class="string">ScheduleAnyway</span></span><br><span class="line">          <span class="attr">defaultingType:</span> <span class="string">List</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="课后习题"><a href="#课后习题" class="headerlink" title="课后习题"></a>课后习题</h2><p>现在我们再去解决上节课留下的一个问题 - <strong>如果想在每个节点（或指定的一些节点）上运行 2 个（或多个）Pod 副本，如何实现？</strong></p>
+<p>这里以我们的集群为例，加上 master 节点一共有 3 个节点，每个节点运行 2 个副本，总共就需要 6 个 Pod 副本，要在 master 节点上运行，则同样需要添加容忍，如果只想在一个节点上运行 2 个副本，则可以使用我们的拓扑分布约束来进行细粒度控制，对应的资源清单如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">topo-demo</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">6</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">topo</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">topo</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">tolerations:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">key:</span> <span class="string">&#x27;node-role.kubernetes.io/master&#x27;</span></span><br><span class="line">          <span class="attr">operator:</span> <span class="string">&#x27;Exists&#x27;</span></span><br><span class="line">          <span class="attr">effect:</span> <span class="string">&#x27;NoSchedule&#x27;</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">image:</span> <span class="string">nginx</span></span><br><span class="line">          <span class="attr">name:</span> <span class="string">nginx</span></span><br><span class="line">          <span class="attr">ports:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">80</span></span><br><span class="line">              <span class="attr">name:</span> <span class="string">ngpt</span></span><br><span class="line">      <span class="attr">topologySpreadConstraints:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">maxSkew:</span> <span class="number">1</span></span><br><span class="line">          <span class="attr">topologyKey:</span> <span class="string">kubernetes.io/hostname</span></span><br><span class="line">          <span class="attr">whenUnsatisfiable:</span> <span class="string">DoNotSchedule</span></span><br><span class="line">          <span class="attr">labelSelector:</span></span><br><span class="line">            <span class="attr">matchLabels:</span></span><br><span class="line">              <span class="attr">app:</span> <span class="string">topo</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>这里我们重点需要关注的就是 <code>topologySpreadConstraints</code> 部分的配置，我们选择使用 <code>kubernetes.io/hostname</code> 为拓扑域，相当于就是 3 个节点都是独立的，<code>maxSkew: 1</code> 表示最大的分布不均匀度为 1，所以只能出现的调度结果就是每个节点运行 2 个 Pod。</p>
+<p><img data-src="https://picdn.youdianzhishi.com/images/20220119162204.png" alt="解析"></p>
+<p>直接创建上面的资源即可验证：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl get nodes</span><br><span class="line">NAME      STATUS   ROLES                  AGE   VERSION</span><br><span class="line">master1   Ready    control-plane,master   85d   v1.22.2</span><br><span class="line">node1     Ready    &lt;none&gt;                 85d   v1.22.2</span><br><span class="line">node2     Ready    &lt;none&gt;                 85d   v1.22.2</span><br><span class="line">➜ kubectl get pods -l app=topo -o wide</span><br><span class="line">NAME                         READY   STATUS    RESTARTS   AGE     IP             NODE      NOMINATED NODE   READINESS GATES</span><br><span class="line">topo-demo-6bbf65d967-7969w   1/1     Running   0          7m16s   10.244.2.40    node2     &lt;none&gt;           &lt;none&gt;</span><br><span class="line">topo-demo-6bbf65d967-8vhb8   1/1     Running   0          7m16s   10.244.2.41    node2     &lt;none&gt;           &lt;none&gt;</span><br><span class="line">topo-demo-6bbf65d967-cvg7j   1/1     Running   0          7m16s   10.244.1.211   node1     &lt;none&gt;           &lt;none&gt;</span><br><span class="line">topo-demo-6bbf65d967-hzhv2   1/1     Running   0          7m16s   10.244.0.143   master1   &lt;none&gt;           &lt;none&gt;</span><br><span class="line">topo-demo-6bbf65d967-nvg4z   1/1     Running   0          7m16s   10.244.0.144   master1   &lt;none&gt;           &lt;none&gt;</span><br><span class="line">topo-demo-6bbf65d967-w7w29   1/1     Running   0          7m16s   10.244.1.212   node1     &lt;none&gt;           &lt;none&gt;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>可以看到符合我们的预期，每个节点上运行了 2 个 Pod 副本，如果是要求每个节点上运行 3 个 Pod 副本呢？大家也可以尝试去练习下。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Pod%20%E4%BD%BF%E7%94%A8%E8%BF%9B%E9%98%B6/" rel="prev" title="Pod 使用进阶">
+      <i class="fa fa-chevron-left"></i> Pod 使用进阶
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Pod%20%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/" rel="next" title="Pod 基本原理">
+      Pod 基本原理 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Pod-%E6%8B%93%E6%89%91%E5%88%86%E5%B8%83%E7%BA%A6%E6%9D%9F"><span class="nav-number">1.</span> <span class="nav-text">Pod 拓扑分布约束</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E8%A7%84%E8%8C%83"><span class="nav-number">1.1.</span> <span class="nav-text">使用规范</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8D%95%E4%B8%AA%E6%8B%93%E6%89%91%E7%BA%A6%E6%9D%9F"><span class="nav-number">1.2.</span> <span class="nav-text">单个拓扑约束</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%9A%E4%B8%AA%E6%8B%93%E6%89%91%E7%BA%A6%E6%9D%9F"><span class="nav-number">1.3.</span> <span class="nav-text">多个拓扑约束</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8E-NodeSelector-NodeAffinity-%E4%B8%80%E8%B5%B7%E4%BD%BF%E7%94%A8"><span class="nav-number">1.4.</span> <span class="nav-text">与 NodeSelector&#x2F;NodeAffinity 一起使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9B%86%E7%BE%A4%E9%BB%98%E8%AE%A4%E7%BA%A6%E6%9D%9F"><span class="nav-number">1.5.</span> <span class="nav-text">集群默认约束</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AF%BE%E5%90%8E%E4%B9%A0%E9%A2%98"><span class="nav-number">1.6.</span> <span class="nav-text">课后习题</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Pod 使用进阶-深入理解 Pod 对象Pod 资源配置实际上上面几个步骤就是影响一个 Pod 生命周期的大的部分，但是还有一些细节也会在 Pod 的启动过程进行设置，比如在容器启动之前还会为当前的容器设置分配的 CPU、内存等资源，我们知道我们可以通过 CGroup 来对容器的资源进行限制，同样的，在 Pod 中我们也可以直接配置某个容器的使用的 CPU 或者内存的上限。那么 Pod 是如何来使">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Pod 使用进阶">
+<meta property="og:url" content="http://example.com/2025/09/11/Pod%20%E4%BD%BF%E7%94%A8%E8%BF%9B%E9%98%B6/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="Pod 使用进阶-深入理解 Pod 对象Pod 资源配置实际上上面几个步骤就是影响一个 Pod 生命周期的大的部分，但是还有一些细节也会在 Pod 的启动过程进行设置，比如在容器启动之前还会为当前的容器设置分配的 CPU、内存等资源，我们知道我们可以通过 CGroup 来对容器的资源进行限制，同样的，在 Pod 中我们也可以直接配置某个容器的使用的 CPU 或者内存的上限。那么 Pod 是如何来使">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:51:40.537Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/Pod%20%E4%BD%BF%E7%94%A8%E8%BF%9B%E9%98%B6/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Pod 使用进阶 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Pod%20%E4%BD%BF%E7%94%A8%E8%BF%9B%E9%98%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Pod 使用进阶
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:51:40" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/" itemprop="url" rel="index"><span itemprop="name">基础知识</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>12k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>11 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Pod-使用进阶-深入理解-Pod-对象"><a href="#Pod-使用进阶-深入理解-Pod-对象" class="headerlink" title="Pod 使用进阶-深入理解 Pod 对象"></a>Pod 使用进阶-深入理解 Pod 对象</h1><h2 id="Pod-资源配置"><a href="#Pod-资源配置" class="headerlink" title="Pod 资源配置"></a>Pod 资源配置</h2><p>实际上上面几个步骤就是影响一个 Pod 生命周期的大的部分，但是还有一些细节也会在 Pod 的启动过程进行设置，比如在容器启动之前还会为当前的容器设置分配的 CPU、内存等资源，我们知道我们可以通过 CGroup 来对容器的资源进行限制，同样的，在 Pod 中我们也可以直接配置某个容器的使用的 CPU 或者内存的上限。那么 Pod 是如何来使用和控制这些资源的分配的呢？</p>
+<p>首先对于 CPU，我们知道计算机里 CPU 的资源是按<code>“时间片”</code>的方式来进行分配的，系统里的每一个操作都需要 CPU 的处理，所以，哪个任务要是申请的 CPU 时间片越多，那么它得到的 CPU 资源就越多，这个很容器理解。</p>
+<p>然后还需要了解下 CGroup 里面对于 CPU 资源的单位换算：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1 CPU =  1000 millicpu（1 Core = 1000m）</span><br><span class="line">0.5 CPU = 500 millicpu （0.5 Core = 500m）</span><br></pre></td></tr></table></figure>
+
+<p>这里的 <code>m</code> 就是毫、毫核的意思，Kubernetes 集群中的每一个节点可以通过操作系统的命令来确认本节点的 CPU 内核数量，然后将这个数量乘以1000，得到的就是节点总 CPU 总毫数。比如一个节点有四核，那么该节点的 CPU 总毫量为 4000m，如果你要使用0.5 core，则你要求的是 4000*0.5 &#x3D; 2000m。在 Pod 里面我们可以通过下面的两个参数来限制和请求 CPU 资源：</p>
+<ul>
+<li><code>spec.containers[].resources.limits.cpu</code>：CPU 上限值，可以短暂超过，容器也不会被停止</li>
+<li><code>spec.containers[].resources.requests.cpu</code>：CPU请求值，Kubernetes 调度算法里的依据值，可以超过</li>
+</ul>
+<p>这里需要明白的是，如果 <code>resources.requests.cpu</code> 设置的值大于集群里每个节点的最大 CPU 核心数，那么这个 Pod 将无法调度，因为没有节点能满足它。</p>
+<p>到这里应该明白了，<code>requests</code> 是用于集群调度使用的资源，而 <code>limits</code> 才是真正的用于资源限制的配置，如果你需要保证的你应用优先级很高，也就是资源吃紧的情况下最后再杀掉你的 Pod，那么你就把你的 requests 和 limits 的值设置成一致，在后面应用的 <code>Qos</code> 中会具体讲解。</p>
+<p>比如，现在我们定义一个 Pod，给容器的配置如下的资源:</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># pod-resource-demo1.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">resource-demo1</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">resource-demo1</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">nginx</span></span><br><span class="line">    <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">80</span></span><br><span class="line">    <span class="attr">resources:</span></span><br><span class="line">      <span class="attr">requests:</span></span><br><span class="line">        <span class="attr">memory:</span> <span class="string">50Mi</span></span><br><span class="line">        <span class="attr">cpu:</span> <span class="string">50m</span></span><br><span class="line">      <span class="attr">limits:</span></span><br><span class="line">        <span class="attr">memory:</span> <span class="string">100Mi</span></span><br><span class="line">        <span class="attr">cpu:</span> <span class="string">100m</span></span><br></pre></td></tr></table></figure>
+
+<p>这里，CPU 我们给的是 50m，也就是 <code>0.05core</code>，这 <code>0.05core</code> 也就是占了 1 CPU 里的 5% 的资源时间。而限制资源是给的是 100m，但是需要注意的是 CPU 资源是可压缩资源，也就是容器达到了这个设定的上限后，容器性能会下降，但是不会终止或退出。比如我们直接创建上面这个 Pod：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl apply -f pod-resource-demo1.yaml</span><br></pre></td></tr></table></figure>
+
+<p>创建完成后，我们可以看到 Pod 被调度到 node1 这个节点上：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl get pods -o wide</span><br><span class="line">NAME             READY   STATUS    RESTARTS   AGE   IP            NODE    NOMINATED NODE   READINESS GATES</span><br><span class="line">resource-demo1   1/1     Running   0          24s   10.244.1.27   node1   &lt;none&gt;           &lt;none&gt;</span><br></pre></td></tr></table></figure>
+
+<p>然后我们到 node1 节点上去查看 Pod 里面启动的 <code>resource-demo1</code> 这个容器：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ crictl ps</span><br><span class="line">CONTAINER           IMAGE               CREATED             STATE               NAME                ATTEMPT             POD ID</span><br><span class="line">1e4ef680a5a88       87a94228f133e       41 seconds ago      Running             resource-demo1      0                   a00af47f2a12e</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+
+<p>我们可以去查看下主容器的信息：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ crictl inspect 1e4ef680a5a88</span><br><span class="line">&#123;</span><br><span class="line">  &quot;status&quot;: &#123;</span><br><span class="line">    &quot;id&quot;: &quot;1e4ef680a5a88af7eae88a6901f12eb103dc3f8e1807f26337cd9bfb3704ca05&quot;,</span><br><span class="line">    &quot;metadata&quot;: &#123;</span><br><span class="line">      &quot;attempt&quot;: 0,</span><br><span class="line">      &quot;name&quot;: &quot;resource-demo1&quot;</span><br><span class="line">    &#125;,</span><br><span class="line">......</span><br><span class="line">      &quot;linux&quot;: &#123;</span><br><span class="line">        &quot;resources&quot;: &#123;</span><br><span class="line">          &quot;devices&quot;: [</span><br><span class="line">            &#123;</span><br><span class="line">              &quot;allow&quot;: false,</span><br><span class="line">              &quot;access&quot;: &quot;rwm&quot;</span><br><span class="line">            &#125;</span><br><span class="line">          ],</span><br><span class="line">          &quot;memory&quot;: &#123;</span><br><span class="line">            &quot;limit&quot;: 104857600</span><br><span class="line">          &#125;,</span><br><span class="line">          &quot;cpu&quot;: &#123;</span><br><span class="line">            &quot;shares&quot;: 51,</span><br><span class="line">            &quot;quota&quot;: 10000,</span><br><span class="line">            &quot;period&quot;: 100000</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;,</span><br><span class="line">        &quot;cgroupsPath&quot;: &quot;kubepods-burstable-poda194c43a_9551_494b_bd72_ab898afdcc0c.slice:cri-containerd:1e4ef680a5a88af7eae88a6901f12eb103dc3f8e1807f26337cd9bfb3704ca05&quot;,</span><br><span class="line">     ......</span><br></pre></td></tr></table></figure>
+
+<p>实际上我们就可以看到这个容器的一些资源情况，Pod 上的资源配置最终也还是通过底层的容器运行时去控制 CGroup 来实现的，我们可以进入如下目录查看 CGroup 的配置，该目录就是 CGroup 父级目录，而 CGroup 是通过文件系统来进行资源限制的，所以我们上面限制容器的资源就可以在该目录下面反映出来：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ cd /sys/fs/cgroup/cpu/kubepods.slice/kubepods-burstable.slice/kubepods-burstable-poda194c43a_9551_494b_bd72_ab898afdcc0c.slice</span><br><span class="line">➜  ~ ls</span><br><span class="line">cgroup.clone_children  cpuacct.stat          cpu.cfs_period_us  cpu.rt_runtime_us  notify_on_release</span><br><span class="line">cgroup.event_control   cpuacct.usage         cpu.cfs_quota_us   cpu.shares         tasks</span><br><span class="line">cgroup.procs           cpuacct.usage_percpu  cpu.rt_period_us   cpu.stat</span><br><span class="line">➜  ~ cat cpu.cfs_quota_us</span><br><span class="line">10000</span><br></pre></td></tr></table></figure>
+
+<p>其中 <code>cpu.cfs_quota_us</code> 就是 CPU 的限制值，如果要查看具体的容器的资源，我们也可以进入到容器目录下面去查看即可。</p>
+<p>最后我们了解下内存这块的资源控制，内存的单位换算比较简单：</p>
+<p><code>1 MiB = 1024 KiB</code>，内存这块在 Kubernetes 里一般用的是<code>Mi</code>单位，当然你也可以使用<code>Ki、Gi</code>甚至<code>Pi</code>，看具体的业务需求和资源容量。</p>
+<p>单位换算</p>
+<p>这里注意的是<code>MiB ≠ MB</code>，MB 是十进制单位，MiB 是二进制，平时我们以为 MB 等于 1024KB，其实<code>1MB=1000KB</code>，<code>1MiB</code>才等于<code>1024KiB</code>。中间带字母 i 的是国际电工协会（IEC）定的，走1024乘积；KB、MB、GB 是国际单位制，走1000乘积。</p>
+<p>这里要注意的是，内存是不可压缩性资源，如果容器使用内存资源到达了上限，那么会<code>OOM</code>，造成内存溢出，容器就会终止和退出。我们也可以通过上面的方式去通过查看 CGroup 文件的值来验证资源限制。</p>
+<h2 id="静态-Pod"><a href="#静态-Pod" class="headerlink" title="静态 Pod"></a>静态 Pod</h2><p>在 Kubernetes 集群中除了我们经常使用到的普通的 Pod 外，还有一种特殊的 Pod，叫做Static Pod，也就是我们说的静态 Pod，静态 Pod 有什么特殊的地方呢？</p>
+<p>静态 Pod 直接由节点上的 kubelet 进程来管理，不通过 master 节点上的 apiserver。无法与我们常用的控制器 Deployment 或者 DaemonSet 进行关联，它由 kubelet 进程自己来监控，当 pod 崩溃时会重启该 pod，kubelet 也无法对他们进行健康检查。静态 pod 始终绑定在某一个 kubelet 上，并且始终运行在同一个节点上。kubelet 会自动为每一个静态 pod 在 Kubernetes 的 apiserver 上创建一个镜像 Pod，因此我们可以在 apiserver 中查询到该 pod，但是不能通过 apiserver 进行控制（例如不能删除）。</p>
+<p>创建静态 Pod 有两种方式：<code>配置文件</code>和 <code>HTTP</code> 两种方式</p>
+<p><strong>配置文件</strong></p>
+<p>配置文件就是放在特定目录下的标准的 JSON 或 YAML 格式的 pod 定义文件。用 <code>kubelet --pod-manifest-path=&lt;the directory&gt;</code>来启动 kubelet 进程，kubelet 定期的去扫描这个目录，根据这个目录下出现或消失的 YAML&#x2F;JSON 文件来创建或删除静态 pod。</p>
+<p>比如我们在 node1 这个节点上用静态 pod 的方式来启动一个 nginx 的服务，配置文件路径为：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ cat /var/lib/kubelet/config.yaml</span><br><span class="line">......</span><br><span class="line">staticPodPath: /etc/kubernetes/manifests  # 和命令行的 pod-manifest-path 参数一致</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+
+
+
+<p>打开这个文件我们可以看到其中有一个属性为 <code>staticPodPath</code> 的配置，其实和命令行的 <code>--pod-manifest-path</code> 配置是一致的，所以如果我们通过 kubeadm 的方式来安装的集群环境，对应的 kubelet 已经配置了我们的静态 Pod 文件的路径，默认地址为 <code>/etc/kubernetes/manifests</code>，所以我们只需要在该目录下面创建一个标准的 Pod 的 JSON 或者 YAML 文件即可，如果你的 kubelet 启动参数中没有配置上面的<code>--pod-manifest-path</code> 参数的话，那么添加上这个参数然后重启 kubelet 即可：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ cat &lt;&lt;EOF &gt;/etc/kubernetes/manifests/static-web.yaml</span><br><span class="line">apiVersion: v1</span><br><span class="line">kind: Pod</span><br><span class="line">metadata:</span><br><span class="line">  name: static-web</span><br><span class="line">  labels:</span><br><span class="line">    app: static</span><br><span class="line">spec:</span><br><span class="line">  containers:</span><br><span class="line">    - name: web</span><br><span class="line">      image: nginx</span><br><span class="line">      ports:</span><br><span class="line">        - name: web</span><br><span class="line">          containerPort: 80</span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
+
+<p><strong>通过 HTTP 创建静态 Pods</strong></p>
+<p>kubelet 周期地从 <code>–manifest-url=</code> 参数指定的地址下载文件，并且把它翻译成 JSON&#x2F;YAML 格式的 pod 定义。此后的操作方式与<code>–pod-manifest-path=</code> 相同，kubelet 会不时地重新下载该文件，当文件变化时对应地终止或启动静态 pod。</p>
+<p>kubelet 启动时，由 <code>--pod-manifest-path=</code> 或 <code>--manifest-url=</code> 参数指定的目录下定义的所有 pod 都会自动创建，例如，我们示例中的 <code>static-web</code>：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ nerdctl -n k8s.io ps</span><br><span class="line">CONTAINER ID    IMAGE                                              COMMAND                   CREATED           STATUS    PORTS    NAMES</span><br><span class="line">6add7aa53969    docker.io/library/nginx:latest                     &quot;/docker-entrypoint.…&quot;    43 seconds ago    Up</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+
+<p>现在我们通过kubectl工具可以看到这里创建了一个新的镜像 Pod：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl get pods</span><br><span class="line">NAME               READY   STATUS    RESTARTS   AGE</span><br><span class="line">static-web-node1   1/1     Running   0          109s</span><br></pre></td></tr></table></figure>
+
+<p>静态 pod 的标签会传递给镜像 Pod，可以用来过滤或筛选。 需要注意的是，我们不能通过 API 服务器来删除静态 pod（例如，通过kubectl命令），kubelet 不会删除它。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl delete pod static-web-node1</span><br><span class="line">pod &quot;static-web-node1&quot; deleted</span><br><span class="line">➜  ~ kubectl get pods</span><br><span class="line">NAME               READY   STATUS    RESTARTS   AGE</span><br><span class="line">static-web-node1   1/1     Running   0          4s</span><br></pre></td></tr></table></figure>
+
+
+
+<p><strong>静态 Pod 的动态增加和删除</strong></p>
+<p>运行中的 kubelet 周期扫描配置的目录（我们这个例子中就是 <code>/etc/kubernetes/manifests</code>）下文件的变化，当这个目录中有文件出现或消失时创建或删除 pods：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ mv /etc/kubernetes/manifests/static-web.yaml /tmp</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">sleep</span> 20</span></span><br><span class="line">➜  ~ nerdctl -n k8s.io ps</span><br><span class="line">// no nginx container is running</span><br><span class="line">➜  ~ mv /tmp/static-web.yaml  /etc/kubernetes/manifests</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">sleep</span> 20</span></span><br><span class="line">➜  ~ nerdctl -n k8s.io ps</span><br><span class="line">CONTAINER ID    IMAGE                                              COMMAND                   CREATED           STATUS    PORTS    NAMES</span><br><span class="line">902be9190538    docker.io/library/nginx:latest                     &quot;/docker-entrypoint.…&quot;    14 seconds ago    Up</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+
+<p>其实我们用 kubeadm 安装的集群，master 节点上面的几个重要组件都是用静态 Pod 的方式运行的，我们登录到 master 节点上查看<code>/etc/kubernetes/manifests</code>目录：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ ls /etc/kubernetes/manifests/</span><br><span class="line">etcd.yaml  kube-apiserver.yaml  kube-controller-manager.yaml  kube-scheduler.yaml</span><br></pre></td></tr></table></figure>
+
+<p>现在明白了吧，这种方式也为我们将集群的一些组件容器化提供了可能，因为这些 Pod 都不会受到 apiserver 的控制，不然我们这里kube-apiserver怎么自己去控制自己呢？万一不小心把这个 Pod 删掉了呢？所以只能有kubelet自己来进行控制，这就是我们所说的静态 Pod。</p>
+<h2 id="Downward-API"><a href="#Downward-API" class="headerlink" title="Downward API"></a>Downward API</h2><p>前面我们从 Pod 的原理到生命周期介绍了 Pod 的一些使用，作为 Kubernetes 中最核心的资源对象、最基本的调度单元，我们可以发现 Pod 中的属性还是非常繁多的，前面我们使用过一个 <code>volumes</code> 的属性，表示声明一个数据卷，我们可以通过命令<code>kubectl explain pod.spec.volumes</code>去查看该对象下面的属性非常多，前面我们只是简单使用了 <code>hostPath</code> 和 <code>emptyDir&#123;&#125;</code> 这两种模式，其中还有一种模式叫做<code>downwardAPI</code>，这个模式和其他模式不一样的地方在于它不是为了存放容器的数据也不是用来进行容器和宿主机的数据交换的，而是让 Pod 里的容器能够直接获取到这个 Pod 对象本身的一些信息。</p>
+<p>目前 <code>Downward API</code> 提供了两种方式用于将 Pod 的信息注入到容器内部：</p>
+<ul>
+<li>环境变量：用于单个变量，可以将 Pod 信息和容器信息直接注入容器内部</li>
+<li>Volume 挂载：将 Pod 信息生成为文件，直接挂载到容器内部中去</li>
+</ul>
+<h3 id="环境变量"><a href="#环境变量" class="headerlink" title="环境变量"></a>环境变量</h3><p>我们通过 <code>Downward API</code> 来将 Pod 的 IP、名称以及所对应的 namespace 注入到容器的环境变量中去，然后在容器中打印全部的环境变量来进行验证，对应资源清单文件如下：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># env-pod.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">env-pod</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-system</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">env-pod</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">busybox</span></span><br><span class="line">    <span class="attr">command:</span> [<span class="string">&quot;/bin/sh&quot;</span>, <span class="string">&quot;-c&quot;</span>, <span class="string">&quot;env&quot;</span>]</span><br><span class="line">    <span class="attr">env:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">POD_NAME</span></span><br><span class="line">      <span class="attr">valueFrom:</span></span><br><span class="line">        <span class="attr">fieldRef:</span></span><br><span class="line">          <span class="attr">fieldPath:</span> <span class="string">metadata.name</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">POD_NAMESPACE</span></span><br><span class="line">      <span class="attr">valueFrom:</span></span><br><span class="line">        <span class="attr">fieldRef:</span></span><br><span class="line">          <span class="attr">fieldPath:</span> <span class="string">metadata.namespace</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">POD_IP</span></span><br><span class="line">      <span class="attr">valueFrom:</span></span><br><span class="line">        <span class="attr">fieldRef:</span></span><br><span class="line">          <span class="attr">fieldPath:</span> <span class="string">status.podIP</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>我们可以看到上面我们使用了一种新的方式来设置 env 的值：<code>valueFrom</code>，由于 Pod 的 name 和 namespace 属于元数据，是在 Pod 创建之前就已经定下来了的，所以我们可以使用 metata 就可以获取到了，但是对于 Pod 的 IP 则不一样，因为我们知道 Pod IP 是不固定的，Pod 重建了就变了，它属于状态数据，所以我们使用 status 这个属性去获取。另外除了使用 <code>fieldRef</code>获取 Pod 的基本信息外，还可以通过 <code>resourceFieldRef</code> 去获取容器的资源请求和资源限制信息。</p>
+<p>我们直接创建上面的 Pod：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl apply -f env-pod.yaml</span><br><span class="line">pod &quot;env-pod&quot; created</span><br></pre></td></tr></table></figure>
+
+
+
+<p>Pod 创建成功后，我们可以查看日志：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl logs env-pod -n kube-system |grep POD</span><br><span class="line">kubectl logs -f env-pod -n kube-system</span><br><span class="line">POD_IP=10.244.1.121</span><br><span class="line">KUBERNETES_SERVICE_PORT=443</span><br><span class="line">KUBERNETES_PORT=tcp://10.96.0.1:443</span><br><span class="line">KUBE_DNS_SERVICE_PORT_DNS_TCP=53</span><br><span class="line">HOSTNAME=env-pod</span><br><span class="line">SHLVL=1</span><br><span class="line">HOME=/root</span><br><span class="line">KUBE_DNS_SERVICE_HOST=10.96.0.10</span><br><span class="line">KUBE_DNS_PORT_9153_TCP_ADDR=10.96.0.10</span><br><span class="line">KUBE_DNS_PORT_9153_TCP_PORT=9153</span><br><span class="line">KUBE_DNS_PORT_9153_TCP_PROTO=tcp</span><br><span class="line">KUBE_DNS_SERVICE_PORT=53</span><br><span class="line">KUBE_DNS_PORT=udp://10.96.0.10:53</span><br><span class="line">POD_NAME=env-pod</span><br><span class="line">KUBERNETES_PORT_443_TCP_ADDR=10.96.0.1</span><br><span class="line">PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin</span><br><span class="line">KUBE_DNS_PORT_53_TCP_ADDR=10.96.0.10</span><br><span class="line">KUBERNETES_PORT_443_TCP_PORT=443</span><br><span class="line">KUBE_DNS_SERVICE_PORT_METRICS=9153</span><br><span class="line">KUBERNETES_PORT_443_TCP_PROTO=tcp</span><br><span class="line">KUBE_DNS_PORT_9153_TCP=tcp://10.96.0.10:9153</span><br><span class="line">KUBE_DNS_PORT_53_UDP_ADDR=10.96.0.10</span><br><span class="line">KUBE_DNS_PORT_53_TCP_PORT=53</span><br><span class="line">KUBE_DNS_PORT_53_TCP_PROTO=tcp</span><br><span class="line">KUBE_DNS_PORT_53_UDP_PORT=53</span><br><span class="line">KUBE_DNS_SERVICE_PORT_DNS=53</span><br><span class="line">KUBE_DNS_PORT_53_UDP_PROTO=udp</span><br><span class="line">KUBERNETES_SERVICE_PORT_HTTPS=443</span><br><span class="line">KUBERNETES_PORT_443_TCP=tcp://10.96.0.1:443</span><br><span class="line">POD_NAMESPACE=kube-system</span><br><span class="line">KUBERNETES_SERVICE_HOST=10.96.0.1</span><br><span class="line">PWD=/</span><br><span class="line">KUBE_DNS_PORT_53_TCP=tcp://10.96.0.10:53</span><br><span class="line">KUBE_DNS_PORT_53_UDP=udp://10.96.0.10:53</span><br></pre></td></tr></table></figure>
+
+<p>我们可以看到 Pod 的 IP、NAME、NAMESPACE 都通过环境变量打印出来了。</p>
+<p>环境变量</p>
+<p>上面打印 Pod 的环境变量可以看到有很多内置的变量，其中大部分是系统自动为我们添加的，Kubernetes 会把当前命名空间下面的 Service 信息通过环境变量的形式注入到 Pod 中去：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl get svc -n kube-system</span><br><span class="line">NAME       TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)                  AGE</span><br><span class="line">kube-dns   ClusterIP   10.96.0.10   &lt;none&gt;        53/UDP,53/TCP,9153/TCP   4d21h</span><br></pre></td></tr></table></figure>
+
+<h3 id="Volume-挂载"><a href="#Volume-挂载" class="headerlink" title="Volume 挂载"></a>Volume 挂载</h3><p><code>Downward API</code>除了提供环境变量的方式外，还提供了通过 Volume 挂载的方式去获取 Pod 的基本信息。接下来我们通过<code>Downward API</code>将 Pod 的 Label、Annotation 等信息通过 Volume 挂载到容器的某个文件中去，然后在容器中打印出该文件的值来验证，对应的资源清单文件如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># volume-pod.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">volume-pod</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-system</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">k8s-app:</span> <span class="string">test-volume</span></span><br><span class="line">    <span class="attr">node-env:</span> <span class="string">test</span></span><br><span class="line">  <span class="attr">annotations:</span></span><br><span class="line">    <span class="attr">own:</span> <span class="string">youdianzhishi</span></span><br><span class="line">    <span class="attr">build:</span> <span class="string">test</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">volumes:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">podinfo</span></span><br><span class="line">    <span class="attr">downwardAPI:</span></span><br><span class="line">      <span class="attr">items:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">path:</span> <span class="string">labels</span></span><br><span class="line">        <span class="attr">fieldRef:</span></span><br><span class="line">          <span class="attr">fieldPath:</span> <span class="string">metadata.labels</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">path:</span> <span class="string">annotations</span></span><br><span class="line">        <span class="attr">fieldRef:</span></span><br><span class="line">          <span class="attr">fieldPath:</span> <span class="string">metadata.annotations</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">volume-pod</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">busybox</span></span><br><span class="line">    <span class="attr">args:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">sleep</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&quot;3600&quot;</span></span><br><span class="line">    <span class="attr">volumeMounts:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">podinfo</span></span><br><span class="line">      <span class="attr">mountPath:</span> <span class="string">/etc/podinfo</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>我们将元数据 labels 和 annotaions 以文件的形式挂载到了 <code>/etc/podinfo</code> 目录下，创建上面的 Pod：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl create -f volume-pod.yaml</span><br><span class="line">pod &quot;volume-pod&quot; created</span><br></pre></td></tr></table></figure>
+
+
+
+<p>创建成功后，我们可以进入到容器中查看元信息是不是已经存入到文件中了：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl exec -it volume-pod /bin/sh -n kube-system</span><br><span class="line">/ # ls /etc/podinfo/</span><br><span class="line">..2019_11_13_09_57_15.990445016/  annotations</span><br><span class="line">..data/                           labels</span><br><span class="line">/ # cat /etc/podinfo/labels</span><br><span class="line">k8s-app=&quot;test-volume&quot;</span><br><span class="line">/ # cat /etc/podinfo/annotations</span><br><span class="line">build=&quot;test&quot;</span><br><span class="line">kubectl.kubernetes.io/last-applied-configuration=&quot;&#123;\&quot;apiVersion\&quot;:\&quot;v1\&quot;,\&quot;kind\&quot;:\&quot;Pod\&quot;,\&quot;metadata\&quot;:&#123;\&quot;annotations\&quot;:&#123;\&quot;build\&quot;:\&quot;test\&quot;,\&quot;own\&quot;:\&quot;youdianzhishi\&quot;&#125;,\&quot;labels\&quot;:&#123;\&quot;k8s-app\&quot;:\&quot;test-volume\&quot;,\&quot;node-env\&quot;:\&quot;test\&quot;&#125;,\&quot;name\&quot;:\&quot;volume-pod\&quot;,\&quot;namespace\&quot;:\&quot;kube-system\&quot;&#125;,\&quot;spec\&quot;:&#123;\&quot;containers\&quot;:[&#123;\&quot;args\&quot;:[\&quot;sleep\&quot;,\&quot;3600\&quot;],\&quot;image\&quot;:\&quot;busybox\&quot;,\&quot;name\&quot;:\&quot;volume-pod\&quot;,\&quot;volumeMounts\&quot;:[&#123;\&quot;mountPath\&quot;:\&quot;/etc/podinfo\&quot;,\&quot;name\&quot;:\&quot;podinfo\&quot;&#125;]&#125;],\&quot;volumes\&quot;:[&#123;\&quot;downwardAPI\&quot;:&#123;\&quot;items\&quot;:[&#123;\&quot;fieldRef\&quot;:&#123;\&quot;fieldPath\&quot;:\&quot;metadata.labels\&quot;&#125;,\&quot;path\&quot;:\&quot;labels\&quot;&#125;,&#123;\&quot;fieldRef\&quot;:&#123;\&quot;fieldPath\&quot;:\&quot;metadata.annotations\&quot;&#125;,\&quot;path\&quot;:\&quot;annotations\&quot;&#125;]&#125;,\&quot;name\&quot;:\&quot;podinfo\&quot;&#125;]&#125;&#125;\n&quot;</span><br><span class="line">kubernetes.io/config.seen=&quot;2019-11-13T17:57:15.320894744+08:00&quot;</span><br><span class="line">kubernetes.io/config.source=&quot;api&quot;</span><br></pre></td></tr></table></figure>
+
+<p>我们可以看到 Pod 的 Labels 和 Annotations 信息都被挂载到 <code>/etc/podinfo</code> 目录下面的 lables 和 annotations 文件了。</p>
+<p>目前，<code>Downward API</code> 支持的字段已经非常丰富了，比如：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">1. 使用 fieldRef 可以声明使用:</span><br><span class="line"></span><br><span class="line">spec.nodeName - 宿主机名字</span><br><span class="line">status.hostIP - 宿主机IP</span><br><span class="line">metadata.name - Pod的名字</span><br><span class="line">metadata.namespace - Pod的Namespace</span><br><span class="line">status.podIP - Pod的IP</span><br><span class="line">spec.serviceAccountName - Pod的Service Account的名字</span><br><span class="line">metadata.uid - Pod的UID</span><br><span class="line">metadata.labels[&#x27;&lt;KEY&gt;&#x27;] - 指定&lt;KEY&gt;的Label值</span><br><span class="line">metadata.annotations[&#x27;&lt;KEY&gt;&#x27;] - 指定&lt;KEY&gt;的Annotation值</span><br><span class="line">metadata.labels - Pod的所有Label</span><br><span class="line">metadata.annotations - Pod的所有Annotation</span><br><span class="line"></span><br><span class="line">2. 使用 resourceFieldRef 可以声明使用:</span><br><span class="line"></span><br><span class="line">容器的 CPU limit</span><br><span class="line">容器的 CPU request</span><br><span class="line">容器的 memory limit</span><br><span class="line">容器的 memory request</span><br></pre></td></tr></table></figure>
+
+<p><strong>注意</strong></p>
+<p>需要注意的是，<code>Downward API</code> 能够获取到的信息，一定是 Pod 里的容器进程启动之前就能够确定下来的信息。而如果你想要获取 Pod 容器运行后才会出现的信息，比如，容器进程的 PID，那就肯定不能使用 <code>Downward API</code> 了，而应该考虑在 Pod 里定义一个 sidecar 容器来获取了。</p>
+<p>在实际应用中，如果你的应用有获取 Pod 的基本信息的需求，一般我们就可以利用<code>Downward API</code>来获取基本信息，然后编写一个启动脚本或者利用<code>initContainer</code>将 Pod 的信息注入到我们容器中去，然后在我们自己的应用中就可以正常的处理相关逻辑了。</p>
+<p>除了通过 Downward API 可以获取到 Pod 本身的信息之外，其实我们还可以通过映射其他资源对象来获取对应的信息，比如 Secret、ConfigMap 资源对象，同样我们可以通过环境变量和挂载 Volume 的方式来获取他们的信息，但是，通过环境变量获取这些信息的方式，不具备自动更新的能力。所以，一般情况下，都建议使用 Volume 文件的方式获取这些信息，因为通过 Volume 的方式挂载的文件在 Pod 中会进行热更新。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Pod%20%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/" rel="prev" title="Pod 生命周期">
+      <i class="fa fa-chevron-left"></i> Pod 生命周期
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Pod%20%E6%8B%93%E6%89%91%E5%88%86%E5%B8%83%E7%BA%A6%E6%9D%9F/" rel="next" title="Pod 拓扑分布约束">
+      Pod 拓扑分布约束 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Pod-%E4%BD%BF%E7%94%A8%E8%BF%9B%E9%98%B6-%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3-Pod-%E5%AF%B9%E8%B1%A1"><span class="nav-number">1.</span> <span class="nav-text">Pod 使用进阶-深入理解 Pod 对象</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Pod-%E8%B5%84%E6%BA%90%E9%85%8D%E7%BD%AE"><span class="nav-number">1.1.</span> <span class="nav-text">Pod 资源配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9D%99%E6%80%81-Pod"><span class="nav-number">1.2.</span> <span class="nav-text">静态 Pod</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Downward-API"><span class="nav-number">1.3.</span> <span class="nav-text">Downward API</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F"><span class="nav-number">1.3.1.</span> <span class="nav-text">环境变量</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Volume-%E6%8C%82%E8%BD%BD"><span class="nav-number">1.3.2.</span> <span class="nav-text">Volume 挂载</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Go 语言支持默认参数或可选参数吗？ 直接的答案是：不，Go 语言从语言层面不支持函数默认参数或可选参数。 这与 Python 的 def func(arg1, optional_arg&#x3D;&quot;default&quot;) 或 C++ 的 void func(int arg1, int optional_arg &#x3D; 0) 不同。Go 的设计者们出于对代码明确性（explicitness）和可">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go 语言支持默认参数或可选参数吗？">
+<meta property="og:url" content="http://example.com/2025/09/11/Go%20%E8%AF%AD%E8%A8%80%E6%94%AF%E6%8C%81%E9%BB%98%E8%AE%A4%E5%8F%82%E6%95%B0%E6%88%96%E5%8F%AF%E9%80%89%E5%8F%82%E6%95%B0%E5%90%97%EF%BC%9F/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="Go 语言支持默认参数或可选参数吗？ 直接的答案是：不，Go 语言从语言层面不支持函数默认参数或可选参数。 这与 Python 的 def func(arg1, optional_arg&#x3D;&quot;default&quot;) 或 C++ 的 void func(int arg1, int optional_arg &#x3D; 0) 不同。Go 的设计者们出于对代码明确性（explicitness）和可">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:33:14.925Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Go">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/Go%20%E8%AF%AD%E8%A8%80%E6%94%AF%E6%8C%81%E9%BB%98%E8%AE%A4%E5%8F%82%E6%95%B0%E6%88%96%E5%8F%AF%E9%80%89%E5%8F%82%E6%95%B0%E5%90%97%EF%BC%9F/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Go 语言支持默认参数或可选参数吗？ | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Go%20%E8%AF%AD%E8%A8%80%E6%94%AF%E6%8C%81%E9%BB%98%E8%AE%A4%E5%8F%82%E6%95%B0%E6%88%96%E5%8F%AF%E9%80%89%E5%8F%82%E6%95%B0%E5%90%97%EF%BC%9F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Go 语言支持默认参数或可选参数吗？
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:33:14" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/go/" itemprop="url" rel="index"><span itemprop="name">go</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.2k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Go 语言支持默认参数或可选参数吗？</p>
+<p>直接的答案是：<strong>不，Go 语言从语言层面不支持函数默认参数或可选参数。</strong></p>
+<p>这与 Python 的 <code>def func(arg1, optional_arg=&quot;default&quot;)</code> 或 C++ 的 <code>void func(int arg1, int optional_arg = 0)</code> 不同。Go 的设计者们出于对代码<strong>明确性（explicitness）</strong>和<strong>可读性（readability）</strong>的极致追求，刻意省略了这个特性。</p>
+<p>作为后端开发专家，我将为您阐述其背后的设计考量，并提供 Go 语言中实现类似功能的几种惯用（idiomatic）模式。</p>
+<hr>
+<h3 id="一、为什么-Go-选择不支持？——-设计哲学"><a href="#一、为什么-Go-选择不支持？——-设计哲学" class="headerlink" title="一、为什么 Go 选择不支持？—— 设计哲学"></a>一、为什么 Go 选择不支持？—— 设计哲学</h3><p>Go 语言的设计哲学强调“少即是多”（Less is more）和“明晰胜于隐含”（Clarity is better than implicitness）。不支持默认&#x2F;可选参数主要基于以下考量：</p>
+<ol>
+<li><p><strong>提升代码可读性和明确性：</strong><br>当函数调用者写下 <code>createUser(&quot;admin&quot;)</code> 时，如果 <code>createUser</code> 函数签名是 <code>func createUser(name string, role string, active bool)</code>，调用者可能不清楚 <code>role</code> 和 <code>active</code> 的默认值是什么。他必须跳转到函数定义去查看。Go 语言希望每一次函数调用都是自解释的、清晰的。<code>createUser(&quot;admin&quot;, &quot;admin_role&quot;, true)</code> 这样显式的调用虽然更长，但意图一目了然，不会产生任何歧义。</p>
+</li>
+<li><p><strong>简化语言规范：</strong><br>引入默认参数会使函数签名变得复杂。例如，如何处理 <code>func(a int, b int = 10, c int)</code> 这样的情况？这会增加语言解析的复杂度和学习成本。Go 致力于保持语言本身的简单。</p>
+</li>
+<li><p><strong>避免函数重载的需要：</strong><br>在其他语言中，默认参数常常和函数重载（function overloading）一起使用。Go 从根本上就不支持函数重载，它认为使用不同名字的函数（如 <code>CreateUser</code> 和 <code>CreateUserWithRole</code>）来表达不同的行为是更清晰的模式。</p>
+</li>
+</ol>
+<hr>
+<p>###二、Go 的惯用解决方案 (Idiomatic Go Solutions)</p>
+<p>既然语言本身不支持，Go 社区发展出了几种非常优雅且高效的模式来解决这个问题。</p>
+<h4 id="模式一：使用配置结构体-Options-Struct-推荐的首选方案"><a href="#模式一：使用配置结构体-Options-Struct-推荐的首选方案" class="headerlink" title="模式一：使用配置结构体 (Options Struct) - 推荐的首选方案"></a>模式一：使用配置结构体 (Options Struct) - <strong>推荐的首选方案</strong></h4><p>这是最常见、最清晰、也是最具扩展性的方法。它的核心思想是：将所有可选参数聚合到一个配置结构体中，并将该结构体的指针作为函数参数。</p>
+<p><strong>步骤：</strong></p>
+<ol>
+<li>定义一个 <code>Config</code> 或 <code>Options</code> 结构体来封装所有参数。</li>
+<li>函数接收这个结构体的指针。</li>
+<li>函数内部检查传入的配置，如果为 <code>nil</code> 或某些字段为零值，则使用预设的默认值。</li>
+</ol>
+<p><strong>代码示例：</strong></p>
+<p>假设我们要创建一个 HTTP 服务器，它有必须的 <code>Address</code>，但 <code>Port</code> 和 <code>Timeout</code> 是可选的。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;time&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment">// 1. 定义配置结构体</span></span><br><span class="line"><span class="keyword">type</span> ServerConfig <span class="keyword">struct</span> &#123;</span><br><span class="line">	Port    <span class="type">int</span></span><br><span class="line">	Timeout time.Duration</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 2. NewServer 函数接收一个必须参数和一个可选的配置指针</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewServer</span><span class="params">(address <span class="type">string</span>, config *ServerConfig)</span></span> &#123;</span><br><span class="line">	<span class="comment">// 设置默认值</span></span><br><span class="line">	defaultPort := <span class="number">8080</span></span><br><span class="line">	defaultTimeout := <span class="number">30</span> * time.Second</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 如果传入了配置，则覆盖默认值</span></span><br><span class="line">	<span class="keyword">if</span> config != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">if</span> config.Port != <span class="number">0</span> &#123;        <span class="comment">// 检查零值来决定是否覆盖</span></span><br><span class="line">			defaultPort = config.Port</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> config.Timeout != <span class="number">0</span> &#123;</span><br><span class="line">			defaultTimeout = config.Timeout</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	fmt.Printf(<span class="string">&quot;Starting server at %s:%d with timeout %v\n&quot;</span>,</span><br><span class="line">		address, defaultPort, defaultTimeout)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="comment">// 场景1: 不提供任何可选参数，使用全部默认值</span></span><br><span class="line">	<span class="comment">// 传入 nil 表示使用所有默认配置</span></span><br><span class="line">	fmt.Println(<span class="string">&quot;--- 场景1: 使用默认配置 ---&quot;</span>)</span><br><span class="line">	NewServer(<span class="string">&quot;localhost&quot;</span>, <span class="literal">nil</span>)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 场景2: 只提供部分可选参数</span></span><br><span class="line">	<span class="comment">// 创建一个配置实例，只设置我们关心的字段</span></span><br><span class="line">	fmt.Println(<span class="string">&quot;\n--- 场景2: 自定义端口 ---&quot;</span>)</span><br><span class="line">	NewServer(<span class="string">&quot;localhost&quot;</span>, &amp;ServerConfig&#123;</span><br><span class="line">		Port: <span class="number">9000</span>,</span><br><span class="line">	&#125;)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 场景3: 提供所有可选参数</span></span><br><span class="line">	fmt.Println(<span class="string">&quot;\n--- 场景3: 自定义所有配置 ---&quot;</span>)</span><br><span class="line">	NewServer(<span class="string">&quot;localhost&quot;</span>, &amp;ServerConfig&#123;</span><br><span class="line">		Port:    <span class="number">8888</span>,</span><br><span class="line">		Timeout: <span class="number">60</span> * time.Second,</span><br><span class="line">	&#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>优点：</strong></p>
+<ul>
+<li><strong>高度可读：</strong> <code>&amp;ServerConfig&#123;Port: 9000&#125;</code> 清晰地标明了要修改哪个参数。</li>
+<li><strong>易于扩展：</strong> 未来如果需要增加新的可选参数（如<code>MaxConnections</code>），只需在 <code>ServerConfig</code> 结构体中增加一个字段即可，函数签名完全不需要改变，保持了向后兼容。</li>
+<li><strong>零值即默认：</strong> 巧妙地利用了 Go 的零值机制。</li>
+</ul>
+<h4 id="模式二：函数式选项模式-Functional-Options-Pattern-高级模式"><a href="#模式二：函数式选项模式-Functional-Options-Pattern-高级模式" class="headerlink" title="模式二：函数式选项模式 (Functional Options Pattern) - 高级模式"></a>模式二：函数式选项模式 (Functional Options Pattern) - <strong>高级模式</strong></h4><p>这是一种更高级、更灵活的模式，常见于知名的 Go 库中（如 gRPC, Docker SDK）。它将每个“选项”都实现为一个函数。</p>
+<p><strong>步骤：</strong></p>
+<ol>
+<li>定义一个 <code>Option</code> 函数类型，它接收一个指向配置对象的指针。</li>
+<li>为每个可选参数编写一个返回 <code>Option</code> 的函数（例如 <code>WithPort</code>, <code>WithTimeout</code>）。</li>
+<li>主构造函数接收一个可变数量的 <code>Option</code> 函数作为参数，并依次应用它们。</li>
+</ol>
+<p><strong>代码示例（续上例）：</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;time&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Server <span class="keyword">struct</span> &#123;</span><br><span class="line">	Address <span class="type">string</span></span><br><span class="line">	Port    <span class="type">int</span></span><br><span class="line">	Timeout time.Duration</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 1. 定义 Option 函数类型</span></span><br><span class="line"><span class="keyword">type</span> Option <span class="function"><span class="keyword">func</span><span class="params">(*Server)</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 2. 为每个选项编写一个返回 Option 的函数</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">WithPort</span><span class="params">(port <span class="type">int</span>)</span></span> Option &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="function"><span class="keyword">func</span><span class="params">(s *Server)</span></span> &#123;</span><br><span class="line">		s.Port = port</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">WithTimeout</span><span class="params">(timeout time.Duration)</span></span> Option &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="function"><span class="keyword">func</span><span class="params">(s *Server)</span></span> &#123;</span><br><span class="line">		s.Timeout = timeout</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 3. NewServer 接收可变数量的 Option</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewServer</span><span class="params">(address <span class="type">string</span>, options ...Option)</span></span> *Server &#123;</span><br><span class="line">	<span class="comment">// 初始化带默认值的 Server</span></span><br><span class="line">	srv := &amp;Server&#123;</span><br><span class="line">		Address: address,</span><br><span class="line">		Port:    <span class="number">8080</span>,</span><br><span class="line">		Timeout: <span class="number">30</span> * time.Second,</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 循环应用所有传入的 options 函数，覆盖默认值</span></span><br><span class="line">	<span class="keyword">for</span> _, opt := <span class="keyword">range</span> options &#123;</span><br><span class="line">		opt(srv)</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">return</span> srv</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="comment">// 场景1: 使用默认值</span></span><br><span class="line">	s1 := NewServer(<span class="string">&quot;localhost&quot;</span>)</span><br><span class="line">	fmt.Printf(<span class="string">&quot;Server 1: %+v\n&quot;</span>, s1)</span><br><span class="line">	</span><br><span class="line">	<span class="comment">// 场景2: 自定义端口和超时</span></span><br><span class="line">	s2 := NewServer(<span class="string">&quot;localhost&quot;</span>, WithPort(<span class="number">9000</span>), WithTimeout(<span class="number">60</span>*time.Second))</span><br><span class="line">	fmt.Printf(<span class="string">&quot;Server 2: %+v\n&quot;</span>, s2)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 场景3: 只自定义超时，顺序无关</span></span><br><span class="line">	s3 := NewServer(<span class="string">&quot;localhost&quot;</span>, WithTimeout(<span class="number">10</span>*time.Second))</span><br><span class="line">	fmt.Printf(<span class="string">&quot;Server 3: %+v\n&quot;</span>, s3)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>优点：</strong></p>
+<ul>
+<li><strong>极高的灵活性和可读性：</strong> 调用链 <code>NewServer(&quot;localhost&quot;, WithPort(9000))</code> 非常清晰。</li>
+<li><strong>良好的封装：</strong> <code>Server</code> 结构体的字段可以是私有的，只能通过 <code>Option</code> 函数修改，控制力更强。</li>
+</ul>
+<hr>
+<h3 id="三、总结与对比"><a href="#三、总结与对比" class="headerlink" title="三、总结与对比"></a>三、总结与对比</h3><table>
+<thead>
+<tr>
+<th>模式</th>
+<th>适用场景</th>
+<th>复杂度</th>
+<th>优点</th>
+<th>缺点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>配置结构体</strong> (首选)</td>
+<td><strong>绝大多数应用和内部项目。</strong> 简单、直接、高效。</td>
+<td><strong>低</strong></td>
+<td>易于理解和实现，极佳的可扩展性。</td>
+<td>需要暴露配置结构体。</td>
+</tr>
+<tr>
+<td><strong>函数式选项</strong> (高级)</td>
+<td><strong>公共库、SDK、需要复杂配置的 API。</strong></td>
+<td><strong>中</strong></td>
+<td>灵活性和封装性极佳，调用方式非常优雅。</td>
+<td>实现稍复杂，样板代码多。</td>
+</tr>
+</tbody></table>
+<p><strong>结论：</strong><br>Go 语言不支持默认参数是其设计哲学的一种体现，旨在强制开发者编写清晰、明确、易于维护的代码。在实践中，<strong>配置结构体（Options Struct）模式</strong>是解决此类问题的黄金标准，而<strong>函数式选项模式</strong>则为库和框架的作者提供了更强大的武器。这两种模式都比简单的默认参数更为健壮和可扩展，体现了 Go 语言在设计上对代码长期健康度的深刻考量。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Go/" rel="tag"># Go</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Go%20%E8%AF%AD%E8%A8%80%E7%9A%84%E6%9C%89%E7%B1%BB%E5%9E%8B%E5%B8%B8%E9%87%8F%E5%92%8C%E6%97%A0%E7%B1%BB%E5%9E%8B%E5%B8%B8%E9%87%8F/" rel="prev" title="Go 语言的有类型常量和无类型常量">
+      <i class="fa fa-chevron-left"></i> Go 语言的有类型常量和无类型常量
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Go%20%E8%AF%AD%E8%A8%80%E4%B8%AD%EF%BC%8C%E5%A6%82%E4%BD%95%E5%88%A4%E6%96%AD%E4%B8%A4%E4%B8%AA%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%88%87%E7%89%87%EF%BC%88slice%EF%BC%89%E6%98%AF%E5%90%A6%E7%9B%B8%E7%AD%89/" rel="next" title="Go 语言中，如何判断两个字符串切片（slice）是否相等">
+      Go 语言中，如何判断两个字符串切片（slice）是否相等 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E4%B8%BA%E4%BB%80%E4%B9%88-Go-%E9%80%89%E6%8B%A9%E4%B8%8D%E6%94%AF%E6%8C%81%EF%BC%9F%E2%80%94%E2%80%94-%E8%AE%BE%E8%AE%A1%E5%93%B2%E5%AD%A6"><span class="nav-number">1.</span> <span class="nav-text">一、为什么 Go 选择不支持？—— 设计哲学</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%A8%A1%E5%BC%8F%E4%B8%80%EF%BC%9A%E4%BD%BF%E7%94%A8%E9%85%8D%E7%BD%AE%E7%BB%93%E6%9E%84%E4%BD%93-Options-Struct-%E6%8E%A8%E8%8D%90%E7%9A%84%E9%A6%96%E9%80%89%E6%96%B9%E6%A1%88"><span class="nav-number">1.1.</span> <span class="nav-text">模式一：使用配置结构体 (Options Struct) - 推荐的首选方案</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%A8%A1%E5%BC%8F%E4%BA%8C%EF%BC%9A%E5%87%BD%E6%95%B0%E5%BC%8F%E9%80%89%E9%A1%B9%E6%A8%A1%E5%BC%8F-Functional-Options-Pattern-%E9%AB%98%E7%BA%A7%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.2.</span> <span class="nav-text">模式二：函数式选项模式 (Functional Options Pattern) - 高级模式</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E3%80%81%E6%80%BB%E7%BB%93%E4%B8%8E%E5%AF%B9%E6%AF%94"><span class="nav-number">2.</span> <span class="nav-text">三、总结与对比</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

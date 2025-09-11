@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Jenkins 与 Kubernetes 集成的核心价值 弹性伸缩的构建环境： Jenkins 可以根据构建需求动态创建 Kubernetes Pod 作为 Jenkins Agent，构建完成后自动销毁，节省资源。 构建环境隔离与一致性： 每个构建都在独立的、预定义的 Pod 中运行，确保环境的纯净和一致性，避免“污染”和冲突。 资源利用率最大化： Kubernetes 负责调度 Agent P">
+<meta property="og:type" content="article">
+<meta property="og:title" content="jenkins-k8s">
+<meta property="og:url" content="http://example.com/2025/09/11/jenkins-k8s/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="Jenkins 与 Kubernetes 集成的核心价值 弹性伸缩的构建环境： Jenkins 可以根据构建需求动态创建 Kubernetes Pod 作为 Jenkins Agent，构建完成后自动销毁，节省资源。 构建环境隔离与一致性： 每个构建都在独立的、预定义的 Pod 中运行，确保环境的纯净和一致性，避免“污染”和冲突。 资源利用率最大化： Kubernetes 负责调度 Agent P">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:42:32.268Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="DevOps">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/jenkins-k8s/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>jenkins-k8s | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/jenkins-k8s/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          jenkins-k8s
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:42:32" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/DevOps/" itemprop="url" rel="index"><span itemprop="name">DevOps</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/DevOps/Jenkins/" itemprop="url" rel="index"><span itemprop="name">Jenkins</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>8.7k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>8 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="Jenkins-与-Kubernetes-集成的核心价值"><a href="#Jenkins-与-Kubernetes-集成的核心价值" class="headerlink" title="Jenkins 与 Kubernetes 集成的核心价值"></a>Jenkins 与 Kubernetes 集成的核心价值</h3><ol>
+<li><strong>弹性伸缩的构建环境：</strong> Jenkins 可以根据构建需求动态创建 Kubernetes Pod 作为 Jenkins Agent，构建完成后自动销毁，节省资源。</li>
+<li><strong>构建环境隔离与一致性：</strong> 每个构建都在独立的、预定义的 Pod 中运行，确保环境的纯净和一致性，避免“污染”和冲突。</li>
+<li><strong>资源利用率最大化：</strong> Kubernetes 负责调度 Agent Pod 到可用节点，优化集群资源利用。</li>
+<li><strong>云原生部署：</strong> 将应用程序打包成 Docker 镜像后，通过 Jenkins Pipeline 直接部署到 Kubernetes 集群。</li>
+<li><strong>自动化且可靠的部署：</strong> 利用 Kubernetes 的原生部署（Deployment）、服务发现（Service）、配置管理（ConfigMap&#x2F;Secret）等能力，实现声明式、不可变的基础设施部署。</li>
+<li><strong>可观测性与回滚：</strong> 结合 Kubernetes 的滚动更新和回滚机制，Jenkins Pipeline 可以轻松实现零停机部署和快速回滚。</li>
+</ol>
+<h3 id="Jenkins-与-Kubernetes-集成方式"><a href="#Jenkins-与-Kubernetes-集成方式" class="headerlink" title="Jenkins 与 Kubernetes 集成方式"></a>Jenkins 与 Kubernetes 集成方式</h3><p>Jenkins 与 Kubernetes 的集成主要在两个层面：</p>
+<ol>
+<li><strong>Jenkins Agent 运行在 Kubernetes Pod 中：</strong> Jenkins 将构建任务负载分发到动态创建的 Kubernetes Agent Pod 上。</li>
+<li><strong>Jenkins Pipeline 部署应用到 Kubernetes：</strong> 构建好的应用（Docker 镜像）通过流水线部署到 Kubernetes 集群。</li>
+</ol>
+<h4 id="1-Jenkins-Agent-运行在-Kubernetes-Pod-中（弹性构建环境）"><a href="#1-Jenkins-Agent-运行在-Kubernetes-Pod-中（弹性构建环境）" class="headerlink" title="1. Jenkins Agent 运行在 Kubernetes Pod 中（弹性构建环境）"></a>1. Jenkins Agent 运行在 Kubernetes Pod 中（弹性构建环境）</h4><p>这是最推荐和最先进的 Jenkins Agent 管理方式。</p>
+<p><strong>a. 安装 Kubernetes 插件</strong></p>
+<ul>
+<li>登录 Jenkins。</li>
+<li>前往 <code>Manage Jenkins</code> -&gt; <code>Manage Plugins</code>。</li>
+<li>在 <code>Available</code> 标签页搜索并安装 <strong>“Kubernetes CLI”</strong> 和 <strong>“Kubernetes”</strong> 插件。</li>
+</ul>
+<p><strong>b. 配置 Kubernetes Cloud</strong></p>
+<ul>
+<li>前往 <code>Manage Jenkins</code> -&gt; <code>Configure System</code>。</li>
+<li>找到 <code>Cloud</code> 部分，点击 <code>Add a new cloud</code> -&gt; <code>Kubernetes</code>。</li>
+<li><strong>Kubernetes URL：</strong> 填写您的 Kubernetes API Server URL。<ul>
+<li>如果您 Jenkins Master 也在 Kubernetes 集群内运行，通常可以使用 <code>https://kubernetes.default.svc.cluster.local</code>。</li>
+<li>如果是外部集群，需要填写完整地址。</li>
+</ul>
+</li>
+<li><strong>凭据 (Credentials)：</strong> 选择或添加连接 Kubernetes 的凭据。最常见的是：<ul>
+<li><strong>Kubernetes service account：</strong> 如果 Jenkins Master 运行在 K8s 中，可以使用本 Pod 的 Service Account。</li>
+<li><strong>Kubeconfig：</strong> 上传一个 Kubeconfig 文件。</li>
+<li><strong>Username with password &#x2F; Secret text：</strong> 用于外部访问。</li>
+</ul>
+</li>
+<li><strong>Jenkins URL：</strong> 填写 Jenkins Master 的外部可访问 URL，用于 Agent 连接 Master。</li>
+<li><strong>Jenkins tunnel：</strong> 如果需要 JNLP 协议的 Agent，配置隧道地址。</li>
+<li><strong>Pod Templates：</strong> 此处是核心配置，定义了 Jenkins Agent Pod 的不同规格。点击 <code>Add Pod Template</code>。<ul>
+<li><strong>Name：</strong> 模板名称。</li>
+<li><strong>Labels：</strong> 关键！这是 Jenkins Job 选择 Agent 的标签，例如 <code>maven-jdk11</code>、<code>nodejs-16</code>。</li>
+<li><strong>Namespace：</strong> Agent Pod 将被创建到哪个 K8s Namespace。</li>
+<li><strong>Containers：</strong> 定义 Agent Pod 中的容器。<ul>
+<li><strong>Container Name：</strong> 必须是 <code>jnlp</code> (如果使用 JNLP 协议连接) 或其他自定义名称。</li>
+<li><strong>Docker Image：</strong> 例如 <code>maven:3.8.6-openjdk-11</code>、<code>node:16-alpine</code>。</li>
+<li><strong>Command &#x2F; Args：</strong> 通常留空，或根据镜像要求填写启动命令。</li>
+<li><strong>Resource Requests&#x2F;Limits：</strong> 配置 CPU&#x2F;内存请求和限制，确保资源隔离和调度。</li>
+<li><strong>Working Directory：</strong> <code>/home/jenkins/agent</code> 或 <code>/var/jenkins_home/workspace</code>。</li>
+<li><strong>Environment Variables &#x2F; Volume Mounts：</strong> 配置其他环境变量或挂载所需的卷。</li>
+</ul>
+</li>
+<li><strong>ServiceAccount：</strong> 为 Agent Pod 指定一个 ServiceAccount，该 ServiceAccount 需具备执行构建任务所需的 K8s 权限（例如，如果 Agent 需要执行 <code>kubectl</code> 命令来部署应用）。</li>
+</ul>
+</li>
+<li>点击 **“保存” (Save)**。</li>
+</ul>
+<p><strong>c. 在 <code>Jenkinsfile</code> 中使用 Kubernetes Agent</strong></p>
+<p>在您的 <code>Jenkinsfile</code> 中，只需指定您在 Pod Template 中定义的标签即可：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Jenkinsfile</span></span><br><span class="line">pipeline &#123;</span><br><span class="line">    <span class="comment">// Jenkins 会根据标签 &#x27;maven-jdk11&#x27; 动态启动一个对应的 Kubernetes Pod 作为 Agent</span></span><br><span class="line">    agent &#123; label <span class="string">&#x27;maven-jdk11&#x27;</span> &#125; </span><br><span class="line"></span><br><span class="line">    stages &#123;</span><br><span class="line">        stage(<span class="string">&#x27;Build&#x27;</span>) &#123;</span><br><span class="line">            steps &#123;</span><br><span class="line">                echo <span class="string">&quot;Building application on Kubernetes Pod: $&#123;env.HOSTNAME&#125;&quot;</span></span><br><span class="line">                sh <span class="string">&#x27;mvn clean install -Dmaven.test.skip=true&#x27;</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      </span><br><span class="line">        stage(<span class="string">&#x27;Test&#x27;</span>) &#123;</span><br><span class="line">            <span class="comment">// 如果需要不同环境，可以切换 Pod 模板</span></span><br><span class="line">            <span class="comment">// agent &#123; label &#x27;nodejs-16&#x27; &#125; </span></span><br><span class="line">            steps &#123;</span><br><span class="line">                sh <span class="string">&#x27;mvn test&#x27;</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        stage(<span class="string">&#x27;Build Docker Image&#x27;</span>) &#123;</span><br><span class="line">            steps &#123;</span><br><span class="line">                <span class="comment">// 如果当前 Agent Pod 中没有 Docker 客户端，且需要访问 K8s 集群 Docker daemon</span></span><br><span class="line">                <span class="comment">// 确保你的 Pod 模板已经挂载了 /var/run/docker.sock (Kube-Dind 或 DooD 方案)</span></span><br><span class="line">                <span class="comment">// 或者你的 Agent Pod 已经部署了 Docker daemon (真正 Docker-in-Docker)</span></span><br><span class="line">                <span class="comment">// 另一种更标准的做法是使用 Kaniko 或 Buildah 在 K8s 内构建镜像，无需 Docker daemon</span></span><br><span class="line">                sh <span class="string">&quot;docker build -t myapp:$&#123;env.BUILD_NUMBER&#125; .&quot;</span> </span><br><span class="line">                withCredentials([usernamePassword(<span class="attr">credentialsId:</span> <span class="string">&#x27;docker-registry-creds&#x27;</span>, <span class="attr">passwordVariable:</span> <span class="string">&#x27;DOCKERHUB_PASSWORD&#x27;</span>, <span class="attr">usernameVariable:</span> <span class="string">&#x27;DOCKERHUB_USERNAME&#x27;</span>)]) &#123;</span><br><span class="line">                    sh <span class="string">&quot;docker login -u $&#123;DOCKERHUB_USERNAME&#125; -p $&#123;DOCKERHUB_PASSWORD&#125;&quot;</span></span><br><span class="line">                    sh <span class="string">&quot;docker push myapp:$&#123;env.BUILD_NUMBER&#125;&quot;</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  </span><br><span class="line">    post &#123;</span><br><span class="line">        always &#123;</span><br><span class="line">            <span class="comment">// 清理或通知</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>d. 多容器 Pod (Sidecar Pattern)</strong></p>
+<p>一个 Agent Pod 可以包含多个容器。例如，主容器是 JNLP Agent，旁边可以运行一个包含 <code>kubectl</code> 或 Helm 的 Sidecar 容器。在 <code>Jenkinsfile</code> 中，可以通过 <code>container</code> 指令在不同的容器中执行步骤：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Jenkinsfile</span></span><br><span class="line">pipeline &#123;</span><br><span class="line">    agent &#123;</span><br><span class="line">        kubernetes &#123;</span><br><span class="line">            cloud <span class="string">&#x27;kubernetes&#x27;</span> <span class="comment">// 引用配置的 Kubernetes Cloud 名称</span></span><br><span class="line">            yaml <span class="string">&#x27;&#x27;&#x27;</span></span><br><span class="line"><span class="string">apiVersion: v1</span></span><br><span class="line"><span class="string">kind: Pod</span></span><br><span class="line"><span class="string">metadata:</span></span><br><span class="line"><span class="string">  labels:</span></span><br><span class="line"><span class="string">    app: my-jenkins-agent</span></span><br><span class="line"><span class="string">spec:</span></span><br><span class="line"><span class="string">  containers:</span></span><br><span class="line"><span class="string">  - name: jnlp # Jenkins agent 主容器</span></span><br><span class="line"><span class="string">    image: jenkins/jnlp-agent:latest</span></span><br><span class="line"><span class="string">    args: [&#x27;$(JENKINS_SECRET)&#x27;, &#x27;$(JENKINS_NAME)&#x27;]</span></span><br><span class="line"><span class="string">    env:</span></span><br><span class="line"><span class="string">    - name: EXAMPLE_ENV</span></span><br><span class="line"><span class="string">      value: &quot;hello&quot;</span></span><br><span class="line"><span class="string">  - name: kubectl-tools # Sidecar 容器，包含 kubectl 和 helm</span></span><br><span class="line"><span class="string">    image: bitnami/kubectl:latest</span></span><br><span class="line"><span class="string">    command: [&#x27;cat&#x27;]</span></span><br><span class="line"><span class="string">    tty: true</span></span><br><span class="line"><span class="string">  - name: maven-tools # Sidecar 容器，包含 Maven</span></span><br><span class="line"><span class="string">    image: maven:3.8.6-openjdk-11</span></span><br><span class="line"><span class="string">    command: [&#x27;cat&#x27;]</span></span><br><span class="line"><span class="string">    tty: true</span></span><br><span class="line"><span class="string">&#x27;&#x27;&#x27;</span></span><br><span class="line">            <span class="comment">// or podTemplate &#x27;my-complex-pod-template&#x27; // 引用预先定义的 Pod Template</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    stages &#123;</span><br><span class="line">        stage(<span class="string">&#x27;Build with Maven&#x27;</span>) &#123;</span><br><span class="line">            steps &#123;</span><br><span class="line">                container(<span class="string">&#x27;maven-tools&#x27;</span>) &#123; <span class="comment">// 在名为 &#x27;maven-tools&#x27; 的容器中执行</span></span><br><span class="line">                    sh <span class="string">&#x27;mvn clean install&#x27;</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        stage(<span class="string">&#x27;Deploy with Kubectl&#x27;</span>) &#123;</span><br><span class="line">            steps &#123;</span><br><span class="line">                container(<span class="string">&#x27;kubectl-tools&#x27;</span>) &#123; <span class="comment">// 在名为 &#x27;kubectl-tools&#x27; 的容器中执行</span></span><br><span class="line">                    <span class="comment">// 确保 Agent Pod 的 ServiceAccount 有足够的 K8s 部署权限</span></span><br><span class="line">                    sh <span class="string">&#x27;kubectl apply -f k8s/deployment.yaml&#x27;</span></span><br><span class="line">                    sh <span class="string">&#x27;kubectl rollout status deployment/my-app&#x27;</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="2-Jenkins-Pipeline-部署应用到-Kubernetes"><a href="#2-Jenkins-Pipeline-部署应用到-Kubernetes" class="headerlink" title="2. Jenkins Pipeline 部署应用到 Kubernetes"></a>2. Jenkins Pipeline 部署应用到 Kubernetes</h4><p>一旦您的应用程序被构建成 Docker 镜像并推送到镜像仓库，Jenkins Pipeline 就可以负责将其部署到 Kubernetes 集群。</p>
+<p><strong>a. 使用 <code>kubectl</code> CLI</strong></p>
+<p>最直接的方式是在 Jenkins Agent 中安装 <code>kubectl</code>，然后直接执行 <code>kubectl</code> 命令。</p>
+<ul>
+<li><p><strong>前提：</strong> Jenkins Agent 所在的 Pod 或服务器需要安装 <code>kubectl</code> 并在 PATH 中。</p>
+</li>
+<li><p><strong>权限：</strong> Agent 需要配置 Kubeconfig 或 Service Account 来访问目标 Kubernetes 集群。</p>
+</li>
+<li><p><strong>示例 (<code>Jenkinsfile</code>)：</strong></p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">pipeline &#123;</span><br><span class="line">    agent &#123; label <span class="string">&#x27;kubectl-agent&#x27;</span> &#125; <span class="comment">// 确保这个 Agent 有 kubectl</span></span><br><span class="line"></span><br><span class="line">    stages &#123;</span><br><span class="line">        stage(<span class="string">&#x27;Deploy to Kubernetes&#x27;</span>) &#123;</span><br><span class="line">            steps &#123;</span><br><span class="line">                <span class="comment">// 切换到目标命名空间 (如果需要)</span></span><br><span class="line">                <span class="comment">// sh &#x27;kubectl config set-context --current --namespace=my-app-namespace&#x27;</span></span><br><span class="line">                <span class="comment">// 生成带有动态标签的部署文件（例如使用 sed 或 yq）</span></span><br><span class="line">                sh <span class="string">&quot;sed -i &#x27;s/APP_VERSION/$&#123;env.BUILD_NUMBER&#125;/g&#x27; k8s/deployment.yaml&quot;</span> </span><br><span class="line">                sh <span class="string">&quot;sed -i &#x27;s/REGISTRY_IMG/myregistry\/myapp/g&#x27; k8s/deployment.yaml&quot;</span></span><br><span class="line">              </span><br><span class="line">                <span class="comment">// 应用 Kubernetes 配置</span></span><br><span class="line">                sh <span class="string">&#x27;kubectl apply -f k8s/deployment.yaml&#x27;</span></span><br><span class="line">              </span><br><span class="line">                <span class="comment">// 等待部署完成</span></span><br><span class="line">                sh <span class="string">&#x27;kubectl rollout status deployment/my-app&#x27;</span></span><br><span class="line">              </span><br><span class="line">                <span class="comment">// 可选：验证部署</span></span><br><span class="line">                sh <span class="string">&#x27;kubectl get pods -l app=my-app&#x27;</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        stage(<span class="string">&#x27;Smoke Test&#x27;</span>) &#123;</span><br><span class="line">            steps &#123;</span><br><span class="line">                <span class="comment">// 部署后执行自动化测试</span></span><br><span class="line">                sh <span class="string">&#x27;curl -f http://my-app-service:8080/health || exit 1&#x27;</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p><strong>b. 使用 Helm (推荐用于复杂应用)</strong></p>
+<p>Helm 是 Kubernetes 的包管理器，可以定义、安装和升级复杂的 Kubernetes 应用程序。Jenkins Pipeline 可以利用 Helm 进行部署。</p>
+<ul>
+<li><p><strong>前提：</strong> Jenkins Agent 上安装 Helm CLI。</p>
+</li>
+<li><p><strong>示例 (<code>Jenkinsfile</code>)：</strong></p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">pipeline &#123;</span><br><span class="line">    agent &#123; label <span class="string">&#x27;helm-agent&#x27;</span> &#125; <span class="comment">// 确保这个 Agent 有 Helm 和 kubectl</span></span><br><span class="line"></span><br><span class="line">    stages &#123;</span><br><span class="line">        stage(<span class="string">&#x27;Package Helm Chart&#x27;</span>) &#123;</span><br><span class="line">            steps &#123;</span><br><span class="line">                sh <span class="string">&quot;helm package ./helm-chart --version $&#123;env.BUILD_NUMBER&#125;&quot;</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        stage(<span class="string">&#x27;Deploy with Helm&#x27;</span>) &#123;</span><br><span class="line">            steps &#123;</span><br><span class="line">                <span class="comment">// 例如，部署或升级一个名为 &#x27;my-app&#x27; 的 Helm Release</span></span><br><span class="line">                sh <span class="string">&quot;helm upgrade --install my-app ./helm-chart --namespace my-app-namespace --set image.tag=$&#123;env.BUILD_NUMBER&#125;&quot;</span></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        stage(<span class="string">&#x27;Rollback (Manual Trigger)&#x27;</span>) &#123;</span><br><span class="line">            <span class="comment">// 仅在手动触发时，用于回滚</span></span><br><span class="line">            when &#123; manualInput(<span class="string">&#x27;Rollback to previous version?&#x27;</span>) &#125;</span><br><span class="line">            steps &#123;</span><br><span class="line">                <span class="comment">// 获取上次成功的版本 (这里简化，实际可能需要更复杂逻辑或参数)</span></span><br><span class="line">                sh <span class="string">&#x27;helm rollback my-app&#x27;</span> </span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p><strong>c. 使用 Kubernetes Pipeline Plugin &#x2F; Kubernetes Client Library (更高级)</strong></p>
+<p>Jenkins 有专门的 Kubernetes Pipeline 插件，它提供 Groovy DSL 来与 Kubernetes API 直接交互，而无需安装 <code>kubectl</code> CLI。这对于更复杂的声明式 Pod 定义和操作非常有用。</p>
+<ul>
+<li><p><strong>安装 <code>Kubernetes Pipeline</code> 插件。</strong></p>
+</li>
+<li><p><strong>示例 (<code>Jenkinsfile</code>)：</strong></p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Jenkinsfile</span></span><br><span class="line"><span class="meta">@Library</span>(<span class="string">&#x27;kubernetes-shared-library&#x27;</span>) _ <span class="comment">// 假设你有一个封装了 K8s 操作的共享库</span></span><br><span class="line"></span><br><span class="line">pipeline &#123;</span><br><span class="line">    agent &#123; label <span class="string">&#x27;maven-jdk11&#x27;</span> &#125; </span><br><span class="line"></span><br><span class="line">    stages &#123;</span><br><span class="line">        stage(<span class="string">&#x27;Deploy to K8s via DSL&#x27;</span>) &#123;</span><br><span class="line">            steps &#123;</span><br><span class="line">                script &#123;</span><br><span class="line">                    <span class="comment">// 使用 Kubernetes Plugin 提供的 Groovy DSL</span></span><br><span class="line">                    <span class="comment">// 定义一个 Deployment</span></span><br><span class="line">                    <span class="keyword">def</span> deployment = <span class="keyword">new</span> LinkedHashMap()</span><br><span class="line">                    deployment.apiVersion = <span class="string">&#x27;apps/v1&#x27;</span></span><br><span class="line">                    deployment.kind = <span class="string">&#x27;Deployment&#x27;</span></span><br><span class="line">                    deployment.metadata = [<span class="attr">name:</span> <span class="string">&quot;my-app-$&#123;env.BUILD_NUMBER&#125;&quot;</span>, <span class="attr">namespace:</span> <span class="string">&quot;default&quot;</span>]</span><br><span class="line">                    deployment.spec = [</span><br><span class="line">                        <span class="symbol">selector:</span> [<span class="attr">matchLabels:</span> [<span class="attr">app:</span> <span class="string">&quot;my-app-$&#123;env.BUILD_NUMBER&#125;&quot;</span>]],</span><br><span class="line">                        <span class="symbol">replicas:</span> <span class="number">2</span>,</span><br><span class="line">                        <span class="symbol">template:</span> [</span><br><span class="line">                            <span class="symbol">metadata:</span> [<span class="attr">labels:</span> [<span class="attr">app:</span> <span class="string">&quot;my-app-$&#123;env.BUILD_NUMBER&#125;&quot;</span>]],</span><br><span class="line">                            <span class="symbol">spec:</span> [</span><br><span class="line">                                <span class="symbol">containers:</span> [[</span><br><span class="line">                                    <span class="symbol">name:</span> <span class="string">&#x27;my-app&#x27;</span>,</span><br><span class="line">                                    <span class="symbol">image:</span> <span class="string">&quot;myregistry/myapp:$&#123;env.BUILD_NUMBER&#125;&quot;</span>,</span><br><span class="line">                                    <span class="symbol">ports:</span> [[<span class="attr">containerPort:</span> <span class="number">8080</span>]]</span><br><span class="line">                                ]]</span><br><span class="line">                            ]</span><br><span class="line">                        ]</span><br><span class="line">                    ]</span><br><span class="line"></span><br><span class="line">                    <span class="comment">// 应用 Deployment</span></span><br><span class="line">                    k8s.resource(deployment).createOrReplace()</span><br><span class="line">                    k8s.resource(deployment).waitUntilReady(<span class="number">300</span>) <span class="comment">// 等待 Pod 就绪</span></span><br><span class="line"></span><br><span class="line">                    <span class="comment">// 或者调用共享库中封装的 K8s 部署函数</span></span><br><span class="line">                    <span class="comment">// sh.deployToK8s(&#x27;myapp&#x27;, env.BUILD_NUMBER) </span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h3 id="最佳实践与注意事项"><a href="#最佳实践与注意事项" class="headerlink" title="最佳实践与注意事项"></a>最佳实践与注意事项</h3><ul>
+<li><strong>ServiceAccount 权限：</strong> Jenkins Agent Pod 所使用的 Kubernetes ServiceAccount 必须仅拥有执行其任务所必需的最小权限（最小权限原则）。</li>
+<li><strong>凭据管理：</strong> 所有敏感信息（如 Docker Registry 凭据、Kubeconfig 内容）都应通过 Jenkins Credentials 进行管理，并通过 <code>withCredentials</code> 在 <code>Jenkinsfile</code> 中安全使用。</li>
+<li><strong>版本管理：</strong> 确保 Kubernetes Manifests (YAML 文件) 和 Helm Charts 与应用程序代码一同进行版本控制。</li>
+<li><strong>共享库：</strong> 强烈建议将复杂的 Kubernetes 部署逻辑封装在 Jenkins Shared Libraries 中。这可以使 <code>Jenkinsfile</code> 保持简洁，并促进团队内的CI&#x2F;CD实践标准化和复用。<ul>
+<li>例如，可以封装 <code>deployAppToK8s(appName, imageTag, namespace)</code> 等函数。</li>
+</ul>
+</li>
+<li><strong>回滚策略：</strong> Pipeline 应包含回滚机制，利用 Kubernetes 的内置能力（如 <code>kubectl rollout undo</code>）。</li>
+<li><strong>环境隔离：</strong> 使用不同的 Kubernetes Namespace 或集群来隔离开发、测试、生产环境。</li>
+<li><strong>可观测性：</strong> 部署后集成日志、监控和链路追踪系统，确保应用的健康和性能。</li>
+<li><strong>Jenkins Master 的部署：</strong> 考虑将 Jenkins Master 本身也部署在 Kubernetes 集群中（例如使用 Helm Chart），以充分利用 K8s 的高可用性、伸缩性和管理能力。</li>
+</ul>
+<p>将 Jenkins 与 Kubernetes 深度集成，是实现高效、健壮和可扩展的云原生 CI&#x2F;CD 流程的关键一步。它不仅简化了部署复杂性，还为您的团队带来了前所未有的敏捷性和控制力。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/DevOps/" rel="tag"># DevOps</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/k8s%20Namespace/" rel="prev" title="k8s Namespace">
+      <i class="fa fa-chevron-left"></i> k8s Namespace
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/k8s%20Deployment/" rel="next" title="k8s Deployment">
+      k8s Deployment <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Jenkins-%E4%B8%8E-Kubernetes-%E9%9B%86%E6%88%90%E7%9A%84%E6%A0%B8%E5%BF%83%E4%BB%B7%E5%80%BC"><span class="nav-number">1.</span> <span class="nav-text">Jenkins 与 Kubernetes 集成的核心价值</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Jenkins-%E4%B8%8E-Kubernetes-%E9%9B%86%E6%88%90%E6%96%B9%E5%BC%8F"><span class="nav-number">2.</span> <span class="nav-text">Jenkins 与 Kubernetes 集成方式</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-Jenkins-Agent-%E8%BF%90%E8%A1%8C%E5%9C%A8-Kubernetes-Pod-%E4%B8%AD%EF%BC%88%E5%BC%B9%E6%80%A7%E6%9E%84%E5%BB%BA%E7%8E%AF%E5%A2%83%EF%BC%89"><span class="nav-number">2.1.</span> <span class="nav-text">1. Jenkins Agent 运行在 Kubernetes Pod 中（弹性构建环境）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-Jenkins-Pipeline-%E9%83%A8%E7%BD%B2%E5%BA%94%E7%94%A8%E5%88%B0-Kubernetes"><span class="nav-number">2.2.</span> <span class="nav-text">2. Jenkins Pipeline 部署应用到 Kubernetes</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5%E4%B8%8E%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9"><span class="nav-number">3.</span> <span class="nav-text">最佳实践与注意事项</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="服务端解析 HTTP 请求数据是一个多步的、结构化的过程，它依赖于 HTTP 请求的严格格式定义。理解这个过程，有助于我们更好地进行网络编程和故障排查。 HTTP 请求通常由以下几个部分组成：  请求行 (Request Line) 请求头 (Request Headers) 空行 (Empty Line) 请求体 (Request Body) (可选，通常用于 POST&#x2F;PUT 请求)">
+<meta property="og:type" content="article">
+<meta property="og:title" content="服务端解析 HTTP 请求数据">
+<meta property="og:url" content="http://example.com/2025/09/11/%E6%9C%8D%E5%8A%A1%E7%AB%AF%E8%A7%A3%E6%9E%90%20HTTP%20%E8%AF%B7%E6%B1%82%E6%95%B0%E6%8D%AE/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="服务端解析 HTTP 请求数据是一个多步的、结构化的过程，它依赖于 HTTP 请求的严格格式定义。理解这个过程，有助于我们更好地进行网络编程和故障排查。 HTTP 请求通常由以下几个部分组成：  请求行 (Request Line) 请求头 (Request Headers) 空行 (Empty Line) 请求体 (Request Body) (可选，通常用于 POST&#x2F;PUT 请求)">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:12:34.960Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Network">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/%E6%9C%8D%E5%8A%A1%E7%AB%AF%E8%A7%A3%E6%9E%90%20HTTP%20%E8%AF%B7%E6%B1%82%E6%95%B0%E6%8D%AE/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>服务端解析 HTTP 请求数据 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/%E6%9C%8D%E5%8A%A1%E7%AB%AF%E8%A7%A3%E6%9E%90%20HTTP%20%E8%AF%B7%E6%B1%82%E6%95%B0%E6%8D%AE/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          服务端解析 HTTP 请求数据
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:12:34" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/" itemprop="url" rel="index"><span itemprop="name">WEB</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/Http/" itemprop="url" rel="index"><span itemprop="name">Http</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>服务端解析 HTTP 请求数据是一个多步的、结构化的过程，它依赖于 HTTP 请求的严格格式定义。理解这个过程，有助于我们更好地进行网络编程和故障排查。</p>
+<p>HTTP 请求通常由以下几个部分组成：</p>
+<ol>
+<li><strong>请求行 (Request Line)</strong></li>
+<li><strong>请求头 (Request Headers)</strong></li>
+<li><strong>空行 (Empty Line)</strong></li>
+<li><strong>请求体 (Request Body)</strong> (可选，通常用于 POST&#x2F;PUT 请求)</li>
+</ol>
+<p>服务端（通常是 Web 服务器如 Nginx, Apache, Tomcat, Node.js Express，或自定义的网络应用）在底层接收到客户端发送的原始字节流后，会按照这些部分的定义逐步解析。</p>
+<hr>
+<h3 id="服务端解析-HTTP-请求数据的步骤："><a href="#服务端解析-HTTP-请求数据的步骤：" class="headerlink" title="服务端解析 HTTP 请求数据的步骤："></a>服务端解析 HTTP 请求数据的步骤：</h3><h4 id="步骤-1：建立-TCP-连接并接收原始字节流"><a href="#步骤-1：建立-TCP-连接并接收原始字节流" class="headerlink" title="步骤 1：建立 TCP 连接并接收原始字节流"></a>步骤 1：建立 TCP 连接并接收原始字节流</h4><ul>
+<li><strong>底层网络通信：</strong> 客户端通过 TCP&#x2F;IP 协议向服务器的指定端口（HTTP 默认 80，HTTPS 默认 443）发起连接。</li>
+<li><strong>服务器监听：</strong> 服务器程序（如 Apache, Nginx 或 Node.js 应用）在这些端口上监听传入连接。</li>
+<li><strong>数据接收：</strong> 一旦 TCP 连接建立，服务器开始从这个连接中接收客户端发送过来的原始字节流。</li>
+</ul>
+<h4 id="步骤-2：解析请求行-Request-Line"><a href="#步骤-2：解析请求行-Request-Line" class="headerlink" title="步骤 2：解析请求行 (Request Line)"></a>步骤 2：解析请求行 (Request Line)</h4><ul>
+<li><p><strong>识别行结束符：</strong> 服务器首先会读取第一行数据，直到遇到回车换行符 (<code>CRLF</code>，即 <code>\r\n</code>)。</p>
+</li>
+<li><p><strong>分割请求行：</strong> 这一行（请求行）通常包含三个部分，由空格分隔：</p>
+<ol>
+<li><strong>请求方法 (Method)：</strong> 解析第一个单词，识别是 <code>GET</code>、<code>POST</code>、<code>PUT</code>、<code>DELETE</code>、<code>HEAD</code>、<code>OPTIONS</code> 等。</li>
+<li><strong>请求目标 (Request Target&#x2F;Path)：</strong> 解析第二个单词，这是客户端请求的资源路径（URI&#x2F;URL），可能包含查询字符串（<code>?param=value</code>）。<ul>
+<li><strong>路径解析：</strong> 将路径分割为基础路径和查询字符串部分。</li>
+<li><strong>查询字符串解析：</strong> 如果存在，会将键值对（<code>param=value&amp;param2=value2</code>）解析成易于访问的数据结构（例如，在编程语言中通常是键值对映射或字典）。</li>
+</ul>
+</li>
+<li><strong>HTTP 协议版本 (HTTP Version)：</strong> 解析第三个单词，识别请求使用的 HTTP 协议版本（如 <code>HTTP/1.1</code>, <code>HTTP/2.0</code>）。</li>
+</ol>
+</li>
+<li><p><strong>示例请求行：</strong><br><code>GET /index.html?name=John&amp;age=30 HTTP/1.1</code></p>
+</li>
+</ul>
+<h4 id="步骤-3：解析请求头-Request-Headers"><a href="#步骤-3：解析请求头-Request-Headers" class="headerlink" title="步骤 3：解析请求头 (Request Headers)"></a>步骤 3：解析请求头 (Request Headers)</h4><ul>
+<li><strong>循环读取：</strong> 服务器会继续一行一行地读取数据。每行代表一个请求头，直到遇到一个空行。</li>
+<li><strong>识别头结束符：</strong> 每读取一行，直到遇到 <code>CRLF</code>。</li>
+<li><strong>分割键值对：</strong> 每个请求头都由 <code>Header-Name: Header-Value</code> 的格式组成。服务器会：<ol>
+<li>查找第一个冒号 (<code>:</code> )。</li>
+<li>冒号之前的部分是**头名称 (Header Name)**。</li>
+<li>冒号之后的部分是**头值 (Header Value)**（可能会去除前导空格）。</li>
+</ol>
+</li>
+<li><strong>存储头信息：</strong> 解析后的头名称和头值会存储在服务器内部的一个数据结构中（例如，一个哈希表或字典），以便后续处理。</li>
+<li><strong>常见请求头示例：</strong><ul>
+<li><code>Host: www.example.com</code></li>
+<li><code>User-Agent: Mozilla/5.0 (...)</code></li>
+<li><code>Accept: text/html,application/xhtml+xml</code></li>
+<li><code>Content-Type: application/x-www-form-urlencoded</code> (如果存在请求体)</li>
+<li><code>Content-Length: 123</code> (如果存在请求体)</li>
+<li><code>Cookie: sessionid=abcd123; user=test</code></li>
+</ul>
+</li>
+</ul>
+<h4 id="步骤-4：识别空行-Empty-Line"><a href="#步骤-4：识别空行-Empty-Line" class="headerlink" title="步骤 4：识别空行 (Empty Line)"></a>步骤 4：识别空行 (Empty Line)</h4><ul>
+<li><strong>标记请求头结束：</strong> 服务器通过检测到一个单独的 <code>CRLF</code>（即一行中只有回车换行符，没有任何其他字符）来判断请求头部分已经结束。这是请求头和请求体之间的分隔符。</li>
+</ul>
+<h4 id="步骤-5：解析请求体-Request-Body"><a href="#步骤-5：解析请求体-Request-Body" class="headerlink" title="步骤 5：解析请求体 (Request Body)"></a>步骤 5：解析请求体 (Request Body)</h4><ul>
+<li><strong>条件判断：</strong> 只有当请求方法是 <code>POST</code>、<code>PUT</code> 或其他需要提交数据的方法时，并且请求头中包含 <code>Content-Length</code> 或 <code>Transfer-Encoding: chunked</code> 时，服务器才会期望接收请求体。</li>
+<li><strong>读取长度：</strong><ul>
+<li><strong>Content-Length：</strong> 如果存在 <code>Content-Length</code> 头，服务器会根据其值（一个数字，表示字节数）从连接中精确地读取指定数量的字节。</li>
+<li><strong>Transfer-Encoding: chunked：</strong> 如果是分块传输编码，服务器会按照分块的格式解析：读取每块的大小，然后读取该大小的数据，直到遇到一个零大小的块标记传输结束。</li>
+</ul>
+</li>
+<li><strong>解析Content-Type：</strong> 请求体中的数据格式由 <code>Content-Type</code> 请求头指定。服务器需要根据这个头来决定如何解析请求体数据。常见的 <code>Content-Type</code> 及其解析方式：<ul>
+<li><code>application/x-www-form-urlencoded</code>：这是传统的 HTML 表单提交格式。数据是 <code>key1=value1&amp;key2=value2</code> 形式的字符串，需要进行 URL 解码，并解析成键值对。</li>
+<li><code>multipart/form-data</code>：用于文件上传，以及包含多个数据部分的表单。服务器会解析多部分（<code>Boundary</code>）分隔符，并从每个部分中提取字段名、文件名和数据。</li>
+<li><code>application/json</code>：请求体是一个 JSON 字符串。服务器会使用 JSON 解析器将其解析成对应的编程语言数据结构（如对象、字典）。</li>
+<li><code>text/plain</code>：纯文本。</li>
+<li><code>application/xml</code>：XML 数据，需要 XML 解析器。</li>
+<li>其他二进制数据：如图片、视频等，通常直接作为原始字节流处理。</li>
+</ul>
+</li>
+</ul>
+<h4 id="步骤-6：封装请求对象并路由"><a href="#步骤-6：封装请求对象并路由" class="headerlink" title="步骤 6：封装请求对象并路由"></a>步骤 6：封装请求对象并路由</h4><ul>
+<li><strong>构建内部请求对象：</strong> 解析完成后，服务器会将所有解析出来的信息（方法、路径、查询参数、请求头、请求体数据）封装到一个内部的“请求对象”（Request Object）中。</li>
+<li><strong>路由到处理程序：</strong> Web 服务器或框架会根据请求方法和路径，将这个请求对象路由到对应的应用程序处理程序（例如，某个 MVC 框架中的控制器方法，或某个 Node.js Express 路由句柄）。</li>
+<li><strong>业务逻辑处理：</strong> 应用程序处理程序可以读取和使用这个请求对象中的数据，执行业务逻辑（如数据库查询、用户认证、数据保存等）。</li>
+</ul>
+<hr>
+<p><strong>示例流程（以 Node.js Express 为例的简化概念）：</strong></p>
+<p>当一个 Express 应用接收到请求：</p>
+<ol>
+<li>底层 Node.js <code>http</code> 模块接收到原始字节流。</li>
+<li><code>http</code> 模块解析请求行（<code>req.method</code>, <code>req.url</code>）和请求头（<code>req.headers</code>）。查询字符串被解析到 <code>req.query</code>。</li>
+<li>如果存在请求体，<code>http</code> 模块会流式地接收请求体数据。</li>
+<li>Express 或其使用的中间件（如 <code>body-parser</code>）会根据 <code>Content-Type</code> 头部来进一步解析请求体数据：<ul>
+<li>如果是 <code>application/json</code>，<code>body-parser</code> 会将请求体解析成 JavaScript 对象，并赋值给 <code>req.body</code>。</li>
+<li>如果是 <code>application/x-www-form-urlencoded</code>，<code>body-parser</code> 也会将其解析成对象，赋值给 <code>req.body</code>。</li>
+<li>如果是 <code>multipart/form-data</code>，通常需要像 <code>multer</code> 这样的第三方库来处理文件上传，解析结果也会被放置在 <code>req.body</code> 或 <code>req.files</code> 中。</li>
+</ul>
+</li>
+<li>最终，在你的路由处理器中，你可以直接访问 <code>req.method</code>, <code>req.url</code>, <code>req.query</code>, <code>req.headers</code>, <code>req.body</code> 等属性来获取解析后的请求数据。</li>
+</ol>
+<p>这个过程是所有 Web 服务的基础，理解它有助于我们更深入地理解网络通信。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Network/" rel="tag"># Network</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E6%A0%88%E4%B8%8E%E5%A0%86/" rel="prev" title="栈与堆">
+      <i class="fa fa-chevron-left"></i> 栈与堆
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0/" rel="next" title="服务发现">
+      服务发现 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E7%AB%AF%E8%A7%A3%E6%9E%90-HTTP-%E8%AF%B7%E6%B1%82%E6%95%B0%E6%8D%AE%E7%9A%84%E6%AD%A5%E9%AA%A4%EF%BC%9A"><span class="nav-number">1.</span> <span class="nav-text">服务端解析 HTTP 请求数据的步骤：</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%AD%A5%E9%AA%A4-1%EF%BC%9A%E5%BB%BA%E7%AB%8B-TCP-%E8%BF%9E%E6%8E%A5%E5%B9%B6%E6%8E%A5%E6%94%B6%E5%8E%9F%E5%A7%8B%E5%AD%97%E8%8A%82%E6%B5%81"><span class="nav-number">1.1.</span> <span class="nav-text">步骤 1：建立 TCP 连接并接收原始字节流</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%AD%A5%E9%AA%A4-2%EF%BC%9A%E8%A7%A3%E6%9E%90%E8%AF%B7%E6%B1%82%E8%A1%8C-Request-Line"><span class="nav-number">1.2.</span> <span class="nav-text">步骤 2：解析请求行 (Request Line)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%AD%A5%E9%AA%A4-3%EF%BC%9A%E8%A7%A3%E6%9E%90%E8%AF%B7%E6%B1%82%E5%A4%B4-Request-Headers"><span class="nav-number">1.3.</span> <span class="nav-text">步骤 3：解析请求头 (Request Headers)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%AD%A5%E9%AA%A4-4%EF%BC%9A%E8%AF%86%E5%88%AB%E7%A9%BA%E8%A1%8C-Empty-Line"><span class="nav-number">1.4.</span> <span class="nav-text">步骤 4：识别空行 (Empty Line)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%AD%A5%E9%AA%A4-5%EF%BC%9A%E8%A7%A3%E6%9E%90%E8%AF%B7%E6%B1%82%E4%BD%93-Request-Body"><span class="nav-number">1.5.</span> <span class="nav-text">步骤 5：解析请求体 (Request Body)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%AD%A5%E9%AA%A4-6%EF%BC%9A%E5%B0%81%E8%A3%85%E8%AF%B7%E6%B1%82%E5%AF%B9%E8%B1%A1%E5%B9%B6%E8%B7%AF%E7%94%B1"><span class="nav-number">1.6.</span> <span class="nav-text">步骤 6：封装请求对象并路由</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

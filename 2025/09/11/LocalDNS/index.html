@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="DNS 优化前面我们讲解了在 Kubernetes 中我们可以使用 CoreDNS 来进行集群的域名解析，但是如果在集群规模较大并发较高的情况下我们仍然需要对 DNS 进行优化，典型的就是大家比较熟悉的 CoreDNS 会出现超时 5s 的情况。 超时原因在 iptables 模式下（默认情况下），每个服务的 kube-proxy 在主机网络名称空间的 nat 表中创建一些 iptables 规则">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LocalDNS">
+<meta property="og:url" content="http://example.com/2025/09/11/LocalDNS/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="DNS 优化前面我们讲解了在 Kubernetes 中我们可以使用 CoreDNS 来进行集群的域名解析，但是如果在集群规模较大并发较高的情况下我们仍然需要对 DNS 进行优化，典型的就是大家比较熟悉的 CoreDNS 会出现超时 5s 的情况。 超时原因在 iptables 模式下（默认情况下），每个服务的 kube-proxy 在主机网络名称空间的 nat 表中创建一些 iptables 规则">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/iz848m.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/upm1o7.png">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:48:43.425Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://mudutestmenu.mudu.tv/upload/iz848m.png">
+
+<link rel="canonical" href="http://example.com/2025/09/11/LocalDNS/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>LocalDNS | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/LocalDNS/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          LocalDNS
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:48:43" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E7%BD%91%E7%BB%9C/" itemprop="url" rel="index"><span itemprop="name">网络</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>12k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>10 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="DNS-优化"><a href="#DNS-优化" class="headerlink" title="DNS 优化"></a>DNS 优化</h1><p>前面我们讲解了在 Kubernetes 中我们可以使用 CoreDNS 来进行集群的域名解析，但是如果在集群规模较大并发较高的情况下我们仍然需要对 DNS 进行优化，典型的就是大家比较熟悉的 CoreDNS 会出现超时 5s 的情况。</p>
+<h2 id="超时原因"><a href="#超时原因" class="headerlink" title="超时原因"></a>超时原因</h2><p>在 iptables 模式下（默认情况下），每个服务的 kube-proxy 在主机网络名称空间的 nat 表中创建一些 iptables 规则。</p>
+<p>比如在集群中具有两个 DNS 服务器实例的 kube-dns 服务，其相关规则大致如下所示：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">(1) -A PREROUTING -m comment --comment &quot;kubernetes service portals&quot; -j KUBE-SERVICES</span><br><span class="line">&lt;...&gt;</span><br><span class="line">(2) -A KUBE-SERVICES -d 10.96.0.10/32 -p udp -m comment --comment &quot;kube-system/kube-dns:dns cluster IP&quot; -m udp --dport 53 -j KUBE-SVC-TCOU7JCQXEZGVUNU</span><br><span class="line">&lt;...&gt;</span><br><span class="line">(3) -A KUBE-SVC-TCOU7JCQXEZGVUNU -m comment --comment &quot;kube-system/kube-dns:dns&quot; -m statistic --mode random --probability 0.50000000000 -j KUBE-SEP-LLLB6FGXBLX6PZF7</span><br><span class="line">(4) -A KUBE-SVC-TCOU7JCQXEZGVUNU -m comment --comment &quot;kube-system/kube-dns:dns&quot; -j KUBE-SEP-LRVEW52VMYCOUSMZ</span><br><span class="line">&lt;...&gt;</span><br><span class="line">(5) -A KUBE-SEP-LLLB6FGXBLX6PZF7 -p udp -m comment --comment &quot;kube-system/kube-dns:dns&quot; -m udp -j DNAT --to-destination 10.32.0.6:53</span><br><span class="line">&lt;...&gt;</span><br><span class="line">(6) -A KUBE-SEP-LRVEW52VMYCOUSMZ -p udp -m comment --comment &quot;kube-system/kube-dns:dns&quot; -m udp -j DNAT --to-destination 10.32.0.7:53</span><br></pre></td></tr></table></figure>
+
+
+
+<p>我们知道每个 Pod 的 <code>/etc/resolv.conf</code> 文件中都有填充的 <code>nameserver 10.96.0.10</code> 这个条目。所以来自 Pod 的 DNS 查找请求将发送到 <code>10.96.0.10</code>，这是 kube-dns 服务的 ClusterIP 地址。</p>
+<p>由于 <code>(1)</code> 请求进入 <code>KUBE-SERVICE</code> 链，然后匹配规则 <code>(2)</code>，最后根据 <code>(3)</code> 的 random 随机模式，跳转到 (5) 或 (6) 条目，将请求 UDP 数据包的目标 IP 地址修改为 DNS 服务器的<code>实际</code> IP 地址，这是通过 <code>DNAT</code> 完成的。其中 <code>10.32.0.6</code> 和 <code>10.32.0.7</code> 是我们集群中 CoreDNS 的两个 Pod 副本的 IP 地址。</p>
+<h3 id="内核中的-DNAT"><a href="#内核中的-DNAT" class="headerlink" title="内核中的 DNAT"></a>内核中的 DNAT</h3><p><code>DNAT</code> 的主要职责是同时更改传出数据包的目的地，响应数据包的源，并确保对所有后续数据包进行相同的修改。后者严重依赖于连接跟踪机制，也称为 <code>conntrack</code>，它被实现为内核模块。<code>conntrack</code> 会跟踪系统中正在进行的网络连接。</p>
+<p><code>conntrack</code> 中的每个连接都由两个元组表示，一个元组用于原始请求（IP_CT_DIR_ORIGINAL），另一个元组用于答复（IP_CT_DIR_REPLY）。对于 UDP，每个元组都由源 IP 地址，源端口以及目标 IP 地址和目标端口组成，答复元组包含存储在 src 字段中的目标的真实地址。</p>
+<p>例如，如果 IP 地址为 <code>10.40.0.17</code> 的 Pod 向 kube-dns 的 ClusterIP 发送一个请求，该请求被转换为 <code>10.32.0.6</code>，则将创建以下元组：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">原始：src = 10.40.0.17 dst = 10.96.0.10 sport = 53378 dport = 53</span><br><span class="line">回复：src = 10.32.0.6 dst = 10.40.0.17 sport = 53 dport = 53378</span><br></pre></td></tr></table></figure>
+
+
+
+<p>通过这些条目内核可以相应地修改任何相关数据包的目的地和源地址，而无需再次遍历 DNAT 规则，此外，它将知道如何修改回复以及应将回复发送给谁。创建 <code>conntrack</code> 条目后，将首先对其进行确认，然后如果没有已确认的 <code>conntrack</code> 条目具有相同的原始元组或回复元组，则内核将尝试确认该条目。<code>conntrack</code> 创建和 DNAT 的简化流程如下所示：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/iz848m.png" alt="conntrack"></p>
+<h3 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h3><p>DNS 客户端 (glibc 或 musl libc) 会并发请求 A 和 AAAA 记录，跟 DNS Server 通信自然会先 connect (建立 fd)，后面请求报文使用这个 fd 来发送，由于 UDP 是无状态协议，connect 时并不会创建 <code>conntrack</code> 表项, 而并发请求的 A 和 AAAA 记录默认使用同一个 fd 发包，这时它们源 Port 相同，当并发发包时，两个包都还没有被插入 conntrack 表项，所以 netfilter 会为它们分别创建 conntrack 表项，而集群内请求 CoreDNS 都是访问的 CLUSTER-IP，报文最终会被 DNAT 成一个具体的 Pod IP，当两个包被 DNAT 成同一个 IP，最终它们的五元组就相同了，在最终插入的时候后面那个包就会被丢掉，如果 DNS 的 Pod 副本只有一个实例的情况就很容易发生，现象就是 DNS 请求超时，客户端默认策略是等待 5s 自动重试，如果重试成功，我们看到的现象就是 DNS 请求有 5s 的延时。</p>
+<blockquote>
+<p>具体原因可以参考 weave works 总结的文章 <a target="_blank" rel="noopener" href="https://www.weave.works/blog/racy-conntrack-and-dns-lookup-timeouts">Racy conntrack and DNS lookup timeouts</a>。</p>
+</blockquote>
+<ul>
+<li>只有多个线程或进程，并发从同一个 socket 发送相同五元组的 UDP 报文时，才有一定概率会发生</li>
+<li>glibc、musl（alpine linux 的 libc 库）都使用 <code>parallel query</code>, 就是并发发出多个查询请求，因此很容易碰到这样的冲突，造成查询请求被丢弃</li>
+<li>由于 ipvs 也使用了 conntrack, 使用 kube-proxy 的 ipvs 模式，并不能避免这个问题</li>
+</ul>
+<h2 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h2><p>要彻底解决这个问题最好当然是内核上去 FIX 掉这个 BUG，除了这种方法之外我们还可以使用其他方法来进行规避，我们可以避免相同五元组 DNS 请求的并发。</p>
+<p>在 <code>resolv.conf</code> 中就有两个相关的参数可以进行配置：</p>
+<ul>
+<li><code>single-request-reopen</code>：发送 A 类型请求和 AAAA 类型请求使用不同的源端口，这样两个请求在 conntrack 表中不占用同一个表项，从而避免冲突。</li>
+<li><code>single-request</code>：避免并发，改为串行发送 A 类型和 AAAA 类型请求。没有了并发，从而也避免了冲突。</li>
+</ul>
+<p>要给容器的 <code>resolv.conf</code> 加上 options 参数，有几个办法：</p>
+<ul>
+<li><ol>
+<li>在容器的 <code>ENTRYPOINT</code> 或者 <code>CMD</code> 脚本中，执行 <code>/bin/echo &#39;options single-request-reopen&#39; &gt;&gt; /etc/resolv.conf</code></li>
+</ol>
+</li>
+<li><ol>
+<li>在 Pod 的 postStart hook 中添加：</li>
+</ol>
+</li>
+</ul>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">lifecycle:</span></span><br><span class="line">  <span class="attr">postStart:</span></span><br><span class="line">    <span class="attr">exec:</span></span><br><span class="line">      <span class="attr">command:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">/bin/sh</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">-c</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">&quot;/bin/echo &#x27;options single-request-reopen&#x27; &gt;&gt; /etc/resolv.conf&quot;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<ul>
+<li><ol>
+<li>使用 <code>template.spec.dnsConfig</code> 配置:</li>
+</ol>
+</li>
+</ul>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">template:</span></span><br><span class="line">  <span class="attr">spec:</span></span><br><span class="line">    <span class="attr">dnsConfig:</span></span><br><span class="line">      <span class="attr">options:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">single-request-reopen</span></span><br></pre></td></tr></table></figure>
+
+
+
+<ul>
+<li><ol>
+<li>使用 ConfigMap 覆盖 Pod 里面的 <code>/etc/resolv.conf</code>：</li>
+</ol>
+</li>
+</ul>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># configmap</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">data:</span></span><br><span class="line">  <span class="attr">resolv.conf:</span> <span class="string">|</span></span><br><span class="line"><span class="string">    nameserver 1.2.3.4</span></span><br><span class="line"><span class="string">    search default.svc.cluster.local svc.cluster.local cluster.local</span></span><br><span class="line"><span class="string">    options ndots:5 single-request-reopen timeout:1</span></span><br><span class="line"><span class="string"></span><span class="attr">kind:</span> <span class="string">ConfigMap</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">resolvconf</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="comment"># Pod Spec</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">volumeMounts:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">resolv-conf</span></span><br><span class="line">      <span class="attr">mountPath:</span> <span class="string">/etc/resolv.conf</span></span><br><span class="line">      <span class="attr">subPath:</span> <span class="string">resolv.conf</span> <span class="comment"># 在某个目录下面挂载一个文件（保证不覆盖当前目录）需要使用subPath -&gt; 不支持热更新</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">volumes:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">resolv-conf</span></span><br><span class="line">    <span class="attr">configMap:</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">resolvconf</span></span><br><span class="line">      <span class="attr">items:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">key:</span> <span class="string">resolv.conf</span></span><br><span class="line">          <span class="attr">path:</span> <span class="string">resolv.conf</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>上面的方法在一定程度上可以解决 DNS 超时的问题，但更好的方式是<strong>使用本地 DNS 缓存</strong>，容器的 DNS 请求都发往本地的 DNS 缓存服务，也就不需要走 DNAT，当然也不会发生 <code>conntrack</code> 冲突了，而且还可以有效提升 CoreDNS 的性能瓶颈。</p>
+<h2 id="性能测试"><a href="#性能测试" class="headerlink" title="性能测试"></a>性能测试</h2><p>这里我们使用一个简单的 golang 程序来测试下使用本地 DNS 缓存的前后性能。代码如下所示：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// main.go</span></span><br><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">&quot;context&quot;</span></span><br><span class="line">    <span class="string">&quot;flag&quot;</span></span><br><span class="line">    <span class="string">&quot;fmt&quot;</span></span><br><span class="line">    <span class="string">&quot;net&quot;</span></span><br><span class="line">    <span class="string">&quot;sync/atomic&quot;</span></span><br><span class="line">    <span class="string">&quot;time&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> host <span class="type">string</span></span><br><span class="line"><span class="keyword">var</span> connections <span class="type">int</span></span><br><span class="line"><span class="keyword">var</span> duration <span class="type">int64</span></span><br><span class="line"><span class="keyword">var</span> limit <span class="type">int64</span></span><br><span class="line"><span class="keyword">var</span> timeoutCount <span class="type">int64</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    flag.StringVar(&amp;host, <span class="string">&quot;host&quot;</span>, <span class="string">&quot;&quot;</span>, <span class="string">&quot;Resolve host&quot;</span>)</span><br><span class="line">    flag.IntVar(&amp;connections, <span class="string">&quot;c&quot;</span>, <span class="number">100</span>, <span class="string">&quot;Connections&quot;</span>)</span><br><span class="line">    flag.Int64Var(&amp;duration, <span class="string">&quot;d&quot;</span>, <span class="number">0</span>, <span class="string">&quot;Duration(s)&quot;</span>)</span><br><span class="line">    flag.Int64Var(&amp;limit, <span class="string">&quot;l&quot;</span>, <span class="number">0</span>, <span class="string">&quot;Limit(ms)&quot;</span>)</span><br><span class="line">    flag.Parse()</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> count <span class="type">int64</span> = <span class="number">0</span></span><br><span class="line">    <span class="keyword">var</span> errCount <span class="type">int64</span> = <span class="number">0</span></span><br><span class="line">    pool := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="keyword">interface</span>&#123;&#125;, connections)</span><br><span class="line">    exit := <span class="built_in">make</span>(<span class="keyword">chan</span> <span class="type">bool</span>)</span><br><span class="line">    <span class="keyword">var</span> (</span><br><span class="line">        min <span class="type">int64</span> = <span class="number">0</span></span><br><span class="line">        max <span class="type">int64</span> = <span class="number">0</span></span><br><span class="line">        sum <span class="type">int64</span> = <span class="number">0</span></span><br><span class="line">    )</span><br><span class="line"></span><br><span class="line">    <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">        time.Sleep(time.Second * time.Duration(duration))</span><br><span class="line">        exit &lt;- <span class="literal">true</span></span><br><span class="line">    &#125;()</span><br><span class="line"></span><br><span class="line">endD:</span><br><span class="line">    <span class="keyword">for</span> &#123;</span><br><span class="line">        <span class="keyword">select</span> &#123;</span><br><span class="line">        <span class="keyword">case</span> pool &lt;- <span class="literal">nil</span>:</span><br><span class="line">            <span class="keyword">go</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">                <span class="keyword">defer</span> <span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">                    &lt;-pool</span><br><span class="line">                &#125;()</span><br><span class="line">                resolver := &amp;net.Resolver&#123;&#125;</span><br><span class="line">                now := time.Now()</span><br><span class="line">                _, err := resolver.LookupIPAddr(context.Background(), host)</span><br><span class="line">                use := time.Since(now).Nanoseconds() / <span class="type">int64</span>(time.Millisecond)</span><br><span class="line">                <span class="keyword">if</span> min == <span class="number">0</span> || use &lt; min &#123;</span><br><span class="line">                    min = use</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">if</span> use &gt; max &#123;</span><br><span class="line">                    max = use</span><br><span class="line">                &#125;</span><br><span class="line">                sum += use</span><br><span class="line">                <span class="keyword">if</span> limit &gt; <span class="number">0</span> &amp;&amp; use &gt;= limit &#123;</span><br><span class="line">                    timeoutCount++</span><br><span class="line">                &#125;</span><br><span class="line">                atomic.AddInt64(&amp;count, <span class="number">1</span>)</span><br><span class="line">                <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">                    fmt.Println(err.Error())</span><br><span class="line">                    atomic.AddInt64(&amp;errCount, <span class="number">1</span>)</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;()</span><br><span class="line">        <span class="keyword">case</span> &lt;-exit:</span><br><span class="line">            <span class="keyword">break</span> endD</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;request count：%d\nerror count：%d\n&quot;</span>, count, errCount)</span><br><span class="line">    fmt.Printf(<span class="string">&quot;request time：min(%dms) max(%dms) avg(%dms) timeout(%dn)\n&quot;</span>, min, max, sum/count, timeoutCount)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>首先配置好 golang 环境，然后直接构建上面的测试应用：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go build -o testdns .</span><br></pre></td></tr></table></figure>
+
+
+
+<p>构建完成后生成一个 testdns 的二进制文件，然后我们将这个二进制文件拷贝到任意一个 Pod 中去进行测试：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl cp testdns svc-demo-546b7bcdcf-6xsnr:/root -n default</span><br></pre></td></tr></table></figure>
+
+
+
+<p>拷贝完成后进入这个测试的 Pod 中去：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl <span class="built_in">exec</span> -it svc-demo-546b7bcdcf-6xsnr -- /bin/bash</span></span><br><span class="line">root@svc-demo-546b7bcdcf-6xsnr:/# cd /root</span><br></pre></td></tr></table></figure>
+
+
+
+<p>然后我们执行 testdns 程序来进行压力测试，比如执行 200 个并发，持续 30 秒：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">对 nginx-service.default 这个地址进行解析</span></span><br><span class="line">root@svc-demo-546b7bcdcf-6xsnr:~# ./testdns -host nginx-service.default -c 200 -d 30 -l 5000</span><br><span class="line">lookup nginx-service.default on 10.96.0.10:53: no such host</span><br><span class="line">lookup nginx-service.default on 10.96.0.10:53: no such host</span><br><span class="line">lookup nginx-service.default on 10.96.0.10:53: no such host</span><br><span class="line">lookup nginx-service.default on 10.96.0.10:53: no such host</span><br><span class="line">lookup nginx-service.default on 10.96.0.10:53: no such host</span><br><span class="line">request count：12533</span><br><span class="line">error count：5</span><br><span class="line">request time：min(5ms) max(16871ms) avg(425ms) timeout(475n)</span><br><span class="line">root@svc-demo-546b7bcdcf-6xsnr:~# ./testdns -host nginx-service.default -c 200 -d 30 -l 5000</span><br><span class="line">lookup nginx-service.default on 10.96.0.10:53: no such host</span><br><span class="line">lookup nginx-service.default on 10.96.0.10:53: no such host</span><br><span class="line">lookup nginx-service.default on 10.96.0.10:53: no such host</span><br><span class="line">request count：10058</span><br><span class="line">error count：3</span><br><span class="line">request time：min(4ms) max(12347ms) avg(540ms) timeout(487n)</span><br><span class="line">root@svc-demo-546b7bcdcf-6xsnr:~# ./testdns -host nginx-service.default -c 200 -d 30 -l 5000</span><br><span class="line">lookup nginx-service.default on 10.96.0.10:53: no such host</span><br><span class="line">lookup nginx-service.default on 10.96.0.10:53: no such host</span><br><span class="line">request count：12242</span><br><span class="line">error count：2</span><br><span class="line">request time：min(3ms) max(12206ms) avg(478ms) timeout(644n)</span><br><span class="line">root@svc-demo-546b7bcdcf-6xsnr:~# ./testdns -host nginx-service.default -c 200 -d 30 -l 5000</span><br><span class="line">request count：11008</span><br><span class="line">error count：0</span><br><span class="line">request time：min(3ms) max(11110ms) avg(496ms) timeout(478n)</span><br><span class="line">root@svc-demo-546b7bcdcf-6xsnr:~# ./testdns -host nginx-service.default -c 200 -d 30 -l 5000</span><br><span class="line">request count：9141</span><br><span class="line">error count：0</span><br><span class="line">request time：min(4ms) max(11198ms) avg(607ms) timeout(332n)</span><br><span class="line">root@svc-demo-546b7bcdcf-6xsnr:~# ./testdns -host nginx-service.default -c 200 -d 30 -l 5000</span><br><span class="line">request count：9126</span><br><span class="line">error count：0</span><br><span class="line">request time：min(4ms) max(11554ms) avg(613ms) timeout(197n)</span><br></pre></td></tr></table></figure>
+
+
+
+<p>我们可以看到大部分平均耗时都是在 500ms 左右，这个性能是非常差的，而且还有部分解析失败的条目。接下来我们就来尝试使用 <code>NodeLocal DNSCache</code> 来提升 DNS 的性能和可靠性。</p>
+<h2 id="NodeLocal-DNSCache"><a href="#NodeLocal-DNSCache" class="headerlink" title="NodeLocal DNSCache"></a>NodeLocal DNSCache</h2><p><code>NodeLocal DNSCache</code> 通过在集群节点上运行一个 DaemonSet 来提高集群 DNS 性能和可靠性。处于 ClusterFirst 的 DNS 模式下的 Pod 可以连接到 kube-dns 的 serviceIP 进行 DNS 查询，通过 kube-proxy 组件添加的 iptables 规则将其转换为 CoreDNS 端点。通过在每个集群节点上运行 DNS 缓存，<code>NodeLocal DNSCache</code> 可以缩短 DNS 查找的延迟时间、使 DNS 查找时间更加一致，以及减少发送到 kube-dns 的 DNS 查询次数。</p>
+<p>在集群中运行 <code>NodeLocal DNSCache</code> 有如下几个好处：</p>
+<ul>
+<li>如果本地没有 CoreDNS 实例，则具有最高 DNS QPS 的 Pod 可能必须到另一个节点进行解析，使用 <code>NodeLocal DNSCache</code> 后，拥有本地缓存将有助于改善延迟</li>
+<li>跳过 iptables DNAT 和连接跟踪将有助于减少 conntrack 竞争并避免 UDP DNS 条目填满 conntrack 表（上面提到的 5s 超时问题就是这个原因造成的）</li>
+<li>从本地缓存代理到 kube-dns 服务的连接可以升级到 TCP，TCP conntrack 条目将在连接关闭时被删除，而 UDP 条目必须超时(默认 <code>nfconntrackudp_timeout</code> 是 30 秒)</li>
+<li>将 DNS 查询从 UDP 升级到 TCP 将减少归因于丢弃的 UDP 数据包和 DNS 超时的尾部等待时间，通常长达 30 秒（3 次重试+ 10 秒超时）</li>
+</ul>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/upm1o7.png" alt="NodeLocal"></p>
+<p>要安装 <code>NodeLocal DNSCache</code> 也非常简单，直接获取官方的资源清单即可：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget https://github.com/kubernetes/kubernetes/raw/master/cluster/addons/dns/nodelocaldns/nodelocaldns.yaml</span><br></pre></td></tr></table></figure>
+
+
+
+<p>该资源清单文件中包含几个变量值得注意，其中：</p>
+<ul>
+<li><code>__PILLAR__DNS__SERVER__</code> ：表示 kube-dns 这个 Service 的 ClusterIP，可以通过命令 <code>kubectl get svc -n kube-system | grep kube-dns | awk&#39;&#123; print $3 &#125;&#39;</code> 获取（我们这里就是 <code>10.96.0.10</code>）</li>
+<li><code>__PILLAR__LOCAL__DNS__</code>：表示 DNSCache 本地的 IP，默认为 <code>169.254.20.10</code></li>
+<li><code>__PILLAR__DNS__DOMAIN__</code>：表示集群域，默认就是 <code>cluster.local</code></li>
+</ul>
+<p>另外还有两个参数 <code>__PILLAR__CLUSTER__DNS__</code> 和 <code>__PILLAR__UPSTREAM__SERVERS__</code>，这两个参数会通过镜像 1.15.16 版本去进行自动配置，对应的值来源于 kube-dns 的 ConfigMap 和定制的 <code>Upstream Server</code> 配置。直接执行如下所示的命令即可安装：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">sed <span class="string">&#x27;s/k8s.gcr.io\/dns/cnych/g</span></span></span><br><span class="line">s/__PILLAR__DNS__SERVER__/10.96.0.10/g</span><br><span class="line">s/__PILLAR__LOCAL__DNS__/169.254.20.10/g</span><br><span class="line">s/__PILLAR__DNS__DOMAIN__/cluster.local/g&#x27; nodelocaldns.yaml |</span><br><span class="line">kubectl apply -f -</span><br></pre></td></tr></table></figure>
+
+
+
+<p>可以通过如下命令来查看对应的 Pod 是否已经启动成功：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get pods -n kube-system -l k8s-app=node-local-dns</span></span><br><span class="line">NAME                   READY   STATUS    RESTARTS   AGE</span><br><span class="line">node-local-dns-4wclp   1/1     Running   0          5m43s</span><br><span class="line">node-local-dns-gxq57   1/1     Running   0          5m43s</span><br><span class="line">node-local-dns-v7gtz   1/1     Running   0          5m43s</span><br></pre></td></tr></table></figure>
+
+
+
+<p>需要注意的是这里使用 DaemonSet 部署 node-local-dns 使用了 <code>hostNetwork=true</code>，会占用宿主机的 8080 端口，所以需要保证该端口未被占用。</p>
+<p>但是到这里还没有完，如果 kube-proxy 组件使用的是 ipvs 模式的话我们还需要修改 kubelet 的 <code>--cluster-dns</code> 参数，将其指向 <code>169.254.20.10</code>，Daemonset 会在每个节点创建一个网卡来绑这个 IP，Pod 向本节点这个 IP 发 DNS 请求，缓存没有命中的时候才会再代理到上游集群 DNS 进行查询。iptables 模式下 Pod 还是向原来的集群 DNS 请求，节点上有这个 IP 监听，会被本机拦截，再请求集群上游 DNS，所以不需要更改 <code>--cluster-dns</code> 参数。</p>
+<blockquote>
+<p>如果担心线上环境修改 <code>--cluster-dns</code> 参数会产生影响，我们也可以直接在新部署的 Pod 中通过 dnsConfig 配置使用新的 localdns 的地址来进行解析。</p>
+</blockquote>
+<p>由于我这里使用的是 kubeadm 安装的 1.19 版本的集群，所以我们只需要替换节点上 <code>/var/lib/kubelet/config.yaml</code> 文件中的 clusterDNS 这个参数值，然后重启即可：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sed -i &#x27;s/10.96.0.10/169.254.20.10/g&#x27; /var/lib/kubelet/config.yaml</span><br><span class="line">systemctl daemon-reload &amp;&amp; systemctl restart kubelet</span><br></pre></td></tr></table></figure>
+
+
+
+<p>待 node-local-dns 安装配置完成后，我们可以部署一个新的 Pod 来验证下：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># test-node-local-dns.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">test-node-local-dns</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">local-dns</span></span><br><span class="line">      <span class="attr">image:</span> <span class="string">busybox</span></span><br><span class="line">      <span class="attr">command:</span> [<span class="string">&#x27;/bin/sh&#x27;</span>, <span class="string">&#x27;-c&#x27;</span>, <span class="string">&#x27;sleep 60m&#x27;</span>]</span><br></pre></td></tr></table></figure>
+
+
+
+<p>直接部署：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl apply -f test-node-local-dns.yaml</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl <span class="built_in">exec</span> -it test-node-local-dns /bin/sh</span></span><br><span class="line">/ # cat /etc/resolv.conf</span><br><span class="line">nameserver 169.254.20.10</span><br><span class="line">search default.svc.cluster.local svc.cluster.local cluster.local</span><br><span class="line">options ndots:5</span><br></pre></td></tr></table></figure>
+
+
+
+<p>我们可以看到 nameserver 已经变成 <code>169.254.20.10</code> 了，当然对于之前的历史 Pod 要想使用 node-local-dns 则需要重建。</p>
+<p>接下来我们重建前面压力测试 DNS 的 Pod，重新将 testdns 二进制文件拷贝到 Pod 中去：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">拷贝到重建的 Pod 中</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl <span class="built_in">cp</span> testdns svc-demo-546b7bcdcf-b5mkt:/root</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl <span class="built_in">exec</span> -it svc-demo-546b7bcdcf-b5mkt -- /bin/bash</span></span><br><span class="line">root@svc-demo-546b7bcdcf-b5mkt:/# cat /etc/resolv.conf</span><br><span class="line">nameserver 169.254.20.10  # 可以看到 nameserver 已经更改</span><br><span class="line">search default.svc.cluster.local svc.cluster.local cluster.local</span><br><span class="line">options ndots:5</span><br><span class="line">root@svc-demo-546b7bcdcf-b5mkt:/# cd /root</span><br><span class="line">root@svc-demo-546b7bcdcf-b5mkt:~# ls</span><br><span class="line">testdns</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">重新执行压力测试</span></span><br><span class="line">root@svc-demo-546b7bcdcf-b5mkt:~# ./testdns -host nginx-service.default -c 200 -d 30 -l 5000</span><br><span class="line">request count：16297</span><br><span class="line">error count：0</span><br><span class="line">request time：min(2ms) max(5270ms) avg(357ms) timeout(8n)</span><br><span class="line">root@svc-demo-546b7bcdcf-b5mkt:~# ./testdns -host nginx-service.default -c 200 -d 30 -l 5000</span><br><span class="line">request count：15982</span><br><span class="line">error count：0</span><br><span class="line">request time：min(2ms) max(5360ms) avg(373ms) timeout(54n)</span><br><span class="line">root@svc-demo-546b7bcdcf-b5mkt:~# ./testdns -host nginx-service.default -c 200 -d 30 -l 5000</span><br><span class="line">request count：25631</span><br><span class="line">error count：0</span><br><span class="line">request time：min(3ms) max(958ms) avg(232ms) timeout(0n)</span><br><span class="line">root@svc-demo-546b7bcdcf-b5mkt:~# ./testdns -host nginx-service.default -c 200 -d 30 -l 5000</span><br><span class="line">request count：23388</span><br><span class="line">error count：0</span><br><span class="line">request time：min(6ms) max(1130ms) avg(253ms) timeout(0n)</span><br></pre></td></tr></table></figure>
+
+
+
+<p>从上面的结果可以看到无论是最大解析时间还是平均解析时间都比之前默认的 CoreDNS 提示了不少的效率，所以我们还是非常推荐在线上环境部署 <code>NodeLocal DNSCache</code> 来提升 DNS 的性能和可靠性的，唯一的缺点就是由于 LocalDNS 使用的是 DaemonSet 模式部署，所以如果需要更新镜像则可能会中断服务（不过可以使用一些第三方的增强组件来实现原地升级解决这个问题，比如 <a target="_blank" rel="noopener" href="https://openkruise.io/">openkruise</a>）。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/NAT/" rel="prev" title="NAT">
+      <i class="fa fa-chevron-left"></i> NAT
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Local%20%E5%AD%98%E5%82%A8/" rel="next" title="Local 存储">
+      Local 存储 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#DNS-%E4%BC%98%E5%8C%96"><span class="nav-number">1.</span> <span class="nav-text">DNS 优化</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B6%85%E6%97%B6%E5%8E%9F%E5%9B%A0"><span class="nav-number">1.1.</span> <span class="nav-text">超时原因</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%85%E6%A0%B8%E4%B8%AD%E7%9A%84-DNAT"><span class="nav-number">1.1.1.</span> <span class="nav-text">内核中的 DNAT</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%97%AE%E9%A2%98"><span class="nav-number">1.1.2.</span> <span class="nav-text">问题</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95"><span class="nav-number">1.2.</span> <span class="nav-text">解决方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%A7%E8%83%BD%E6%B5%8B%E8%AF%95"><span class="nav-number">1.3.</span> <span class="nav-text">性能测试</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NodeLocal-DNSCache"><span class="nav-number">1.4.</span> <span class="nav-text">NodeLocal DNSCache</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

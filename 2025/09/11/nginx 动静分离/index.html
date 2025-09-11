@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="什么是动静分离？动静分离是一种 Web 架构优化技术，其核心思想是将网站的动态内容和静态内容分离开来，由不同的服务器或服务进行处理。  动态内容： 指的是需要服务器端程序（如 PHP, Java, Python, Node.js 等）处理，从数据库中查询数据，经过业务逻辑计算后才能生成的响应。例如：用户登录页面、购物车、文章详情页（需要查询数据库）、API 接口等。这些内容通常会频繁变化，且生成成">
+<meta property="og:type" content="article">
+<meta property="og:title" content="nginx 动静分离">
+<meta property="og:url" content="http://example.com/2025/09/11/nginx%20%E5%8A%A8%E9%9D%99%E5%88%86%E7%A6%BB/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="什么是动静分离？动静分离是一种 Web 架构优化技术，其核心思想是将网站的动态内容和静态内容分离开来，由不同的服务器或服务进行处理。  动态内容： 指的是需要服务器端程序（如 PHP, Java, Python, Node.js 等）处理，从数据库中查询数据，经过业务逻辑计算后才能生成的响应。例如：用户登录页面、购物车、文章详情页（需要查询数据库）、API 接口等。这些内容通常会频繁变化，且生成成">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:50:44.652Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Web">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/nginx%20%E5%8A%A8%E9%9D%99%E5%88%86%E7%A6%BB/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>nginx 动静分离 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/nginx%20%E5%8A%A8%E9%9D%99%E5%88%86%E7%A6%BB/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          nginx 动静分离
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:50:44" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/" itemprop="url" rel="index"><span itemprop="name">WEB</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/Nginx/" itemprop="url" rel="index"><span itemprop="name">Nginx</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>5k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="什么是动静分离？"><a href="#什么是动静分离？" class="headerlink" title="什么是动静分离？"></a>什么是动静分离？</h3><p><strong>动静分离</strong>是一种 Web 架构优化技术，其核心思想是将网站的动态内容和静态内容分离开来，由不同的服务器或服务进行处理。</p>
+<ul>
+<li><strong>动态内容：</strong> 指的是需要服务器端程序（如 PHP, Java, Python, Node.js 等）处理，从数据库中查询数据，经过业务逻辑计算后才能生成的响应。例如：用户登录页面、购物车、文章详情页（需要查询数据库）、API 接口等。这些内容通常会频繁变化，且生成成本较高。</li>
+<li><strong>静态内容：</strong> 指的是不需要服务器端程序处理，可以直接从文件系统读取并返回给客户端的文件。例如：HTML 页面、CSS 样式表、JavaScript 脚本、图片、字体文件、视频等。这些内容通常不经常变化，且生成成本为零。</li>
+</ul>
+<h3 id="为什么要实现动静分离？"><a href="#为什么要实现动静分离？" class="headerlink" title="为什么要实现动静分离？"></a>为什么要实现动静分离？</h3><ol>
+<li><p><strong>提高系统性能：</strong></p>
+<ul>
+<li><strong>专业化处理：</strong> Nginx 非常擅长高效地处理静态文件（高性能 Web 服务器）。将静态内容交给 Nginx 直接处理，可以减轻后端应用服务器的压力，让后端服务器专注于处理复杂的动态业务逻辑。</li>
+<li><strong>减少资源消耗：</strong> 动态请求需要更多 CPU、内存和数据库资源。将这部分请求和静态请求分离，可以避免应用服务器因为处理大量静态请求而资源耗尽，从而提高动态请求的响应速度。</li>
+<li><strong>充分利用缓存：</strong> 静态文件可以被 Nginx 和浏览器长时间缓存，极大地减少了重复请求和传输，进一步提高性能。</li>
+</ul>
+</li>
+<li><p><strong>提高系统可用性和稳定性：</strong></p>
+<ul>
+<li><strong>故障隔离：</strong> 如果动态应用服务器出现故障，Nginx 仍然可以正常提供静态资源（如错误页面），避免整个网站完全瘫痪。</li>
+<li><strong>弹性伸缩：</strong> 静态资源通常更容易扩容，可以通过 CDN 或多台 Nginx 服务器轻松应对高并发。动态服务器可以独立地进行扩容和维护。</li>
+</ul>
+</li>
+<li><p><strong>提高安全性：</strong></p>
+<ul>
+<li>将敏感的动态应用服务器与公共网络隔离开来，仅通过 Nginx 暴露必要的端口，可以降低安全风险。</li>
+</ul>
+</li>
+</ol>
+<h3 id="动静分离的原理"><a href="#动静分离的原理" class="headerlink" title="动静分离的原理"></a>动静分离的原理</h3><p>动静分离的原理非常简单明了，主要依赖于 Nginx 的<strong>基于 URL 路径匹配和代理转发</strong>的能力。</p>
+<ol>
+<li><strong>Nginx 作为统一入口：</strong> 所有来自客户端的请求首先都到达 Nginx 服务器。</li>
+<li><strong>URL 规则匹配：</strong> Nginx 根据客户端请求的 URL 路径、文件扩展名等，通过 <code>location</code> 指令中定义的规则进行匹配。</li>
+<li><strong>分流处理：</strong><ul>
+<li><strong>静态请求：</strong> 如果请求的 URL 匹配到静态资源的模式（例如 <code>/static/</code> 目录下的文件，或 <code>.js</code>、<code>.css</code>、<code>.png</code> 等扩展名的文件），Nginx 会直接从其配置的本地文件系统（<code>root</code> 或 <code>alias</code> 指定的目录）中查找并返回这些文件给客户端。同时，Nginx 会应用缓存策略（如 <code>expires</code>）来优化后续访问。</li>
+<li><strong>动态请求：</strong> 如果请求的 URL 没有匹配到静态资源的模式（例如 <code>/api/</code> 路径、<code>.php</code> 后缀等），Nginx 会将其判断为动态请求。此时，Nginx 会将这个请求通过 <code>proxy_pass</code> 指令转发给后端部署动态应用的应用服务器（如 Tomcat、PHP-FPM、Node.js 应用等）进行处理。后端应用服务器处理完后，将结果返回给 Nginx，Nginx 再将结果返回给客户端。</li>
+</ul>
+</li>
+</ol>
+<p><strong>核心思想：</strong> Nginx 根据请求的特性（主要是 URL）充当一个智能的分发器，将不同类型的请求发送到最适合处理它们的组件。</p>
+<h3 id="在-Nginx-中如何配置动静分离？"><a href="#在-Nginx-中如何配置动静分离？" class="headerlink" title="在 Nginx 中如何配置动静分离？"></a>在 Nginx 中如何配置动静分离？</h3><p>下面是一个典型的 Nginx 动静分离配置示例。假设我们的应用结构如下：</p>
+<ul>
+<li><strong>静态文件：</strong> 放在 Nginx 服务器本地的 <code>/var/www/mywebapp/static/</code> 目录下。</li>
+<li><strong>动态应用：</strong> 运行在 <code>http://127.0.0.1:8080</code> 的后端应用服务器。</li>
+</ul>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">http</span> &#123;</span><br><span class="line">    <span class="comment"># 静态文件的 MIME 类型映射</span></span><br><span class="line">    <span class="attribute">include</span> mime.types; </span><br><span class="line">    <span class="attribute">default_type</span> application/octet-stream;</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 配置日志格式和访问日志</span></span><br><span class="line">    <span class="attribute">log_format</span> main <span class="string">&#x27;<span class="variable">$remote_addr</span> - <span class="variable">$remote_user</span> [<span class="variable">$time_local</span>] &quot;<span class="variable">$request</span>&quot; &#x27;</span></span><br><span class="line">                      <span class="string">&#x27;<span class="variable">$status</span> <span class="variable">$body_bytes_sent</span> &quot;<span class="variable">$http_referer</span>&quot; &#x27;</span></span><br><span class="line">                      <span class="string">&#x27;&quot;<span class="variable">$http_user_agent</span>&quot; &quot;<span class="variable">$http_x_forwarded_for</span>&quot;&#x27;</span>;</span><br><span class="line">    <span class="attribute">access_log</span> /var/log/nginx/access.log main;</span><br><span class="line">    <span class="attribute">error_log</span> /var/log/nginx/<span class="literal">error</span>.log <span class="literal">warn</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 启用 Gzip 压缩，进一步优化静态文件传输</span></span><br><span class="line">    <span class="attribute">gzip</span> <span class="literal">on</span>;</span><br><span class="line">    <span class="attribute">gzip_min_length</span> <span class="number">1k</span>;</span><br><span class="line">    <span class="attribute">gzip_buffers</span> <span class="number">4</span> <span class="number">16k</span>;</span><br><span class="line">    <span class="attribute">gzip_http_version</span> <span class="number">1</span>.<span class="number">0</span>;</span><br><span class="line">    <span class="attribute">gzip_comp_level</span> <span class="number">6</span>;</span><br><span class="line">    <span class="attribute">gzip_types</span> text/plain application/javascript application/x-javascript text/css application/xml text/xml image/svg+xml;</span><br><span class="line">    <span class="attribute">gzip_vary</span> <span class="literal">on</span>;</span><br><span class="line">    <span class="comment"># gzip_proxied any; # 如果 Nginx 前面还有一层代理，可能需要这个</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 定义后端动态应用服务器（如果有多个可以进行负载均衡）</span></span><br><span class="line">    <span class="section">upstream</span> dynamic_backend &#123;</span><br><span class="line">        <span class="attribute">server</span> <span class="number">127.0.0.1:8080</span>; <span class="comment"># 后端应用服务器地址和端口</span></span><br><span class="line">        <span class="comment"># server 192.168.1.2:8080; # 另一个后端服务器</span></span><br><span class="line">        <span class="comment"># least_conn; # 负载均衡算法</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="section">server</span> &#123;</span><br><span class="line">        <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">        <span class="attribute">server_name</span> your_domain.com; <span class="comment"># 替换为你的域名或IP</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># 1. 静态文件处理 (使用 location 匹配文件扩展名)</span></span><br><span class="line">        <span class="comment"># 匹配常用的静态文件扩展名，并直接由 Nginx 服务</span></span><br><span class="line">        <span class="section">location</span> <span class="regexp">~* \.(css|js|jpg|jpeg|gif|png|ico|woff|woff2|ttf|svg|eot)$</span> &#123;</span><br><span class="line">            <span class="attribute">root</span> /var/www/mywebapp; <span class="comment"># 静态文件的根目录 (这里假设是 /var/www/mywebapp/static/)</span></span><br><span class="line">            <span class="comment"># 如果静态文件在 root 的子目录，如 /var/www/mywebapp/static/</span></span><br><span class="line">            <span class="comment"># 可以写成 root /var/www/mywebapp; 当请求 /static/a.png 时，Nginx 会去 /var/www/mywebapp/static/a.png 找</span></span><br><span class="line">            <span class="comment"># 为了更明确，你也可以使用 alias 指令：</span></span><br><span class="line">            <span class="comment"># alias /var/www/mywebapp/static_files/; # 注意 alias 后面要带斜杠</span></span><br><span class="line"></span><br><span class="line">            <span class="attribute">expires</span> <span class="number">30d</span>; <span class="comment"># 设置浏览器缓存 30 天</span></span><br><span class="line">            <span class="attribute">access_log</span> <span class="literal">off</span>; <span class="comment"># 静态文件访问频率高，通常关闭日志减少IO</span></span><br><span class="line">            <span class="attribute">log_not_found</span> <span class="literal">off</span>; <span class="comment"># 不记录找不到静态文件的日志</span></span><br><span class="line">        &#125;</span><br><span class="line">      </span><br><span class="line">        <span class="comment"># 2. 静态文件处理 (使用 location 匹配特定目录)</span></span><br><span class="line">        <span class="comment"># 如果你的静态文件都在一个明确的目录下，比如 /static/</span></span><br><span class="line">        <span class="section">location</span> /static/ &#123;</span><br><span class="line">            <span class="attribute">root</span> /var/www/mywebapp; <span class="comment"># Nginx 会从 /var/www/mywebapp/static/ 查找文件</span></span><br><span class="line">            <span class="attribute">expires</span> <span class="number">30d</span>;</span><br><span class="line">            <span class="attribute">access_log</span> <span class="literal">off</span>;</span><br><span class="line">            <span class="attribute">log_not_found</span> <span class="literal">off</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 3. 动态请求处理</span></span><br><span class="line">        <span class="comment"># 匹配所有其他请求，将其转发给后端应用服务器</span></span><br><span class="line">        <span class="section">location</span> / &#123;</span><br><span class="line">            <span class="attribute">proxy_pass</span> http://dynamic_backend; <span class="comment"># 将请求代理到后端动态服务器</span></span><br><span class="line"></span><br><span class="line">            <span class="comment"># 传递客户端真实 IP 等信息给后端</span></span><br><span class="line">            <span class="attribute">proxy_set_header</span> Host <span class="variable">$host</span>;</span><br><span class="line">            <span class="attribute">proxy_set_header</span> X-Real-IP <span class="variable">$remote_addr</span>;</span><br><span class="line">            <span class="attribute">proxy_set_header</span> X-Forwarded-For <span class="variable">$proxy_add_x_forwarded_for</span>;</span><br><span class="line">            <span class="attribute">proxy_set_header</span> X-Forwarded-Proto <span class="variable">$scheme</span>; <span class="comment"># 传递原始请求协议 (http/https)</span></span><br><span class="line"></span><br><span class="line">            <span class="comment"># 保持后端连接，提高效率</span></span><br><span class="line">            <span class="attribute">proxy_connect_timeout</span> <span class="number">60s</span>;</span><br><span class="line">            <span class="attribute">proxy_send_timeout</span> <span class="number">60s</span>;</span><br><span class="line">            <span class="attribute">proxy_read_timeout</span> <span class="number">60s</span>;</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 禁用代理缓冲，对于动态内容实时性要求较高时有用</span></span><br><span class="line">            <span class="attribute">proxy_buffering</span> <span class="literal">off</span>;</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 在这里可以添加 try_files 指令用于处理特定的 URL 重写或默认页面</span></span><br><span class="line">            <span class="comment"># 例如，如果后端应用是 SPA (Single Page Application)，</span></span><br><span class="line">            <span class="comment"># 所有的非API请求都应该返回 index.html</span></span><br><span class="line">            <span class="comment"># try_files $uri $uri/ /index.html;</span></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 如果你的动态应用是 API 接口，可以单独配置</span></span><br><span class="line">        <span class="comment"># location /api/ &#123;</span></span><br><span class="line">        <span class="comment">#     proxy_pass http://dynamic_backend;</span></span><br><span class="line">        <span class="comment">#     proxy_set_header Host $host;</span></span><br><span class="line">        <span class="comment">#     proxy_set_header X-Real-IP $remote_addr;</span></span><br><span class="line">        <span class="comment">#     # ... 其他代理头和超时设置</span></span><br><span class="line">        <span class="comment"># &#125;</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># 处理 favicon.ico 请求，通常是静态文件</span></span><br><span class="line">        <span class="section">location</span> = /favicon.ico &#123;</span><br><span class="line">            <span class="attribute">alias</span> /var/www/mywebapp/static/favicon.ico;</span><br><span class="line">            <span class="attribute">expires</span> <span class="number">30d</span>;</span><br><span class="line">            <span class="attribute">access_log</span> <span class="literal">off</span>;</span><br><span class="line">            <span class="attribute">log_not_found</span> <span class="literal">off</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="配置步骤和要点："><a href="#配置步骤和要点：" class="headerlink" title="配置步骤和要点："></a>配置步骤和要点：</h4><ol>
+<li><p><strong>确定静态文件存放位置：</strong></p>
+<ul>
+<li>将所有 CSS、JS、图片、字体等静态文件统一存放在 Nginx 服务器本地的一个目录下，例如 <code>/var/www/mywebapp/static/</code>。</li>
+<li>在前端代码中，确保引用这些静态文件时使用 <code>/static/</code> 或其他特定路径，便于 Nginx 匹配。</li>
+</ul>
+</li>
+<li><p><strong>配置 <code>root</code> 或 <code>alias</code> 指令：</strong></p>
+<ul>
+<li><code>root</code> 指令：Nginx 会将请求的 URI 附加到 <code>root</code> 路径之后，形成完整的文件路径。例如，<code>root /var/www/mywebapp;</code> 时，请求 <code>/static/a.js</code> 会去 <code>/var/www/mywebapp/static/a.js</code> 找。</li>
+<li><code>alias</code> 指令：<code>alias</code> 指定的路径会替换 <code>location</code> 匹配到的部分。例如，<code>location /static/ &#123; alias /var/www/mywebapp/static_files/; &#125;</code> 时，请求 <code>/static/a.js</code> 会去 <code>/var/www/mywebapp/static_files/a.js</code> 找。注意 <code>alias</code> 结尾通常需要加斜杠。</li>
+<li><strong>建议：</strong> 如果静态文件都在一个明确的子目录下（如 <code>/static/</code>），使用 <code>root</code> 结合合适的 <code>location</code> 匹配通常更简洁。如果静态文件分散在不同位置，或者 <code>location</code> 匹配的是正则表达式，<code>alias</code> 可能更灵活。</li>
+</ul>
+</li>
+<li><p><strong>配置 <code>expires</code> 指令：</strong> 对静态文件设置合理的缓存时间，加速浏览器访问。</p>
+</li>
+<li><p><strong>配置 <code>access_log off;</code> 和 <code>log_not_found off;</code>：</strong> 针对静态文件，关闭访问日志和找不到文件的日志，减少 Nginx 的 I&#x2F;O 负担，提高性能。</p>
+</li>
+<li><p><strong>配置 <code>gzip</code> 压缩：</strong> 启用 Gzip 压缩，可以有效减小传输的静态文件大小，进一步提升加载速度。</p>
+</li>
+<li><p><strong>定义 <code>upstream</code> 块：</strong> 如果有多个后端动态服务器，可以在 <code>upstream</code> 块中定义它们，并配置负载均衡策略。</p>
+</li>
+<li><p><strong>配置 <code>proxy_pass</code> 指令：</strong> 将动态请求转发给 <code>upstream</code> 定义的后端服务器。</p>
+</li>
+<li><p><strong>传递 <code>proxy_set_header</code>：</strong> 至关重要，它确保后端应用能获取到客户端的真实 IP 地址、请求的原始 Host 等信息。</p>
+</li>
+<li><p><strong>测试和重载 Nginx：</strong></p>
+<ul>
+<li><code>sudo nginx -t</code> (测试配置文件语法)</li>
+<li><code>sudo systemctl reload nginx</code> 或 <code>sudo service nginx reload</code> (重新加载配置)</li>
+</ul>
+</li>
+</ol>
+<p>通过上述配置，Nginx 就能清晰地将静态和动态请求分流，实现高效的动静分离。这是现代高性能 Web 架构中不可或缺的一环。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Web/" rel="tag"># Web</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/mysql/" rel="prev" title="mysql-ansible">
+      <i class="fa fa-chevron-left"></i> mysql-ansible
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/new&make/" rel="next" title="new&make">
+      new&make <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E5%8A%A8%E9%9D%99%E5%88%86%E7%A6%BB%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">什么是动静分离？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E5%AE%9E%E7%8E%B0%E5%8A%A8%E9%9D%99%E5%88%86%E7%A6%BB%EF%BC%9F"><span class="nav-number">2.</span> <span class="nav-text">为什么要实现动静分离？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8A%A8%E9%9D%99%E5%88%86%E7%A6%BB%E7%9A%84%E5%8E%9F%E7%90%86"><span class="nav-number">3.</span> <span class="nav-text">动静分离的原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9C%A8-Nginx-%E4%B8%AD%E5%A6%82%E4%BD%95%E9%85%8D%E7%BD%AE%E5%8A%A8%E9%9D%99%E5%88%86%E7%A6%BB%EF%BC%9F"><span class="nav-number">4.</span> <span class="nav-text">在 Nginx 中如何配置动静分离？</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E6%AD%A5%E9%AA%A4%E5%92%8C%E8%A6%81%E7%82%B9%EF%BC%9A"><span class="nav-number">4.1.</span> <span class="nav-text">配置步骤和要点：</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

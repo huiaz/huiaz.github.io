@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Python 多线程然而，在使用之前，必须理解一个核心概念：**Python 的全局解释器锁 (Global Interpreter Lock - GIL)**。  GIL 的影响：GIL 保证了在任何时刻，只有一个线程在执行 Python 字节码。这意味着，如果你的任务是 CPU 密集型的（例如，复杂的数学计算、视频编码），多线程无法利用多核 CPU 来实现真正的并行计算，效率提升不大甚至可能下">
+<meta property="og:type" content="article">
+<meta property="og:title" content="python thread">
+<meta property="og:url" content="http://example.com/2025/09/11/python%20thread/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="Python 多线程然而，在使用之前，必须理解一个核心概念：**Python 的全局解释器锁 (Global Interpreter Lock - GIL)**。  GIL 的影响：GIL 保证了在任何时刻，只有一个线程在执行 Python 字节码。这意味着，如果你的任务是 CPU 密集型的（例如，复杂的数学计算、视频编码），多线程无法利用多核 CPU 来实现真正的并行计算，效率提升不大甚至可能下">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:53:20.899Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Python">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/python%20thread/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>python thread | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/python%20thread/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          python thread
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:53:20" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/scripts/" itemprop="url" rel="index"><span itemprop="name">scripts</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.8k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="Python-多线程"><a href="#Python-多线程" class="headerlink" title="Python 多线程"></a>Python 多线程</h3><p>然而，在使用之前，必须理解一个核心概念：**Python 的全局解释器锁 (Global Interpreter Lock - GIL)**。</p>
+<ul>
+<li><strong>GIL 的影响</strong>：GIL 保证了在任何时刻，只有一个线程在执行 Python 字节码。这意味着，如果你的任务是 <strong>CPU 密集型</strong>的（例如，复杂的数学计算、视频编码），多线程<strong>无法</strong>利用多核 CPU 来实现真正的并行计算，效率提升不大甚至可能下降。</li>
+<li><strong>多线程的优势所在</strong>：对于 <strong>I&#x2F;O 密集型</strong>任务（例如，网络请求、读写文件、数据库查询），一个线程在等待 I&#x2F;O 操作（比如等待网络响应）时，会被阻塞。GIL 在此时会释放，允许另一个线程运行。这样，多个线程可以“轮流”执行，当一个在等待时，另一个在工作，从而极大地减少了总的等待时间，提升了脚本的整体执行效率。</li>
+</ul>
+<p><strong>结论先行：在 Python 中，多线程是优化 I&#x2F;O 密集型任务的利器。</strong></p>
+<hr>
+<h3 id="如何使用多线程：从基础到最佳实践"><a href="#如何使用多线程：从基础到最佳实践" class="headerlink" title="如何使用多线程：从基础到最佳实践"></a>如何使用多线程：从基础到最佳实践</h3><p>我们以一个常见的运维场景为例：检查一组服务器的网站是否能正常访问。</p>
+<h4 id="场景1：单线程（串行执行）"><a href="#场景1：单线程（串行执行）" class="headerlink" title="场景1：单线程（串行执行）"></a>场景1：单线程（串行执行）</h4><p>这是未使用多线程的原始脚本，它会一个接一个地检查 URL。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"></span><br><span class="line">urls = [</span><br><span class="line">    <span class="string">&#x27;https://www.python.org&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;https://www.google.com&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;https://www.github.com&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;https://www.microsoft.com&#x27;</span>,</span><br><span class="line">    <span class="string">&#x27;https://www.amazon.com&#x27;</span>,</span><br><span class="line">    <span class="comment"># 假设还有更多</span></span><br><span class="line">]</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">check_url</span>(<span class="params">url</span>):</span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        response = requests.get(url, timeout=<span class="number">5</span>)</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;<span class="subst">&#123;url&#125;</span>: Status <span class="subst">&#123;response.status_code&#125;</span>&quot;</span>)</span><br><span class="line">    <span class="keyword">except</span> requests.exceptions.RequestException <span class="keyword">as</span> e:</span><br><span class="line">        <span class="built_in">print</span>(<span class="string">f&quot;<span class="subst">&#123;url&#125;</span>: FAILED - <span class="subst">&#123;e&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">start_time = time.time()</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> url <span class="keyword">in</span> urls:</span><br><span class="line">    check_url(url)</span><br><span class="line"></span><br><span class="line">end_time = time.time()</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;\nTotal execution time: <span class="subst">&#123;end_time - start_time:<span class="number">.2</span>f&#125;</span> seconds.&quot;</span>)</span><br></pre></td></tr></table></figure>
+<p><strong>问题</strong>：如果每个请求平均耗时 1 秒，那么检查 5 个 URL 就会耗时约 5 秒。如果检查 100 个，就会耗时 100 秒，效率极低。</p>
+<hr>
+<h4 id="场景2：使用-threading-模块（手动管理）"><a href="#场景2：使用-threading-模块（手动管理）" class="headerlink" title="场景2：使用 threading 模块（手动管理）"></a>场景2：使用 <code>threading</code> 模块（手动管理）</h4><p>这是基础的多线程实现方式。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">import</span> threading</span><br><span class="line"></span><br><span class="line"><span class="comment"># ... (urls 和 check_url 函数与上面相同) ...</span></span><br><span class="line"></span><br><span class="line">start_time = time.time()</span><br><span class="line"></span><br><span class="line">threads = []</span><br><span class="line"><span class="keyword">for</span> url <span class="keyword">in</span> urls:</span><br><span class="line">    <span class="comment"># 1. 为每个任务创建一个线程对象</span></span><br><span class="line">    thread = threading.Thread(target=check_url, args=(url,))</span><br><span class="line">    threads.append(thread)</span><br><span class="line">    <span class="comment"># 2. 启动线程</span></span><br><span class="line">    thread.start()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 3. 等待所有线程执行完毕</span></span><br><span class="line"><span class="comment"># 这一步至关重要！主线程会在这里阻塞，直到所有子线程都结束。</span></span><br><span class="line"><span class="keyword">for</span> thread <span class="keyword">in</span> threads:</span><br><span class="line">    thread.join()</span><br><span class="line"></span><br><span class="line">end_time = time.time()</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;\nTotal execution time: <span class="subst">&#123;end_time - start_time:<span class="number">.2</span>f&#125;</span> seconds.&quot;</span>)</span><br></pre></td></tr></table></figure>
+<p><strong>效率提升</strong>：现在，所有网络请求几乎是同时发出的。总耗时不再是所有请求时间的总和，而是取决于<strong>最慢的那个请求</strong>的时间。对于 5 个 URL，总耗时可能就在 1 秒左右。</p>
+<hr>
+<h3 id="最佳实践：使用-concurrent-futures-ThreadPoolExecutor"><a href="#最佳实践：使用-concurrent-futures-ThreadPoolExecutor" class="headerlink" title="最佳实践：使用 concurrent.futures.ThreadPoolExecutor"></a>最佳实践：使用 <code>concurrent.futures.ThreadPoolExecutor</code></h3><p>手动管理线程（创建、启动、加入）比较繁琐，且容易出错。Python 3 引入的 <code>ThreadPoolExecutor</code> 提供了一个更高级、更简洁、更安全的接口，是现代 Python 开发中的<strong>首选方案</strong>。</p>
+<p>它会自动管理一个线程池，你只需要把任务提交给它即可。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"><span class="keyword">import</span> concurrent.futures</span><br><span class="line"></span><br><span class="line"><span class="comment"># ... (urls 和 check_url 函数与上面相同) ...</span></span><br><span class="line"></span><br><span class="line">start_time = time.time()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 设置最大并发线程数，例如 5 个</span></span><br><span class="line"><span class="comment"># 如果不设置，它会根据 CPU 核心数选择一个合理的值</span></span><br><span class="line">max_workers = <span class="number">5</span></span><br><span class="line"><span class="keyword">with</span> concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) <span class="keyword">as</span> executor:</span><br><span class="line">    <span class="comment"># 使用 executor.map 来提交所有任务，它会返回一个结果的迭代器</span></span><br><span class="line">    <span class="comment"># 这种方式简洁，会自动处理任务的提交和结果的收集</span></span><br><span class="line">    executor.<span class="built_in">map</span>(check_url, urls)</span><br><span class="line"></span><br><span class="line">end_time = time.time()</span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;\nTotal execution time: <span class="subst">&#123;end_time - start_time:<span class="number">.2</span>f&#125;</span> seconds.&quot;</span>)</span><br></pre></td></tr></table></figure>
+<p><strong>为何这是最佳实践？</strong></p>
+<ol>
+<li><strong>代码简洁</strong>：使用 <code>with</code> 语句可以确保线程池在使用完毕后被正确关闭。<code>executor.map</code> 一行代码就替代了之前复杂的循环和 <code>join</code>。</li>
+<li><strong>资源可控</strong>：通过 <code>max_workers</code> 参数，你可以精确控制并发量，防止因创建过多线程而耗尽系统资源。</li>
+<li><strong>易于获取结果</strong>：<code>executor.map</code> 按照任务提交的顺序返回结果。如果你需要更灵活地处理结果（比如谁先完成就先处理谁），可以使用 <code>executor.submit</code> 和 <code>concurrent.futures.as_completed</code>。</li>
+</ol>
+<hr>
+<h3 id="处理线程安全问题：使用锁-Lock"><a href="#处理线程安全问题：使用锁-Lock" class="headerlink" title="处理线程安全问题：使用锁 (Lock)"></a>处理线程安全问题：使用锁 (Lock)</h3><p>当多个线程需要<strong>修改同一个共享变量</strong>时，可能会发生“竞态条件”（Race Condition），导致数据不一致。</p>
+<p><strong>例子：</strong> 多个线程同时对一个计数器执行 <code>+1</code> 操作。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> threading</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"></span><br><span class="line"><span class="comment"># 一个共享的变量</span></span><br><span class="line">counter = <span class="number">0</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">worker</span>():</span><br><span class="line">    <span class="keyword">global</span> counter</span><br><span class="line">    <span class="keyword">for</span> _ <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">100000</span>):</span><br><span class="line">        <span class="comment"># 这是一个不安全的操作</span></span><br><span class="line">        counter += <span class="number">1</span></span><br><span class="line"></span><br><span class="line">threads = [threading.Thread(target=worker) <span class="keyword">for</span> _ <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">10</span>)]</span><br><span class="line"><span class="keyword">for</span> t <span class="keyword">in</span> threads:</span><br><span class="line">    t.start()</span><br><span class="line"><span class="keyword">for</span> t <span class="keyword">in</span> threads:</span><br><span class="line">    t.join()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 理论上结果应该是 10 * 100000 = 1000000</span></span><br><span class="line"><span class="comment"># 但实际运行结果几乎每次都小于这个值！</span></span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;Final counter value: <span class="subst">&#123;counter&#125;</span>&quot;</span>)</span><br></pre></td></tr></table></figure>
+<p><strong>原因</strong>：<code>counter += 1</code> 并非原子操作，它包含“读取-修改-写入”三步。一个线程可能在读取了旧值后被切换，另一个线程也读取了这个旧值，导致最终的写入覆盖了前一个线程的结果。</p>
+<p><strong>解决方案：使用 <code>threading.Lock</code></strong></p>
+<p>锁可以确保在同一时间只有一个线程能进入代码的“临界区”。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> threading</span><br><span class="line"><span class="keyword">import</span> time</span><br><span class="line"></span><br><span class="line">counter = <span class="number">0</span></span><br><span class="line"><span class="comment"># 创建一个锁对象</span></span><br><span class="line">lock = threading.Lock()</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">safe_worker</span>():</span><br><span class="line">    <span class="keyword">global</span> counter</span><br><span class="line">    <span class="keyword">for</span> _ <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">100000</span>):</span><br><span class="line">        <span class="comment"># 使用 &#x27;with&#x27; 语句能自动获取和释放锁，非常安全</span></span><br><span class="line">        <span class="keyword">with</span> lock:</span><br><span class="line">            counter += <span class="number">1</span></span><br><span class="line"></span><br><span class="line">threads = [threading.Thread(target=safe_worker) <span class="keyword">for</span> _ <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">10</span>)]</span><br><span class="line"><span class="keyword">for</span> t <span class="keyword">in</span> threads:</span><br><span class="line">    t.start()</span><br><span class="line"><span class="keyword">for</span> t <span class="keyword">in</span> threads:</span><br><span class="line">    t.join()</span><br><span class="line"></span><br><span class="line"><span class="comment"># 现在结果总是正确的 1000000</span></span><br><span class="line"><span class="built_in">print</span>(<span class="string">f&quot;Final counter value: <span class="subst">&#123;counter&#125;</span>&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>作为运维工程师，你应该这样应用多线程：</p>
+<ol>
+<li><strong>识别场景</strong>：首先判断你的任务是 I&#x2F;O 密集型（适合多线程）还是 CPU 密集型（应考虑多进程 <code>multiprocessing</code>）。</li>
+<li>**首选 <code>ThreadPoolExecutor</code>**：它是最现代、最安全、最方便的方式。用它来处理并发的网络请求、文件操作等。</li>
+<li><strong>控制并发量</strong>：通过 <code>max_workers</code> 设置合理的线程数，避免对服务器或目标 API 造成过大压力。</li>
+<li><strong>注意线程安全</strong>：如果多个线程需要操作共享数据（如全局列表、字典、计数器），<strong>必须</strong>使用 <code>threading.Lock</code> 或其他同步原语来保护它，防止数据损坏。</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Python/" rel="tag"># Python</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/python-%E5%A2%9E%E9%87%8F%E5%A4%87%E4%BB%BD/" rel="prev" title="python-增量备份">
+      <i class="fa fa-chevron-left"></i> python-增量备份
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/panic/" rel="next" title="panic">
+      panic <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Python-%E5%A4%9A%E7%BA%BF%E7%A8%8B"><span class="nav-number">1.</span> <span class="nav-text">Python 多线程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8%E5%A4%9A%E7%BA%BF%E7%A8%8B%EF%BC%9A%E4%BB%8E%E5%9F%BA%E7%A1%80%E5%88%B0%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="nav-number">2.</span> <span class="nav-text">如何使用多线程：从基础到最佳实践</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9C%BA%E6%99%AF1%EF%BC%9A%E5%8D%95%E7%BA%BF%E7%A8%8B%EF%BC%88%E4%B8%B2%E8%A1%8C%E6%89%A7%E8%A1%8C%EF%BC%89"><span class="nav-number">2.1.</span> <span class="nav-text">场景1：单线程（串行执行）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9C%BA%E6%99%AF2%EF%BC%9A%E4%BD%BF%E7%94%A8-threading-%E6%A8%A1%E5%9D%97%EF%BC%88%E6%89%8B%E5%8A%A8%E7%AE%A1%E7%90%86%EF%BC%89"><span class="nav-number">2.2.</span> <span class="nav-text">场景2：使用 threading 模块（手动管理）</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5%EF%BC%9A%E4%BD%BF%E7%94%A8-concurrent-futures-ThreadPoolExecutor"><span class="nav-number">3.</span> <span class="nav-text">最佳实践：使用 concurrent.futures.ThreadPoolExecutor</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%84%E7%90%86%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E9%97%AE%E9%A2%98%EF%BC%9A%E4%BD%BF%E7%94%A8%E9%94%81-Lock"><span class="nav-number">4.</span> <span class="nav-text">处理线程安全问题：使用锁 (Lock)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">5.</span> <span class="nav-text">总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

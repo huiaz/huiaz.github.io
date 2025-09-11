@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="OPA 策略引擎Open Policy Agent 简称 OPA，是一种开源的通用策略代理引擎，是 CNCF 毕业的项目。OPA 提供了一种高级声明式语言 Rego，简化了策略规则的定义，以减轻程序中策略的决策负担。在微服务、Kubernetes、CI&#x2F;CD、API 网关等场景中均可以使用 OPA 来定义策略。  我们这里主要讲解在 Kubernetes 中如何集成 OPA，在 Kube">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OPA">
+<meta property="og:url" content="http://example.com/2025/09/11/OPA/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="OPA 策略引擎Open Policy Agent 简称 OPA，是一种开源的通用策略代理引擎，是 CNCF 毕业的项目。OPA 提供了一种高级声明式语言 Rego，简化了策略规则的定义，以减轻程序中策略的决策负担。在微服务、Kubernetes、CI&#x2F;CD、API 网关等场景中均可以使用 OPA 来定义策略。  我们这里主要讲解在 Kubernetes 中如何集成 OPA，在 Kube">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/p98vq1.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/0khzif.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/zzls81.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/nobebs.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/wuyp4s.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/1jmruk.png">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:50:59.287Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://mudutestmenu.mudu.tv/upload/p98vq1.png">
+
+<link rel="canonical" href="http://example.com/2025/09/11/OPA/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>OPA | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/OPA/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          OPA
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:50:59" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E9%85%8D%E7%BD%AE%E7%AE%A1%E7%90%86/" itemprop="url" rel="index"><span itemprop="name">配置管理</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>19k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>18 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="OPA-策略引擎"><a href="#OPA-策略引擎" class="headerlink" title="OPA 策略引擎"></a>OPA 策略引擎</h1><p><a target="_blank" rel="noopener" href="https://www.openpolicyagent.org/">Open Policy Agent</a> 简称 OPA，是一种开源的通用策略代理引擎，是 CNCF 毕业的项目。OPA 提供了一种高级声明式语言 Rego，简化了策略规则的定义，以减轻程序中策略的决策负担。在微服务、Kubernetes、CI&#x2F;CD、API 网关等场景中均可以使用 OPA 来定义策略。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/p98vq1.png" alt="集成OPA"></p>
+<p>我们这里主要讲解在 Kubernetes 中如何集成 OPA，在 Kubernetes 中 OPA 是通过 Admission Controllers 来实现安全策略的。事实上使用 Pod 安全策略（要废弃了）来执行我们的安全策略并没有什么问题，然而，根据定义，PSP 只能应用于 pods。它们不能处理其他 Kubernetes 资源，如 Ingresses、Deployments、Services 等，OPA 的强大之处在于它可以应用于任何 Kubernetes 资源。OPA 作为一个准入控制器部署到 Kubernetes，它拦截发送到 APIServer 的 API 调用，并验证和&#x2F;或修改它们。你可以有一个统一的 OPA 策略，适用于系统的不同组件，而不仅仅是 pods，例如，有一种策略，强制用户在其服务中使用公司的域，并确保用户只从公司的镜像仓库中拉取镜像。</p>
+<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>OPA 将策略决策与策略执行分离，当应用需要做出策略决策时，它会查询 OPA 并提供结构化数据（例如 JSON）作为输入，OPA 接受任意结构化数据作为输入。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/0khzif.png" alt="OPA decouples"></p>
+<p>OPA 通过评估查询输入策略和数据来生成策略决策，你可以在你的策略中描述几乎任何的不变因素，例如：</p>
+<ul>
+<li>哪些用户可以访问哪些资源</li>
+<li>哪些子网的出口流量被允许</li>
+<li>工作负载必须部署到哪些集群</li>
+<li>二进制文件可以从哪里下载</li>
+<li>容器可以用哪些操作系统的能力来执行</li>
+<li>系统在一天中的哪些时间可以被访问</li>
+</ul>
+<p>策略决定不限于简单的<strong>是&#x2F;否或允许&#x2F;拒绝</strong>，与查询输入一样，你的策略可以生成任意结构化数据作为输出。 让我们看一个例子。OPA 的策略是用一种叫做 Rego 的高级声明性语言来声明的，Rego 是专门为表达复杂的分层数据结构的策略而设计的。</p>
+<p>在 Kubernetes 中，准入控制器在创建、更新和删除操作期间对对象实施策略。准入控制是 Kubernetes 中策略执行的基础。通过将 OPA 部署为准入控制器，可以：</p>
+<ul>
+<li>要求在所有资源上使用特定标签</li>
+<li>要求容器镜像来自企业镜像仓库</li>
+<li>要求所有 Pod 指定资源请求和限制</li>
+<li>防止创建冲突的 Ingress 对象</li>
+<li>……</li>
+</ul>
+<p>Kubernetes APIServer 配置为在创建、更新或删除对象时查询 OPA 以获取准入控制策略。APIServer 将 webhook 请求中的整个对象发送给 OPA，OPA 使用准入审查作为输入来评估它已加载的策略。这个其实和我们自己去实现一个准入控制器是类似的，只是不需要我们去编写代码，只需要编写策略规则，OPA 就可以根据我们的规则去对输入的对象进行验证。</p>
+<h2 id="部署"><a href="#部署" class="headerlink" title="部署"></a>部署</h2><p>接下来我们介绍下如何在 Kubernetes 集群中集成 OPA，由于 Kubernetes 中是通过准入控制器来集成 OPA 的，所以我们必须在集群中启用 <code>ValidatingAdmissionWebhook</code> 这个准入控制器。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/zzls81.png" alt="Admission"></p>
+<p>首先创建一个名为 <code>opa</code> 的命名空间，可以让 OPA 从该命名空间中的 ConfigMap 去加载策略：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl create namespace opa</span><br></pre></td></tr></table></figure>
+
+
+
+<p>并将上下文更改为 opa 命名空间：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl config current-context</span><br><span class="line">kubernetes-admin@kubernetes</span><br><span class="line">➜ kubectl config set-context kubernetes-admin@kubernetes --namespace=opa</span><br><span class="line">Context &quot;kubernetes-admin@kubernetes&quot; modified.</span><br><span class="line">➜ kubectl get pods</span><br><span class="line">No resources found in opa namespace.</span><br></pre></td></tr></table></figure>
+
+
+
+<p>为了保护 APIServer 和 OPA 之间的通信，我们需要配置 TLS 证书。</p>
+<ol>
+<li>创建证书颁发机构和密钥：</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜ openssl genrsa -out ca.key 2048</span><br><span class="line">➜ openssl req -x509 -new -nodes -key ca.key -days 100000 -out ca.crt -subj &quot;/CN=admission_ca&quot;</span><br></pre></td></tr></table></figure>
+
+
+
+<ol>
+<li>为 OPA 生成密钥和证书：</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">cat &gt;server.conf &lt;&lt;EOF</span><br><span class="line">[req]</span><br><span class="line">req_extensions = v3_req</span><br><span class="line">distinguished_name = req_distinguished_name</span><br><span class="line">[req_distinguished_name]</span><br><span class="line">[ v3_req ]</span><br><span class="line">basicConstraints = CA:FALSE</span><br><span class="line">keyUsage = nonRepudiation, digitalSignature, keyEncipherment</span><br><span class="line">extendedKeyUsage = clientAuth, serverAuth</span><br><span class="line">subjectAltName = @alt_names</span><br><span class="line">[ alt_names ]</span><br><span class="line">DNS.1 = opa.opa.svc</span><br><span class="line">EOF</span><br><span class="line">➜ openssl genrsa -out server.key 2048</span><br><span class="line">➜ openssl req -new -key server.key -out server.csr -subj &quot;/CN=opa.opa.svc&quot; -config server.conf</span><br><span class="line">➜ openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 100000 -extensions v3_req -extfile server.conf</span><br></pre></td></tr></table></figure>
+
+
+
+<ol>
+<li>创建一个 Kubernetes TLS Secret 来存储我们的 OPA 凭证：</li>
+</ol>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl create secret tls opa-server --cert=server.crt --key=server.key</span><br></pre></td></tr></table></figure>
+
+
+
+<p>证书准备好后就可以部署准入控制器了，对应的资源清单文件如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># opa-admission-controller.yaml</span></span><br><span class="line"><span class="comment"># Grant OPA/kube-mgmt read-only access to resources. This lets kube-mgmt</span></span><br><span class="line"><span class="comment"># replicate resources into OPA so they can be used in policies.</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ClusterRoleBinding</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">rbac.authorization.k8s.io/v1</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">opa-viewer</span></span><br><span class="line"><span class="attr">roleRef:</span></span><br><span class="line">  <span class="attr">kind:</span> <span class="string">ClusterRole</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">view</span></span><br><span class="line">  <span class="attr">apiGroup:</span> <span class="string">rbac.authorization.k8s.io</span></span><br><span class="line"><span class="attr">subjects:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">kind:</span> <span class="string">Group</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">system:serviceaccounts:opa</span></span><br><span class="line">    <span class="attr">apiGroup:</span> <span class="string">rbac.authorization.k8s.io</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="comment"># Define role for OPA/kube-mgmt to update configmaps with policy status.</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Role</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">rbac.authorization.k8s.io/v1</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">opa</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">configmap-modifier</span></span><br><span class="line"><span class="attr">rules:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">apiGroups:</span> [<span class="string">&#x27;&#x27;</span>]</span><br><span class="line">    <span class="attr">resources:</span> [<span class="string">&#x27;configmaps&#x27;</span>]</span><br><span class="line">    <span class="attr">verbs:</span> [<span class="string">&#x27;update&#x27;</span>, <span class="string">&#x27;patch&#x27;</span>]</span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="comment"># Grant OPA/kube-mgmt role defined above.</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">RoleBinding</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">rbac.authorization.k8s.io/v1</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">opa</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">opa-configmap-modifier</span></span><br><span class="line"><span class="attr">roleRef:</span></span><br><span class="line">  <span class="attr">kind:</span> <span class="string">Role</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">configmap-modifier</span></span><br><span class="line">  <span class="attr">apiGroup:</span> <span class="string">rbac.authorization.k8s.io</span></span><br><span class="line"><span class="attr">subjects:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">kind:</span> <span class="string">Group</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">system:serviceaccounts:opa</span></span><br><span class="line">    <span class="attr">apiGroup:</span> <span class="string">rbac.authorization.k8s.io</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">opa</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">opa</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">opa</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">https</span></span><br><span class="line">      <span class="attr">protocol:</span> <span class="string">TCP</span></span><br><span class="line">      <span class="attr">port:</span> <span class="number">443</span></span><br><span class="line">      <span class="attr">targetPort:</span> <span class="number">443</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">opa</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">opa</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">opa</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">opa</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">opa</span></span><br><span class="line">          <span class="attr">image:</span> <span class="string">openpolicyagent/opa:latest</span></span><br><span class="line">          <span class="attr">args:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">&#x27;run&#x27;</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">&#x27;--server&#x27;</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">&#x27;--tls-cert-file=/certs/tls.crt&#x27;</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">&#x27;--tls-private-key-file=/certs/tls.key&#x27;</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">&#x27;--addr=0.0.0.0:443&#x27;</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">&#x27;--addr=http://127.0.0.1:8181&#x27;</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">&#x27;--log-level=debug&#x27;</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">&#x27;--log-format=json-pretty&#x27;</span></span><br><span class="line">          <span class="attr">volumeMounts:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">readOnly:</span> <span class="literal">true</span></span><br><span class="line">              <span class="attr">mountPath:</span> <span class="string">/certs</span></span><br><span class="line">              <span class="attr">name:</span> <span class="string">opa-server</span></span><br><span class="line">          <span class="attr">readinessProbe:</span></span><br><span class="line">            <span class="attr">httpGet:</span></span><br><span class="line">              <span class="attr">path:</span> <span class="string">/health</span></span><br><span class="line">              <span class="attr">scheme:</span> <span class="string">HTTPS</span></span><br><span class="line">              <span class="attr">port:</span> <span class="number">443</span></span><br><span class="line">            <span class="attr">initialDelaySeconds:</span> <span class="number">5</span></span><br><span class="line">            <span class="attr">periodSeconds:</span> <span class="number">10</span></span><br><span class="line">          <span class="attr">livenessProbe:</span></span><br><span class="line">            <span class="attr">httpGet:</span></span><br><span class="line">              <span class="attr">path:</span> <span class="string">/health</span></span><br><span class="line">              <span class="attr">scheme:</span> <span class="string">HTTPS</span></span><br><span class="line">              <span class="attr">port:</span> <span class="number">443</span></span><br><span class="line">            <span class="attr">initialDelaySeconds:</span> <span class="number">10</span></span><br><span class="line">            <span class="attr">periodSeconds:</span> <span class="number">15</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">kube-mgmt</span></span><br><span class="line">          <span class="attr">image:</span> <span class="string">openpolicyagent/kube-mgmt:4.0.0</span></span><br><span class="line">          <span class="attr">args:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">--replicate-cluster=v1/namespaces</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">--replicate=networking.k8s.io/v1/ingresses</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">--opa-url=http://127.0.0.1:8181/v1</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">--enable-data=true</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">--enable-policies=true</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">--policies=opa</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">--require-policy-label=true</span></span><br><span class="line">      <span class="attr">volumes:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">opa-server</span></span><br><span class="line">          <span class="attr">secret:</span></span><br><span class="line">            <span class="attr">secretName:</span> <span class="string">opa-server</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ConfigMap</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">opa-default-system-main</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">opa</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">openpolicyagent.org/policy:</span> <span class="string">rego</span></span><br><span class="line"><span class="attr">data:</span></span><br><span class="line">  <span class="attr">main:</span> <span class="string">|</span></span><br><span class="line"><span class="string">    package system</span></span><br><span class="line"><span class="string"></span></span><br><span class="line">    <span class="string">import</span> <span class="string">data.kubernetes.admission</span></span><br><span class="line"></span><br><span class="line">    <span class="string">main</span> <span class="string">=</span> &#123;</span><br><span class="line">      <span class="attr">&quot;apiVersion&quot;:</span> <span class="string">&quot;admission.k8s.io/v1&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;kind&quot;:</span> <span class="string">&quot;AdmissionReview&quot;</span>,</span><br><span class="line">      <span class="attr">&quot;response&quot;:</span> <span class="string">response</span>,</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="string">default</span> <span class="string">uid</span> <span class="string">=</span> <span class="string">&quot;&quot;</span></span><br><span class="line">    <span class="string">uid</span> <span class="string">=</span> <span class="string">input.request.uid</span></span><br><span class="line">    <span class="string">response</span> <span class="string">=</span> &#123;</span><br><span class="line">        <span class="attr">&quot;allowed&quot;:</span> <span class="literal">false</span>,</span><br><span class="line">        <span class="attr">&quot;uid&quot;:</span> <span class="string">uid</span>,</span><br><span class="line">        <span class="attr">&quot;status&quot;:</span> &#123;</span><br><span class="line">            <span class="attr">&quot;message&quot;:</span> <span class="string">reason</span>,</span><br><span class="line">        &#125;,</span><br><span class="line">    &#125; &#123;</span><br><span class="line">        <span class="string">reason</span> <span class="string">=</span> <span class="string">concat(&quot;</span>, <span class="string">&quot;, admission.deny)</span></span><br><span class="line"><span class="string">        reason != &quot;</span><span class="string">&quot;</span></span><br><span class="line"><span class="string">    &#125;</span></span><br><span class="line"><span class="string">    else = &#123;&quot;</span><span class="string">allowed&quot;:</span> <span class="literal">true</span>, <span class="attr">&quot;uid&quot;:</span> <span class="string">uid</span>&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>上面的资源清单中我们添加了一个 <code>kube-mgmt</code> 的 Sidecar 容器，该容器可以将 ConfigMap 对象中的策略动态加载到 OPA 中，<code>kube-mgmt</code> 容器还可以将任何其他 Kubernetes 对象作为 JSON 数据加载到 OPA 中。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/nobebs.png" alt="kube-mgmt"></p>
+<p>另外需要注意的是 Service 的名称（opa）必须与我们证书配置的 CN 匹配，否则 TLS 通信会失败。在 <code>kube-mgmt</code> 容器中还指定了以下命令行参数：</p>
+<ul>
+<li>–replicate-cluster&#x3D;v1&#x2F;namespaces</li>
+<li>–replicate&#x3D;networking.k8s.io&#x2F;v1&#x2F;ingresses</li>
+<li>–enable-policies&#x3D;true</li>
+<li>–policies&#x3D;opa</li>
+<li>–require-policy-label&#x3D;true</li>
+</ul>
+<p>前两个参数允许 sidecar 容器复制命名空间、Ingress 对象，并将它们加载到 OPA 引擎中，<code>enable-policies=true</code> 表示会通过 Configmap 加载 OPA 策略，下面的 <code>--policies=opa</code> 表示从 <code>opa</code> 命名空间中的 Configmap 来加载策略，如果还配置了 <code>--require-policy-label=true</code> 参数，则需要 Configmap 中带有 <code>openpolicyagent.org/policy=rego</code> 这个标签才会被自动加载。</p>
+<p>现在直接应用上面的资源清单即可：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl apply -f opa-admission-controller.yaml</span><br><span class="line">➜ kubectl get pods</span><br><span class="line">NAME                  READY   STATUS    RESTARTS   AGE</span><br><span class="line">opa-6cd68f74f-s9zcv   2/2     Running   0          5m28s</span><br></pre></td></tr></table></figure>
+
+
+
+<p>为了让准入控制器工作，我们还需要一个准入 webhook 来接收准入 HTTP 回调并执行它们，创建如下所示的 webhook 配置文件：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">➜ cat &gt; webhook-configuration.yaml &lt;&lt;EOF</span><br><span class="line">kind: ValidatingWebhookConfiguration</span><br><span class="line">apiVersion: admissionregistration.k8s.io/v1</span><br><span class="line">metadata:</span><br><span class="line">  name: opa-validating-webhook</span><br><span class="line">webhooks:</span><br><span class="line">  - name: validating-webhook.openpolicyagent.org</span><br><span class="line">    admissionReviewVersions: [&quot;v1&quot;, &quot;v1beta1&quot;]</span><br><span class="line">    namespaceSelector:</span><br><span class="line">      matchExpressions:</span><br><span class="line">      - key: openpolicyagent.org/webhook</span><br><span class="line">        operator: NotIn</span><br><span class="line">        values:</span><br><span class="line">        - ignore</span><br><span class="line">    failurePolicy: Ignore</span><br><span class="line">    rules:</span><br><span class="line">      - apiGroups:</span><br><span class="line">        - &#x27;*&#x27;</span><br><span class="line">        apiVersions:</span><br><span class="line">        - &#x27;*&#x27;</span><br><span class="line">        operations:</span><br><span class="line">        - &#x27;*&#x27;</span><br><span class="line">        resources:</span><br><span class="line">        - &#x27;*&#x27;</span><br><span class="line">    sideEffects: None</span><br><span class="line">    clientConfig:</span><br><span class="line">      caBundle: $(cat ca.crt | base64 | tr -d &#x27;\n&#x27;)</span><br><span class="line">      service:</span><br><span class="line">        namespace: opa</span><br><span class="line">        name: opa</span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
+
+
+
+<p>上面的 webhook 中配置了以下属性：</p>
+<ul>
+<li>不会监听来自带有 <code>openpolicyagent.org/webhook=ignore</code> 标签的命名空间的操作</li>
+<li>会监听所有资源上的 CREATE 和 UPDATE 操作</li>
+<li>它使用我们之前创建的 CA 证书，以便能够与 OPA 通信</li>
+</ul>
+<p>现在，在使用配置之前，我们标记 <code>kube-system</code> 和 <code>opa</code> 命名空间，使它们不在 webhook 范围内：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl label ns kube-system openpolicyagent.org/webhook=ignore</span><br><span class="line">➜ kubectl label ns opa openpolicyagent.org/webhook=ignore</span><br></pre></td></tr></table></figure>
+
+
+
+<p>然后应用上面的配置对象将 OPA 注册为准入控制器：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl apply -f webhook-configuration.yaml</span><br><span class="line">➜ kubectl get pods</span><br><span class="line">NAME                  READY   STATUS    RESTARTS   AGE</span><br><span class="line">opa-6cd68f74f-s9zcv   2/2     Running   0          72m</span><br><span class="line">➜ kubectl get validatingwebhookconfiguration</span><br><span class="line">NAME                                      WEBHOOKS   AGE</span><br><span class="line">opa-validating-webhook                    1          2m14s</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="策略示例"><a href="#策略示例" class="headerlink" title="策略示例"></a>策略示例</h2><p>OPA 使用 Rego 语言来描述策略，这里我们使用官方文档中提到的示例来进行说明，创建一个限制 Ingress 可以使用的主机名策略，只允许匹配指定正则表达式的主机名。</p>
+<p>创建如下所示名为 <code>ingress-allowlist.rego</code> 的策略文件：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">&lt;!-- 在这里，我们声明规则属于什么包，这与其他语言的包装类似，是将类似规则归入同一命名空间的一种方式。 --&gt;</span><br><span class="line">package kubernetes.admission</span><br><span class="line"></span><br><span class="line">import data.kubernetes.namespaces</span><br><span class="line"></span><br><span class="line">operations = &#123;&quot;CREATE&quot;, &quot;UPDATE&quot;&#125;</span><br><span class="line"></span><br><span class="line">deny[msg] &#123;</span><br><span class="line">    input.request.kind.kind == &quot;Ingress&quot;</span><br><span class="line">    operations[input.request.operation]</span><br><span class="line">    host := input.request.object.spec.rules[_].host</span><br><span class="line">    not fqdn_matches_any(host, valid_ingress_hosts)</span><br><span class="line">    msg := sprintf(&quot;invalid ingress host %q&quot;, [host])</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">valid_ingress_hosts = &#123;host |</span><br><span class="line">    allowlist := namespaces[input.request.namespace].metadata.annotations[&quot;ingress-allowlist&quot;]</span><br><span class="line">    hosts := split(allowlist, &quot;,&quot;)</span><br><span class="line">    host := hosts[_]</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">fqdn_matches_any(str, patterns) &#123;</span><br><span class="line">    fqdn_matches(str, patterns[_])</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">fqdn_matches(str, pattern) &#123;</span><br><span class="line">    pattern_parts := split(pattern, &quot;.&quot;)</span><br><span class="line">    pattern_parts[0] == &quot;*&quot;</span><br><span class="line">    str_parts := split(str, &quot;.&quot;)</span><br><span class="line">    n_pattern_parts := count(pattern_parts)</span><br><span class="line">    n_str_parts := count(str_parts)</span><br><span class="line">    suffix := trim(pattern, &quot;*.&quot;)</span><br><span class="line">    endswith(str, suffix)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">fqdn_matches(str, pattern) &#123;</span><br><span class="line">    not contains(pattern, &quot;*&quot;)</span><br><span class="line">    str == pattern</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>如果你是 Rego 新手，上面的代码看上去可能有点陌生，但 Rego 让定义策略变得非常容易，我们来分析下这个策略是如何使用白名单中的 Ingress 命名空间强制执行的：</p>
+<ul>
+<li><p>第 1 行：<code>package</code> 的使用方式与在其他语言中的使用方式是一样的</p>
+</li>
+<li><p>第 5 行：我们定义一个包含两项操作的数据集：<code>CREATE</code> 和 <code>UPDATE</code></p>
+</li>
+<li><p>第 7 行：这是策略的核心部分，以 <code>deny</code> 开头，然后是策略正文。如果正文中的语句组合评估为真，则违反策略，便会阻止操作，并将消息返回给用户，说明操作被阻止的原因</p>
+</li>
+<li><p>第 8 行：指定输入对象，发送到 OPA 的任何 JSON 消息都是从输入对象的根部开始的，我们遍历 JSON 对象，直到找到有问题的资源，并且它必须是 <code>Ingress</code> 才能应用该策略</p>
+</li>
+<li><p>第 9 行：我们需要应用策略来创建或更新资源，在 Rego 中，我们可以通过使用 <code>operations[input.requset.operations]</code> 来实现，方括号内的代码会提取请求中指定的操作，如果它与第 5 行的操作集中定义的元素相匹配，则该语句为真</p>
+</li>
+<li><p>第 10 行：为了提取 Ingress 对象的 host 信息，我们需要迭代 JSON 对象的 rules 数组，同样 Rego 提供了 <code>_</code> 字符来循环浏览数组，并将所有元素返回到 <code>host</code> 变量中</p>
+</li>
+<li><p>第 11 行：现在我们有了 host 变量，我们需要确保它不是列入白名单的主机，要记住，只有在评估为 true 时才会违反该策略，为了检查主机是否有效，我们使用第 21 行中定义的 <code>fqdn_matches_any</code> 函数</p>
+</li>
+<li><p>第 12 行：定义应返回给用户的消息，说明无法创建 Ingress 对象的原因</p>
+</li>
+<li><p>第 15-19 行：这部分从 Ingress 命名空间的 <code>annotations</code> 中提取列入白名单的主机名，主机名添加在逗号分隔的列表中，使用 <code>split</code> 内置函数用于将其转换为列表。最后，<code>_</code> 用于遍历所有提取的主机列表，将结果通过 <code>|</code> 管道传送给 <code>host</code> 变量（这与 Python 中的列表推导非常类似）</p>
+</li>
+<li><p>第 21 行：该函数只接受一个字符串，并在一个 patterns 列表中搜索它，这是第二个参数。实际上是调用的下方的 <code>fqdn_matches</code> 函数来实现的。在 Rego 中，<strong>可以定义具有多个相同名称的函数</strong>，只要它们都产生相同的输出，当调用多次定义的函数时，将调用该函数的所有实例</p>
+</li>
+<li><p>第 25-33 行：第一个</p>
+<figure class="highlight ebnf"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">fqdn_matches</span></span><br></pre></td></tr></table></figure>
+
+<p>函数的定义。</p>
+<ul>
+<li>首先它通过点 <code>.</code> 将 pattern 进行拆分，比如 <code>*.example.com</code> 会分割成 <code>*</code>、<code>example</code> 和 <code>com</code></li>
+<li>接下来确保 pattern 的第一个标记是星号，同样对输入的字符串按照 <code>.</code> 进行拆分</li>
+<li>删除 pattern 中的 <code>*.</code></li>
+<li>最后评估输入字符串是否以后缀结尾，比如如果允许的模式字符串是 <code>*.mydomain.com</code>，被评估的字符串是 <code>www.example.com</code>，则违反了该策略，因为该字符串不是 <code>mydomain.com</code> 的一部分</li>
+</ul>
+</li>
+<li><p>第 35-38 行：第二个验证函数，该函数用于验证不使用通配符的模式，例如，当模式写为</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mycompany<span class="selector-class">.mydomain</span>.com</span><br></pre></td></tr></table></figure>
+
+<p>的时候</p>
+<ul>
+<li>首先，需要确保提供的模式不包含通配符，否则，该语句将评估为 false 并且函数将不会继续</li>
+<li>如果模式指的是特定的域名，那么我们只需要确保 fqdn 与该模式匹配。换句话说，如果模式是 <code>mycompany.mydomain.com</code>，那么主机的 fqdn 也必须是 <code>mycompany.mydomain.com</code></li>
+</ul>
+</li>
+</ul>
+<p>我们之所以有两个具有相同名称的函数，是因为 Rego 语言的一个限制，它会阻止函数产生一个以上的输出结果，所以，要想在同一时间用不同的逻辑进行多个验证，必须使用多个同名的函数。</p>
+<p>在生产环境中，在将 Rego 代码应用到集群之前一定要进行全方位测试，比如可以添加单元测试，同时也可以使用 <a target="_blank" rel="noopener" href="https://play.openpolicyagent.org/">Rego Playground</a> 来对代码进行验证。</p>
+<p>要将该策略应用于集群，我们需要将上面的 Rego 文件以 Configmap 的形式应用到 opa 命名空间中：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl create configmap ingress-allowlist --from-file=ingress-allowlist.rego</span><br><span class="line">➜ kubectl label  configmap ingress-allowlist openpolicyagent.org/policy=rego</span><br></pre></td></tr></table></figure>
+
+
+
+<p>由于我们开启了 <code>--require-policy-label</code> 参数，所以还需要带上对应的标签。创建完成后最好检查下我们的策略是否被 OPA 获取了，并且没有语法错误，可以通过检查 ConfigMap 的状态来判断：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl get cm ingress-allowlist  -o json | jq &#x27;.metadata.annotations&#x27;</span><br><span class="line">&#123;</span><br><span class="line">  &quot;openpolicyagent.org/policy-status&quot;: &quot;&#123;\&quot;status\&quot;:\&quot;ok\&quot;&#125;&quot;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>接下来，让我们创建两个命名空间，一个用于 QA 环境，另一个用于生产环境。要注意它们都包含 <code>ingress-allowlist</code> 注解，其中包含 Ingress 主机名应该匹配的模式。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># qa-namespace.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Namespace</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">annotations:</span></span><br><span class="line">    <span class="attr">ingress-allowlist:</span> <span class="string">&#x27;*.qa.qikqiak.com,*.internal.qikqiak.com&#x27;</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">qa</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="comment"># production-namespace.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Namespace</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">annotations:</span></span><br><span class="line">    <span class="attr">ingress-allowlist:</span> <span class="string">&#x27;*.qikqiak.com&#x27;</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">production</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>直接应用上面的两个资源清单文件即可：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl apply -f qa-namespace.yaml -f production-namespace.yaml</span><br></pre></td></tr></table></figure>
+
+
+
+<p>接下来让我们创建一个被策略允许的 Ingress 对象：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl apply -f - &lt;&lt;EOT</span><br><span class="line">apiVersion: networking.k8s.io/v1</span><br><span class="line">kind: Ingress</span><br><span class="line">metadata:</span><br><span class="line">  name: ingress-ok</span><br><span class="line">  namespace: production</span><br><span class="line">spec:</span><br><span class="line">  ingressClassName: nginx</span><br><span class="line">  rules:</span><br><span class="line">  - host: prod.qikqiak.com</span><br><span class="line">    http:</span><br><span class="line">      paths:</span><br><span class="line">      - backend:</span><br><span class="line">          service:</span><br><span class="line">            name: nginx</span><br><span class="line">            port:</span><br><span class="line">              number: 80</span><br><span class="line">        path: /</span><br><span class="line">        pathType: Prefix</span><br><span class="line">EOT</span><br></pre></td></tr></table></figure>
+
+
+
+<p>正常上面的资源对象可以创建：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl get ing -n production</span><br><span class="line">NAME         CLASS   HOSTS              ADDRESS   PORTS   AGE</span><br><span class="line">ingress-ok   nginx   prod.qikqiak.com             80      17s</span><br></pre></td></tr></table></figure>
+
+
+
+<p>接着我们创建一个不符合策略的 Ingress 对象：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl apply -f - &lt;&lt;EOT</span><br><span class="line">apiVersion: networking.k8s.io/v1</span><br><span class="line">kind: Ingress</span><br><span class="line">metadata:</span><br><span class="line">  name: ingress-bad</span><br><span class="line">  namespace: qa</span><br><span class="line">spec:</span><br><span class="line">  ingressClassName: nginx</span><br><span class="line">  rules:</span><br><span class="line">  - host: opa.k8s.local</span><br><span class="line">    http:</span><br><span class="line">      paths:</span><br><span class="line">      - backend:</span><br><span class="line">          service:</span><br><span class="line">            name: nginx</span><br><span class="line">            port:</span><br><span class="line">              number: 80</span><br><span class="line">        path: /</span><br><span class="line">        pathType: Prefix</span><br><span class="line">EOT</span><br><span class="line">Error from server: error when creating &quot;test.yaml&quot;: admission webhook &quot;validating-webhook.openpolicyagent.org&quot; denied the request: invalid ingress host &quot;opa.k8s.local&quot;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>从输出中可以看出，APIServer 拒绝创建 Ingress 对象，因为上面的对象违反了我们的 OPA 策略规则。</p>
+<p>到这里我们就完成了理由 OPA 在 Kubernetes 集群中实施准入控制策略，而无需修改或重新编译任何 Kubernetes 组件。此外，还可以通过 OPA 的 Bundle 功能策略，可以定期从远程服务器下载以满足不断变化的操作要求。</p>
+<h2 id="gatekeeper"><a href="#gatekeeper" class="headerlink" title="gatekeeper"></a>gatekeeper</h2><p>上面我们介绍了使用 <code>kube-mgmt</code> 这个 sidecar 容器来完成 OPA 策略的自动同步，此外还有另外一个更加高级的工具 <a target="_blank" rel="noopener" href="https://open-policy-agent.github.io/gatekeeper/website/docs/">Gatekeeper</a>，相比于之前的模式，<code>Gatekeeper(v3.0)</code> 准入控制器集成了 <code>OPA Constraint Framework</code>，以执行基于 CRD 的策略，并允许声明式配置的策略可靠地共享，使用 kubebuilder 构建，它提供了验证和修改准入控制和审计功能。这允许为 Rego 策略创建策略模板，将策略创建为 CRD，并在策略 CRD 上存储审计结果，这个项目是谷歌、微软、红帽和 Styra 一起合作实现的。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/wuyp4s.png" alt="gatekeeper"></p>
+<p>直接使用下面的命令即可安装 <code>Gatekeeper</code>：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl apply -f https://raw.githubusercontent.com/open-policy-agent/gatekeeper/release-3.7/deploy/gatekeeper.yaml</span><br></pre></td></tr></table></figure>
+
+
+
+<p>默认会将 <code>Gatekeeper</code> 安装到 <code>gatekeeper-system</code> 命名空间下面，同样会安装几个相关的 CRD：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl get pods -n gatekeeper-system</span><br><span class="line">NAME                                             READY   STATUS    RESTARTS   AGE</span><br><span class="line">gatekeeper-audit-5cf4b9686-glndv                 1/1     Running   0          2m2s</span><br><span class="line">gatekeeper-controller-manager-77b7dc99fb-dvkvp   1/1     Running   0          2m2s</span><br><span class="line">gatekeeper-controller-manager-77b7dc99fb-gk4gr   1/1     Running   0          2m2s</span><br><span class="line">gatekeeper-controller-manager-77b7dc99fb-mt5wn   1/1     Running   0          2m2s</span><br><span class="line">➜ kubectl get crd |grep gate</span><br><span class="line">assign.mutations.gatekeeper.sh                       2022-03-27T06:47:24Z</span><br><span class="line">assignmetadata.mutations.gatekeeper.sh               2022-03-27T06:47:24Z</span><br><span class="line">configs.config.gatekeeper.sh                         2022-03-27T06:47:24Z</span><br><span class="line">constraintpodstatuses.status.gatekeeper.sh           2022-03-27T06:47:24Z</span><br><span class="line">constrainttemplatepodstatuses.status.gatekeeper.sh   2022-03-27T06:47:24Z</span><br><span class="line">constrainttemplates.templates.gatekeeper.sh          2022-03-27T06:47:24Z</span><br><span class="line">modifyset.mutations.gatekeeper.sh                    2022-03-27T06:47:24Z</span><br><span class="line">mutatorpodstatuses.status.gatekeeper.sh              2022-03-27T06:47:25Z</span><br><span class="line">providers.externaldata.gatekeeper.sh                 2022-03-27T06:47:25Z</span><br></pre></td></tr></table></figure>
+
+
+
+<p><code>Gatekeeper</code> 使用 OPA 约束框架来描述和执行策略，在定义约束之前必须首先定义一个 <code>ConstraintTemplate</code> 对象，它描述了强制执行约束的 Rego 和约束的模式。约束的模式允许管理员对约束的行为进行微调，就像函数的参数一样。</p>
+<p>如下所示是一个约束模板，描述了验证的对象必须要有标签存在：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># k8srequiredlabels_template.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">templates.gatekeeper.sh/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ConstraintTemplate</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">k8srequiredlabels</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">crd:</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">names:</span></span><br><span class="line">        <span class="attr">kind:</span> <span class="string">K8sRequiredLabels</span></span><br><span class="line">      <span class="attr">validation:</span></span><br><span class="line">        <span class="attr">openAPIV3Schema:</span> <span class="comment"># Schema for the `parameters` field</span></span><br><span class="line">          <span class="attr">type:</span> <span class="string">object</span></span><br><span class="line">          <span class="attr">description:</span> <span class="string">Describe</span> <span class="string">K8sRequiredLabels</span> <span class="string">crd</span> <span class="string">parameters</span></span><br><span class="line">          <span class="attr">properties:</span></span><br><span class="line">            <span class="attr">labels:</span></span><br><span class="line">              <span class="attr">type:</span> <span class="string">array</span></span><br><span class="line">              <span class="attr">items:</span></span><br><span class="line">                <span class="attr">type:</span> <span class="string">string</span></span><br><span class="line">                <span class="attr">description:</span> <span class="string">A</span> <span class="string">label</span> <span class="string">string</span></span><br><span class="line">  <span class="attr">targets:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">target:</span> <span class="string">admission.k8s.gatekeeper.sh</span></span><br><span class="line">      <span class="attr">rego:</span> <span class="string">|</span></span><br><span class="line"><span class="string">        package k8srequiredlabels</span></span><br><span class="line"><span class="string"></span></span><br><span class="line">        <span class="string">violation[&#123;&quot;msg&quot;:</span> <span class="string">msg,</span> <span class="attr">&quot;details&quot;:</span> &#123;<span class="attr">&quot;missing_labels&quot;:</span> <span class="string">missing</span>&#125;<span class="string">&#125;]</span> &#123;</span><br><span class="line">          <span class="string">provided</span> <span class="string">:=</span> &#123;<span class="string">label</span> <span class="string">|</span> <span class="string">input.review.object.metadata.labels</span>[<span class="string">label</span>]&#125;</span><br><span class="line">          <span class="string">required</span> <span class="string">:=</span> &#123;<span class="string">label</span> <span class="string">|</span> <span class="string">label</span> <span class="string">:=</span> <span class="string">input.parameters.labels</span>[<span class="string">_</span>]&#125;</span><br><span class="line">          <span class="string">missing</span> <span class="string">:=</span> <span class="string">required</span> <span class="bullet">-</span> <span class="string">provided</span></span><br><span class="line">          <span class="string">count(missing)</span> <span class="string">&gt;</span> <span class="number">0</span></span><br><span class="line">          <span class="string">msg</span> <span class="string">:=</span> <span class="string">sprintf(&quot;you</span> <span class="attr">must provide labels:</span> <span class="string">%v&quot;</span>, [<span class="string">missing</span>]<span class="string">)</span></span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>直接应用上面的 <code>ConstraintTemplate</code> 资源清单：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl apply -f k8srequiredlabels_template.yaml</span><br><span class="line">constrainttemplate.templates.gatekeeper.sh/k8srequiredlabels created</span><br><span class="line">➜ kubectl get ConstraintTemplate</span><br><span class="line">NAME                AGE</span><br><span class="line">k8srequiredlabels   68s</span><br></pre></td></tr></table></figure>
+
+
+
+<p>上面我们的定义的 <code>ConstraintTemplate</code> 对象就是一个模板，其中的 <code>crd</code> 部分描述了我们定义的 CRD 模板，比如类型叫 <code>K8sRequiredLabels</code>，需要和模板的名称保持一致，然后通过下面的 <code>validation</code> 定义了我们的 CRD 的属性 Schema，比如有一个 <code>labels</code> 的属性参数，类似是字符串数据类型：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">crd:</span></span><br><span class="line">  <span class="attr">spec:</span></span><br><span class="line">    <span class="attr">names:</span></span><br><span class="line">      <span class="attr">kind:</span> <span class="string">K8sRequiredLabels</span></span><br><span class="line">    <span class="attr">validation:</span></span><br><span class="line">      <span class="attr">openAPIV3Schema:</span> <span class="comment"># Schema for the `parameters` field</span></span><br><span class="line">        <span class="attr">type:</span> <span class="string">object</span></span><br><span class="line">        <span class="attr">description:</span> <span class="string">Describe</span> <span class="string">K8sRequiredLabels</span> <span class="string">crd</span> <span class="string">parameters</span></span><br><span class="line">        <span class="attr">properties:</span></span><br><span class="line">          <span class="attr">labels:</span></span><br><span class="line">            <span class="attr">type:</span> <span class="string">array</span></span><br><span class="line">            <span class="attr">items:</span></span><br><span class="line">              <span class="attr">type:</span> <span class="string">string</span></span><br><span class="line">              <span class="attr">description:</span> <span class="string">A</span> <span class="string">label</span> <span class="string">string</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>然后下面的 <code>targets</code> 部分就是定义的约束目标，使用 Rego 进行编写。</p>
+<ul>
+<li>首先通过 <code>provided := &#123;label | input.review.object.metadata.labels[label]&#125;</code> 获取到创建对象的所有 label 标签</li>
+<li>然后通过 <code>required := &#123;label | label := input.parameters.labels[_]&#125;</code> 获取到需要提供的 label 标签</li>
+<li>将上面两个标签集合相减（rego 语言支持该操作），得到未满足的 label</li>
+<li>断言未满足的 label 数量&gt;0，如果大于 0，说明条件满足，violation 为 true，说明违反了约束，返回错误</li>
+</ul>
+<p>上面的约束模板创建完成后，实际上相当于创建了一个名为的 <code>K8sRequiredLabels</code> 对象，我们定义的属性位于 <code>spec.parameters</code> 属性下面：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl get K8sRequiredLabels</span><br><span class="line">No resources found</span><br><span class="line">➜ kubectl explain K8sRequiredLabels.spec.parameters.labels</span><br><span class="line">KIND:     K8sRequiredLabels</span><br><span class="line">VERSION:  constraints.gatekeeper.sh/v1beta1</span><br><span class="line"></span><br><span class="line">FIELD:    labels &lt;[]string&gt;</span><br><span class="line"></span><br><span class="line">DESCRIPTION:</span><br><span class="line"></span><br><span class="line">     A label string</span><br></pre></td></tr></table></figure>
+
+
+
+<p>现在我们就可以使用上面的 <code>K8sRequiredLabels</code> 这个约束模板来定义策略了，比如我们要求在所有命名空间上都定义一个 <code>gatekeeper</code> 的标签，则可以创建如下所示的对象：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># all_ns_must_have_gatekeeper.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">constraints.gatekeeper.sh/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">K8sRequiredLabels</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">ns-must-have-gk</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">match:</span></span><br><span class="line">    <span class="attr">kinds:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">apiGroups:</span> [<span class="string">&#x27;&#x27;</span>]</span><br><span class="line">        <span class="attr">kinds:</span> [<span class="string">&#x27;Namespace&#x27;</span>] <span class="comment"># 表示这个约束会在创建命名空间的时候被应用，可以使用 namespaceSelector、namespaces等进行过滤</span></span><br><span class="line">  <span class="attr">parameters:</span></span><br><span class="line">    <span class="attr">labels:</span> [<span class="string">&#x27;gatekeeper&#x27;</span>] <span class="comment"># 根据schema规范定义</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>注意 match 字段，它定义了将应用给定约束的对象的范围，其中 <code>kinds: [&quot;Namespace&quot;]</code> 表示这个约束会在创建命名空间的时候被应用，此外它还支持其他匹配器：</p>
+<ul>
+<li><code>kind</code> 接受带有 apiGroups 和 kind 字段的对象列表，这些字段列出了约束将应用到的对象的组&#x2F;种类。如果指定了多个组&#x2F;种类对象，则资源在范围内只需要一个匹配项。</li>
+<li><code>scope</code> 接受 <em>、Cluster 或 Namespaced 决定是否选择集群范围和&#x2F;或命名空间范围的资源。（默认为</em>）</li>
+<li><code>namespaces</code> 是命名空间名称的列表。如果已定义，则约束仅适用于列出的命名空间中的资源。命名空间还支持基于前缀的 glob。例如，namespaces: [kube-*] 匹配 kube-system 和 kube-public。</li>
+<li><code>excludeNamespaces</code> 是命名空间名称的列表。如果已定义，则约束仅适用于不在列出的命名空间中的资源。ExcludedNamespaces 还支持基于前缀的 glob，例如，excludedNamespaces: [kube-*] 匹配 kube-system 和 kube-public。</li>
+<li><code>labelSelector</code> 是标准的 Kubernetes 标签选择器。</li>
+<li><code>namespaceSelector</code> 是针对对象的包含名称空间或对象本身的标签选择器，如果对象是名称空间。name 是对象的名称。如果已定义，则匹配具有指定名称的对象。Name 还支持基于前缀的 glob。例如，名称：pod-* 匹配 pod-a 和 pod-b。</li>
+</ul>
+<p>下面的 <code>parameters.labels</code> 就是根据上面的 CRD 规范定义的属性，该值是传递给 opa 的参数，此处表示一个 key 为 labels，value 为一个列表的字典，与 <code>ConstraintTemplate</code> 里的 <code>properties</code> 要匹配上，此处表示要创建的对象需要含有 <code>gatekeeper</code> 的 label。</p>
+<p>直接应用上面的这个资源对象即可：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl apply -f all_ns_must_have_gatekeeper.yaml</span><br><span class="line">k8srequiredlabels.constraints.gatekeeper.sh/ns-must-have-gk created</span><br></pre></td></tr></table></figure>
+
+
+
+<p>创建完成后可以查看到这个 <code>constraints</code> 对象：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl get k8srequiredlabels</span><br><span class="line">NAME              AGE</span><br><span class="line">ns-must-have-gk   73s</span><br><span class="line">➜ kubectl get constraints  # 和上面对象一样</span><br><span class="line">NAME              AGE</span><br><span class="line">ns-must-have-gk   81s</span><br></pre></td></tr></table></figure>
+
+
+
+<p>由于 <code>Gatekeeper</code> 具有审计功能，可以根据集群中执行的约束条件对资源进行定期评估，以检测预先存在的错误配置，<code>Gatekeeper</code> 将审计结果存储为相关约束条件的 <code>status</code> 字段中列出违规行为。我们可以查看 <code>K8sRequiredLabels</code> 对象的 <code>status</code> 字段来查看不符合约束的行为：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl get constraints ns-must-have-gk -o yaml</span><br><span class="line">apiVersion: constraints.gatekeeper.sh/v1beta1</span><br><span class="line">kind: K8sRequiredLabels</span><br><span class="line">......</span><br><span class="line">status:</span><br><span class="line">  auditTimestamp: &quot;2022-03-27T07:42:38Z&quot;</span><br><span class="line">  ......</span><br><span class="line">  totalViolations: 11</span><br><span class="line">  violations:</span><br><span class="line">  - enforcementAction: deny</span><br><span class="line">    kind: Namespace</span><br><span class="line">    message: &#x27;you must provide labels: &#123;&quot;gatekeeper&quot;&#125;&#x27;</span><br><span class="line">    name: apisix</span><br><span class="line">  - enforcementAction: deny</span><br><span class="line">    kind: Namespace</span><br><span class="line">    message: &#x27;you must provide labels: &#123;&quot;gatekeeper&quot;&#125;&#x27;</span><br><span class="line">    name: default</span><br><span class="line">  ......</span><br></pre></td></tr></table></figure>
+
+
+
+<p>比如现在我们创建一个如下所示的 Namespace：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># test-namespace.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Namespace</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">ns-test</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">a:</span> <span class="string">b</span></span><br><span class="line">    <span class="comment">#gatekeeper: abc</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>此时不给命名空间添加 key 为 <code>gatekeeper</code> 的 label，创建的时候就会报错：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Error from server ([ns-must-have-gk] you must provide labels: &#123;&quot;gatekeeper&quot;&#125;): error when creating &quot;test-namespace.yaml&quot;: admission webhook &quot;validation.gatekeeper.sh&quot; denied the request: [ns-must-have-gk] you must provide labels: &#123;&quot;gatekeeper&quot;&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>然后把 <code>gatekeeper: abc</code> 这行的注释打开，则能成功创建了，这就是 <code>Gatekeeper</code> 的基本用法。</p>
+<p>从上面我们可以知道定义约束模板的策略会经常从 <code>input</code> 对象中获取数据，但是如果需要创建自己的约束，但是不知道传入的参数即 <code>input</code> 是什么，有一种简单方法是使用拒绝所有请求并将请求对象作为其拒绝消息输出的约束&#x2F;模板。我们可以在创建模板时在 <code>violation</code> 中只保留一行 <code>msg := sprintf(&quot;input: %v&quot;, [input])</code>，此时创建对象时必定会失败，然后获取到输出的错误信息，里面即包含所有 <code>input</code> 信息，之后再通过 Rego 语法去获取需要的数据即可。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">apiVersion: templates.gatekeeper.sh/v1</span><br><span class="line">kind: ConstraintTemplate</span><br><span class="line">metadata:</span><br><span class="line">  name: k8sdenyall</span><br><span class="line">spec:</span><br><span class="line">  crd:</span><br><span class="line">    spec:</span><br><span class="line">      names:</span><br><span class="line">        kind: K8sDenyAll</span><br><span class="line">  targets:</span><br><span class="line">    - target: admission.k8s.gatekeeper.sh</span><br><span class="line">      rego: |</span><br><span class="line">        package k8sdenyall</span><br><span class="line"></span><br><span class="line">        violation[&#123;&quot;msg&quot;: msg&#125;] &#123;</span><br><span class="line">          msg := sprintf(&quot;input:  %v&quot;, [input])</span><br><span class="line">        &#125;</span><br><span class="line">---</span><br><span class="line">apiVersion: constraints.gatekeeper.sh/v1beta1</span><br><span class="line">kind: K8sDenyAll</span><br><span class="line">metadata:</span><br><span class="line">  name: deny-all-namespaces</span><br><span class="line">spec:</span><br><span class="line">  match:</span><br><span class="line">    kinds:</span><br><span class="line">      - apiGroups: [&quot;&quot;]</span><br><span class="line">        kinds: [&quot;Namespace&quot;]</span><br></pre></td></tr></table></figure>
+
+
+
+<p>由于约束模板或者说策略库具有一定的通用性，所以 <code>OPA Gatekeeper</code> 社区提供了一个通用的策略库：<a target="_blank" rel="noopener" href="https://github.com/open-policy-agent/gatekeeper-library%EF%BC%8C%E8%AF%A5%E4%BB%93%E5%BA%93%E4%B8%AD%E5%8C%85%E5%90%AB%E4%BA%86%E5%A4%A7%E9%87%8F%E9%80%9A%E7%94%A8%E7%9A%84%E7%BA%A6%E6%9D%9F%E6%A8%A1%E6%9D%BF%E3%80%82">https://github.com/open-policy-agent/gatekeeper-library，该仓库中包含了大量通用的约束模板。</a></p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/1jmruk.png" alt="gatekeeper-library"></p>
+<p>每个模板库下面都包含一个 <code>template.yaml</code> 文件用来描述约束模板，<code>samples</code> 目录下面就包含具体的约束对象和示例资源清单，这些策略也是我们去学习 Rego 语言的很好的案例。</p>
+<h2 id="Rego"><a href="#Rego" class="headerlink" title="Rego"></a>Rego</h2><p>上面的示例为我们详细介绍了如何使用 OPA 来配置我们的策略规则，其中最核心的就是使用 Rego 编写的策略规则，Rego 是专门为表达复杂的分层数据结构的策略而设计的，所以要掌握 OPA 的使用对 Rego 的了解是必不可少的。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/POD%20Pending/" rel="prev" title="POD Pending">
+      <i class="fa fa-chevron-left"></i> POD Pending
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Nginx/" rel="next" title="Nginx">
+      Nginx <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#OPA-%E7%AD%96%E7%95%A5%E5%BC%95%E6%93%8E"><span class="nav-number">1.</span> <span class="nav-text">OPA 策略引擎</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%83%A8%E7%BD%B2"><span class="nav-number">1.2.</span> <span class="nav-text">部署</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AD%96%E7%95%A5%E7%A4%BA%E4%BE%8B"><span class="nav-number">1.3.</span> <span class="nav-text">策略示例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#gatekeeper"><span class="nav-number">1.4.</span> <span class="nav-text">gatekeeper</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Rego"><span class="nav-number">1.5.</span> <span class="nav-text">Rego</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

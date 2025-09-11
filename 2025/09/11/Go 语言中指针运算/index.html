@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="您好！这是一个非常重要的问题，尤其对于习惯了 C&#x2F;C++ 等语言的开发者而言。我会专业而严谨地为您解答。  在 Go 语言中，标准库和日常编程中，是不允许进行传统的 C&#x2F;C++ 风格的指针运算的。 这意味着您不能：  对指针进行加减整数操作来移动内存地址（例如 ptr++ 或 ptr + N）。 计算两个指针之间的差值来获取它们在内存中的距离。  Go 语言设计者特意移除了这种">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go 语言中指针运算">
+<meta property="og:url" content="http://example.com/2025/09/11/Go%20%E8%AF%AD%E8%A8%80%E4%B8%AD%E6%8C%87%E9%92%88%E8%BF%90%E7%AE%97/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="您好！这是一个非常重要的问题，尤其对于习惯了 C&#x2F;C++ 等语言的开发者而言。我会专业而严谨地为您解答。  在 Go 语言中，标准库和日常编程中，是不允许进行传统的 C&#x2F;C++ 风格的指针运算的。 这意味着您不能：  对指针进行加减整数操作来移动内存地址（例如 ptr++ 或 ptr + N）。 计算两个指针之间的差值来获取它们在内存中的距离。  Go 语言设计者特意移除了这种">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:35:09.394Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Go">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/Go%20%E8%AF%AD%E8%A8%80%E4%B8%AD%E6%8C%87%E9%92%88%E8%BF%90%E7%AE%97/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Go 语言中指针运算 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Go%20%E8%AF%AD%E8%A8%80%E4%B8%AD%E6%8C%87%E9%92%88%E8%BF%90%E7%AE%97/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Go 语言中指针运算
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:35:09" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/go/" itemprop="url" rel="index"><span itemprop="name">go</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>您好！这是一个非常重要的问题，尤其对于习惯了 C&#x2F;C++ 等语言的开发者而言。我会专业而严谨地为您解答。</p>
+<hr>
+<p>在 Go 语言中，<strong>标准库和日常编程中，是不允许进行传统的 C&#x2F;C++ 风格的指针运算的。</strong></p>
+<p>这意味着您不能：</p>
+<ul>
+<li>对指针进行加减整数操作来移动内存地址（例如 <code>ptr++</code> 或 <code>ptr + N</code>）。</li>
+<li>计算两个指针之间的差值来获取它们在内存中的距离。</li>
+</ul>
+<p>Go 语言设计者特意移除了这种能力，原因主要有：</p>
+<ol>
+<li><strong>安全性（Safety）：</strong> 传统的指针运算是许多内存安全漏洞（如缓冲区溢出、越界访问）的常见原因。Go 通过禁止它来提高程序的健壮性。</li>
+<li><strong>简化垃圾回收（Easier Garbage Collection）：</strong> 任意的指针运算会使垃圾回收器更难以精确地识别和管理活跃的内存块。限制指针运算有助于 GC 的高效工作。</li>
+<li><strong>抽象和可预测性：</strong> Go 倾向于提供更高级别的抽象，并使程序行为更可预测。<code>slice</code> 是一个很好的例子，它在底层封装了对连续内存段的操作，但通过更安全、更抽象的接口暴露给开发者。</li>
+</ol>
+<hr>
+<h3 id="Go-语言中允许的指针操作"><a href="#Go-语言中允许的指针操作" class="headerlink" title="Go 语言中允许的指针操作"></a>Go 语言中允许的指针操作</h3><p>尽管没有指针算术，Go 语言仍然提供了强大的指针操作能力，这些操作是安全且类型严格的：</p>
+<ol>
+<li><p><strong>取地址操作符 (<code>&amp;</code>)</strong><br>用于获取一个变量的内存地址，返回一个指向该变量的指针。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> x <span class="type">int</span> = <span class="number">42</span></span><br><span class="line">ptr := &amp;x <span class="comment">// ptr 现在指向 x 的内存地址，类型是 *int</span></span><br><span class="line">fmt.Printf(<span class="string">&quot;x 的值: %d, x 的地址: %p\n&quot;</span>, x, ptr)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>解引用操作符 (<code>*</code>)</strong><br>用于访问指针所指向的值。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> x <span class="type">int</span> = <span class="number">42</span></span><br><span class="line">ptr := &amp;x</span><br><span class="line">fmt.Printf(<span class="string">&quot;ptr 指向的值: %d\n&quot;</span>, *ptr) <span class="comment">// 输出 42</span></span><br><span class="line"></span><br><span class="line">*ptr = <span class="number">100</span> <span class="comment">// 通过指针修改 x 的值</span></span><br><span class="line">fmt.Printf(<span class="string">&quot;x 的新值: %d\n&quot;</span>, x) <span class="comment">// 输出 100</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>指针比较 (<code>==</code>, <code>!=</code>)</strong><br>可以比较两个指针，看它们是否指向同一个内存地址。也可以将指针与 <code>nil</code> 进行比较。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> a <span class="type">int</span> = <span class="number">1</span></span><br><span class="line"><span class="keyword">var</span> b <span class="type">int</span> = <span class="number">2</span></span><br><span class="line">ptrA := &amp;a</span><br><span class="line">ptrB := &amp;b</span><br><span class="line">ptrC := &amp;a</span><br><span class="line"></span><br><span class="line">fmt.Printf(<span class="string">&quot;ptrA == ptrB: %t\n&quot;</span>, ptrA == ptrB) <span class="comment">// false</span></span><br><span class="line">fmt.Printf(<span class="string">&quot;ptrA == ptrC: %t\n&quot;</span>, ptrA == ptrC) <span class="comment">// true</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> nilPtr *<span class="type">int</span></span><br><span class="line">fmt.Printf(<span class="string">&quot;nilPtr == nil: %t\n&quot;</span>, nilPtr == <span class="literal">nil</span>) <span class="comment">// true</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>指针赋值 (<code>=</code>)</strong><br>可以将一个指针的值（即一个内存地址）赋给另一个相同类型的指针变量。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> x <span class="type">int</span> = <span class="number">10</span></span><br><span class="line"><span class="keyword">var</span> p1 *<span class="type">int</span> = &amp;x</span><br><span class="line"><span class="keyword">var</span> p2 *<span class="type">int</span></span><br><span class="line"></span><br><span class="line">p2 = p1 <span class="comment">// p2 现在也指向 x</span></span><br><span class="line"></span><br><span class="line">*p2 = <span class="number">20</span> <span class="comment">// 通过 p2 修改 x 的值</span></span><br><span class="line">fmt.Printf(<span class="string">&quot;x 的值: %d\n&quot;</span>, x) <span class="comment">// 输出 20</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong><code>new()</code> 函数</strong><br><code>new()</code> 函数用于分配内存，返回一个指向新创建的、零值填充的类型实例的指针。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ptr := <span class="built_in">new</span>(<span class="type">int</span>) <span class="comment">// 分配一个 int 类型的内存，并将其初始化为 0，然后返回一个 *int 指针</span></span><br><span class="line">fmt.Printf(<span class="string">&quot;new(int) 产生的指针指向的值: %d\n&quot;</span>, *ptr) <span class="comment">// 输出 0 (int的零值)</span></span><br><span class="line">*ptr = <span class="number">50</span></span><br><span class="line">fmt.Printf(<span class="string">&quot;修改后的值: %d\n&quot;</span>, *ptr) <span class="comment">// 输出 50</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>结构体字段的指针访问</strong><br>如果一个结构体类型拥有方法，无论是值接收者还是指针接收者，都可以通过指针来访问结构体的字段。Go 会自动处理解引用。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Point <span class="keyword">struct</span> &#123;</span><br><span class="line">    X, Y <span class="type">int</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">p := &amp;Point&#123;X: <span class="number">1</span>, Y: <span class="number">2</span>&#125; <span class="comment">// p 是一个 *Point 类型</span></span><br><span class="line">fmt.Printf(<span class="string">&quot;X: %d, Y: %d\n&quot;</span>, p.X, p.Y) <span class="comment">// Go 会自动解引用 p，等同于 (*p).X</span></span><br><span class="line"></span><br><span class="line">p.X = <span class="number">10</span> <span class="comment">// 修改字段</span></span><br><span class="line">fmt.Printf(<span class="string">&quot;新 X: %d\n&quot;</span>, p.X)</span><br></pre></td></tr></table></figure></li>
+</ol>
+<hr>
+<h3 id="unsafe-包：打破-Go-类型的安全性（不推荐）"><a href="#unsafe-包：打破-Go-类型的安全性（不推荐）" class="headerlink" title="unsafe 包：打破 Go 类型的安全性（不推荐）"></a><code>unsafe</code> 包：打破 Go 类型的安全性（不推荐）</h3><p>Go 语言提供了一个 <code>unsafe</code> 包，其中包含了 <code>Pointer</code> 类型以及一些函数，允许开发者绕过 Go 的类型系统和内存安全性限制，从而<strong>可以进行原始的指针运算</strong>。</p>
+<p><strong>强调：</strong></p>
+<ul>
+<li><strong>极度不推荐在常规代码中使用 <code>unsafe</code> 包。</strong></li>
+<li>它会破坏 Go 的类型安全。</li>
+<li>使用 <code>unsafe</code> 写的代码可能不可移植，并且可能在 Go 版本升级时失效。</li>
+<li>它导致代码难以理解和维护。</li>
+<li>它使得垃圾回收器的工作变得复杂，可能影响性能或导致内存泄漏。</li>
+<li>通常只有在与操作系统、硬件进行低级交互，或者实现某些需要极致性能的库（如序列化、反射优化）时，才会在非常受限的场景下使用。</li>
+</ul>
+<p><strong><code>unsafe</code> 包中的主要概念：</strong></p>
+<ul>
+<li><code>unsafe.Pointer</code>: 一个通用指针类型，可以持有任何类型的指针，也可以转换为任何类型的指针。它类似于 C 语言中的 <code>void*</code>。</li>
+<li><code>uintptr</code>: 一个无符号整数类型，足够大以容纳任何内存地址。可以把 <code>unsafe.Pointer</code> 转换为 <code>uintptr</code> 进行整数运算，然后再转回 <code>unsafe.Pointer</code>。</li>
+</ul>
+<p><strong>一个（非常不安全的）示例：</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;unsafe&quot;</span> <span class="comment">// 避免在生产代码中滥用！</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	arr := [<span class="number">5</span>]<span class="type">int</span>&#123;<span class="number">10</span>, <span class="number">20</span>, <span class="number">30</span>, <span class="number">40</span>, <span class="number">50</span>&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 获取数组第一个元素的地址</span></span><br><span class="line">	p0 := &amp;arr[<span class="number">0</span>]</span><br><span class="line">	fmt.Printf(<span class="string">&quot;arr[0] 的地址: %p, 值: %d\n&quot;</span>, p0, *p0)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 将 *int 指针转换为 unsafe.Pointer</span></span><br><span class="line">	p0Unsafe := unsafe.Pointer(p0)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 将 unsafe.Pointer 转换为 uintptr，进行指针算术（加 8 字节，因为 int 是 8 字节）</span></span><br><span class="line">	<span class="comment">// 注意：这里的 8 是 int 类型的大小，它依赖于具体的架构（64位系统上 int 通常是 8 字节）</span></span><br><span class="line">	<span class="comment">// 这种硬编码大小是危险且不可移植的。应该使用 unsafe.Sizeof()</span></span><br><span class="line">	p1Unsafe := unsafe.Pointer(<span class="type">uintptr</span>(p0Unsafe) + unsafe.Sizeof(arr[<span class="number">0</span>]))</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 将 uintptr 转换回 unsafe.Pointer，再转换为 *int 指针</span></span><br><span class="line">	p1 := (*<span class="type">int</span>)(p1Unsafe)</span><br><span class="line">	fmt.Printf(<span class="string">&quot;arr[1] (通过指针算术) 的地址: %p, 值: %d\n&quot;</span>, p1, *p1) <span class="comment">// 输出 arr[1] 的地址和值 20</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// 再次进行指针算术，访问 arr[2]</span></span><br><span class="line">	p2Unsafe := unsafe.Pointer(<span class="type">uintptr</span>(p0Unsafe) + <span class="number">2</span>*unsafe.Sizeof(arr[<span class="number">0</span>]))</span><br><span class="line">	p2 := (*<span class="type">int</span>)(p2Unsafe)</span><br><span class="line">	fmt.Printf(<span class="string">&quot;arr[2] (通过指针算术) 的地址: %p, 值: %d\n&quot;</span>, p2, *p2) <span class="comment">// 输出 arr[2] 的地址和值 30</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这个例子只是为了演示 <code>unsafe.Pointer</code> 的功能，再次强调它在正常 Go 编程中是应<strong>极力避免</strong>的。</p>
+<hr>
+<h3 id="Go-语言中处理连续内存的惯用方式：Slice"><a href="#Go-语言中处理连续内存的惯用方式：Slice" class="headerlink" title="Go 语言中处理连续内存的惯用方式：Slice"></a>Go 语言中处理连续内存的惯用方式：Slice</h3><p>Go 语言提供了 <code>slice</code> 来替代需要指针算术的场景。<code>slice</code> 是对底层数组的一个封装，它提供了长度、容量和指向底层数组的指针。<code>slice</code> 提供了安全且高效的方式来操作序列数据，包括切片、重新切片、追加等，而不需要暴露底层的指针运算。所有这些操作都是类型安全的，并且由 Go 运行时管理，避免了手动内存管理和指针算术带来的风险。</p>
+<p>因此，当您需要处理内存中的连续数据块时，Go 的惯用和推荐方式是使用 <code>slice</code>，而不是求助于低级的指针运算。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Go/" rel="tag"># Go</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Go%20%E8%AF%AD%E8%A8%80%E4%B8%AD%E7%9A%84%E5%AF%B9%E8%B1%A1%E9%80%89%E6%8B%A9%E5%99%A8%E8%87%AA%E5%8A%A8%E8%A7%A3%E5%BC%95%E7%94%A8/" rel="prev" title="Go 语言中的对象选择器自动解引用">
+      <i class="fa fa-chevron-left"></i> Go 语言中的对象选择器自动解引用
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Go%20%E8%AF%AD%E8%A8%80%E4%B8%AD%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%20set/" rel="next" title="Go 语言中如何实现 set">
+      Go 语言中如何实现 set <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Go-%E8%AF%AD%E8%A8%80%E4%B8%AD%E5%85%81%E8%AE%B8%E7%9A%84%E6%8C%87%E9%92%88%E6%93%8D%E4%BD%9C"><span class="nav-number">1.</span> <span class="nav-text">Go 语言中允许的指针操作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#unsafe-%E5%8C%85%EF%BC%9A%E6%89%93%E7%A0%B4-Go-%E7%B1%BB%E5%9E%8B%E7%9A%84%E5%AE%89%E5%85%A8%E6%80%A7%EF%BC%88%E4%B8%8D%E6%8E%A8%E8%8D%90%EF%BC%89"><span class="nav-number">2.</span> <span class="nav-text">unsafe 包：打破 Go 类型的安全性（不推荐）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Go-%E8%AF%AD%E8%A8%80%E4%B8%AD%E5%A4%84%E7%90%86%E8%BF%9E%E7%BB%AD%E5%86%85%E5%AD%98%E7%9A%84%E6%83%AF%E7%94%A8%E6%96%B9%E5%BC%8F%EF%BC%9ASlice"><span class="nav-number">3.</span> <span class="nav-text">Go 语言中处理连续内存的惯用方式：Slice</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

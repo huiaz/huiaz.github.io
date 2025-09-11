@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Go语言的接口是一种非常强大且灵活的类型系统特性，它通过非侵入式的鸭子类型（Duck Typing）实现了多态。在运行时，Go语言的接口变量实际上是一个内部的数据结构，它存储了关于“类型”和“值”的信息。 接口的底层数据结构Go语言的接口在运行时有两种基本形式，但它们的底层结构是相似且精简的：  空接口 (interface&#123;&#125;) &#x2F; eface (empty int">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go interface">
+<meta property="og:url" content="http://example.com/2025/09/11/interface/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="Go语言的接口是一种非常强大且灵活的类型系统特性，它通过非侵入式的鸭子类型（Duck Typing）实现了多态。在运行时，Go语言的接口变量实际上是一个内部的数据结构，它存储了关于“类型”和“值”的信息。 接口的底层数据结构Go语言的接口在运行时有两种基本形式，但它们的底层结构是相似且精简的：  空接口 (interface&#123;&#125;) &#x2F; eface (empty int">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:40:58.426Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Go">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/interface/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Go interface | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/interface/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Go interface
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:40:58" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/go/" itemprop="url" rel="index"><span itemprop="name">go</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.8k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Go语言的接口是一种非常强大且灵活的类型系统特性，它通过<strong>非侵入式</strong>的鸭子类型（Duck Typing）实现了多态。在运行时，Go语言的接口变量实际上是一个内部的数据结构，它存储了关于“类型”和“值”的信息。</p>
+<h3 id="接口的底层数据结构"><a href="#接口的底层数据结构" class="headerlink" title="接口的底层数据结构"></a>接口的底层数据结构</h3><p>Go语言的接口在运行时有两种基本形式，但它们的底层结构是相似且精简的：</p>
+<ol>
+<li><strong>空接口 (<code>interface&#123;&#125;</code>) &#x2F; <code>eface</code> (empty interface)</strong></li>
+<li><strong>非空接口 (<code>interface S</code>) &#x2F; <code>iface</code> (interface with methods)</strong></li>
+</ol>
+<p>这两种接口在内存中都由两个单词（通常是两个指针大小的内存单元）组成。在Go的源码中，它们分别对应<code>runtime.eface</code>和<code>runtime.iface</code>结构体。</p>
+<h4 id="1-空接口-eface-的实现"><a href="#1-空接口-eface-的实现" class="headerlink" title="1. 空接口 (eface) 的实现"></a>1. 空接口 (<code>eface</code>) 的实现</h4><p><code>interface&#123;&#125;</code> 是最简单的接口，它可以存储任何类型的值，因为它不要求被存储的值实现任何方法。</p>
+<p><code>runtime.eface</code> 结构体：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> eface <span class="keyword">struct</span> &#123;</span><br><span class="line">    _type *_type <span class="comment">// 指向值的类型信息</span></span><br><span class="line">    data  unsafe.Pointer <span class="comment">// 指向实际值的指针</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>_type</code>: 这是一个指向 <code>runtime._type</code> 结构体的指针。<code>_type</code> 包含了关于值本身的元数据，比如类型名称、大小、对齐方式以及其方法集（即使是空接口，它实际存储的值也有自身的方法集，比如 <code>int</code> 类型就没有方法，<code>string</code> 有 <code>Len()</code> 等）。</li>
+<li><code>data</code>: 这是一个 <code>unsafe.Pointer</code>，它指向接口中实际存储的数据。</li>
+</ul>
+<p><strong><code>eface</code> 的工作原理：</strong></p>
+<p>当一个值被赋给一个空接口时：</p>
+<ul>
+<li>Go运行时会获取该值的<strong>类型信息</strong>（<code>_type</code>），并存储在 <code>_type</code> 字段中。</li>
+<li>如果该值是<strong>非指针类型</strong>（如 <code>int</code>, <code>string</code>, <code>struct</code> 等），并且它的大小<strong>超过一个字大小</strong>（通常是8字节，取决于架构，或不适合直接嵌入），Go会创建该值的一个<strong>副本（拷贝）</strong>，并把这个副本存储在堆上。<code>data</code> 字段会指向这个堆上的副本。</li>
+<li>如果该值是<strong>指针类型</strong>（如 <code>*MyStruct</code>）或者<strong>很小的值</strong>（如 <code>int</code>, <code>bool</code>），那么 <code>data</code> 字段可能直接存储这个值本身（对于小值）或者直接存储这个指针。对于指针，<code>data</code> 字段会指向这个指针所引用的数据。</li>
+<li><strong>注意：</strong> 空接口在内部始终存储的是值的<strong>一个副本或副本的指针</strong>。原始变量和接口内的变量是独立的。</li>
+</ul>
+<h4 id="2-非空接口-iface-的实现"><a href="#2-非空接口-iface-的实现" class="headerlink" title="2. 非空接口 (iface) 的实现"></a>2. 非空接口 (<code>iface</code>) 的实现</h4><p>非空接口，或者说带有方法集的接口（如 <code>io.Reader</code>, <code>fmt.Stringer</code>），其底层结构稍微复杂一些，因为它还需要记录接口所要求的具体方法。</p>
+<p><code>runtime.iface</code> 结构体：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> iface <span class="keyword">struct</span> &#123;</span><br><span class="line">    tab  *itab <span class="comment">// 指向接口表格的指针</span></span><br><span class="line">    data unsafe.Pointer <span class="comment">// 指向实际值的指针</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>data</code>: 与空接口类似，它指向实际存储的值。同样，对于非指针类型，通常会有一个值拷贝。</li>
+<li><code>tab</code>: 这是一个指向 <code>runtime.itab</code> 结构体的指针。<code>itab</code> 是 interface table 的缩写，它是 Go 运行时在编译时或运行时动态生成的一个表格，它连接了<strong>接口类型</strong>和<strong>实际类型</strong>。</li>
+</ul>
+<p><code>runtime.itab</code> 结构体：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> itab <span class="keyword">struct</span> &#123;</span><br><span class="line">    inter *IType <span class="comment">// 接口的类型信息 (如 Reader 接口)</span></span><br><span class="line">    _type *_type <span class="comment">// 实现该接口的类型信息 (如 MyStruct)</span></span><br><span class="line">    hash  <span class="type">uint32</span> <span class="comment">// 用于快速查找的哈希值</span></span><br><span class="line">    _     [<span class="number">4</span>]<span class="type">byte</span> <span class="comment">// padding</span></span><br><span class="line">    fun   [<span class="number">1</span>]<span class="type">uintptr</span> <span class="comment">// 动态数组，存储实际类型实现接口方法的函数指针列表</span></span><br><span class="line">    <span class="comment">// fun 数组的实际大小是由接口定义的方法数量决定的</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>itab</code> 是非空接口的核心。它记录了：</p>
+<ul>
+<li><code>inter</code>: 接口本身的类型（例如，如果你有一个 <code>io.Reader</code> 接口变量，这个字段就指向 <code>io.Reader</code> 接口的类型元数据）。</li>
+<li><code>_type</code>: 实现该接口的<strong>实际类型</strong>的元数据（例如，如果 <code>io.Reader</code> 接口变量中存储了一个 <code>*bytes.Buffer</code> 类型的值，这个字段就指向 <code>*bytes.Buffer</code> 的类型元数据）。</li>
+<li><code>fun</code>: 这是一个方法表，存储了实际类型 (<code>_type</code>) 匹配接口 (<code>inter</code>) 要求的所有方法的<strong>函数指针</strong>。这些函数指针按照接口方法声明的顺序排列。</li>
+</ul>
+<p><strong><code>iface</code> 的工作原理：</strong></p>
+<p>当一个值被赋给一个非空接口时：</p>
+<ol>
+<li><strong>查找 <code>itab</code>：</strong> Go运行时会查找或创建一个 <code>itab</code>。这个查找过程是根据<strong>接口类型</strong>和<strong>实际类型</strong>进行的。如果 <code>(实际类型, 接口类型)</code> 组合已经存在对应的 <code>itab</code>，就直接使用；否则，Go会在运行时创建一个新的 <code>itab</code>。</li>
+<li><strong>填充 <code>itab</code>：</strong> <code>itab</code> 会记录接口类型、实现该接口的实际类型，并构建一个方法表 (<code>fun</code> 字段)。方法表中的函数指针指向实际类型所实现的方法。这些查找和匹配在编译时会做一部分，<strong>主要在运行时进行动态查找和缓存</strong>。</li>
+<li><strong>填充 <code>iface</code>：</strong><ul>
+<li><code>iface.tab</code> 指向构建好的 <code>itab</code>。</li>
+<li><code>iface.data</code> 指向实际的值。同样，对于非指针类型，这里通常会有一个拷贝。</li>
+</ul>
+</li>
+</ol>
+<h3 id="接口方法调用的实现"><a href="#接口方法调用的实现" class="headerlink" title="接口方法调用的实现"></a>接口方法调用的实现</h3><p>当通过接口变量调用方法时（例如 <code>myReader.Read(buf)</code>）：</p>
+<ol>
+<li>Go运行时从 <code>myReader</code> 接口变量的 <code>tab</code> 字段获取 <code>itab</code> 指针。</li>
+<li>通过 <code>itab</code> 结构体的 <code>fun</code> 字段，找到对应方法的函数指针。例如，<code>Read</code> 方法可能是 <code>fun[0]</code>。</li>
+<li>将 <code>myReader</code> 接口变量的 <code>data</code> 字段作为方法的第一个接收者参数传递给找到的函数指针。</li>
+</ol>
+<p>这种机制使得Go语言能够实现运行时多态：即使在编译时不知道接口变量中具体存储的是哪种类型，在运行时也能通过 <code>itab</code> 正确地找到并调用相应类型的方法。</p>
+<h3 id="总结要点："><a href="#总结要点：" class="headerlink" title="总结要点："></a>总结要点：</h3><ul>
+<li><strong>编译时检查，运行时调度：</strong> 编译器在编译时检查一个类型是否实现了接口的所有方法。而在运行时，通过接口的内部结构（<code>itab</code>）来动态地调用正确的方法。</li>
+<li><strong>非侵入式：</strong> 一个类型要实现某个接口，不需要显式声明（如Java的<code>implements</code>），只需要实现接口定义的所有方法即可。</li>
+<li><strong>值拷贝的考量：</strong> 当一个<strong>非指针类型</strong>的值赋给接口时，会发生一次<strong>值拷贝</strong>。这意味着接口内部持有的值是原值的一个副本。如果方法通过接口修改了内部的值，并不会影响到原变量。<ul>
+<li><strong>重要提示：</strong> 为了避免不必要的拷贝或确保接口操作能修改原始数据，通常会传递<strong>指针类型</strong>到接口（例如 <code>var r io.Reader = &amp;MyStruct&#123;&#125;</code> 而非 <code>var r io.Reader = MyStruct&#123;&#125;</code>），因为此时接口内部存储的是指针的拷贝，而多个指针副本都指向同一份底层数据。</li>
+</ul>
+</li>
+<li><strong>性能开销：</strong> 接口调用的开销略高于直接函数调用，因为它涉及额外的指针解引用和 <code>itab</code> 查找。但在绝大多数应用场景下，这种开销微乎其微，可以忽略不计。</li>
+</ul>
+<p>理解Go接口的这些底层实现细节，能够帮助您更好地设计接口，处理值的传递，避免不必要的内存分配和潜在的bug。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Go/" rel="tag"># Go</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/k8s%20Deployment/" rel="prev" title="k8s Deployment">
+      <i class="fa fa-chevron-left"></i> k8s Deployment
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/ipvs%20%E5%9F%BA%E6%9C%AC%E4%BB%8B%E7%BB%8D/" rel="next" title="ipvs 基本介绍">
+      ipvs 基本介绍 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8E%A5%E5%8F%A3%E7%9A%84%E5%BA%95%E5%B1%82%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="nav-number">1.</span> <span class="nav-text">接口的底层数据结构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E7%A9%BA%E6%8E%A5%E5%8F%A3-eface-%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.1.</span> <span class="nav-text">1. 空接口 (eface) 的实现</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E9%9D%9E%E7%A9%BA%E6%8E%A5%E5%8F%A3-iface-%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.2.</span> <span class="nav-text">2. 非空接口 (iface) 的实现</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8E%A5%E5%8F%A3%E6%96%B9%E6%B3%95%E8%B0%83%E7%94%A8%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">2.</span> <span class="nav-text">接口方法调用的实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%E8%A6%81%E7%82%B9%EF%BC%9A"><span class="nav-number">3.</span> <span class="nav-text">总结要点：</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

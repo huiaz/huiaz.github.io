@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="描述在 Kubernetes 中如何配置资源配额，并解释其作用。	 🤔 分析过程：此问题旨在考察对Kubernetes资源治理和多租户管理的理解。核心是ResourceQuota对象。一个高质量的回答不仅要说明如何创建ResourceQuota，更要阐明其核心目的：为命名空间（Namespace）设置资源“预算”。这包括计算资源（CPU&#x2F;Memory）、存储资源和对象数量的限制。此外，">
+<meta property="og:type" content="article">
+<meta property="og:title" content="k8s ResourceQuota">
+<meta property="og:url" content="http://example.com/2025/09/11/k8s%20ResourceQuota/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="描述在 Kubernetes 中如何配置资源配额，并解释其作用。	 🤔 分析过程：此问题旨在考察对Kubernetes资源治理和多租户管理的理解。核心是ResourceQuota对象。一个高质量的回答不仅要说明如何创建ResourceQuota，更要阐明其核心目的：为命名空间（Namespace）设置资源“预算”。这包括计算资源（CPU&#x2F;Memory）、存储资源和对象数量的限制。此外，">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:43:52.047Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/k8s%20ResourceQuota/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>k8s ResourceQuota | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/k8s%20ResourceQuota/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          k8s ResourceQuota
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:43:52" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E9%9D%A2%E8%AF%95%E9%A2%98/" itemprop="url" rel="index"><span itemprop="name">面试题</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.1k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>描述在 Kubernetes 中如何配置资源配额，并解释其作用。	</p>
+<h3 id="🤔-分析过程："><a href="#🤔-分析过程：" class="headerlink" title="🤔 分析过程："></a>🤔 分析过程：</h3><p>此问题旨在考察对Kubernetes资源治理和多租户管理的理解。核心是<code>ResourceQuota</code>对象。一个高质量的回答不仅要说明如何创建<code>ResourceQuota</code>，更要阐明其核心目的：为命名空间（Namespace）设置资源“预算”。这包括计算资源（CPU&#x2F;Memory）、存储资源和对象数量的限制。此外，还应提及它与<code>LimitRange</code>对象的关系，这能体现出对资源管理体系的深入理解。</p>
+<h3 id="💡-答案生成："><a href="#💡-答案生成：" class="headerlink" title="💡 答案生成："></a>💡 答案生成：</h3><h4 id="1-概念或定义"><a href="#1-概念或定义" class="headerlink" title="1. 概念或定义"></a>1. 概念或定义</h4><p><strong>ResourceQuota</strong>（资源配额）是Kubernetes中的一个策略对象，它为<strong>命名空间（Namespace）</strong>提供了资源消耗的总量限制。它允许集群管理员为每个命名空间分配一个“预算”，确保单个团队或应用不会消耗掉超出其分配额度的资源，从而影响到集群中的其他用户。</p>
+<p><strong>核心要点：</strong> 资源配额是<strong>作用于命名空间级别</strong>的，不是作用于单个Pod或节点的。</p>
+<h4 id="2-作用与目的"><a href="#2-作用与目的" class="headerlink" title="2. 作用与目的"></a>2. 作用与目的</h4><p>配置资源配额的主要作用是实现集群的<strong>治理和公平性</strong>，具体目标包括：</p>
+<ul>
+<li><strong>防止“邻居吵闹”问题 (Noisy Neighbor):</strong> 避免某个命名空间中的应用（或用户错误）过度消耗资源（如CPU、内存），从而影响其他命名空间中应用的性能和稳定性。</li>
+<li><strong>成本控制与容量规划:</strong> 在多租户环境中，可以根据团队或项目的预算分配资源，有助于成本核算和未来的容量规划。</li>
+<li><strong>防止意外错误:</strong> 限制可创建的对象数量（如Pods、Services），可以防止因配置错误（例如，一个Deployment错误地请求创建1000个副本）而导致集群资源被瞬间耗尽。</li>
+<li><strong>强制执行最佳实践:</strong> 强制要求用户为其Pod指定资源请求（<code>requests</code>），因为只有设置了<code>requests</code>的Pod才会被计入计算资源的配额统计中。</li>
+</ul>
+<h4 id="3-如何配置-YAML示例"><a href="#3-如何配置-YAML示例" class="headerlink" title="3. 如何配置 (YAML示例)"></a>3. 如何配置 (YAML示例)</h4><p>资源配额通过创建一个<code>ResourceQuota</code>对象来定义。下面是一个综合性的示例，限制了一个命名空间的计算资源、存储资源和对象数量。</p>
+<p>将以下内容保存为 <code>my-namespace-quota.yaml</code>:</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># my-namespace-quota.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ResourceQuota</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="comment"># ResourceQuota的名称</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">my-namespace-quota</span></span><br><span class="line">  <span class="comment"># 必须指定它所作用的命名空间</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">my-team-namespace</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="comment"># &quot;hard&quot; 字段定义了硬性限制</span></span><br><span class="line">  <span class="attr">hard:</span></span><br><span class="line">    <span class="comment"># 1. 计算资源配额</span></span><br><span class="line">    <span class="comment"># 该命名空间中所有Pod的CPU请求总和不能超过10个核心</span></span><br><span class="line">    <span class="attr">requests.cpu:</span> <span class="string">&quot;10&quot;</span></span><br><span class="line">    <span class="comment"># 该命名空间中所有Pod的CPU限制总和不能超过20个核心</span></span><br><span class="line">    <span class="attr">limits.cpu:</span> <span class="string">&quot;20&quot;</span></span><br><span class="line">    <span class="comment"># 该命名空间中所有Pod的内存请求总和不能超过20GiB</span></span><br><span class="line">    <span class="attr">requests.memory:</span> <span class="string">&quot;20Gi&quot;</span></span><br><span class="line">    <span class="comment"># 该命名空间中所有Pod的内存限制总和不能超过40GiB</span></span><br><span class="line">    <span class="attr">limits.memory:</span> <span class="string">&quot;40Gi&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 2. 存储资源配额</span></span><br><span class="line">    <span class="comment"># 该命名空间中所有PVC的存储请求总和不能超过50GiB</span></span><br><span class="line">    <span class="attr">requests.storage:</span> <span class="string">&quot;50Gi&quot;</span></span><br><span class="line">    <span class="comment"># 该命名空间中总共可以创建10个PVC</span></span><br><span class="line">    <span class="attr">persistentvolumeclaims:</span> <span class="string">&quot;10&quot;</span></span><br><span class="line">    <span class="comment"># 针对特定的StorageClass (例如高性能ssd) 进行配额</span></span><br><span class="line">    <span class="attr">fast-ssd.storageclass.storage.k8s.io/requests.storage:</span> <span class="string">&quot;10Gi&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 3. 对象数量配额</span></span><br><span class="line">    <span class="comment"># 该命名空间中最多只能有20个Pod</span></span><br><span class="line">    <span class="attr">pods:</span> <span class="string">&quot;20&quot;</span></span><br><span class="line">    <span class="comment"># 最多10个Services</span></span><br><span class="line">    <span class="attr">services:</span> <span class="string">&quot;10&quot;</span></span><br><span class="line">    <span class="comment"># 最多10个ReplicaSets</span></span><br><span class="line">    <span class="attr">replicasets:</span> <span class="string">&quot;10&quot;</span></span><br><span class="line">    <span class="comment"># 最多50个Secrets</span></span><br><span class="line">    <span class="attr">secrets:</span> <span class="string">&quot;50&quot;</span></span><br><span class="line">    <span class="comment"># 最多50个ConfigMaps</span></span><br><span class="line">    <span class="attr">configmaps:</span> <span class="string">&quot;50&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="4-管理与验证"><a href="#4-管理与验证" class="headerlink" title="4. 管理与验证"></a>4. 管理与验证</h4><ol>
+<li><p><strong>应用配额：</strong><br>首先，确保命名空间存在，然后应用该<code>ResourceQuota</code>对象。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 如果命名空间不存在，先创建它</span></span><br><span class="line">kubectl create namespace my-team-namespace</span><br><span class="line"></span><br><span class="line"><span class="comment"># 将配额应用到该命名空间</span></span><br><span class="line">kubectl apply -f my-namespace-quota.yaml -n my-team-namespace</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>查看配额：</strong><br>使用<code>describe</code>命令可以清晰地看到配额的总量（Hard）和当前已使用量（Used）。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl describe quota my-namespace-quota -n my-team-namespace</span><br></pre></td></tr></table></figure>
+<p><strong>输出示例：</strong></p>
+<figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Name:            <span class="keyword">my</span>-namespace-quota</span><br><span class="line">Namespace:       <span class="keyword">my</span>-team-namespace</span><br><span class="line">Resource         Used   Hard</span><br><span class="line"><span class="comment">--------         ----   ----</span></span><br><span class="line">configmaps       <span class="number">5</span>      <span class="number">50</span></span><br><span class="line">limits.cpu       <span class="number">500</span>m   <span class="number">20</span></span><br><span class="line">limits.memory    <span class="number">1</span>Gi    <span class="number">40</span>Gi</span><br><span class="line">pods             <span class="number">10</span>     <span class="number">20</span></span><br><span class="line"><span class="comment"># ... 其他资源 ...</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>违规行为：</strong><br>当用户尝试在该命名空间中创建一个会超出配额的资源时，API Server会<strong>拒绝</strong>该请求，并返回一个明确的错误信息。<br><strong>错误示例：</strong> <code>Error from server (Forbidden): error when creating &quot;pod.yaml&quot;: pods &quot;my-pod&quot; is forbidden: exceeded quota: my-namespace-quota, requested: pods=1, used: pods=20, limited: pods=20</code></p>
+</li>
+</ol>
+<h4 id="5-扩展知识-最佳实践"><a href="#5-扩展知识-最佳实践" class="headerlink" title="5. 扩展知识&#x2F;最佳实践"></a>5. 扩展知识&#x2F;最佳实践</h4><ul>
+<li><strong>与<code>LimitRange</code>协同工作:</strong><ul>
+<li><code>ResourceQuota</code>设置的是<strong>命名空间的总预算</strong>。</li>
+<li><code>LimitRange</code>则为该命名空间中的<strong>每个Pod设置默认的、最小或最大的资源请求&#x2F;限制</strong>。</li>
+<li><strong>二者必须协同使用。</strong> 如果你设置了计算资源配额（如<code>requests.cpu</code>），但用户创建的Pod没有指定<code>requests.cpu</code>，那么这个Pod将无法被创建。<code>LimitRange</code>可以为未指定资源请求的Pod自动添加默认值，从而确保它们能被<code>ResourceQuota</code>正确地统计和管理。</li>
+</ul>
+</li>
+<li><strong>配额范围 (Scope):</strong> <code>ResourceQuota</code>可以通过<code>scopes</code>字段来进一步限定其作用范围，例如，可以创建一个只对<code>BestEffort</code>类型的Pod生效的配额，或者只对<code>NotTerminating</code>的Pod生效的配额。</li>
+<li><strong>监控与告警:</strong> 在生产环境中，应该使用Prometheus等监控工具来监控各命名空间的配额使用情况（<code>kube_resourcequota</code>指标），并在使用量接近硬性限制时发出告警，以便管理员及时调整或通知用户。</li>
+<li><strong>合理规划:</strong> 配额的设置需要基于对应用负载的理解和业务需求。设置得过低会影响开发和部署效率，设置得过高则失去了资源治理的意义。</li>
+</ul>
+<p><strong>结论：</strong>  <code>ResourceQuota</code>是Kubernetes中实现多租户资源治理和公平性的核心工具，它通过为命名空间设置计算、存储和对象数量的硬性上限，有效防止资源滥用，并强制推行资源管理的最佳实践。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/k8s%20POD/" rel="prev" title="k8s POD">
+      <i class="fa fa-chevron-left"></i> k8s POD
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/k8s%20ReplicaSet/" rel="next" title="k8s ReplicaSet">
+      k8s ReplicaSet <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%F0%9F%A4%94-%E5%88%86%E6%9E%90%E8%BF%87%E7%A8%8B%EF%BC%9A"><span class="nav-number">1.</span> <span class="nav-text">🤔 分析过程：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%F0%9F%92%A1-%E7%AD%94%E6%A1%88%E7%94%9F%E6%88%90%EF%BC%9A"><span class="nav-number">2.</span> <span class="nav-text">💡 答案生成：</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E6%A6%82%E5%BF%B5%E6%88%96%E5%AE%9A%E4%B9%89"><span class="nav-number">2.1.</span> <span class="nav-text">1. 概念或定义</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E4%BD%9C%E7%94%A8%E4%B8%8E%E7%9B%AE%E7%9A%84"><span class="nav-number">2.2.</span> <span class="nav-text">2. 作用与目的</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E5%A6%82%E4%BD%95%E9%85%8D%E7%BD%AE-YAML%E7%A4%BA%E4%BE%8B"><span class="nav-number">2.3.</span> <span class="nav-text">3. 如何配置 (YAML示例)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-%E7%AE%A1%E7%90%86%E4%B8%8E%E9%AA%8C%E8%AF%81"><span class="nav-number">2.4.</span> <span class="nav-text">4. 管理与验证</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-%E6%89%A9%E5%B1%95%E7%9F%A5%E8%AF%86-%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="nav-number">2.5.</span> <span class="nav-text">5. 扩展知识&#x2F;最佳实践</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

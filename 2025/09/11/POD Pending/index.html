@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="彻底搞懂 K8S Pod Pending 故障原因及解决方案即使在高成熟度级别 Kubernetes 集群中 pod pending 也是无处不在。 如果您随机询问任何使用 Kubernetes DevOps 工程师来确定折磨他们噩梦的最常见错误，pod pending 可能是非常常见的问题（可能仅次于 CrashLoopBackOff）。 尝试推送更新并看到它卡住会使 DevOps 紧张。即使解">
+<meta property="og:type" content="article">
+<meta property="og:title" content="POD Pending">
+<meta property="og:url" content="http://example.com/2025/09/11/POD%20Pending/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="彻底搞懂 K8S Pod Pending 故障原因及解决方案即使在高成熟度级别 Kubernetes 集群中 pod pending 也是无处不在。 如果您随机询问任何使用 Kubernetes DevOps 工程师来确定折磨他们噩梦的最常见错误，pod pending 可能是非常常见的问题（可能仅次于 CrashLoopBackOff）。 尝试推送更新并看到它卡住会使 DevOps 紧张。即使解">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/sw044c.jpg">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/hswjd7.jpg">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:51:55.329Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://mudutestmenu.mudu.tv/upload/sw044c.jpg">
+
+<link rel="canonical" href="http://example.com/2025/09/11/POD%20Pending/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>POD Pending | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/POD%20Pending/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          POD Pending
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:51:55" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E9%9D%A2%E8%AF%95%E9%A2%98/" itemprop="url" rel="index"><span itemprop="name">面试题</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>8.5k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>8 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="彻底搞懂-K8S-Pod-Pending-故障原因及解决方案"><a href="#彻底搞懂-K8S-Pod-Pending-故障原因及解决方案" class="headerlink" title="彻底搞懂 K8S Pod Pending 故障原因及解决方案"></a>彻底搞懂 K8S Pod Pending 故障原因及解决方案</h1><p>即使在高成熟度级别 Kubernetes 集群中 pod pending 也是无处不在。</p>
+<p>如果您随机询问任何使用 Kubernetes DevOps 工程师来确定折磨他们噩梦的最常见错误，pod pending 可能是非常常见的问题（可能仅次于 CrashLoopBackOff）。</p>
+<p>尝试推送更新并看到它卡住会使 DevOps 紧张。即使解决方案相当简单，找到 pod 挂起的原因并了解您需要应用的更改也很重要（Kubernetes 故障排除很少是微不足道的）。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/sw044c.jpg" alt="图片"></p>
+<p>在本文中，我们将阐明导致此问题的不同情况，让 DevOps 团队能够快速找到解决方案，最重要的是，尽可能避免它。</p>
+<h3 id="Kubernetes-Pod-pending-是什么意思？"><a href="#Kubernetes-Pod-pending-是什么意思？" class="headerlink" title="Kubernetes Pod pending 是什么意思？"></a>Kubernetes Pod pending 是什么意思？</h3><p>Kubernetes 中的 Pod 的生命周期由几个不同的阶段组成：</p>
+<ul>
+<li>创建 pod 时，它从Pending阶段开始。</li>
+<li>一旦 pod 被调度并且容器已经启动，pod 就会进入Running阶段。</li>
+</ul>
+<p>大多数 pod 只需要几秒钟就可以从 Pending 到 Running 并在该状态下度过大部分时间。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/hswjd7.jpg" alt="图片"></p>
+<p>至此，Pod 已被 Kubernetes 集群接受。但是一个或多个容器尚未准备好对外提供服务。这包括 Pod 等待调度所花费的时间以及通过网络下载容器镜像所花费的时间。</p>
+<p>当 pod 无法从 PendingtoRunning 阶段前进时，生命周期将停止并保留 pod，直到阻止它前进的问题得到修复。</p>
+<p>如果我们使用 kubectl 列出 pod，我们将看到显示 Kubernetes pod 挂起情况的输出：</p>
+<figure class="highlight fortran"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl -n troubleshooting get pods</span><br><span class="line"><span class="keyword">NAME</span>                                           READY   <span class="keyword">STATUS</span>    RESTARTS   AGE</span><br><span class="line">stress-<span class="number">6d6</span>cbc8b9d-s4sbh                        <span class="number">0</span>/<span class="number">1</span>     Pending   <span class="number">0</span>          <span class="number">17</span>s</span><br></pre></td></tr></table></figure>
+
+<p>除非我们解决问题，否则 pod 被卡住并且不会运行。</p>
+<h3 id="排查-Kubernetes-pod-Pending-的常见原因"><a href="#排查-Kubernetes-pod-Pending-的常见原因" class="headerlink" title="排查 Kubernetes pod Pending 的常见原因"></a>排查 Kubernetes pod Pending 的常见原因</h3><p>有几个原因可以阻止 Pod 运行，但我们将描述三个主要问题：</p>
+<ul>
+<li>调度问题：无法在任何节点上调度 Pod。</li>
+<li>镜像问题：下载容器镜像时出现问题。</li>
+<li>依赖性问题：Pod 需要一个卷、Secret 或 ConfigMap 才能运行。</li>
+</ul>
+<p>第一个是最常见的，最后一个很少见。让我们详细说明每种情况。</p>
+<h4 id="调度问题导致-Kubernetes-Pod-Pending"><a href="#调度问题导致-Kubernetes-Pod-Pending" class="headerlink" title="调度问题导致 Kubernetes Pod Pending"></a>调度问题导致 Kubernetes Pod Pending</h4><p>![图片](data:image&#x2F;svg+xml,%3C%3Fxml version&#x3D;’1.0’ encoding&#x3D;’UTF-8’%3F%3E%3Csvg width&#x3D;’1px’ height&#x3D;’1px’ viewBox&#x3D;’0 0 1 1’ version&#x3D;’1.1’ xmlns&#x3D;’<a target="_blank" rel="noopener" href="http://www.w3.org/2000/svg">http://www.w3.org/2000/svg</a>‘ xmlns:xlink&#x3D;’<a target="_blank" rel="noopener" href="http://www.w3.org/1999/xlink'%3E%3Ctitle%3E%3C/title%3E%3Cg">http://www.w3.org/1999/xlink&#39;%3E%3Ctitle%3E%3C/title%3E%3Cg</a> stroke&#x3D;’none’ stroke-width&#x3D;’1’ fill&#x3D;’none’ fill-rule&#x3D;’evenodd’ fill-opacity&#x3D;’0’%3E%3Cg transform&#x3D;’translate(-249.000000, -126.000000)’ fill&#x3D;’%23FFFFFF’%3E%3Crect x&#x3D;’249’ y&#x3D;’126’ width&#x3D;’1’ height&#x3D;’1’%3E%3C&#x2F;rect%3E%3C&#x2F;g%3E%3C&#x2F;g%3E%3C&#x2F;svg%3E)</p>
+<p>创建 Pod 后，Kubernetes 集群做的第一件事就是尝试调度 Pod 在其中一个节点上运行。这个过程通常非常快，并且 pod 被快速分配给具有足够资源来运行它的节点。</p>
+<p>为了放置它，集群中的 Pod 被分配给具有更多未请求资源的节点，并继续其快乐而美好的生活，其中充满了对请求的符合 SLO 的回复。</p>
+<p>但是，如果此过程每次都有效，有几个因素可能导致集群无法分配 pod。</p>
+<p>让我们回顾一下最常见的。</p>
+<h5 id="任何节点中都没有足够的资源来分配-pod"><a href="#任何节点中都没有足够的资源来分配-pod" class="headerlink" title="任何节点中都没有足够的资源来分配 pod"></a>任何节点中都没有足够的资源来分配 pod</h5><p>Kubernetes 使用调度请求来决定fits节点中是否有 pod。资源的真正使用无关紧要，只有其他 pod 已经请求的资源。</p>
+<p>effective requests当一个 pod 有足够的可请求资源来参与该 pod 的内存和 CPU 时，它将被调度到一个节点中。并且节点必须没有达到它可以运行的最大 pod 数。</p>
+<p>![图片](data:image&#x2F;svg+xml,%3C%3Fxml version&#x3D;’1.0’ encoding&#x3D;’UTF-8’%3F%3E%3Csvg width&#x3D;’1px’ height&#x3D;’1px’ viewBox&#x3D;’0 0 1 1’ version&#x3D;’1.1’ xmlns&#x3D;’<a target="_blank" rel="noopener" href="http://www.w3.org/2000/svg">http://www.w3.org/2000/svg</a>‘ xmlns:xlink&#x3D;’<a target="_blank" rel="noopener" href="http://www.w3.org/1999/xlink'%3E%3Ctitle%3E%3C/title%3E%3Cg">http://www.w3.org/1999/xlink&#39;%3E%3Ctitle%3E%3C/title%3E%3Cg</a> stroke&#x3D;’none’ stroke-width&#x3D;’1’ fill&#x3D;’none’ fill-rule&#x3D;’evenodd’ fill-opacity&#x3D;’0’%3E%3Cg transform&#x3D;’translate(-249.000000, -126.000000)’ fill&#x3D;’%23FFFFFF’%3E%3Crect x&#x3D;’249’ y&#x3D;’126’ width&#x3D;’1’ height&#x3D;’1’%3E%3C&#x2F;rect%3E%3C&#x2F;g%3E%3C&#x2F;g%3E%3C&#x2F;svg%3E)</p>
+<p>当没有任何节点满足 pod 的所有要求时，它将保持在 Kubernetes pod 挂起状态，直到释放一些资源。</p>
+<h5 id="不可调度的节点"><a href="#不可调度的节点" class="headerlink" title="不可调度的节点"></a>不可调度的节点</h5><p>由于不同的问题（节点压力）或人为行为（节点封锁），节点可能会变为不可调度的状态。这些节点在状态发生变化之前不会调度任何 pod。</p>
+<p>![图片](data:image&#x2F;svg+xml,%3C%3Fxml version&#x3D;’1.0’ encoding&#x3D;’UTF-8’%3F%3E%3Csvg width&#x3D;’1px’ height&#x3D;’1px’ viewBox&#x3D;’0 0 1 1’ version&#x3D;’1.1’ xmlns&#x3D;’<a target="_blank" rel="noopener" href="http://www.w3.org/2000/svg">http://www.w3.org/2000/svg</a>‘ xmlns:xlink&#x3D;’<a target="_blank" rel="noopener" href="http://www.w3.org/1999/xlink'%3E%3Ctitle%3E%3C/title%3E%3Cg">http://www.w3.org/1999/xlink&#39;%3E%3Ctitle%3E%3C/title%3E%3Cg</a> stroke&#x3D;’none’ stroke-width&#x3D;’1’ fill&#x3D;’none’ fill-rule&#x3D;’evenodd’ fill-opacity&#x3D;’0’%3E%3Cg transform&#x3D;’translate(-249.000000, -126.000000)’ fill&#x3D;’%23FFFFFF’%3E%3Crect x&#x3D;’249’ y&#x3D;’126’ width&#x3D;’1’ height&#x3D;’1’%3E%3C&#x2F;rect%3E%3C&#x2F;g%3E%3C&#x2F;g%3E%3C&#x2F;svg%3E)</p>
+<h5 id="污点和容忍度"><a href="#污点和容忍度" class="headerlink" title="污点和容忍度"></a>污点和容忍度</h5><p>污点是 Kubernetes 的一种机制，它允许我们限制可以分配给不同节点的 pod。当节点具有 taint 时，只有匹配容忍度的 pod 才能在该节点中运行。</p>
+<p>这种机制允许 Kubernetes 的特殊用途，例如为不同的工作负载使用不同类型的节点（具有 GPU 的节点，具有不同的 CPU&#x2F;内存比率等）。</p>
+<p>![图片](data:image&#x2F;svg+xml,%3C%3Fxml version&#x3D;’1.0’ encoding&#x3D;’UTF-8’%3F%3E%3Csvg width&#x3D;’1px’ height&#x3D;’1px’ viewBox&#x3D;’0 0 1 1’ version&#x3D;’1.1’ xmlns&#x3D;’<a target="_blank" rel="noopener" href="http://www.w3.org/2000/svg">http://www.w3.org/2000/svg</a>‘ xmlns:xlink&#x3D;’<a target="_blank" rel="noopener" href="http://www.w3.org/1999/xlink'%3E%3Ctitle%3E%3C/title%3E%3Cg">http://www.w3.org/1999/xlink&#39;%3E%3Ctitle%3E%3C/title%3E%3Cg</a> stroke&#x3D;’none’ stroke-width&#x3D;’1’ fill&#x3D;’none’ fill-rule&#x3D;’evenodd’ fill-opacity&#x3D;’0’%3E%3Cg transform&#x3D;’translate(-249.000000, -126.000000)’ fill&#x3D;’%23FFFFFF’%3E%3Crect x&#x3D;’249’ y&#x3D;’126’ width&#x3D;’1’ height&#x3D;’1’%3E%3C&#x2F;rect%3E%3C&#x2F;g%3E%3C&#x2F;g%3E%3C&#x2F;svg%3E)</p>
+<p>即使我们分别描述每个原因，调度问题也往往是由这些问题的组合引起的。通常，您无法调度，因为某些节点已满而其他节点已被污染，或者某个节点可能由于内存压力而无法调度。</p>
+<p>为了找出调度问题是什么，您需要查看调度程序生成的关于 pod 的事件，其中将详细描述阻止节点分配的原因。我们可以使用 kubectl describe 查看事件，例如：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">$</span> <span class="string">kubectl</span> <span class="string">-n</span> <span class="string">troubleshooting</span> <span class="string">describe</span> <span class="string">pod</span> <span class="string">stress-6d6cbc8b9d-s4sbh</span></span><br><span class="line"><span class="attr">Name:</span>           <span class="string">stress-6d6cbc8b9d-s4sbh</span></span><br><span class="line"><span class="attr">Namespace:</span>      <span class="string">troubleshooting</span></span><br><span class="line"><span class="attr">Priority:</span>       <span class="number">0</span></span><br><span class="line"><span class="attr">Node:</span>           <span class="string">&lt;none&gt;</span></span><br><span class="line"><span class="attr">Labels:</span>         <span class="string">app=stress</span></span><br><span class="line">                <span class="string">pod-template-hash=6d6cbc8b9d</span></span><br><span class="line"><span class="attr">Annotations:</span>    <span class="string">&lt;none&gt;</span></span><br><span class="line"><span class="attr">Status:</span>         <span class="string">Pending</span></span><br><span class="line"><span class="attr">IP:</span></span><br><span class="line"><span class="attr">IPs:</span>            <span class="string">&lt;none&gt;</span></span><br><span class="line"><span class="attr">Controlled By:</span>  <span class="string">ReplicaSet/stress-6d6cbc8b9d</span></span><br><span class="line"><span class="attr">Containers:</span></span><br><span class="line">  <span class="attr">stress:</span></span><br><span class="line">    <span class="attr">Image:</span>      <span class="string">progrium/stress</span></span><br><span class="line">    <span class="attr">Port:</span>       <span class="string">&lt;none&gt;</span></span><br><span class="line">    <span class="attr">Host Port:</span>  <span class="string">&lt;none&gt;</span></span><br><span class="line">    <span class="attr">Args:</span></span><br><span class="line">      <span class="string">--cpu</span></span><br><span class="line">      <span class="number">1</span></span><br><span class="line">      <span class="string">--vm</span></span><br><span class="line">      <span class="number">2</span></span><br><span class="line">      <span class="string">--vm-bytes</span></span><br><span class="line">      <span class="string">150M</span></span><br><span class="line">    <span class="attr">Limits:</span></span><br><span class="line">      <span class="attr">cpu:</span>     <span class="string">300m</span></span><br><span class="line">      <span class="attr">memory:</span>  <span class="string">120000Mi</span></span><br><span class="line">    <span class="attr">Requests:</span></span><br><span class="line">      <span class="attr">cpu:</span>        <span class="string">200m</span></span><br><span class="line">      <span class="attr">memory:</span>     <span class="string">100000Mi</span></span><br><span class="line">    <span class="attr">Environment:</span>  <span class="string">&lt;none&gt;</span></span><br><span class="line">    <span class="attr">Mounts:</span></span><br><span class="line">      <span class="string">/var/run/secrets/kubernetes.io/serviceaccount</span> <span class="string">from</span> <span class="string">kube-api-access-snrww</span> <span class="string">(ro)</span></span><br><span class="line"><span class="attr">Conditions:</span></span><br><span class="line">  <span class="string">Type</span>           <span class="string">Status</span></span><br><span class="line">  <span class="string">PodScheduled</span>   <span class="literal">False</span></span><br><span class="line"><span class="attr">Volumes:</span></span><br><span class="line">  <span class="attr">kube-api-access-snrww:</span></span><br><span class="line">    <span class="attr">Type:</span>                    <span class="string">Projected</span> <span class="string">(a</span> <span class="string">volume</span> <span class="string">that</span> <span class="string">contains</span> <span class="string">injected</span> <span class="string">data</span> <span class="string">from</span> <span class="string">multiple</span> <span class="string">sources)</span></span><br><span class="line">    <span class="attr">TokenExpirationSeconds:</span>  <span class="number">3607</span></span><br><span class="line">    <span class="attr">ConfigMapName:</span>           <span class="string">kube-root-ca.crt</span></span><br><span class="line">    <span class="attr">ConfigMapOptional:</span>       <span class="string">&lt;nil&gt;</span></span><br><span class="line">    <span class="attr">DownwardAPI:</span>             <span class="literal">true</span></span><br><span class="line"><span class="attr">QoS Class:</span>                   <span class="string">Burstable</span></span><br><span class="line"><span class="attr">Node-Selectors:</span>              <span class="string">&lt;none&gt;</span></span><br><span class="line"><span class="attr">Tolerations:</span>                 <span class="string">node.kubernetes.io/not-ready:NoExecute</span> <span class="string">op=Exists</span> <span class="string">for</span> <span class="string">300s</span></span><br><span class="line">                             <span class="string">node.kubernetes.io/unreachable:NoExecute</span> <span class="string">op=Exists</span> <span class="string">for</span> <span class="string">300s</span></span><br><span class="line"><span class="attr">Events:</span></span><br><span class="line">  <span class="string">Type</span>     <span class="string">Reason</span>            <span class="string">Age</span>                   <span class="string">From</span>               <span class="string">Message</span></span><br><span class="line">  <span class="string">----</span>     <span class="string">------</span>            <span class="string">----</span>                  <span class="string">----</span>               <span class="string">-------</span></span><br><span class="line">  <span class="attr">Warning  FailedScheduling  4m17s (x41 over 34m)  default-scheduler  0/5 nodes are available:</span> <span class="number">1</span> <span class="string">node(s)</span> <span class="string">had</span> <span class="string">taint</span> &#123;<span class="attr">node-role.kubernetes.io/master:</span> &#125;<span class="string">,</span> <span class="string">that</span> <span class="string">the</span> <span class="string">pod</span> <span class="string">didn&#x27;t</span> <span class="string">tolerate,</span> <span class="number">4</span> <span class="string">Insufficient</span> <span class="string">memory.</span></span><br></pre></td></tr></table></figure>
+
+<p>我们可以在输出中看到消息中的确切原因：</p>
+<figure class="highlight crmsh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">0</span>/<span class="number">5</span> nodes are available: <span class="number">1</span> <span class="keyword">node</span><span class="title">(s</span>) had taint &#123;<span class="keyword">node</span><span class="title">-role</span>.kubernetes.io/<span class="literal">master</span>: &#125;, that the pod didn&#x27;t tolerate, <span class="number">4</span> Insufficient memory.</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>其中一个节点被污染。</li>
+<li>其中四个节点没有足够的可请求内存。</li>
+</ul>
+<p>为了解决这个问题，我们有两个选择：</p>
+<ul>
+<li>减少 pod 定义中的资源请求大小。</li>
+<li>通过添加更多节点或增加每个节点的大小来增加集群的容量。</li>
+</ul>
+<p>如果要更新当前运行的工作负载，还需要考虑另一个重要因素：升级策略。</p>
+<p>由于此策略，Kubernetes 可以允许工作负载在更新过程中创建比平时更多的 Pod，在创建新 Pod 时保留旧 Pod 一段时间。这意味着工作负载可能会在一段时间内请求比预期更多的资源。如果集群没有足够的备用资源，更新将被阻塞，留下一些 pod 待处理，直到进程被解除阻塞（或回滚超时停止更新）。</p>
+<h4 id="由于镜像问题，Pod-Pending"><a href="#由于镜像问题，Pod-Pending" class="headerlink" title="由于镜像问题，Pod Pending"></a>由于镜像问题，Pod Pending</h4><p>一旦在一个节点中分配了 pod，kubelet就会尝试启动 pod 中的所有容器。为此，它将尝试下载镜像并运行它。</p>
+<p>![图片](data:image&#x2F;svg+xml,%3C%3Fxml version&#x3D;’1.0’ encoding&#x3D;’UTF-8’%3F%3E%3Csvg width&#x3D;’1px’ height&#x3D;’1px’ viewBox&#x3D;’0 0 1 1’ version&#x3D;’1.1’ xmlns&#x3D;’<a target="_blank" rel="noopener" href="http://www.w3.org/2000/svg">http://www.w3.org/2000/svg</a>‘ xmlns:xlink&#x3D;’<a target="_blank" rel="noopener" href="http://www.w3.org/1999/xlink'%3E%3Ctitle%3E%3C/title%3E%3Cg">http://www.w3.org/1999/xlink&#39;%3E%3Ctitle%3E%3C/title%3E%3Cg</a> stroke&#x3D;’none’ stroke-width&#x3D;’1’ fill&#x3D;’none’ fill-rule&#x3D;’evenodd’ fill-opacity&#x3D;’0’%3E%3Cg transform&#x3D;’translate(-249.000000, -126.000000)’ fill&#x3D;’%23FFFFFF’%3E%3Crect x&#x3D;’249’ y&#x3D;’126’ width&#x3D;’1’ height&#x3D;’1’%3E%3C&#x2F;rect%3E%3C&#x2F;g%3E%3C&#x2F;g%3E%3C&#x2F;svg%3E)</p>
+<p>有几个错误会阻止镜像被下载：</p>
+<ul>
+<li>镜象名称错误。</li>
+<li>错误的镜像标签。</li>
+<li>错误的存储仓库。</li>
+<li>存储仓库需要身份验证。</li>
+</ul>
+<h4 id="Kubernetes-Pod-由于依赖问题而挂起"><a href="#Kubernetes-Pod-由于依赖问题而挂起" class="headerlink" title="Kubernetes Pod 由于依赖问题而挂起"></a>Kubernetes Pod 由于依赖问题而挂起</h4><p>![图片](data:image&#x2F;svg+xml,%3C%3Fxml version&#x3D;’1.0’ encoding&#x3D;’UTF-8’%3F%3E%3Csvg width&#x3D;’1px’ height&#x3D;’1px’ viewBox&#x3D;’0 0 1 1’ version&#x3D;’1.1’ xmlns&#x3D;’<a target="_blank" rel="noopener" href="http://www.w3.org/2000/svg">http://www.w3.org/2000/svg</a>‘ xmlns:xlink&#x3D;’<a target="_blank" rel="noopener" href="http://www.w3.org/1999/xlink'%3E%3Ctitle%3E%3C/title%3E%3Cg">http://www.w3.org/1999/xlink&#39;%3E%3Ctitle%3E%3C/title%3E%3Cg</a> stroke&#x3D;’none’ stroke-width&#x3D;’1’ fill&#x3D;’none’ fill-rule&#x3D;’evenodd’ fill-opacity&#x3D;’0’%3E%3Cg transform&#x3D;’translate(-249.000000, -126.000000)’ fill&#x3D;’%23FFFFFF’%3E%3Crect x&#x3D;’249’ y&#x3D;’126’ width&#x3D;’1’ height&#x3D;’1’%3E%3C&#x2F;rect%3E%3C&#x2F;g%3E%3C&#x2F;g%3E%3C&#x2F;svg%3E)</p>
+<p>在 pod 启动之前，kubelet将尝试检查与其他 Kubernetes 元素的所有依赖关系。如果无法满足这些依赖项之一，则 pod 将保持挂起状态，直到满足依赖项。</p>
+<p>![图片](data:image&#x2F;svg+xml,%3C%3Fxml version&#x3D;’1.0’ encoding&#x3D;’UTF-8’%3F%3E%3Csvg width&#x3D;’1px’ height&#x3D;’1px’ viewBox&#x3D;’0 0 1 1’ version&#x3D;’1.1’ xmlns&#x3D;’<a target="_blank" rel="noopener" href="http://www.w3.org/2000/svg">http://www.w3.org/2000/svg</a>‘ xmlns:xlink&#x3D;’<a target="_blank" rel="noopener" href="http://www.w3.org/1999/xlink'%3E%3Ctitle%3E%3C/title%3E%3Cg">http://www.w3.org/1999/xlink&#39;%3E%3Ctitle%3E%3C/title%3E%3Cg</a> stroke&#x3D;’none’ stroke-width&#x3D;’1’ fill&#x3D;’none’ fill-rule&#x3D;’evenodd’ fill-opacity&#x3D;’0’%3E%3Cg transform&#x3D;’translate(-249.000000, -126.000000)’ fill&#x3D;’%23FFFFFF’%3E%3Crect x&#x3D;’249’ y&#x3D;’126’ width&#x3D;’1’ height&#x3D;’1’%3E%3C&#x2F;rect%3E%3C&#x2F;g%3E%3C&#x2F;g%3E%3C&#x2F;svg%3E)</p>
+<p>在这种情况下，kubectl 将像这样显示 pod：</p>
+<figure class="highlight fortran"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl -n mysql get pods </span><br><span class="line"><span class="keyword">NAME</span> READY <span class="keyword">STATUS</span> RESTARTS AGE </span><br><span class="line">mysql-<span class="number">0</span> <span class="number">0</span>/<span class="number">1</span> ContainerCreating <span class="number">0</span> <span class="number">97</span>s</span><br></pre></td></tr></table></figure>
+
+<p>在事件中，我们可以看到如下内容：</p>
+<figure class="highlight vhdl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Events:</span><br><span class="line">  <span class="keyword">Type</span>     Reason       Age                  From               Message</span><br><span class="line">  <span class="comment">----     ------       ----                 ----               -------</span></span><br><span class="line">  Normal   Scheduled    <span class="number">3</span>m19s                <span class="keyword">default</span>-scheduler  Successfully assigned mysql/mysql-<span class="number">0</span> <span class="keyword">to</span> ip-<span class="number">172</span>-<span class="number">20</span>-<span class="number">38</span>-<span class="number">115</span>.eu-west-<span class="number">1</span>.compute.internal</span><br><span class="line">  <span class="literal">Warning</span>  FailedMount  <span class="number">76</span>s                  kubelet            Unable <span class="keyword">to</span> attach <span class="keyword">or</span> mount volumes: unmounted volumes=[config], unattached volumes=[kube-api-<span class="keyword">access</span>-gxjf8 data config]: timed <span class="keyword">out</span> waiting <span class="keyword">for</span> the condition</span><br><span class="line">  <span class="literal">Warning</span>  FailedMount  <span class="number">71</span>s (x9 over <span class="number">3</span>m19s)  kubelet            MountVolume.SetUp failed <span class="keyword">for</span> volume <span class="string">&quot;config&quot;</span> : configmap <span class="string">&quot;mysql&quot;</span> <span class="keyword">not</span> found</span><br></pre></td></tr></table></figure>
+
+<p>该 Message 列将为您提供足够的信息，以便能够查明缺失的元素。常见的原因有：</p>
+<ul>
+<li>尚未创建 ConfigMap 或者 Secret，或提供的名称不正确。</li>
+<li>无法在节点中挂载卷，因为它尚未被另一个节点释放。这尤其发生在更新 statefulset 的过程中，挂载的卷必须与旧 pod 相同。</li>
+</ul>
+<h3 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h3><p>了解 pod 保持在该 Pending 阶段的原因是在 Kubernetes 中安全部署和更新工作负载的关键。能够快速定位问题并加快部署进度将为您省去一些麻烦并减少停机时间。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/PPP%20%E5%8D%8F%E8%AE%AE/" rel="prev" title="PPP 协议">
+      <i class="fa fa-chevron-left"></i> PPP 协议
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/OPA/" rel="next" title="OPA">
+      OPA <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BD%BB%E5%BA%95%E6%90%9E%E6%87%82-K8S-Pod-Pending-%E6%95%85%E9%9A%9C%E5%8E%9F%E5%9B%A0%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="nav-number">1.</span> <span class="nav-text">彻底搞懂 K8S Pod Pending 故障原因及解决方案</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Kubernetes-Pod-pending-%E6%98%AF%E4%BB%80%E4%B9%88%E6%84%8F%E6%80%9D%EF%BC%9F"><span class="nav-number">1.0.1.</span> <span class="nav-text">Kubernetes Pod pending 是什么意思？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8E%92%E6%9F%A5-Kubernetes-pod-Pending-%E7%9A%84%E5%B8%B8%E8%A7%81%E5%8E%9F%E5%9B%A0"><span class="nav-number">1.0.2.</span> <span class="nav-text">排查 Kubernetes pod Pending 的常见原因</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%B0%83%E5%BA%A6%E9%97%AE%E9%A2%98%E5%AF%BC%E8%87%B4-Kubernetes-Pod-Pending"><span class="nav-number">1.0.2.1.</span> <span class="nav-text">调度问题导致 Kubernetes Pod Pending</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BB%BB%E4%BD%95%E8%8A%82%E7%82%B9%E4%B8%AD%E9%83%BD%E6%B2%A1%E6%9C%89%E8%B6%B3%E5%A4%9F%E7%9A%84%E8%B5%84%E6%BA%90%E6%9D%A5%E5%88%86%E9%85%8D-pod"><span class="nav-number">1.0.2.1.1.</span> <span class="nav-text">任何节点中都没有足够的资源来分配 pod</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%B8%8D%E5%8F%AF%E8%B0%83%E5%BA%A6%E7%9A%84%E8%8A%82%E7%82%B9"><span class="nav-number">1.0.2.1.2.</span> <span class="nav-text">不可调度的节点</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%B1%A1%E7%82%B9%E5%92%8C%E5%AE%B9%E5%BF%8D%E5%BA%A6"><span class="nav-number">1.0.2.1.3.</span> <span class="nav-text">污点和容忍度</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%94%B1%E4%BA%8E%E9%95%9C%E5%83%8F%E9%97%AE%E9%A2%98%EF%BC%8CPod-Pending"><span class="nav-number">1.0.2.2.</span> <span class="nav-text">由于镜像问题，Pod Pending</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Kubernetes-Pod-%E7%94%B1%E4%BA%8E%E4%BE%9D%E8%B5%96%E9%97%AE%E9%A2%98%E8%80%8C%E6%8C%82%E8%B5%B7"><span class="nav-number">1.0.2.3.</span> <span class="nav-text">Kubernetes Pod 由于依赖问题而挂起</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%93%E8%AE%BA"><span class="nav-number">1.0.3.</span> <span class="nav-text">结论</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

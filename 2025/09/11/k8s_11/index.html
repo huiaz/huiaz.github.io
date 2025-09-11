@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="描述在 Kubernetes 中如何进行安全配置，并解释常用的方法。🤔 分析过程：该问题旨在考察对Kubernetes端到端安全体系的理解，这是一个综合性很强的话题。一个优秀的回答需要结构化地展示安全措施如何应用于从底层基础设施到应用代码的每一个层面。业界公认的“4C安全模型”（Cloud, Cluster, Container, Code）是阐述此问题的最佳框架。本回答将以此模型为骨架，逐层解">
+<meta property="og:type" content="article">
+<meta property="og:title" content="k8s_11">
+<meta property="og:url" content="http://example.com/2025/09/11/k8s_11/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="描述在 Kubernetes 中如何进行安全配置，并解释常用的方法。🤔 分析过程：该问题旨在考察对Kubernetes端到端安全体系的理解，这是一个综合性很强的话题。一个优秀的回答需要结构化地展示安全措施如何应用于从底层基础设施到应用代码的每一个层面。业界公认的“4C安全模型”（Cloud, Cluster, Container, Code）是阐述此问题的最佳框架。本回答将以此模型为骨架，逐层解">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:44:20.064Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/k8s_11/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>k8s_11 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/k8s_11/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          k8s_11
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:44:20" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E9%9D%A2%E8%AF%95%E9%A2%98/" itemprop="url" rel="index"><span itemprop="name">面试题</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.9k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="描述在-Kubernetes-中如何进行安全配置，并解释常用的方法。"><a href="#描述在-Kubernetes-中如何进行安全配置，并解释常用的方法。" class="headerlink" title="描述在 Kubernetes 中如何进行安全配置，并解释常用的方法。"></a>描述在 Kubernetes 中如何进行安全配置，并解释常用的方法。</h3><h3 id="🤔-分析过程："><a href="#🤔-分析过程：" class="headerlink" title="🤔 分析过程："></a>🤔 分析过程：</h3><p>该问题旨在考察对Kubernetes端到端安全体系的理解，这是一个综合性很强的话题。一个优秀的回答需要结构化地展示安全措施如何应用于从底层基础设施到应用代码的每一个层面。业界公认的<strong>“4C安全模型”（Cloud, Cluster, Container, Code）</strong>是阐述此问题的最佳框架。本回答将以此模型为骨架，逐层解释每一个层面需要关注的安全配置和常用方法，确保覆盖全面且逻辑清晰。</p>
+<h3 id="💡-答案生成："><a href="#💡-答案生成：" class="headerlink" title="💡 答案生成："></a>💡 答案生成：</h3><h4 id="1-概念或定义"><a href="#1-概念或定义" class="headerlink" title="1. 概念或定义"></a>1. 概念或定义</h4><p><strong>Kubernetes安全配置</strong>是指在Kubernetes集群的各个层面（基础设施、集群组件、容器、应用代码）实施的一系列策略、工具和实践，旨在保护集群及其上运行的应用免受未经授权的访问、数据泄露、恶意活动和其他安全威胁。其核心原则是<strong>纵深防御（Defense in Depth）</strong>和<strong>最小权限原则（Principle of Least Privilege）</strong>。</p>
+<h4 id="2-“4C”安全模型与常用方法"><a href="#2-“4C”安全模型与常用方法" class="headerlink" title="2. “4C”安全模型与常用方法"></a>2. “4C”安全模型与常用方法</h4><h5 id="层面一：Cloud-Corporate-Data-Center-云-基础设施层"><a href="#层面一：Cloud-Corporate-Data-Center-云-基础设施层" class="headerlink" title="层面一：Cloud&#x2F;Corporate Data Center (云&#x2F;基础设施层)"></a>层面一：Cloud&#x2F;Corporate Data Center (云&#x2F;基础设施层)</h5><p>这是最外层的安全，关注运行Kubernetes的底层环境。</p>
+<ul>
+<li><strong>方法与配置:</strong><ul>
+<li><strong>网络隔离:</strong> 使用云提供商的VPC、安全组或本地数据中心的防火墙，严格限制对Kubernetes控制平面（特别是API Server）和工作节点的网络访问。最佳实践是仅允许来自受信任IP（如堡垒机）的访问。</li>
+<li><strong>节点加固:</strong><ul>
+<li>使用专门为容器设计的、最小化的操作系统（如Bottlerocket, Talos, 或最小化的Linux发行版），以减少攻击面。</li>
+<li>定期对节点操作系统进行安全补丁更新。</li>
+<li>为节点配置最小化的IAM权限（如果使用云提供商），确保节点上的Kubelet仅拥有其履行职责所必需的权限。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h5 id="层面二：Cluster-集群层"><a href="#层面二：Cluster-集群层" class="headerlink" title="层面二：Cluster (集群层)"></a>层面二：Cluster (集群层)</h5><p>这是Kubernetes自身组件和资源的安全。</p>
+<ul>
+<li><strong>方法与配置:</strong><ol>
+<li><p><strong>API Server 访问控制 (核心中的核心):</strong></p>
+<ul>
+<li><strong>认证 (Authentication):</strong> 确保所有API请求都来自可信的实体。常用方法包括客户端证书、Bearer Tokens、以及集成OIDC提供商（如Dex, Keycloak）实现单点登录（SSO）。</li>
+<li><strong>授权 (Authorization) - RBAC:</strong> <strong>Role-Based Access Control (RBAC)</strong> 是最关键的安全机制。它通过<code>Role</code>&#x2F;<code>ClusterRole</code>（定义权限集）和<code>RoleBinding</code>&#x2F;<code>ClusterRoleBinding</code>（将权限集绑定到用户&#x2F;组&#x2F;服务账户）来精确控制谁能对哪些资源执行何种操作。<strong>务必遵循最小权限原则</strong>，只授予必要的权限。</li>
+<li><strong>准入控制 (Admission Control):</strong> 作为API Server的最后一道防线，在请求持久化到etcd之前对其进行验证或修改。关键的准入控制器包括：<ul>
+<li><code>PodSecurity</code>: （取代已废弃的<code>PodSecurityPolicy</code>）基于<strong>Pod安全标准（Pod Security Standards）</strong>（如<code>privileged</code>, <code>baseline</code>, <code>restricted</code>）来限制Pod的行为。</li>
+<li><code>ValidatingAdmissionWebhook</code> &#x2F; <code>MutatingAdmissionWebhook</code>: 允许集成第三方策略引擎（如 <strong>OPA&#x2F;Gatekeeper, Kyverno</strong>）来实现更复杂的自定义安全策略。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>网络策略 (<code>NetworkPolicy</code>):</strong></p>
+<ul>
+<li>默认情况下，Kubernetes集群中的所有Pod之间可以自由通信。<code>NetworkPolicy</code>资源充当Pod级别的防火墙，可以基于Pod标签、命名空间和IP地址来定义精细的流量规则（Ingress&#x2F;Egress），实现微隔离。<strong>最佳实践是默认拒绝所有流量，然后按需放行</strong>。</li>
+</ul>
+</li>
+<li><p><strong>密钥管理 (<code>Secret Management</code>):</strong></p>
+<ul>
+<li>Kubernetes原生的<code>Secret</code>对象仅是Base64编码，并非加密。<strong>必须启用Etcd的静态加密（Encryption at Rest）功能</strong>，以保护存储在etcd中的Secret数据。</li>
+<li>对于更高级的需求，应集成外部密钥管理系统，如 <strong>HashiCorp Vault</strong> 或云提供商的KMS，通过CSI驱动或专用控制器安全地将密钥注入到Pod中。</li>
+</ul>
+</li>
+</ol>
+</li>
+</ul>
+<h5 id="层面三：Container-容器层"><a href="#层面三：Container-容器层" class="headerlink" title="层面三：Container (容器层)"></a>层面三：Container (容器层)</h5><p>关注容器镜像本身和容器运行时的安全。</p>
+<ul>
+<li><strong>方法与配置:</strong><ol>
+<li><p><strong>镜像安全:</strong></p>
+<ul>
+<li><strong>来源可靠:</strong> 只使用来自受信任仓库的、经过数字签名的官方基础镜像。</li>
+<li><strong>漏洞扫描:</strong> 在CI&#x2F;CD流水线中集成镜像扫描工具（如 <strong>Trivy, Clair, Snyk</strong>），在镜像推送到仓库前发现并修复已知漏洞（CVE）。</li>
+<li><strong>最小化镜像:</strong> 使用多阶段构建（Multi-stage builds）和<code>distroless</code>或Alpine等极简基础镜像，以大幅减少镜像中的攻击面。</li>
+</ul>
+</li>
+<li><p><strong>运行时安全 (<code>SecurityContext</code>):</strong></p>
+<ul>
+<li>在Pod和Container的规约（Spec）中配置<code>securityContext</code>字段，以限制容器的行为：<ul>
+<li><code>runAsNonRoot: true</code>: <strong>强制容器以非root用户运行</strong>，这是最重要的运行时安全措施之一。</li>
+<li><code>readOnlyRootFilesystem: true</code>: 将容器的根文件系统设为只读，防止恶意篡改。</li>
+<li><code>allowPrivilegeEscalation: false</code>: 禁止容器内的进程获得比其父进程更多的权限。</li>
+<li><code>capabilities.drop: [&quot;ALL&quot;]</code>: 移除所有非必需的Linux Capabilities，然后按需添加（<code>add</code>）最低限度的能力。</li>
+<li>配置 <code>seccompProfile</code>, <code>apparmorProfile</code> 来进一步限制容器可以执行的系统调用。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+</li>
+</ul>
+<h5 id="层面四：Code-代码层"><a href="#层面四：Code-代码层" class="headerlink" title="层面四：Code (代码层)"></a>层面四：Code (代码层)</h5><p>这是最内层的安全，关注应用程序自身的安全性。</p>
+<ul>
+<li><strong>方法与配置:</strong><ul>
+<li><strong>依赖扫描:</strong> 使用工具（如Snyk, <code>npm audit</code>）扫描应用代码的第三方库和依赖，发现并修复漏洞。</li>
+<li><strong>静态应用安全测试 (SAST):</strong> 在编码阶段分析源代码，发现安全缺陷。</li>
+<li><strong>安全编码实践:</strong> 遵循OWASP Top 10等安全编码指南，防范SQL注入、跨站脚本等常见攻击。</li>
+</ul>
+</li>
+</ul>
+<h4 id="3-扩展知识-最佳实践"><a href="#3-扩展知识-最佳实践" class="headerlink" title="3. 扩展知识&#x2F;最佳实践"></a>3. 扩展知识&#x2F;最佳实践</h4><ul>
+<li><strong>审计日志 (Audit Logs):</strong> 启用Kubernetes的审计日志，记录对API Server的所有请求，以便进行事后分析和异常检测。</li>
+<li><strong>CIS Benchmark:</strong> 使用<code>kube-bench</code>等工具，对照互联网安全中心（CIS）发布的Kubernetes安全基准来评估和加固集群配置。</li>
+<li><strong>GitOps:</strong> 将安全策略（如RBAC规则、NetworkPolicies、Gatekeeper策略）也纳入Git进行版本控制，通过自动化流程进行部署，实现“策略即代码”（Policy as Code）。</li>
+</ul>
+<p><strong>结论：</strong>  Kubernetes安全是一个多层次的纵深防御体系。有效的安全配置必须贯穿基础设施、集群、容器和代码四个层面，并以最小权限原则为指导，综合运用RBAC、NetworkPolicy、SecurityContext和镜像扫描等多种技术手段，形成一个协同工作的、持续加固的安全闭环。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/k8s_12/" rel="prev" title="k8s_12">
+      <i class="fa fa-chevron-left"></i> k8s_12
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/k8s_10/" rel="next" title="k8s_10">
+      k8s_10 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8F%8F%E8%BF%B0%E5%9C%A8-Kubernetes-%E4%B8%AD%E5%A6%82%E4%BD%95%E8%BF%9B%E8%A1%8C%E5%AE%89%E5%85%A8%E9%85%8D%E7%BD%AE%EF%BC%8C%E5%B9%B6%E8%A7%A3%E9%87%8A%E5%B8%B8%E7%94%A8%E7%9A%84%E6%96%B9%E6%B3%95%E3%80%82"><span class="nav-number">1.</span> <span class="nav-text">描述在 Kubernetes 中如何进行安全配置，并解释常用的方法。</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%F0%9F%A4%94-%E5%88%86%E6%9E%90%E8%BF%87%E7%A8%8B%EF%BC%9A"><span class="nav-number">2.</span> <span class="nav-text">🤔 分析过程：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%F0%9F%92%A1-%E7%AD%94%E6%A1%88%E7%94%9F%E6%88%90%EF%BC%9A"><span class="nav-number">3.</span> <span class="nav-text">💡 答案生成：</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E6%A6%82%E5%BF%B5%E6%88%96%E5%AE%9A%E4%B9%89"><span class="nav-number">3.1.</span> <span class="nav-text">1. 概念或定义</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E2%80%9C4C%E2%80%9D%E5%AE%89%E5%85%A8%E6%A8%A1%E5%9E%8B%E4%B8%8E%E5%B8%B8%E7%94%A8%E6%96%B9%E6%B3%95"><span class="nav-number">3.2.</span> <span class="nav-text">2. “4C”安全模型与常用方法</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%B1%82%E9%9D%A2%E4%B8%80%EF%BC%9ACloud-Corporate-Data-Center-%E4%BA%91-%E5%9F%BA%E7%A1%80%E8%AE%BE%E6%96%BD%E5%B1%82"><span class="nav-number">3.2.1.</span> <span class="nav-text">层面一：Cloud&#x2F;Corporate Data Center (云&#x2F;基础设施层)</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%B1%82%E9%9D%A2%E4%BA%8C%EF%BC%9ACluster-%E9%9B%86%E7%BE%A4%E5%B1%82"><span class="nav-number">3.2.2.</span> <span class="nav-text">层面二：Cluster (集群层)</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%B1%82%E9%9D%A2%E4%B8%89%EF%BC%9AContainer-%E5%AE%B9%E5%99%A8%E5%B1%82"><span class="nav-number">3.2.3.</span> <span class="nav-text">层面三：Container (容器层)</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%B1%82%E9%9D%A2%E5%9B%9B%EF%BC%9ACode-%E4%BB%A3%E7%A0%81%E5%B1%82"><span class="nav-number">3.2.4.</span> <span class="nav-text">层面四：Code (代码层)</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E6%89%A9%E5%B1%95%E7%9F%A5%E8%AF%86-%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="nav-number">3.3.</span> <span class="nav-text">3. 扩展知识&#x2F;最佳实践</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

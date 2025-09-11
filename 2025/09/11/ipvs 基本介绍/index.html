@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="ipvs 基本介绍ipvs (IP Virtual Server) 实现了传输层负载均衡，也就是我们常说的4层LAN交换，作为 Linux 内核的一部分。ipvs运行在主机上，在真实服务器集群前充当负载均衡器。ipvs可以将基于TCP和UDP的服务请求转发到真实服务器上，并使真实服务器的服务在单个 IP 地址上显示为虚拟服务。 ipvs vs. iptables我们知道kube-proxy支持 i">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ipvs 基本介绍">
+<meta property="og:url" content="http://example.com/2025/09/11/ipvs%20%E5%9F%BA%E6%9C%AC%E4%BB%8B%E7%BB%8D/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="ipvs 基本介绍ipvs (IP Virtual Server) 实现了传输层负载均衡，也就是我们常说的4层LAN交换，作为 Linux 内核的一部分。ipvs运行在主机上，在真实服务器集群前充当负载均衡器。ipvs可以将基于TCP和UDP的服务请求转发到真实服务器上，并使真实服务器的服务在单个 IP 地址上显示为虚拟服务。 ipvs vs. iptables我们知道kube-proxy支持 i">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:41:08.722Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/ipvs%20%E5%9F%BA%E6%9C%AC%E4%BB%8B%E7%BB%8D/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>ipvs 基本介绍 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/ipvs%20%E5%9F%BA%E6%9C%AC%E4%BB%8B%E7%BB%8D/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          ipvs 基本介绍
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:41:08" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/" itemprop="url" rel="index"><span itemprop="name">基础知识</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>12k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>11 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="ipvs-基本介绍"><a href="#ipvs-基本介绍" class="headerlink" title="ipvs 基本介绍"></a>ipvs 基本介绍</h1><p><strong>ipvs (IP Virtual Server)</strong> 实现了传输层负载均衡，也就是我们常说的4层<code>LAN</code>交换，作为 Linux 内核的一部分。<code>ipvs</code>运行在主机上，在真实服务器集群前充当负载均衡器。<code>ipvs</code>可以将基于<code>TCP</code>和<code>UDP</code>的服务请求转发到真实服务器上，并使真实服务器的服务在单个 IP 地址上显示为虚拟服务。</p>
+<h2 id="ipvs-vs-iptables"><a href="#ipvs-vs-iptables" class="headerlink" title="ipvs vs. iptables"></a>ipvs vs. iptables</h2><p>我们知道<code>kube-proxy</code>支持 iptables 和 ipvs 两种模式， 在<code>kubernetes</code> v1.8 中引入了 ipvs 模式，在 v1.9 中处于 beta 阶段，在 v1.11 中已经正式可用了。iptables 模式在 v1.1 中就添加支持了，从 v1.2 版本开始 iptables 就是 kube-proxy 默认的操作模式，ipvs 和 iptables 都是基于<code>netfilter</code>的，那么 ipvs 模式和 iptables 模式之间有哪些差异呢？</p>
+<ul>
+<li>ipvs 为大型集群提供了更好的可扩展性和性能</li>
+<li>ipvs 支持比 iptables 更复杂的复制均衡算法（最小负载、最少连接、加权等等）</li>
+<li>ipvs 支持服务器健康检查和连接重试等功能</li>
+</ul>
+<h3 id="ipvs-依赖-iptables"><a href="#ipvs-依赖-iptables" class="headerlink" title="ipvs 依赖 iptables"></a>ipvs 依赖 iptables</h3><p>ipvs 会使用 iptables 进行包过滤、SNAT、masquared(伪装)。具体来说，ipvs 将使用<code>ipset</code>来存储需要<code>DROP</code>或<code>masquared</code>的流量的源或目标地址，以确保 iptables 规则的数量是恒定的，这样我们就不需要关心我们有多少服务了</p>
+<p>下表就是 ipvs 使用的 ipset 集合：</p>
+<table>
+<thead>
+<tr>
+<th align="left">set name</th>
+<th>members</th>
+<th>usage</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">KUBE-CLUSTER-IP</td>
+<td>All service IP + port</td>
+<td>Mark-Masq for cases that <code>masquerade-all=true</code> or <code>clusterCIDR</code> specified</td>
+</tr>
+<tr>
+<td align="left">KUBE-LOOP-BACK</td>
+<td>All service IP + port + IP</td>
+<td>masquerade for solving hairpin purpose</td>
+</tr>
+<tr>
+<td align="left">KUBE-EXTERNAL-IP</td>
+<td>service external IP + port</td>
+<td>masquerade for packages to external IPs</td>
+</tr>
+<tr>
+<td align="left">KUBE-LOAD-BALANCER</td>
+<td>load balancer ingress IP + port</td>
+<td>masquerade for packages to load balancer type service</td>
+</tr>
+<tr>
+<td align="left">KUBE-LOAD-BALANCER-LOCAL</td>
+<td>LB ingress IP + port with <code>externalTrafficPolicy=local</code></td>
+<td>accept packages to load balancer with <code>externalTrafficPolicy=local</code></td>
+</tr>
+<tr>
+<td align="left">KUBE-LOAD-BALANCER-FW</td>
+<td>load balancer ingress IP + port with <code>loadBalancerSourceRanges</code></td>
+<td>package filter for load balancer with <code>loadBalancerSourceRanges</code> specified</td>
+</tr>
+<tr>
+<td align="left">KUBE-LOAD-BALANCER-SOURCE-CIDR</td>
+<td>load balancer ingress IP + port + source CIDR</td>
+<td>package filter for load balancer with <code>loadBalancerSourceRanges</code> specified</td>
+</tr>
+<tr>
+<td align="left">KUBE-NODE-PORT-TCP</td>
+<td>nodeport type service TCP port</td>
+<td>masquerade for packets to nodePort(TCP)</td>
+</tr>
+<tr>
+<td align="left">KUBE-NODE-PORT-LOCAL-TCP</td>
+<td>nodeport type service TCP port with <code>externalTrafficPolicy=local</code></td>
+<td>accept packages to nodeport service with <code>externalTrafficPolicy=local</code></td>
+</tr>
+<tr>
+<td align="left">KUBE-NODE-PORT-UDP</td>
+<td>nodeport type service UDP port</td>
+<td>masquerade for packets to nodePort(UDP)</td>
+</tr>
+<tr>
+<td align="left">KUBE-NODE-PORT-LOCAL-UDP</td>
+<td>nodeport type service UDP port with <code>externalTrafficPolicy=local</code></td>
+<td>accept packages to nodeport service with <code>externalTrafficPolicy=local</code></td>
+</tr>
+</tbody></table>
+<p>在以下情况下，ipvs 将依赖于 iptables:</p>
+<p><strong>1. kube-proxy 配置参数 –masquerade-all&#x3D;true</strong></p>
+<p>如果 kube-proxy 配置了<code>--masquerade-all=true</code>参数，则 ipvs 将伪装所有访问 Service 的 Cluster IP 的流量，此时的行为和 iptables 是一致的，由 ipvs 添加的 iptables 规则如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">iptables -t nat -nL</span></span><br><span class="line"></span><br><span class="line">Chain PREROUTING (policy ACCEPT)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-SERVICES  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service portals */</span><br><span class="line"></span><br><span class="line">Chain OUTPUT (policy ACCEPT)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-SERVICES  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service portals */</span><br><span class="line"></span><br><span class="line">Chain POSTROUTING (policy ACCEPT)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-POSTROUTING  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes postrouting rules */</span><br><span class="line"></span><br><span class="line">Chain KUBE-MARK-MASQ (2 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">MARK       all  --  0.0.0.0/0            0.0.0.0/0            MARK or 0x4000</span><br><span class="line"></span><br><span class="line">Chain KUBE-POSTROUTING (1 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">MASQUERADE  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service traffic requiring SNAT */ mark match 0x4000/0x4000</span><br><span class="line">MASQUERADE  all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-LOOP-BACK dst,dst,src</span><br><span class="line"></span><br><span class="line">Chain KUBE-SERVICES (2 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-MARK-MASQ  all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-CLUSTER-IP dst,dst</span><br><span class="line">ACCEPT     all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-CLUSTER-IP dst,dst</span><br></pre></td></tr></table></figure>
+
+<p><strong>2. 在 kube-proxy 启动时指定集群 CIDR</strong></p>
+<p>如果 kube-proxy 配置了<code>--cluster-cidr=&lt;cidr&gt;</code>参数，则 ipvs 会伪装所有访问 Service Cluster IP 的外部流量，其行为和 iptables 相同，假设 kube-proxy 提供的集群 CIDR 值为：<strong>10.244.16.0&#x2F;24</strong>，那么 ipvs 添加的 iptables 规则应该如下所示：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">iptables -t nat -nL</span></span><br><span class="line"></span><br><span class="line">Chain PREROUTING (policy ACCEPT)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-SERVICES  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service portals */</span><br><span class="line"></span><br><span class="line">Chain OUTPUT (policy ACCEPT)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-SERVICES  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service portals */</span><br><span class="line"></span><br><span class="line">Chain POSTROUTING (policy ACCEPT)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-POSTROUTING  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes postrouting rules */</span><br><span class="line"></span><br><span class="line">Chain KUBE-MARK-MASQ (3 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">MARK       all  --  0.0.0.0/0            0.0.0.0/0            MARK or 0x4000</span><br><span class="line"></span><br><span class="line">Chain KUBE-POSTROUTING (1 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">MASQUERADE  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service traffic requiring SNAT */ mark match 0x4000/0x4000</span><br><span class="line">MASQUERADE  all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-LOOP-BACK dst,dst,src</span><br><span class="line"></span><br><span class="line">Chain KUBE-SERVICES (2 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-MARK-MASQ  all  -- !10.244.16.0/24       0.0.0.0/0            match-set KUBE-CLUSTER-IP dst,dst</span><br><span class="line">ACCEPT     all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-CLUSTER-IP dst,dst</span><br></pre></td></tr></table></figure>
+
+<p><strong>3. Load Balancer 类型的 Service</strong></p>
+<p>对于<code>loadBalancer</code>类型的服务，ipvs 将安装匹配 KUBE-LOAD-BALANCER 的 ipset 的 iptables 规则。特别当服务的 LoadBalancerSourceRanges 被指定或指定 externalTrafficPolicy&#x3D;local 的时候，ipvs 将创建 ipset 集合<code>KUBE-LOAD-BALANCER-LOCAL</code>&#x2F;<code>KUBE-LOAD-BALANCER-FW</code>&#x2F;<code>KUBE-LOAD-BALANCER-SOURCE-CIDR</code>，并添加相应的 iptables 规则，如下所示规则：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">iptables -t nat -nL</span></span><br><span class="line"></span><br><span class="line">Chain PREROUTING (policy ACCEPT)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-SERVICES  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service portals */</span><br><span class="line"></span><br><span class="line">Chain OUTPUT (policy ACCEPT)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-SERVICES  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service portals */</span><br><span class="line"></span><br><span class="line">Chain POSTROUTING (policy ACCEPT)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-POSTROUTING  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes postrouting rules */</span><br><span class="line"></span><br><span class="line">Chain KUBE-FIREWALL (1 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">RETURN     all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-LOAD-BALANCER-SOURCE-CIDR dst,dst,src</span><br><span class="line">KUBE-MARK-DROP  all  --  0.0.0.0/0            0.0.0.0/0</span><br><span class="line"></span><br><span class="line">Chain KUBE-LOAD-BALANCER (1 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-FIREWALL  all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-LOAD-BALANCER-FW dst,dst</span><br><span class="line">RETURN     all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-LOAD-BALANCER-LOCAL dst,dst</span><br><span class="line">KUBE-MARK-MASQ  all  --  0.0.0.0/0            0.0.0.0/0</span><br><span class="line"></span><br><span class="line">Chain KUBE-MARK-DROP (1 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">MARK       all  --  0.0.0.0/0            0.0.0.0/0            MARK or 0x8000</span><br><span class="line"></span><br><span class="line">Chain KUBE-MARK-MASQ (2 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">MARK       all  --  0.0.0.0/0            0.0.0.0/0            MARK or 0x4000</span><br><span class="line"></span><br><span class="line">Chain KUBE-POSTROUTING (1 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">MASQUERADE  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service traffic requiring SNAT */ mark match 0x4000/0x4000</span><br><span class="line">MASQUERADE  all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-LOOP-BACK dst,dst,src</span><br><span class="line"></span><br><span class="line">Chain KUBE-SERVICES (2 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-LOAD-BALANCER  all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-LOAD-BALANCER dst,dst</span><br><span class="line">ACCEPT     all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-LOAD-BALANCER dst,dst</span><br></pre></td></tr></table></figure>
+
+<p><strong>4. NodePort 类型的 Service</strong></p>
+<p>对于 NodePort 类型的服务，ipvs 将添加匹配<code>KUBE-NODE-PORT-TCP/KUBE-NODE-PORT-UDP</code>的 ipset 的iptables 规则。当指定<code>externalTrafficPolicy=local</code>时，ipvs 将创建 ipset 集<code>KUBE-NODE-PORT-LOCAL-TC/KUBE-NODE-PORT-LOCAL-UDP</code>并安装相应的 iptables 规则，如下所示：(假设服务使用 TCP 类型 nodePort)</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">Chain PREROUTING (policy ACCEPT)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-SERVICES  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service portals */</span><br><span class="line"></span><br><span class="line">Chain OUTPUT (policy ACCEPT)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-SERVICES  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service portals */</span><br><span class="line"></span><br><span class="line">Chain POSTROUTING (policy ACCEPT)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-POSTROUTING  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes postrouting rules */</span><br><span class="line"></span><br><span class="line">Chain KUBE-MARK-MASQ (2 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">MARK       all  --  0.0.0.0/0            0.0.0.0/0            MARK or 0x4000</span><br><span class="line"></span><br><span class="line">Chain KUBE-NODE-PORT (1 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">RETURN     all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-NODE-PORT-LOCAL-TCP dst</span><br><span class="line">KUBE-MARK-MASQ  all  --  0.0.0.0/0            0.0.0.0/0</span><br><span class="line"></span><br><span class="line">Chain KUBE-POSTROUTING (1 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">MASQUERADE  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service traffic requiring SNAT */ mark match 0x4000/0x4000</span><br><span class="line">MASQUERADE  all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-LOOP-BACK dst,dst,src</span><br><span class="line"></span><br><span class="line">Chain KUBE-SERVICES (2 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-NODE-PORT  all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-NODE-PORT-TCP dst</span><br></pre></td></tr></table></figure>
+
+<p><strong>5. 指定 externalIPs 的 Service</strong></p>
+<p>对于指定了<code>externalIPs</code>的 Service，ipvs 会安装匹配<code>KUBE-EXTERNAL-IP</code> ipset 集的 iptables 规则，假设我们有指定了 externalIPs 的 Service，则 iptables 规则应该如下所示：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">Chain PREROUTING (policy ACCEPT)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-SERVICES  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service portals */</span><br><span class="line"></span><br><span class="line">Chain OUTPUT (policy ACCEPT)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-SERVICES  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service portals */</span><br><span class="line"></span><br><span class="line">Chain POSTROUTING (policy ACCEPT)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-POSTROUTING  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes postrouting rules */</span><br><span class="line"></span><br><span class="line">Chain KUBE-MARK-MASQ (2 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">MARK       all  --  0.0.0.0/0            0.0.0.0/0            MARK or 0x4000</span><br><span class="line"></span><br><span class="line">Chain KUBE-POSTROUTING (1 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">MASQUERADE  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service traffic requiring SNAT */ mark match 0x4000/0x4000</span><br><span class="line">MASQUERADE  all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-LOOP-BACK dst,dst,src</span><br><span class="line"></span><br><span class="line">Chain KUBE-SERVICES (2 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-MARK-MASQ  all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-EXTERNAL-IP dst,dst</span><br><span class="line">ACCEPT     all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-EXTERNAL-IP dst,dst PHYSDEV match ! --physdev-is-in ADDRTYPE match src-type !LOCAL</span><br><span class="line">ACCEPT     all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-EXTERNAL-IP dst,dst ADDRTYPE match dst-type LOCAL</span><br></pre></td></tr></table></figure>
+
+<h2 id="kube-proxy-使用-ipvs-模式"><a href="#kube-proxy-使用-ipvs-模式" class="headerlink" title="kube-proxy 使用 ipvs 模式"></a>kube-proxy 使用 ipvs 模式</h2><p>目前，本地化脚本、GCE 脚本和<code>kubeadm</code>支持通过导入环境变量或者指定标志来切换 ipvs 代理模式</p>
+<h3 id="要求"><a href="#要求" class="headerlink" title="要求"></a>要求</h3><p>确保 ipvs 需要的内核模块，需要下面几个模块：ip_vs、ip_vs_rr、ip_vs_wrr、ip_vs_sh、nf_conntrack_ipv4</p>
+<p>已编译到节点内核中的，可以使用如下命令检查：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">grep -e ipvs -e nf_conntrack_ipv4 /lib/modules/$(<span class="built_in">uname</span> -r)/modules.builtin</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">如果相关内核模块已经编译到内核中，可以得到如下结果：</span></span><br><span class="line">kernel/net/ipv4/netfilter/nf_conntrack_ipv4.ko</span><br><span class="line">kernel/net/netfilter/ipvs/ip_vs.ko</span><br><span class="line">kernel/net/netfilter/ipvs/ip_vs_rr.ko</span><br><span class="line">kernel/net/netfilter/ipvs/ip_vs_wrr.ko</span><br><span class="line">kernel/net/netfilter/ipvs/ip_vs_lc.ko</span><br><span class="line">kernel/net/netfilter/ipvs/ip_vs_wlc.ko</span><br><span class="line">kernel/net/netfilter/ipvs/ip_vs_fo.ko</span><br><span class="line">kernel/net/netfilter/ipvs/ip_vs_ovf.ko</span><br><span class="line">kernel/net/netfilter/ipvs/ip_vs_lblc.ko</span><br><span class="line">kernel/net/netfilter/ipvs/ip_vs_lblcr.ko</span><br><span class="line">kernel/net/netfilter/ipvs/ip_vs_dh.ko</span><br><span class="line">kernel/net/netfilter/ipvs/ip_vs_sh.ko</span><br><span class="line">kernel/net/netfilter/ipvs/ip_vs_sed.ko</span><br><span class="line">kernel/net/netfilter/ipvs/ip_vs_nq.ko</span><br><span class="line">kernel/net/netfilter/ipvs/ip_vs_ftp.ko</span><br></pre></td></tr></table></figure>
+
+<p>已经加载。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">加载模块 &lt;module_name&gt;</span></span><br><span class="line">modprobe -- ip_vs</span><br><span class="line">modprobe -- ip_vs_rr</span><br><span class="line">modprobe -- ip_vs_wrr</span><br><span class="line">modprobe -- ip_vs_sh</span><br><span class="line">modprobe -- nf_conntrack_ipv4</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">检查加载的模块</span></span><br><span class="line">lsmod | grep -e ipvs -e nf_conntrack_ipv4</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">或者</span></span><br><span class="line">cut -f1 -d &quot; &quot;  /proc/modules | grep -e ip_vs -e nf_conntrack_ipv4</span><br></pre></td></tr></table></figure>
+
+<p>在使用 ipvs 模式之前，还应在节点上安装<code>ipset</code>相关的软件包，如果不满足需求 kube-proxy 会回退到 iptables 的模式。</p>
+<h3 id="本地集群"><a href="#本地集群" class="headerlink" title="本地集群"></a>本地集群</h3><p>在<a target="_blank" rel="noopener" href="https://github.com/kubernetes/community/blob/master/contributors/devel/running-locally.md">本地集群</a>中 kube-proxy 默认会运行 iptables 的模式。 要使用 ipvs 模式，在<a target="_blank" rel="noopener" href="https://github.com/kubernetes/community/blob/master/contributors/devel/running-locally.md#starting-the-cluster">启动集群</a>之前需要导入<code>KUBE_PROXY_MODE=ipvs</code>的环境变量：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">运行脚本 hack/local-up-cluster.sh 之前</span></span><br><span class="line">export KUBE_PROXY_MODE=ipvs</span><br></pre></td></tr></table></figure>
+
+<h3 id="GCE-集群"><a href="#GCE-集群" class="headerlink" title="GCE 集群"></a>GCE 集群</h3><p>和本地集群一样，<a target="_blank" rel="noopener" href="https://kubernetes.io/docs/getting-started-guides/gce/">GCE 集群</a>中的 kube-proxy 默认也是 iptables 模式，在<a target="_blank" rel="noopener" href="https://kubernetes.io/docs/getting-started-guides/gce/#starting-a-cluster">启动集群</a>之前同样需要导入环境变量<code>KUBE_PROXY_MODE=ipvs</code>:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">运行前选择下面的一条命令启动集群:</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">curl -sS https://get.k8s.io | bash</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">wget -q -O - https://get.k8s.io | bash</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">cluster/kube-up.sh</span></span><br><span class="line">export KUBE_PROXY_MODE=ipvs</span><br></pre></td></tr></table></figure>
+
+<h3 id="使用-kubeadm-搭建的集群"><a href="#使用-kubeadm-搭建的集群" class="headerlink" title="使用 kubeadm 搭建的集群"></a>使用 kubeadm 搭建的集群</h3><p>通过<a target="_blank" rel="noopener" href="https://www.qikqiak.com/post/how-to-use-ipvs-in-kubernetes/(https://kubernetes.io/docs/setup/independent/create-cluster-kubeadm/)">kubeadm</a>部署的集群中 kube-proxy 同样默认是 iptables 模式。</p>
+<p>如果你是通过<a target="_blank" rel="noopener" href="https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/#config-file">配置文件</a>来使用的 kubeadm，则可以在<code>kubeProxy</code>属性下面添加<code>SupportIPVSProxyMode: true</code>来启用 ipvs 模式：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">kind:</span> <span class="string">MasterConfiguration</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">kubeadm.k8s.io/v1alpha1</span></span><br><span class="line"><span class="string">...</span></span><br><span class="line"><span class="attr">kubeProxy:</span></span><br><span class="line">  <span class="attr">config:</span></span><br><span class="line">    <span class="attr">mode:</span> <span class="string">ipvs</span></span><br><span class="line"><span class="string">...</span></span><br></pre></td></tr></table></figure>
+
+<p>然后执行初始化命令即可：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubeadm init --config &lt;path_to_configuration_file&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>如果你使用的是 v1.8 版本的 kubernetes，你也可以在<code>kubeadm init</code>命令中增加<code>--feature-gates=SupportIPVSProxyMode=true</code>标志来来启用 ipvs 模式：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ kubeadm init --feature-gates=SupportIPVSProxyMode=true</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>注意该参数在 v1.9 后已经弃用掉了</p>
+</blockquote>
+<h3 id="注意"><a href="#注意" class="headerlink" title="注意"></a>注意</h3><p>如果成功启用了 ipvs 模式，你应该可以使用<code>ipvsadm</code>之类的工具看到如下的一些 ipvs 代理规则：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"> # </span><span class="language-bash">ipvsadm -<span class="built_in">ln</span></span></span><br><span class="line">IP Virtual Server version 1.2.1 (size=4096)</span><br><span class="line">Prot LocalAddress:Port Scheduler Flags</span><br><span class="line"><span class="meta prompt_">  -&gt; </span><span class="language-bash">RemoteAddress:Port           Forward Weight ActiveConn InActConn</span></span><br><span class="line">TCP  10.0.0.1:443 rr persistent 10800</span><br><span class="line"><span class="meta prompt_">  -&gt; </span><span class="language-bash">192.168.0.1:6443             Masq    1      1          0</span></span><br></pre></td></tr></table></figure>
+
+<p>或者在 kube-proxy 日志中可以看到如下的一些日志信息：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Using ipvs Proxier.</span><br></pre></td></tr></table></figure>
+
+<p>当没有这些 ipvs 代理规则或者出现了下面的这些日志信息的时候表明 kube-proxy 的 ipvs 模式启用失败了：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Can&#x27;t use ipvs proxier, trying iptables proxier</span><br><span class="line">Using iptables Proxier.</span><br></pre></td></tr></table></figure>
+
+<p>可以参考下面的调试方法进行错误信息排查</p>
+<h2 id="调试"><a href="#调试" class="headerlink" title="调试"></a>调试</h2><h3 id="检查-ipvs-代理规则"><a href="#检查-ipvs-代理规则" class="headerlink" title="检查 ipvs 代理规则"></a>检查 ipvs 代理规则</h3><p>用户可以使用<code>ipvsadm</code>工具检查 kube-proxy 是否维护正确的 ipvs 规则，比如，我们在集群中有以下一些服务：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get svc --all-namespaces</span></span><br><span class="line">NAMESPACE     NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)         AGE</span><br><span class="line">default       kubernetes   ClusterIP   10.0.0.1     &lt;none&gt;        443/TCP         1d</span><br><span class="line">kube-system   kube-dns     ClusterIP   10.0.0.10    &lt;none&gt;        53/UDP,53/TCP   1d</span><br></pre></td></tr></table></figure>
+
+<p>我们可以得到如下的一些 ipvs 代理规则：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"> # </span><span class="language-bash">ipvsadm -<span class="built_in">ln</span></span></span><br><span class="line">IP Virtual Server version 1.2.1 (size=4096)</span><br><span class="line">Prot LocalAddress:Port Scheduler Flags</span><br><span class="line"><span class="meta prompt_">  -&gt; </span><span class="language-bash">RemoteAddress:Port           Forward Weight ActiveConn InActConn</span></span><br><span class="line">TCP  10.0.0.1:443 rr persistent 10800</span><br><span class="line"><span class="meta prompt_">  -&gt; </span><span class="language-bash">192.168.0.1:6443             Masq    1      1          0</span></span><br><span class="line">TCP  10.0.0.10:53 rr</span><br><span class="line"><span class="meta prompt_">  -&gt; </span><span class="language-bash">172.17.0.2:53                Masq    1      0          0</span></span><br><span class="line">UDP  10.0.0.10:53 rr</span><br><span class="line"><span class="meta prompt_">  -&gt; </span><span class="language-bash">172.17.0.2:53                Masq    1      0          0</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="为什么-kube-proxy-无法启动-ipvs模式"><a href="#为什么-kube-proxy-无法启动-ipvs模式" class="headerlink" title="为什么 kube-proxy 无法启动 ipvs模式"></a>为什么 kube-proxy 无法启动 ipvs模式</h3><p>可以使用下面的一些方法来帮助我们解决这些问题：</p>
+<p><strong>1. 启用 ipvs feature gate</strong></p>
+<p>对于 kubernetes v1.10 版本之后，feature gate <code>SupportIPVSProxyMode</code>已经被默认设置为<code>true</code>了，但是如果你是 v1.10 之前的版本，你需要手动设置<code>--feature-gates=SupportIPVSProxyMode=true</code>来启用该 feature。</p>
+<p><strong>2. 指定 proxy-mode&#x3D;ipvs</strong></p>
+<p>检查 kube-proxy 的 model 是否被设置为了<code>ipvs</code>。</p>
+<p><strong>3. 安装需要的内核模块和软件包</strong></p>
+<p>检查 ipvs 需要的内核模块是否已经被编译进内核模块中，以及需要的软件包（可以参考前面的环境要求部分）</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/interface/" rel="prev" title="Go interface">
+      <i class="fa fa-chevron-left"></i> Go interface
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/init%E5%87%BD%E6%95%B0/" rel="next" title="init函数">
+      init函数 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#ipvs-%E5%9F%BA%E6%9C%AC%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.</span> <span class="nav-text">ipvs 基本介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#ipvs-vs-iptables"><span class="nav-number">1.1.</span> <span class="nav-text">ipvs vs. iptables</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ipvs-%E4%BE%9D%E8%B5%96-iptables"><span class="nav-number">1.1.1.</span> <span class="nav-text">ipvs 依赖 iptables</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#kube-proxy-%E4%BD%BF%E7%94%A8-ipvs-%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.2.</span> <span class="nav-text">kube-proxy 使用 ipvs 模式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A6%81%E6%B1%82"><span class="nav-number">1.2.1.</span> <span class="nav-text">要求</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%AC%E5%9C%B0%E9%9B%86%E7%BE%A4"><span class="nav-number">1.2.2.</span> <span class="nav-text">本地集群</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#GCE-%E9%9B%86%E7%BE%A4"><span class="nav-number">1.2.3.</span> <span class="nav-text">GCE 集群</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-kubeadm-%E6%90%AD%E5%BB%BA%E7%9A%84%E9%9B%86%E7%BE%A4"><span class="nav-number">1.2.4.</span> <span class="nav-text">使用 kubeadm 搭建的集群</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B3%A8%E6%84%8F"><span class="nav-number">1.2.5.</span> <span class="nav-text">注意</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B0%83%E8%AF%95"><span class="nav-number">1.3.</span> <span class="nav-text">调试</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A3%80%E6%9F%A5-ipvs-%E4%BB%A3%E7%90%86%E8%A7%84%E5%88%99"><span class="nav-number">1.3.1.</span> <span class="nav-text">检查 ipvs 代理规则</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88-kube-proxy-%E6%97%A0%E6%B3%95%E5%90%AF%E5%8A%A8-ipvs%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.3.2.</span> <span class="nav-text">为什么 kube-proxy 无法启动 ipvs模式</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

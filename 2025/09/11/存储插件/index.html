@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="存储插件前面的章节中我们介绍了在 Kubernetes 中的持久化存储的使用，了解了 PV、PVC 以及 StorageClass 的使用方法，从本地存储到 NFS 共享存储都有学习，到这里我们其实已经可以完成应用各种场景的数据持久化了，但是难免在实际的使用过程中会遇到各种各样的问题，要解决这些问题最好的方式就是来了解下 Kubernetes 中存储的实现原理。 Kubernetes 默认情况下就">
+<meta property="og:type" content="article">
+<meta property="og:title" content="存储插件">
+<meta property="og:url" content="http://example.com/2025/09/11/%E5%AD%98%E5%82%A8%E6%8F%92%E4%BB%B6/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="存储插件前面的章节中我们介绍了在 Kubernetes 中的持久化存储的使用，了解了 PV、PVC 以及 StorageClass 的使用方法，从本地存储到 NFS 共享存储都有学习，到这里我们其实已经可以完成应用各种场景的数据持久化了，但是难免在实际的使用过程中会遇到各种各样的问题，要解决这些问题最好的方式就是来了解下 Kubernetes 中存储的实现原理。 Kubernetes 默认情况下就">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/bwszp4.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/q1am9u.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/1oaqhg.png">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:10:54.264Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://mudutestmenu.mudu.tv/upload/bwszp4.png">
+
+<link rel="canonical" href="http://example.com/2025/09/11/%E5%AD%98%E5%82%A8%E6%8F%92%E4%BB%B6/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>存储插件 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/%E5%AD%98%E5%82%A8%E6%8F%92%E4%BB%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          存储插件
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:10:54" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E5%AD%98%E5%82%A8/" itemprop="url" rel="index"><span itemprop="name">存储</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>16k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>15 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="存储插件"><a href="#存储插件" class="headerlink" title="存储插件"></a>存储插件</h1><p>前面的章节中我们介绍了在 Kubernetes 中的持久化存储的使用，了解了 PV、PVC 以及 StorageClass 的使用方法，从本地存储到 NFS 共享存储都有学习，到这里我们其实已经可以完成应用各种场景的数据持久化了，但是难免在实际的使用过程中会遇到各种各样的问题，要解决这些问题最好的方式就是来了解下 Kubernetes 中存储的实现原理。</p>
+<p>Kubernetes 默认情况下就提供了主流的存储卷接入方案，我们可以执行命令 <code>kubectl explain pod.spec.volumes</code> 查看到支持的各种存储卷，另外也提供了插件机制，允许其他类型的存储服务接入到 Kubernetes 系统中来，在 Kubernetes 中就对应 <code>In-Tree</code> 和 <code>Out-Of-Tree</code> 两种方式，<code>In-Tree</code> 就是在 Kubernetes 源码内部实现的，和 Kubernetes 一起发布、管理的，但是更新迭代慢、灵活性比较差，<code>Out-Of-Tree</code> 是独立于 Kubernetes 的，目前主要有 <code>CSI</code> 和 <code>FlexVolume</code> 两种机制，开发者可以根据自己的存储类型实现不同的存储插件接入到 Kubernetes 中去，其中 <code>CSI</code> 是现在也是以后主流的方式，所以当然我们的重点也会是 <code>CSI</code> 的使用介绍。</p>
+<h2 id="FlexVolume"><a href="#FlexVolume" class="headerlink" title="FlexVolume"></a>FlexVolume</h2><p>FlexVolume 提供了一种扩展 Kubernetes 存储插件的方式，用户可以自定义自己的存储插件。要使用 FlexVolume 需要在每个节点上安装存储插件二进制文件，该二进制需要实现 FlexVolume 的相关接口，默认存储插件的存放路径为 <code>/usr/libexec/kubernetes/kubelet-plugins/volume/exec/&lt;vendor~driver&gt;/&lt;driver&gt;</code>，<code>VolumePlugins</code> 组件会不断 watch 这个目录来实现插件的添加、删除等功能。</p>
+<p>其中 <code>vendor~driver</code> 的名字需要和 Pod 中<code>flexVolume.driver</code> 的字段名字匹配，例如：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/usr/libexec/kubernetes/kubelet-plugins/volume/exec/foo~cifs/cifs</span><br></pre></td></tr></table></figure>
+
+
+
+<p>对应的 Pod 中的 <code>flexVolume.driver</code> 属性为：<code>foo/cifs</code>。</p>
+<p>在我们实现自定义存储插件的时候，需要实现 FlexVolume 的部分接口，因为要看实际需求，并不一定所有接口都需要实现。比如对于类似于 NFS 这样的存储就没必要实现 <code>attach/detach</code> 这些接口了，因为不需要，只需要实现 <code>init/mount/umount</code> 3 个接口即可。</p>
+<ul>
+<li>init: <code>&lt;driver executable&gt; init</code> - <code>kubelet/kube-controller-manager</code> 初始化存储插件时调用，插件需要返回是否需要要 attach 和 detach 操作</li>
+<li>attach: <code>&lt;driver executable&gt; attach &lt;json options&gt; &lt;node name&gt;</code> - 将存储卷挂载到 Node 节点上</li>
+<li>detach: <code>&lt;driver executable&gt; detach &lt;mount device&gt; &lt;node name&gt;</code> - 将存储卷从 Node 上卸载</li>
+<li>waitforattach: <code>&lt;driver executable&gt; waitforattach &lt;mount device&gt; &lt;json options&gt;</code> - 等待 attach 操作成功（超时时间为 10 分钟）</li>
+<li>isattached: <code>&lt;driver executable&gt; isattached &lt;json options&gt; &lt;node name&gt;</code> - 检查存储卷是否已经挂载</li>
+<li>mountdevice: <code>&lt;driver executable&gt; mountdevice &lt;mount dir&gt; &lt;mount device&gt; &lt;json options&gt;</code> - 将设备挂载到指定目录中以便后续 bind mount 使用</li>
+<li>unmountdevice: <code>&lt;driver executable&gt; unmountdevice &lt;mount device&gt;</code> - 将设备取消挂载</li>
+<li>mount: <code>&lt;driver executable&gt; mount &lt;mount dir&gt; &lt;json options&gt;</code> - 将存储卷挂载到指定目录中</li>
+<li>unmount: <code>&lt;driver executable&gt; unmount &lt;mount dir&gt;</code> - 将存储卷取消挂载</li>
+</ul>
+<p>实现上面的这些接口需要返回如下所示的 JSON 格式的数据：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;status&quot;</span><span class="punctuation">:</span> <span class="string">&quot;&lt;Success/Failure/Not supported&gt;&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;message&quot;</span><span class="punctuation">:</span> <span class="string">&quot;&lt;Reason for success/failure&gt;&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;device&quot;</span><span class="punctuation">:</span> <span class="string">&quot;&lt;Path to the device attached. This field is valid only for attach &amp; waitforattach call-outs&gt;&quot;</span></span><br><span class="line">    <span class="attr">&quot;volumeName&quot;</span><span class="punctuation">:</span> <span class="string">&quot;&lt;Cluster wide unique name of the volume. Valid only for getvolumename call-out&gt;&quot;</span></span><br><span class="line">    <span class="attr">&quot;attached&quot;</span><span class="punctuation">:</span> &lt;True/False (Return <span class="literal"><span class="keyword">true</span></span> if volume is attached on the node. Valid only for isattached call-out)&gt;</span><br><span class="line">    <span class="attr">&quot;capabilities&quot;</span><span class="punctuation">:</span> &lt;Only included as part of the Init response&gt;</span><br><span class="line">    <span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;attach&quot;</span><span class="punctuation">:</span> &lt;True/False (Return <span class="literal"><span class="keyword">true</span></span> if the driver implements attach and detach)&gt;</span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>比如我们来实现一个 NFS 的 FlexVolume 插件，最简单的方式就是写一个脚本，然后实现 init、mount、unmount 3 个命令即可，然后按照上面的 JSON 格式返回数据，最后把这个脚本放在节点的 FlexVolume 插件目录下面即可。</p>
+<p>下面就是官方给出的一个 NFS 的 FlexVolume 插件示例，可以从 <a target="_blank" rel="noopener" href="https://github.com/kubernetes/examples/blob/master/staging/volumes/flexvolume/nfs">https://github.com/kubernetes/examples/blob/master/staging/volumes/flexvolume/nfs</a> 获取脚本：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">!/bin/bash</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">注意:</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"> - 在使用插件之前需要先安装 jq。</span></span><br><span class="line">usage() &#123;</span><br><span class="line">    err &quot;Invalid usage. Usage: &quot;</span><br><span class="line">    err &quot;\t$0 init&quot;</span><br><span class="line">    err &quot;\t$0 mount &lt;mount dir&gt; &lt;json params&gt;&quot;</span><br><span class="line">    err &quot;\t$0 unmount &lt;mount dir&gt;&quot;</span><br><span class="line">    exit 1</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">err() &#123;</span><br><span class="line">    echo -ne $* 1&gt;&amp;2</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">log() &#123;</span><br><span class="line">    echo -ne $* &gt;&amp;1</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">ismounted() &#123;</span><br><span class="line">    MOUNT=`findmnt -n $&#123;MNTPATH&#125; 2&gt;/dev/null | cut -d&#x27; &#x27; -f1`</span><br><span class="line">    if [ &quot;$&#123;MOUNT&#125;&quot; == &quot;$&#123;MNTPATH&#125;&quot; ]; then</span><br><span class="line">        echo &quot;1&quot;</span><br><span class="line">    else</span><br><span class="line">        echo &quot;0&quot;</span><br><span class="line">    fi</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">domount() &#123;</span><br><span class="line">    MNTPATH=$1</span><br><span class="line"></span><br><span class="line">    NFS_SERVER=$(echo $2 | jq -r &#x27;.server&#x27;)</span><br><span class="line">    SHARE=$(echo $2 | jq -r &#x27;.share&#x27;)</span><br><span class="line"></span><br><span class="line">    if [ $(ismounted) -eq 1 ] ; then</span><br><span class="line">        log &#x27;&#123;&quot;status&quot;: &quot;Success&quot;&#125;&#x27;</span><br><span class="line">        exit 0</span><br><span class="line">    fi</span><br><span class="line"></span><br><span class="line">    mkdir -p $&#123;MNTPATH&#125; &amp;&gt; /dev/null</span><br><span class="line"></span><br><span class="line">    mount -t nfs $&#123;NFS_SERVER&#125;:/$&#123;SHARE&#125; $&#123;MNTPATH&#125; &amp;&gt; /dev/null</span><br><span class="line">    if [ $? -ne 0 ]; then</span><br><span class="line">        err &quot;&#123; \&quot;status\&quot;: \&quot;Failure\&quot;, \&quot;message\&quot;: \&quot;Failed to mount $&#123;NFS_SERVER&#125;:$&#123;SHARE&#125; at $&#123;MNTPATH&#125;\&quot;&#125;&quot;</span><br><span class="line">        exit 1</span><br><span class="line">    fi</span><br><span class="line">    log &#x27;&#123;&quot;status&quot;: &quot;Success&quot;&#125;&#x27;</span><br><span class="line">    exit 0</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">unmount() &#123;</span><br><span class="line">    MNTPATH=$1</span><br><span class="line">    if [ $(ismounted) -eq 0 ] ; then</span><br><span class="line">        log &#x27;&#123;&quot;status&quot;: &quot;Success&quot;&#125;&#x27;</span><br><span class="line">        exit 0</span><br><span class="line">    fi</span><br><span class="line"></span><br><span class="line">    umount $&#123;MNTPATH&#125; &amp;&gt; /dev/null</span><br><span class="line">    if [ $? -ne 0 ]; then</span><br><span class="line">        err &quot;&#123; \&quot;status\&quot;: \&quot;Failed\&quot;, \&quot;message\&quot;: \&quot;Failed to unmount volume at $&#123;MNTPATH&#125;\&quot;&#125;&quot;</span><br><span class="line">        exit 1</span><br><span class="line">    fi</span><br><span class="line"></span><br><span class="line">    log &#x27;&#123;&quot;status&quot;: &quot;Success&quot;&#125;&#x27;</span><br><span class="line">    exit 0</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">op=$1</span><br><span class="line"></span><br><span class="line">if ! command -v jq &gt;/dev/null 2&gt;&amp;1; then</span><br><span class="line">    err &quot;&#123; \&quot;status\&quot;: \&quot;Failure\&quot;, \&quot;message\&quot;: \&quot;&#x27;jq&#x27; binary not found. Please install jq package before using this driver\&quot;&#125;&quot;</span><br><span class="line">    exit 1</span><br><span class="line">fi</span><br><span class="line"></span><br><span class="line">if [ &quot;$op&quot; = &quot;init&quot; ]; then</span><br><span class="line">    log &#x27;&#123;&quot;status&quot;: &quot;Success&quot;, &quot;capabilities&quot;: &#123;&quot;attach&quot;: false&#125;&#125;&#x27;</span><br><span class="line">    exit 0</span><br><span class="line">fi</span><br><span class="line"></span><br><span class="line">if [ $# -lt 2 ]; then</span><br><span class="line">    usage</span><br><span class="line">fi</span><br><span class="line"></span><br><span class="line">shift</span><br><span class="line"></span><br><span class="line">case &quot;$op&quot; in</span><br><span class="line">    mount)</span><br><span class="line">        domount $*</span><br><span class="line">        ;;</span><br><span class="line">    unmount)</span><br><span class="line">        unmount $*</span><br><span class="line">        ;;</span><br><span class="line">    *)</span><br><span class="line">        log &#x27;&#123;&quot;status&quot;: &quot;Not supported&quot;&#125;&#x27;</span><br><span class="line">        exit 0</span><br><span class="line">esac</span><br><span class="line"></span><br><span class="line">exit 1</span><br></pre></td></tr></table></figure>
+
+
+
+<p>将上面脚本命名成 nfs，放置到 node1 节点对应的插件下面： <code>/usr/libexec/kubernetes/kubelet-plugins/volume/exec/ydzs~nfs/nfs</code>，并设置权限为 700：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">➜ chmod 700 /usr/libexec/kubernetes/kubelet-plugins/volume/exec/ydzs~nfs/nfs</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">安装 jq 工具</span></span><br><span class="line">➜ yum -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm</span><br><span class="line">➜ yum install jq -y</span><br></pre></td></tr></table></figure>
+
+
+
+<p>这个时候我们部署一个应用到 node1 节点上，并用 <code>flexVolume</code> 来持久化容器中的数据（当然也可以通过定义 flexvolume 类型的 PV、PVC 来使用），如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># test-flexvolume.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">test-flexvolume</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">nodeSelector:</span></span><br><span class="line">    <span class="attr">kubernetes.io/hostname:</span> <span class="string">node1</span></span><br><span class="line">  <span class="attr">volumes:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">test</span></span><br><span class="line">      <span class="attr">flexVolume:</span></span><br><span class="line">        <span class="attr">driver:</span> <span class="string">&#x27;ydzs/nfs&#x27;</span> <span class="comment"># 定义插件类型，根据这个参数在对应的目录下面找到插件的可执行文件</span></span><br><span class="line">        <span class="attr">fsType:</span> <span class="string">&#x27;nfs&#x27;</span> <span class="comment"># 定义存储卷文件系统类型</span></span><br><span class="line">        <span class="attr">options:</span> <span class="comment"># 定义所有与存储相关的一些具体参数</span></span><br><span class="line">          <span class="attr">server:</span> <span class="string">&#x27;192.168.31.31&#x27;</span></span><br><span class="line">          <span class="attr">share:</span> <span class="string">&#x27;var/lib/k8s/data/&#x27;</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">web</span></span><br><span class="line">      <span class="attr">image:</span> <span class="string">nginx</span></span><br><span class="line">      <span class="attr">ports:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">80</span></span><br><span class="line">      <span class="attr">volumeMounts:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">test</span></span><br><span class="line">          <span class="attr">subPath:</span> <span class="string">testflexvolume</span></span><br><span class="line">          <span class="attr">mountPath:</span> <span class="string">/usr/share/nginx/html</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>其中 <code>flexVolume.driver</code> 就是插件目录 <code>ydzs~nfs</code> 对应的 <code>ydzs/nfs</code> 名称，<code>flexVolume.options</code> 中根据上面的 nfs 脚本可以得知里面配置的是 NFS 的 Server 地址和挂载目录路径，直接创建上面的资源对象：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl apply -f test-flexvolume.yaml</span><br><span class="line">➜ kubectl get pods</span><br><span class="line">NAME                                      READY   STATUS    RESTARTS   AGE</span><br><span class="line">test-flexvolume                           1/1     Running   0          13h</span><br><span class="line">......</span><br><span class="line">➜ kubectl exec -it test-flexvolume mount |grep test</span><br><span class="line">192.168.31.31:/var/lib/k8s/data/testflexvolume on /usr/share/nginx/html type nfs4 (rw,relatime,vers=4.1,rsize=524288,wsize=524288,namlen=255,hard,proto=tcp,timeo=600,retrans=2,sec=sys,clientaddr=192.168.31.108,local_lock=none,addr=192.168.31.31)</span><br><span class="line">➜ mount |grep test # node1节点上执行</span><br><span class="line">192.168.31.31:/var/lib/k8s/data on /var/lib/kubelet/pods/d1b108d8-2640-4f2b-a08c-14392e163b97/volumes/ydzs~nfs/test type nfs4 (rw,relatime,vers=4.1,rsize=524288,wsize=524288,namlen=255,hard,proto=tcp,timeo=600,retrans=2,sec=sys,clientaddr=192.168.31.108,local_lock=none,addr=192.168.31.31)</span><br><span class="line">192.168.31.31:/var/lib/k8s/data/testflexvolume on /var/lib/kubelet/pods/d1b108d8-2640-4f2b-a08c-14392e163b97/volume-subpaths/test/web/0 type nfs4 (rw,relatime,vers=4.1,rsize=524288,wsize=524288,namlen=255,hard,proto=tcp,timeo=600,retrans=2,sec=sys,clientaddr=192.168.31.108,local_lock=none,addr=192.168.31.31)</span><br></pre></td></tr></table></figure>
+
+
+
+<p>同样我们可以查看到 Pod 的本地持久化目录是被 mount 到了 NFS 上面，证明上面我们的 FlexVolume 插件是正常的。</p>
+<p>!!! info “调用”</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">当我们要去真正的 mount NFS 的时候，就是通过 kubelet 调用 `VolumePlugin`，然后直接执行命令`/usr/libexec/kubernetes/kubelet-plugins/volume/exec/ydzs~nfs/nfs mount &lt;mount dir&gt; &lt;json param&gt;` 来完成的，就相当于平时我们在宿主机上面手动挂载 NFS 的方式一样的，所以存储插件 nfs 是一个可执行的二进制文件或者 shell 脚本都是可以的。</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="CSI"><a href="#CSI" class="headerlink" title="CSI"></a>CSI</h2><p>既然已经有了 <code>FlexVolume</code> 插件了，为什么还需要 <code>CSI</code> 插件呢？上面我们使用 FlexVolume 插件的时候可以看出 FlexVolume 插件实际上相当于就是一个普通的 shell 命令，类似于平时我们在 Linux 下面执行的 <code>ls</code> 命令一样，只是返回的信息是 JSON 格式的数据，并不是我们通常认为的一个常驻内存的进程，而 CSI 是一个更加完善、编码更加方便友好的一种存储插件扩展方式。</p>
+<p><a target="_blank" rel="noopener" href="https://kubernetes-csi.github.io/docs/">CSI</a> 是 <code>Container Storage Interface</code> 的简称，旨在能为容器编排引擎和存储系统间建立一套标准的存储调用接口，通过该接口能为容器编排引擎提供存储服务。在 CSI 之前，K8S 里提供存储服务基本上是通过 <code>in-tree</code> 的方式来提供，如下图：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/bwszp4.png" alt="without csi"></p>
+<p>这种方式需要将存储提供者的代码逻辑放到 K8S 的代码库中运行，调用引擎与插件间属于强耦合，这种方式会带来一些问题：</p>
+<ul>
+<li>存储插件需要一同随 K8S 发布</li>
+<li>K8S 社区需要对存储插件的测试、维护负责</li>
+<li>存储插件的问题有可能会影响 K8S 部件正常运行</li>
+<li>存储插件享有 K8S 部件同等的特权存在安全隐患</li>
+<li>存储插件开发者必须遵循 K8S 社区的规则开发代码</li>
+</ul>
+<p>基于这些问题和挑战，CO（Container Orchestrator） 厂商提出 Container Storage Interface 用来定义容器存储标准，它独立于 Kubernetes Storage SIG，由 Kubernetes、Mesos、Cloud Foundry 三家一起推动。CSI 规范定义了存储提供商实现 CSI 兼容插件的最小操作集合和部署建议，CSI 规范的主要焦点是声明插件必须实现的接口。</p>
+<p>在 Kubernetes 上整合 CSI 插件的整体架构如下图所示：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/q1am9u.png" alt="kubernetes csi structrue"></p>
+<p>Kubernetes CSI 存储体系主要由两部分组成：</p>
+<ul>
+<li><p>Kubernetes 外部组件：包含 <code>Driver registrar</code>、<code>External provisioner</code>、<code>External attacher</code> 三部分，这三个组件是从 Kubernetes 原本的 in-tree 存储体系中剥离出来的存储管理功能，实际上是 Kubernetes 中的一种外部 controller，它们 watch kubernetes 的 API 资源对象，根据 watch 到的状态来调用下面提到的第二部分的 CSI 插件来实现存储的管理和操作。这部分是 Kubernetes 团队维护的，插件开发者完全不必关心其实现细节。</p>
+<ul>
+<li><code>Driver registra</code>：一个 Sidecar 容器，向 Kubernetes 注册 CSI Driver，添加 Drivers 的一些信息</li>
+<li><code>External provisioner</code>：也是一个 Sidecar 容器，watch Kubernetes 的 PVC 对象，调用对应 CSI 的 Volum e 创建、删除等操作</li>
+<li><code>External attacher</code>：一个 Sidecar 容器，watch Kubernetes 系统里的 <code>VolumeAttachment</code> 对象，调用对应 CSI 的 ControllerPublish 和 ControllerUnpublish 操作来完成对应的 Volume 的 Attach&#x2F;Detach。而 Volume 的 Mount&#x2F;Unmount 阶段并不属于外部组件，当真正需要执行 Mount 操作的时候，kubelet 会去直接调用下面的 CSI Node 服务来完成 Volume 的 Mount&#x2F;UnMount 操作。</li>
+</ul>
+</li>
+<li><p>CSI 存储插件: 这部分正是开发者需要实现的 CSI 插件部分，都是通过 gRPC 实现的服务，一般会用一个二进制文件对外提供服务，主要包含三部分：<code>CSI Identity</code>、<code>CSI Controller</code>、<code>CSI Node</code>。</p>
+<ul>
+<li><p><code>CSI Identity</code> — 主要用于负责对外暴露这个插件本身的信息，确保插件的健康状态。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">service Identity &#123;</span><br><span class="line">    <span class="comment">// 返回插件的名称和版本</span></span><br><span class="line">    rpc GetPluginInfo(GetPluginInfoRequest)</span><br><span class="line">        returns (GetPluginInfoResponse) &#123;&#125;</span><br><span class="line">    <span class="comment">// 返回这个插件的包含的功能，比如非块存储类型的 CSI 插件不需要实现 Attach 功能，GetPluginCapabilities 就可以在返回中标注这个 CSI 插件不包含 Attach 功能</span></span><br><span class="line">    rpc GetPluginCapabilities(GetPluginCapabilitiesRequest)</span><br><span class="line">        returns (GetPluginCapabilitiesResponse) &#123;&#125;</span><br><span class="line">    <span class="comment">// 插件插件是否正在运行</span></span><br><span class="line">    rpc Probe (ProbeRequest)</span><br><span class="line">        returns (ProbeResponse) &#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+</li>
+<li><p><code>CSI Controller</code> - 主要实现 Volume 管理流程当中的 Provision 和 Attach 阶段，Provision 阶段是指创建和删除 Volume 的流程，而 Attach 阶段是指把存储卷附着在某个节点或脱离某个节点的流程，另外只有块存储类型的 CSI 插件才需要 Attach 功能。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line">service Controller &#123;</span><br><span class="line">    <span class="comment">// 创建存储卷，包括云端存储介质以及PV对象</span></span><br><span class="line">    rpc CreateVolume (CreateVolumeRequest)</span><br><span class="line">        returns (CreateVolumeResponse) &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">//  删除存储卷</span></span><br><span class="line">    rpc DeleteVolume (DeleteVolumeRequest)</span><br><span class="line">        returns (DeleteVolumeResponse) &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 挂载存储卷，将存储介质挂载到目标节点</span></span><br><span class="line">    rpc ControllerPublishVolume (ControllerPublishVolumeRequest)</span><br><span class="line">        returns (ControllerPublishVolumeResponse) &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 卸载存储卷</span></span><br><span class="line">    rpc ControllerUnpublishVolume (ControllerUnpublishVolumeRequest)</span><br><span class="line">        returns (ControllerUnpublishVolumeResponse) &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 例如：是否可以同时用于多个节点的读/写</span></span><br><span class="line">    rpc ValidateVolumeCapabilities (ValidateVolumeCapabilitiesRequest)</span><br><span class="line">        returns (ValidateVolumeCapabilitiesResponse) &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 返回所有可用的 volumes</span></span><br><span class="line">    rpc ListVolumes (ListVolumesRequest)</span><br><span class="line">        returns (ListVolumesResponse) &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 可用存储池的总容量</span></span><br><span class="line">    rpc GetCapacity (GetCapacityRequest)</span><br><span class="line">        returns (GetCapacityResponse) &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 例如. 插件可能未实现 GetCapacity、Snapshotting</span></span><br><span class="line">    rpc ControllerGetCapabilities (ControllerGetCapabilitiesRequest)</span><br><span class="line">        returns (ControllerGetCapabilitiesResponse) &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 创建快照</span></span><br><span class="line">    rpc CreateSnapshot (CreateSnapshotRequest)</span><br><span class="line">        returns (CreateSnapshotResponse) &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 删除指定的快照</span></span><br><span class="line">    rpc DeleteSnapshot (DeleteSnapshotRequest)</span><br><span class="line">        returns (DeleteSnapshotResponse) &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 获取所有的快照</span></span><br><span class="line">    rpc ListSnapshots (ListSnapshotsRequest)</span><br><span class="line">        returns (ListSnapshotsResponse) &#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+</li>
+<li><p><code>CSI Node</code> — 负责控制 Kubernetes 节点上的 Volume 的相关功能。其中 Volume 的挂载被分成了 NodeStageVolume 和 NodePublishVolume 两个阶段。NodeStageVolume 接口主要是针对块存储类型的 CSI 插件而提供的，块设备在 “Attach” 阶段被附着在 Node 上后，需要挂载至 Pod 对应目录上，但因为块设备在 linux 上只能 mount 一次，而在 kubernetes volume 的使用场景中，一个 volume 可能被挂载进同一个 Node 上的多个 Pod 实例中，所以这里提供了 NodeStageVolume 这个接口，使用这个接口把块设备格式化后先挂载至 Node 上的一个临时全局目录，然后再调用 NodePublishVolume 使用 linux 中的 <code>bind mount</code> 技术把这个全局目录挂载进 Pod 中对应的目录上。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">service Node &#123;</span><br><span class="line">    <span class="comment">// 在节点上初始化存储卷（格式化），并执行挂载到Global目录</span></span><br><span class="line">    rpc NodeStageVolume (NodeStageVolumeRequest)</span><br><span class="line">        returns (NodeStageVolumeResponse) &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// umount 存储卷在节点上的 Global 目录</span></span><br><span class="line">    rpc NodeUnstageVolume (NodeUnstageVolumeRequest)</span><br><span class="line">        returns (NodeUnstageVolumeResponse) &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 在节点上将存储卷的 Global 目录挂载到 Pod 的实际挂载目录</span></span><br><span class="line">    rpc NodePublishVolume (NodePublishVolumeRequest)</span><br><span class="line">        returns (NodePublishVolumeResponse) &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// unmount 存储卷在节点上的 Pod 挂载目录</span></span><br><span class="line">    rpc NodeUnpublishVolume (NodeUnpublishVolumeRequest)</span><br><span class="line">        returns (NodeUnpublishVolumeResponse) &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 获取节点上Volume挂载文件系统统计信息（总空间、可用空间等）</span></span><br><span class="line">    rpc NodeGetVolumeStats (NodeGetVolumeStatsRequest)</span><br><span class="line">        returns (NodeGetVolumeStatsResponse) &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 获取节点的唯一 ID</span></span><br><span class="line">    rpc NodeGetId (NodeGetIdRequest)</span><br><span class="line">        returns (NodeGetIdResponse) &#123;</span><br><span class="line">        option deprecated = <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 返回节点插件的能力</span></span><br><span class="line">    rpc NodeGetCapabilities (NodeGetCapabilitiesRequest)</span><br><span class="line">        returns (NodeGetCapabilitiesResponse) &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 获取节点的一些信息</span></span><br><span class="line">    rpc NodeGetInfo (NodeGetInfoRequest)</span><br><span class="line">        returns (NodeGetInfoResponse) &#123;&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+</ul>
+<p>只需要实现上面的接口就可以实现一个 CSI 插件了。虽然 Kubernetes 并未规定 CSI 插件的打包安装，但是提供了以下建议来简化我们在 Kubernetes 上容器化 CSI Volume 驱动程序的部署方案，具体的方案介绍可以查看 CSI 规范介绍文档 <a target="_blank" rel="noopener" href="https://github.com/container-storage-interface/spec/blob/master/spec.md">https://github.com/container-storage-interface/spec/blob/master/spec.md</a></p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/1oaqhg.png" alt="container storage interface deploy"></p>
+<p>按照上图的推荐方案，<code>CSI Controller</code> 负责 Volumes 的创建删除等操作，整个集群只需要部署一个，以 StatefulSet 或者 Deployment 方式部署均可，<code>CSI Node</code> 部分负责 Volumes 的 attach、detach 等操作，需要在每个节点部署一个，所以用 DaemonSet 方式部署，因为这两部分实现在同一个 CSI 插件程序中，因此只需要把这个 CSI 插件与 <code>External Components</code> 以容器方式部署在同一个 Pod 中，把这个 CSI 插件与 <code>Driver registrar</code> 以容器方式部署在 DaemonSet 的 Pod 中，即可完成 CSI 的部署。</p>
+<p>比如在训练营第一期中我们使用的 Rook 部署的 Ceph 集群就实现了 CSI 插件的:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl get pods -n rook-ceph |grep plugin</span><br><span class="line">csi-cephfsplugin-2s9d5                                 3/3     Running     0          21d</span><br><span class="line">csi-cephfsplugin-fgp4v                                 3/3     Running     0          17d</span><br><span class="line">csi-cephfsplugin-fv5nx                                 3/3     Running     0          21d</span><br><span class="line">csi-cephfsplugin-mn8q4                                 3/3     Running     0          17d</span><br><span class="line">csi-cephfsplugin-nf6h8                                 3/3     Running     0          21d</span><br><span class="line">csi-cephfsplugin-provisioner-56c8b7ddf4-68h6d          4/4     Running     0          21d</span><br><span class="line">csi-cephfsplugin-provisioner-56c8b7ddf4-rq4t6          4/4     Running     0          21d</span><br><span class="line">csi-cephfsplugin-xwnl4                                 3/3     Running     0          21d</span><br><span class="line">csi-rbdplugin-7r88w                                    3/3     Running     0          21d</span><br><span class="line">csi-rbdplugin-95g5j                                    3/3     Running     0          21d</span><br><span class="line">csi-rbdplugin-bnzpr                                    3/3     Running     0          21d</span><br><span class="line">csi-rbdplugin-dvftb                                    3/3     Running     0          21d</span><br><span class="line">csi-rbdplugin-jzmj2                                    3/3     Running     0          17d</span><br><span class="line">csi-rbdplugin-provisioner-6ff4dd4b94-bvtss             5/5     Running     0          21d</span><br><span class="line">csi-rbdplugin-provisioner-6ff4dd4b94-lfn68             5/5     Running     0          21d</span><br><span class="line">csi-rbdplugin-trxb4                                    3/3     Running     0          17d</span><br></pre></td></tr></table></figure>
+
+
+
+<p>这里其实是实现了 RBD 和 CephFS 两种 CSI，用 DaemonSet 在每个节点上运行了一个包含 <code>Driver registra</code> 容器的 Pod，当然和节点相关的操作比如 Mount&#x2F;Unmount 也是在这个 Pod 里面执行的，其他的比如 Provision、Attach 都是在另外的 <code>csi-rbdplugin-provisioner-xxx</code> Pod 中执行的。</p>
+<h2 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h2><p>现在我们来测试通过 CSI 的形式使用 NFS 存储，当然首先我们需要在 Kubernetes 集群中安装 NFS CSI 的驱动，<a target="_blank" rel="noopener" href="https://github.com/kubernetes-csi/csi-driver-nfs">https://github.com/kubernetes-csi/csi-driver-nfs</a> 就是一个 NFS 的 CSI 驱动实现的项目。</p>
+<p>如果能访问 github 则可以直接使用下面的命令一键安装 NFS CSI 驱动程序：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">➜ curl -skSL https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/deploy/install-driver.sh | bash -s master --</span><br></pre></td></tr></table></figure>
+
+
+
+<p>也可以本地安装：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">➜ git clone https://github.com/kubernetes-csi/csi-driver-nfs.git</span><br><span class="line">➜ cd csi-driver-nfs</span><br><span class="line">➜ ./deploy/install-driver.sh master local</span><br></pre></td></tr></table></figure>
+
+
+
+<p>和上面介绍的部署方式基本上也是一致的，首先会用 DaemonSet 的形式在每个节点上运行了一个包含 <code>Driver registra</code> 容器的 Pod，当然和节点相关的操作比如 Mount&#x2F;Unmount 也是在这个 Pod 里面执行的，其他的比如 Provision、Attach 都是在另外的 <code>csi-nfs-controller-xxx</code> Pod 中执行的。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl -n kube-system get pod -o wide -l app=csi-nfs-controller</span><br><span class="line">NAME                                 READY   STATUS    RESTARTS   AGE     IP               NODE    NOMINATED NODE   READINESS GATES</span><br><span class="line">csi-nfs-controller-bd6dbb598-fx4hj   3/3     Running   0          6m20s   192.168.31.108   node1   &lt;none&gt;           &lt;none&gt;</span><br><span class="line">➜ kubectl -n kube-system get pod -o wide -l app=csi-nfs-node</span><br><span class="line">NAME                 READY   STATUS    RESTARTS   AGE     IP               NODE      NOMINATED NODE   READINESS GATES</span><br><span class="line">csi-nfs-node-bx5rc   3/3     Running   0          6m13s   192.168.31.108   node1     &lt;none&gt;           &lt;none&gt;</span><br><span class="line">csi-nfs-node-llwqz   3/3     Running   0          6m20s   192.168.31.46    node2     &lt;none&gt;           &lt;none&gt;</span><br><span class="line">csi-nfs-node-rkcpm   3/3     Running   0          6m15s   192.168.31.31    master1   &lt;none&gt;           &lt;none&gt;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>当 csi 的驱动安装完成后我们就可以通过 csi 的方式来使用我们的 nfs 存储了。</p>
+<p>比如我们创建</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PersistentVolume</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">pv-nfs</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">capacity:</span></span><br><span class="line">    <span class="attr">storage:</span> <span class="string">10Gi</span></span><br><span class="line">  <span class="attr">accessModes:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">ReadWriteMany</span></span><br><span class="line">  <span class="attr">persistentVolumeReclaimPolicy:</span> <span class="string">Retain</span></span><br><span class="line">  <span class="attr">mountOptions:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">hard</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">nfsvers=4.1</span></span><br><span class="line">  <span class="attr">csi:</span></span><br><span class="line">    <span class="attr">driver:</span> <span class="string">nfs.csi.k8s.io</span></span><br><span class="line">    <span class="attr">readOnly:</span> <span class="literal">false</span></span><br><span class="line">    <span class="attr">volumeHandle:</span> <span class="string">unique-volumeid</span> <span class="comment"># make sure it&#x27;s a unique id in the cluster</span></span><br><span class="line">    <span class="attr">volumeAttributes:</span></span><br><span class="line">      <span class="attr">server:</span> <span class="number">192.168</span><span class="number">.31</span><span class="number">.31</span></span><br><span class="line">      <span class="attr">share:</span> <span class="string">/var/lib/k8s/data</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PersistentVolumeClaim</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">pvc-nfs-static</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">accessModes:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">ReadWriteMany</span></span><br><span class="line">  <span class="attr">resources:</span></span><br><span class="line">    <span class="attr">requests:</span></span><br><span class="line">      <span class="attr">storage:</span> <span class="string">10Gi</span></span><br><span class="line">  <span class="attr">volumeName:</span> <span class="string">pv-nfs</span></span><br><span class="line">  <span class="attr">storageClassName:</span> <span class="string">&#x27;&#x27;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>直接创建上面的资源对象后我们的 PV 和 PVC 就绑定在一起了：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl get pv pv-nfs</span><br><span class="line">NAME     CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                    STORAGECLASS   REASON   AGE</span><br><span class="line">pv-nfs   10Gi       RWX            Retain           Bound    default/pvc-nfs-static                           15s</span><br><span class="line">➜ kubectl get pvc pvc-nfs-static</span><br><span class="line">NAME             STATUS   VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   AGE</span><br><span class="line">pvc-nfs-static   Bound    pv-nfs   10Gi       RWX                           30s</span><br></pre></td></tr></table></figure>
+
+
+
+<p>这里的核心配置是 PV 中的 <code>csi</code> 属性的配置，需要通过 <code>csi.driver</code> 来指定我们要使用的驱动名称，比如我们这里使用 nfs 的名称为 <code>nfs.csi.k8s.io</code>，然后就是根据具体的驱动配置相关的参数。</p>
+<p>同样还可以创建一个用于动态创建 PV 的 StorageClass 对象：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">storage.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">StorageClass</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nfs-csi</span></span><br><span class="line"><span class="attr">provisioner:</span> <span class="string">nfs.csi.k8s.io</span></span><br><span class="line"><span class="attr">parameters:</span></span><br><span class="line">  <span class="attr">server:</span> <span class="number">192.168</span><span class="number">.31</span><span class="number">.31</span></span><br><span class="line">  <span class="attr">share:</span> <span class="string">/var/lib/k8s/data</span></span><br><span class="line">  <span class="comment"># csi.storage.k8s.io/provisioner-secret is only needed for providing mountOptions in DeleteVolume</span></span><br><span class="line">  <span class="comment"># csi.storage.k8s.io/provisioner-secret-name: &quot;mount-options&quot;</span></span><br><span class="line">  <span class="comment"># csi.storage.k8s.io/provisioner-secret-namespace: &quot;default&quot;</span></span><br><span class="line"><span class="attr">reclaimPolicy:</span> <span class="string">Delete</span></span><br><span class="line"><span class="attr">volumeBindingMode:</span> <span class="string">Immediate</span></span><br><span class="line"><span class="attr">mountOptions:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">hard</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">nfsvers=4.1</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>对于我们普通用户来说使用起来都是一样的，只需要管理员提供何时的 PV 或 StorageClass 即可，这里我们就使用的 CSI 的形式来提供 NFS 的存储。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E5%AE%89%E8%A3%85%20prometheus/" rel="prev" title="安装 prometheus">
+      <i class="fa fa-chevron-left"></i> 安装 prometheus
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E5%AD%97%E9%9D%A2%E9%87%8F%E5%92%8C%E7%BB%84%E5%90%88%E5%AD%97%E9%9D%A2%E9%87%8F/" rel="next" title="字面量和组合字面量">
+      字面量和组合字面量 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AD%98%E5%82%A8%E6%8F%92%E4%BB%B6"><span class="nav-number">1.</span> <span class="nav-text">存储插件</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#FlexVolume"><span class="nav-number">1.1.</span> <span class="nav-text">FlexVolume</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CSI"><span class="nav-number">1.2.</span> <span class="nav-text">CSI</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%8B%E8%AF%95"><span class="nav-number">1.3.</span> <span class="nav-text">测试</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

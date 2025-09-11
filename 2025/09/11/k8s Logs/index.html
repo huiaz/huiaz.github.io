@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="描述在 Kubernetes 中如何进行日志管理，并解释常用的方法。 Of course. Log management is a cornerstone of observability in any production system, and Kubernetes presents unique challenges and solutions. This is a great questi">
+<meta property="og:type" content="article">
+<meta property="og:title" content="k8s Logs">
+<meta property="og:url" content="http://example.com/2025/09/11/k8s%20Logs/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="描述在 Kubernetes 中如何进行日志管理，并解释常用的方法。 Of course. Log management is a cornerstone of observability in any production system, and Kubernetes presents unique challenges and solutions. This is a great questi">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:43:34.682Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/k8s%20Logs/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>k8s Logs | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/k8s%20Logs/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          k8s Logs
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:43:34" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E9%9D%A2%E8%AF%95%E9%A2%98/" itemprop="url" rel="index"><span itemprop="name">面试题</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>描述在 Kubernetes 中如何进行日志管理，并解释常用的方法。</p>
+<p>Of course. Log management is a cornerstone of observability in any production system, and Kubernetes presents unique challenges and solutions. This is a great question to assess a candidate’s operational maturity.</p>
+<h3 id="🤔-分析过程："><a href="#🤔-分析过程：" class="headerlink" title="🤔 分析过程："></a>🤔 分析过程：</h3><p>该问题旨在考察对Kubernetes中日志生命周期和集中式日志解决方案的理解。一个全面的回答需要首先解释为什么基础的<code>kubectl logs</code>命令在生产环境中不足够，从而引出集中式日志管理的需求。接着，需要清晰地描述最主流的实现架构（节点级日志代理），并能解释其工作流程。提及Sidecar模式作为补充方案，以及介绍市面上流行的工具栈（如EFK、PLG），可以充分展现面试者在该领域的知识广度和深度。</p>
+<h3 id="💡-答案生成："><a href="#💡-答案生成：" class="headerlink" title="💡 答案生成："></a>💡 答案生成：</h3><h4 id="1-概念或定义"><a href="#1-概念或定义" class="headerlink" title="1. 概念或定义"></a>1. 概念或定义</h4><p><strong>Kubernetes日志管理</strong>是指一套系统性的方法和架构，用于从集群中所有运行的容器、应用程序以及节点本身<strong>收集、聚合、存储、和分析</strong>日志数据。其核心目标是克服Pod的<strong>临时性（ephemeral）</strong>和<strong>分布式</strong>特性，将分散的日志汇集到一个中心化的、持久化的存储后端，以便于进行故障排查、性能监控、安全审计和长期分析。</p>
+<p>简单的<code>kubectl logs &lt;pod-name&gt;</code>命令只适用于实时调试，因为一旦Pod被删除或重启，其日志就会丢失。因此，生产级的日志管理是必不可少的。</p>
+<h4 id="2-核心挑战"><a href="#2-核心挑战" class="headerlink" title="2. 核心挑战"></a>2. 核心挑战</h4><p>在讨论解决方案之前，理解Kubernetes日志管理的挑战至关重要：</p>
+<ul>
+<li><strong>Pod的临时性:</strong> Pod随时可能被销毁和重建，其本地日志也会随之消失。</li>
+<li><strong>日志分散:</strong> 日志分布在集群的各个节点上，难以进行关联分析。</li>
+<li><strong>缺乏上下文:</strong> 原始的容器日志不包含Kubernetes的元数据（如Pod名、命名空间、标签），这使得日志的筛选和定位非常困难。</li>
+<li><strong>日志量巨大:</strong> 一个中大型集群每秒会产生海量的日志，对收集和存储系统是巨大的考验。</li>
+</ul>
+<h4 id="3-常用方法和架构"><a href="#3-常用方法和架构" class="headerlink" title="3. 常用方法和架构"></a>3. 常用方法和架构</h4><h5 id="方法一：节点级日志代理-Node-Level-Logging-Agent-业界标准方案"><a href="#方法一：节点级日志代理-Node-Level-Logging-Agent-业界标准方案" class="headerlink" title="方法一：节点级日志代理 (Node-Level Logging Agent) - 业界标准方案"></a>方法一：节点级日志代理 (Node-Level Logging Agent) - <strong>业界标准方案</strong></h5><p>这是最常用、最高效的日志收集方法。</p>
+<ul>
+<li><p><strong>工作原理:</strong></p>
+<ol>
+<li><strong>应用程序输出:</strong> 应用程序遵循云原生最佳实践，将日志输出到<strong>标准输出（<code>stdout</code>）和标准错误（<code>stderr</code>）</strong>。</li>
+<li><strong>容器运行时捕获:</strong> 容器运行时（如containerd, CRI-O）会捕获这些标准输出流，并将其重定向到节点上的特定日志文件中。通常，这些日志文件位于 <code>/var/log/pods/</code> 或 <code>/var/log/containers/</code> 目录下，并以 <code>pod-name_namespace_container-name-container-id.log</code> 的格式命名。</li>
+<li><strong>部署日志代理:</strong> 在集群的<strong>每一个节点</strong>上都通过 <strong><code>DaemonSet</code></strong> 部署一个日志收集代理（Logging Agent），例如 <strong>Fluent Bit</strong>, <strong>Fluentd</strong>, 或 <strong>Vector</strong>。</li>
+<li><strong>日志收集与丰富:</strong><ul>
+<li>这个日志代理会挂载节点上的日志目录（如 <code>/var/log/pods</code>）。</li>
+<li>它会“监听”（tail）这些日志文件的变化，实时收集新的日志条目。</li>
+<li><strong>最关键的一步</strong>：代理会与该节点上的Kubelet API或Kubernetes API Server通信，获取日志对应的Pod元数据（Pod名称、命名空间、标签、注解等），并将这些元数据<strong>附加（enrich）</strong>到日志记录中。</li>
+</ul>
+</li>
+<li><strong>日志转发:</strong> 代理将这些经过丰富的、结构化的日志数据转发到一个中心化的日志存储和分析后端。</li>
+</ol>
+</li>
+<li><p><strong>优点:</strong></p>
+<ul>
+<li>对应用程序透明，应用开发者只需关心标准输出。</li>
+<li>高效且资源占用相对较低（特别是使用Fluent Bit）。</li>
+<li>易于管理，通过一个DaemonSet即可覆盖整个集群。</li>
+</ul>
+</li>
+<li><p><strong>缺点:</strong></p>
+<ul>
+<li>不适用于那些不向标准输出打印日志、而是写入自定义文件的传统应用。</li>
+</ul>
+</li>
+</ul>
+<h5 id="方法二：Sidecar-模式"><a href="#方法二：Sidecar-模式" class="headerlink" title="方法二：Sidecar 模式"></a>方法二：Sidecar 模式</h5><p>当应用程序无法修改以将日志写入标准输出时，Sidecar模式是一个很好的解决方案。</p>
+<ul>
+<li><p><strong>工作原理:</strong></p>
+<ol>
+<li><strong>共享卷:</strong> 在应用程序的Pod中，除了主应用容器外，再额外注入一个<strong>日志代理Sidecar容器</strong>（如一个轻量级的Fluent Bit）。同时，定义一个<code>emptyDir</code>类型的共享卷，并将其挂载到主应用容器和Sidecar容器中。</li>
+<li><strong>应用写日志:</strong> 主应用容器将其日志写入到共享卷的某个文件里（例如 <code>/shared-logs/app.log</code>）。</li>
+<li><strong>Sidecar读日志:</strong> Sidecar容器的任务就是读取共享卷中的这个日志文件（<code>tail -f /shared-logs/app.log</code>）。</li>
+<li><strong>转发日志:</strong> Sidecar容器随后可以将这些日志：<ul>
+<li><strong>A)</strong> 直接输出到它自己的标准输出，这样就可以被前述的<strong>节点级日志代理</strong>捕获。</li>
+<li><strong>B)</strong> 直接推送到中心化的日志后端。</li>
+</ul>
+</li>
+</ol>
+</li>
+<li><p><strong>优点:</strong></p>
+<ul>
+<li>解耦了应用的日志逻辑，无需修改老旧应用。</li>
+<li>可以处理多行日志、特定格式日志的预处理。</li>
+</ul>
+</li>
+<li><p><strong>缺点:</strong></p>
+<ul>
+<li>资源开销更大，因为每个需要此功能的Pod都增加了一个额外的容器。</li>
+<li>配置更复杂。</li>
+</ul>
+</li>
+</ul>
+<h4 id="4-常用工具栈-Common-Tool-Stacks"><a href="#4-常用工具栈-Common-Tool-Stacks" class="headerlink" title="4. 常用工具栈 (Common Tool Stacks)"></a>4. 常用工具栈 (Common Tool Stacks)</h4><ol>
+<li><p><strong>PLG&#x2F;FLG Stack (Prometheus, Loki, Grafana &#x2F; Fluent Bit, Loki, Grafana):</strong></p>
+<ul>
+<li><strong>Loki:</strong> 由Grafana Labs开发的日志聚合系统，设计理念是“像Prometheus一样查日志”。它只索引日志的元数据（标签），而不索引日志的全文内容，因此非常轻量、成本低廉。</li>
+<li><strong>Grafana:</strong> 用于可视化展示Loki中的日志，并能与Prometheus的监控指标进行关联查询。</li>
+<li><strong>Fluent Bit:</strong> 作为轻量级的日志代理（DaemonSet），负责收集日志并发送给Loki。</li>
+<li><strong>特点:</strong> 现代、高效、低成本，是目前非常流行的选择。</li>
+</ul>
+</li>
+<li><p><strong>EFK Stack (Elasticsearch, Fluentd&#x2F;Fluent Bit, Kibana):</strong></p>
+<ul>
+<li><strong>Elasticsearch:</strong> 一个功能强大的全文搜索引擎，用于存储和索引日志数据。</li>
+<li><strong>Fluentd&#x2F;Fluent Bit:</strong> 作为日志收集代理。Fluentd功能更强、插件生态更丰富；Fluent Bit更轻量、性能更高。</li>
+<li><strong>Kibana:</strong> 用于搜索、分析和可视化Elasticsearch中数据的Web UI。</li>
+<li><strong>特点:</strong> 功能强大、生态成熟，但资源消耗较大，运维成本较高。</li>
+</ul>
+</li>
+<li><p><strong>商业&#x2F;SaaS解决方案:</strong></p>
+<ul>
+<li><strong>Datadog, Splunk, New Relic, Logz.io</strong> 等。这些服务通常提供自己的Kubernetes日志代理，用户只需在集群中部署它们的agent (通常也是一个DaemonSet)，日志就会被自动收集并发送到它们的云平台进行存储和分析。</li>
+<li><strong>特点:</strong> 开箱即用，功能强大，免运维，但会产生持续的服务费用。</li>
+</ul>
+</li>
+</ol>
+<h4 id="5-扩展知识-最佳实践"><a href="#5-扩展知识-最佳实践" class="headerlink" title="5. 扩展知识&#x2F;最佳实践"></a>5. 扩展知识&#x2F;最佳实践</h4><ul>
+<li><strong>结构化日志 (Structured Logging):</strong> 强烈建议应用以<strong>JSON格式</strong>输出日志，而不是纯文本。结构化的日志无需复杂的正则表达式解析，可以被后端系统直接索引，极大地提高了查询效率和准确性。</li>
+<li><strong>日志级别:</strong> 在应用中使用不同的日志级别（如<code>INFO</code>, <code>WARN</code>, <code>ERROR</code>, <code>DEBUG</code>），并配置日志代理根据级别进行过滤或路由。</li>
+<li><strong>成本控制:</strong> 日志存储成本可能很高。应制定合理的日志保留策略（Retention Policy），并可以考虑对低优先级的日志（如DEBUG级别）进行采样。</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/k8s_10/" rel="prev" title="k8s_10">
+      <i class="fa fa-chevron-left"></i> k8s_10
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/k8s%20Service&Ingress/" rel="next" title="k8s Service&Ingress">
+      k8s Service&Ingress <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%F0%9F%A4%94-%E5%88%86%E6%9E%90%E8%BF%87%E7%A8%8B%EF%BC%9A"><span class="nav-number">1.</span> <span class="nav-text">🤔 分析过程：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%F0%9F%92%A1-%E7%AD%94%E6%A1%88%E7%94%9F%E6%88%90%EF%BC%9A"><span class="nav-number">2.</span> <span class="nav-text">💡 答案生成：</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E6%A6%82%E5%BF%B5%E6%88%96%E5%AE%9A%E4%B9%89"><span class="nav-number">2.1.</span> <span class="nav-text">1. 概念或定义</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E6%A0%B8%E5%BF%83%E6%8C%91%E6%88%98"><span class="nav-number">2.2.</span> <span class="nav-text">2. 核心挑战</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E5%B8%B8%E7%94%A8%E6%96%B9%E6%B3%95%E5%92%8C%E6%9E%B6%E6%9E%84"><span class="nav-number">2.3.</span> <span class="nav-text">3. 常用方法和架构</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%96%B9%E6%B3%95%E4%B8%80%EF%BC%9A%E8%8A%82%E7%82%B9%E7%BA%A7%E6%97%A5%E5%BF%97%E4%BB%A3%E7%90%86-Node-Level-Logging-Agent-%E4%B8%9A%E7%95%8C%E6%A0%87%E5%87%86%E6%96%B9%E6%A1%88"><span class="nav-number">2.3.1.</span> <span class="nav-text">方法一：节点级日志代理 (Node-Level Logging Agent) - 业界标准方案</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%96%B9%E6%B3%95%E4%BA%8C%EF%BC%9ASidecar-%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.3.2.</span> <span class="nav-text">方法二：Sidecar 模式</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-%E5%B8%B8%E7%94%A8%E5%B7%A5%E5%85%B7%E6%A0%88-Common-Tool-Stacks"><span class="nav-number">2.4.</span> <span class="nav-text">4. 常用工具栈 (Common Tool Stacks)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-%E6%89%A9%E5%B1%95%E7%9F%A5%E8%AF%86-%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="nav-number">2.5.</span> <span class="nav-text">5. 扩展知识&#x2F;最佳实践</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

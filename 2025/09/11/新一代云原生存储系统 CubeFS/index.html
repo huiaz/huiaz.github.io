@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="新一代云原生存储系统 CubeFSCubeFS是一种新一代云原生存储系统，支持 S3、HDFS 和 POSIX 等访问协议，支持多副本与纠删码两种存储引擎，为用户提供多租户、 多 AZ 部署以及跨区域复制等多种特性。  CubeFS 作为一个云原生的分布式存储平台，提供了多种访问协议，因此其应用场景也非常广泛，下面简单介绍几种比较典型的应用场景  大数据分析：兼容 HDFS 协议，为 Hadoop">
+<meta property="og:type" content="article">
+<meta property="og:title" content="新一代云原生存储系统 CubeFS">
+<meta property="og:url" content="http://example.com/2025/09/11/%E6%96%B0%E4%B8%80%E4%BB%A3%E4%BA%91%E5%8E%9F%E7%94%9F%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F%20CubeFS/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="新一代云原生存储系统 CubeFSCubeFS是一种新一代云原生存储系统，支持 S3、HDFS 和 POSIX 等访问协议，支持多副本与纠删码两种存储引擎，为用户提供多租户、 多 AZ 部署以及跨区域复制等多种特性。  CubeFS 作为一个云原生的分布式存储平台，提供了多种访问协议，因此其应用场景也非常广泛，下面简单介绍几种比较典型的应用场景  大数据分析：兼容 HDFS 协议，为 Hadoop">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/44u60m.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/gi2c8s.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/s2rcaw.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/zo97cs.png">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:18:53.975Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://mudutestmenu.mudu.tv/upload/44u60m.png">
+
+<link rel="canonical" href="http://example.com/2025/09/11/%E6%96%B0%E4%B8%80%E4%BB%A3%E4%BA%91%E5%8E%9F%E7%94%9F%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F%20CubeFS/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>新一代云原生存储系统 CubeFS | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/%E6%96%B0%E4%B8%80%E4%BB%A3%E4%BA%91%E5%8E%9F%E7%94%9F%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F%20CubeFS/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          新一代云原生存储系统 CubeFS
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:18:53" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E9%9B%86%E7%BE%A4%E7%AE%A1%E7%90%86/" itemprop="url" rel="index"><span itemprop="name">集群管理</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>9.8k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>9 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="新一代云原生存储系统-CubeFS"><a href="#新一代云原生存储系统-CubeFS" class="headerlink" title="新一代云原生存储系统 CubeFS"></a>新一代云原生存储系统 CubeFS</h1><p><a target="_blank" rel="noopener" href="https://cubefs.io/zh/">CubeFS</a>是一种新一代云原生存储系统，支持 S3、HDFS 和 POSIX 等访问协议，支持多副本与纠删码两种存储引擎，为用户提供多租户、 多 AZ 部署以及跨区域复制等多种特性。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/44u60m.png" alt="CubeFS"></p>
+<p>CubeFS 作为一个云原生的分布式存储平台，提供了多种访问协议，因此其应用场景也非常广泛，下面简单介绍几种比较典型的应用场景</p>
+<ul>
+<li>大数据分析：兼容 HDFS 协议，为 Hadoop 生态（如 Spark、Hive）提供统一存储底座，为计算引擎提供无限的存储空间以及大带宽的数据存储能力。</li>
+<li>深度训练&#x2F;机器学习：作为分布式并行文件系统，支撑 AI 训练、模型存储及分发、IO 加速等需求。</li>
+<li>容器共享存储：容器集群可以将容器镜像的配置文件或初始化加载数据存储在 CubeFS 上，在容器批量加载时实时读取。多 Pod 间通过 CubeFS 共享持久化数据，在 Pod 故障时可以进行快速故障切换。</li>
+<li>数据库&amp;中间件：为数据库应用如 MySQL、ElasticSearch、ClickHouse 提供高并发、低时延云盘服务，实现彻底的存算分离。</li>
+<li>在线服务：为在线业务(如广告、点击流、搜索)或终端用户的图、文、音视频等内容提供高可靠、低成本的对象存储服务。</li>
+<li>传统 NAS 上云：替换线下传统本地存储及 NAS，助力 IT 业务上云。</li>
+</ul>
+<h2 id="特性"><a href="#特性" class="headerlink" title="特性"></a>特性</h2><p><code>CubeFS</code> 具有众多特性，包括：</p>
+<p><strong>多协议</strong></p>
+<p>兼容 S3、POSIX、HDFS 等多种访问协议，协议间访问可互通</p>
+<ul>
+<li>POSIX 兼容：兼容 POSIX 接口，让上层应用的开发变得极其简单，就跟使用本地文件系统一样便捷。此外，CubeFS 在实现时放松了对 POSIX 语义的一致性要求来兼顾文件和元文件操作的性能。</li>
+<li>对象存储兼容：兼容 AWS 的 S3 对象存储协议，用户可以使用原生的 Amazon S3 SDK 管理 CubeFS 中的资源。</li>
+<li>Hadoop 协议兼容：兼容 Hadoop FileSystem 接口协议，用户可以使用 CubeFS 来替换 HDFS，做到上层业务无感。</li>
+</ul>
+<p><strong>双引擎</strong></p>
+<p>支持多副本及纠删码两种引擎，用户可以根据业务场景灵活选择</p>
+<ul>
+<li>多副本存储引擎：副本之间的数据为镜像关系，通过强一致的复制协议来保证副本之间的数据一致性，用户可以根据应用场景灵活的配置不同副本数。</li>
+<li>纠删码存储引擎：纠删码引擎具备高可靠、高可用、低成本、支持超大规模(EB)的特性，根据不同 AZ 模型可以灵活选择纠删码模式。</li>
+</ul>
+<p><strong>多租户</strong></p>
+<p>支持多租户管理，提供细粒度的租户隔离策略</p>
+<p><strong>可扩展</strong></p>
+<p>可以轻松构建 PB 或者 EB 级规模的分布式存储服务，各模块可水平扩展</p>
+<p><strong>高性能</strong></p>
+<p>支持多级缓存，针对小文件特定优化，支持多种高性能的复制协议</p>
+<ul>
+<li>元数据管理：元数据集群为内存元数据存储，在设计上使用两个 B-Tree（inodeBTree 与 dentryBTree）来管理索引，进而提升元数据访问性能；</li>
+<li>强一致副本协议 ：CubeFS 根据文件写入方式的不同采用不同的复制协议来保证副本间的数据一致性。（如果文件按照顺序写入，则会使用主备复制协议来优化 IO 吞吐量；如果是随机写入覆盖现有文件内容时，则是采用一种基于 Multi-Raft 的复制协议，来确保数据的强一致性）；</li>
+<li>多级缓存：纠删码卷支持多级缓存加速能力，针对热点数据，提供更高数据访问性能：</li>
+<li>本地缓存：可以在 Client 机器上同机部署 BlockCache 组件，将本地磁盘作为本地缓存. 可以不经过网络直接读取本地 Cache, 但容量受本地磁盘限制；</li>
+<li>全局缓存：使用副本组件 DataNode 搭建的分布式全局 Cache, 比如可以通过部署客户端同机房的 SSD 磁盘的 DataNode 作为全局 cache, 相对于本地 cache, 需要经过网络, 但是容量更大, 可动态扩缩容,副本数可调。</li>
+</ul>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/gi2c8s.png" alt="img"></p>
+<p><strong>云原生</strong></p>
+<p>基于 CSI 插件可以快速地在 Kubernetes 上使用 CubeFS。</p>
+<h2 id="整体架构"><a href="#整体架构" class="headerlink" title="整体架构"></a>整体架构</h2><p>整体上 CubeFS 由元数据子系统（Metadata Subsystem）、数据子系统（Data Subsystem）和资源管理节点（Master）以及对象网关（Object Subsystem）组成，可以通过 POSIX&#x2F;HDFS&#x2F;S3 接口访问存储数据。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/s2rcaw.png" alt="img"></p>
+<p><strong>资源管理节点</strong></p>
+<p>由多个 Master 节点组成，负责异步处理不同类型的任务，如管理数据分片与元数据分片（包括创建、删除、更新以及一致性检查等），检查数据节点或者元数据节点的健康状态，维护管理卷信息等</p>
+<blockquote>
+<p>Master 节点可以有多个，节点之间通过 Raft 算法保证元数据的一致性，并且持久化到 <code>RocksDB</code> 中。</p>
+</blockquote>
+<p><strong>元数据子系统</strong></p>
+<p>由多个 Meta Node 节点组成，多个元数据分片（Meta Partition）和 Raft 实例（基于 Multi-Raft 复制协议）组成，每个元数据分片表示一个 Inode 范围元数据，其中包含两棵内存 B-Tree 树：inode BTree 与 dentry BTree。</p>
+<blockquote>
+<p>元数据实例最少需要 3 个，支持水平扩容。</p>
+</blockquote>
+<p><strong>数据子系统</strong></p>
+<p>分为副本子系统和纠删码子系统，两种子系统可同时存在，也都可单独存在：</p>
+<ul>
+<li>副本子系统由 DataNode 组成，每个节点管理一组数据分片，多个节点的数据分片构成一个副本组；</li>
+<li>纠删码子系统（Blobstore）主要由 BlobNode 模块组成，每个节点管理一组数据块，多个节点的数据块构成一个纠删码条带。</li>
+</ul>
+<blockquote>
+<p>数据节点支持水平扩容。</p>
+</blockquote>
+<p><strong>对象子系统</strong></p>
+<p>由对象节点（ObjectNode）组成，提供了兼容标准 S3 语义的访问协议，可以通过 Amazon S3 SDK 或者是 s3cmd 等工具访问存储资源。</p>
+<p><strong>卷</strong></p>
+<p>逻辑上的概念，由多个元数据和数据分片组成，从客户端的角度看，卷可以被看作是可被容器访问的文件系统实例。从对象存储的角度来看，一个卷对应着一个 bucket。一个卷可以在多个容器中挂载，使得文件可以被不同客户端同时访问。</p>
+<h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><p>CubeFS 的安装方式有很多，包括 Docker、YUM 等等，由于我们这里直接直接在 Kubernetes 上使用，因此我们可以通过 Helm 来安装 CubeFS，各组件会直接使用宿主机网络，使用 <code>hostPath</code> 将磁盘映射到容器中。</p>
+<p>在 Kubernetes 集群中部署 CubeFS 可以按照下图所示的架构进行部署：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/zo97cs.png" alt="img"></p>
+<p>CubeFS 目前由这四部分组成：</p>
+<ul>
+<li><code>Master</code>：资源管理节点，负责维护整个集群的元信息，部署为 StatefulSet 资源。</li>
+<li><code>DataNode</code>：数据存储节点，需要挂载大量磁盘负责文件数据的实际存储，部署为 DaemonSet 资源。</li>
+<li><code>MetaNode</code>：元数据节点，负责存储所有的文件元信息，部署为 DaemonSet 资源。</li>
+<li><code>ObjectNode</code>：负责提供转换 S3 协议提供对象存储的能力，无状态服务，部署为 Deployment 资源。</li>
+</ul>
+<p>在部署之前，我们需要拥有一个至少有 3 个节点（最好 4 个以上，可以容灾）的 Kubernetes 集群，且集群版本需要大于等于 1.15。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl get nodes</span><br><span class="line">NAME     STATUS   ROLES           AGE   VERSION</span><br><span class="line">master   Ready    control-plane   46d   v1.28.7</span><br><span class="line">node1    Ready    &lt;none&gt;          46d   v1.28.7</span><br><span class="line">node2    Ready    &lt;none&gt;          46d   v1.28.7</span><br></pre></td></tr></table></figure>
+
+<p>首先我们需要给节点打上各自的标签，标明这台机器要在 CubeFS 集群中承担的角色：</p>
+<blockquote>
+<p>由于我们这里只有 3 个节点，所以需要这些节点承担一些共同的角色。</p>
+</blockquote>
+<ul>
+<li><code>Master</code> 节点，至少三个，建议为奇数个:</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">kubectl label node master component.cubefs.io/master=enabled</span><br><span class="line">kubectl label node node1 component.cubefs.io/master=enabled</span><br><span class="line">kubectl label node node2 component.cubefs.io/master=enabled</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>MetaNode</code> 元数据节点，至少 3 个，奇偶无所谓:</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">kubectl label node master component.cubefs.io/metanode=enabled</span><br><span class="line">kubectl label node node1 component.cubefs.io/metanode=enabled</span><br><span class="line">kubectl label node node2 component.cubefs.io/metanode=enabled</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>Datanode</code> 数据节点，至少 3 个，奇偶无所谓:</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">kubectl label node master component.cubefs.io/datanode=enabled</span><br><span class="line">kubectl label node node1 component.cubefs.io/datanode=enabled</span><br><span class="line">kubectl label node node2 component.cubefs.io/datanode=enabled</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>ObjectNode</code> 对象存储节点，可以按需进行标记，不需要对象存储功能的话也可以不部署这个组件：</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">kubectl label node node1 component.cubefs.io/objectnode=enabled</span><br><span class="line">kubectl label node node2 component.cubefs.io/objectnode=enabled</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>CSI</code> 组件，用于在 Kubernetes 中使用 CubeFS，需要在所有节点上部署：</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">kubectl label node node1 component.cubefs.io/csi=enabled</span><br><span class="line">kubectl label node node2 component.cubefs.io/csi=enabled</span><br></pre></td></tr></table></figure>
+
+<p>CubeFS 安装时会根据这些标签通过 <code>nodeSelector</code> 进行匹配，然后在机器创建起对应的 Pod。</p>
+<p>接下来我们就可以通过 Helm 来安装 CubeFS 了，首先我们需要将 CubeFS 的 Helm Chart 下载到本地：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">git <span class="built_in">clone</span> https://github.com/cubefs/cubefs-helm</span><br><span class="line"><span class="built_in">cd</span> cubefs-helm</span><br></pre></td></tr></table></figure>
+
+<p>然后根据自身环境定制 values 文件，比如下面是一个简单的 values 文件：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># cubefs-values.yaml</span></span><br><span class="line"><span class="attr">component:</span></span><br><span class="line">  <span class="attr">master:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">datanode:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">metanode:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">objectnode:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">client:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">csi:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">monitor:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">ingress:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="attr">image:</span></span><br><span class="line">  <span class="comment"># 3.3.0 版本之前会出现 /lib64/libstdc++.so.6: version `GLIBCXX_3.4.21&#x27; not found 错误</span></span><br><span class="line">  <span class="attr">server:</span> <span class="string">cubefs/cfs-server:v3.3.0</span></span><br><span class="line">  <span class="attr">client:</span> <span class="string">cubefs/cfs-client:v3.3.0</span></span><br><span class="line">  <span class="attr">csi_driver:</span> <span class="string">cnych/cubefs-cfs-csi-driver:3.2.0.150.0</span></span><br><span class="line">  <span class="attr">csi_provisioner:</span> <span class="string">cnych/csi-provisioner:v2.2.2</span></span><br><span class="line">  <span class="attr">csi_attacher:</span> <span class="string">cnych/csi-attacher:v3.4.0</span></span><br><span class="line">  <span class="attr">csi_resizer:</span> <span class="string">cnych/csi-resizer:v1.3.0</span></span><br><span class="line">  <span class="attr">driver_registrar:</span> <span class="string">cnych/csi-node-driver-registrar:v2.5.0</span></span><br><span class="line"></span><br><span class="line"><span class="attr">master:</span></span><br><span class="line">  <span class="comment"># The replicas of master component, at least 3, recommend to be an odd number</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">3</span></span><br><span class="line">  <span class="attr">tolerations:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">key:</span> <span class="string">&quot;node-role.kubernetes.io/control-plane&quot;</span></span><br><span class="line">      <span class="attr">operator:</span> <span class="string">&quot;Exists&quot;</span></span><br><span class="line">      <span class="attr">effect:</span> <span class="string">&quot;NoSchedule&quot;</span></span><br><span class="line">  <span class="attr">resources:</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">requests:</span></span><br><span class="line">      <span class="attr">memory:</span> <span class="string">&quot;512Mi&quot;</span></span><br><span class="line">      <span class="attr">cpu:</span> <span class="string">&quot;500m&quot;</span></span><br><span class="line">    <span class="attr">limits:</span></span><br><span class="line">      <span class="attr">memory:</span> <span class="string">&quot;512Mi&quot;</span></span><br><span class="line">      <span class="attr">cpu:</span> <span class="string">&quot;500m&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">metanode:</span></span><br><span class="line">  <span class="attr">total_mem:</span> <span class="string">&quot;4000000000&quot;</span></span><br><span class="line">  <span class="attr">tolerations:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">key:</span> <span class="string">&quot;node-role.kubernetes.io/control-plane&quot;</span></span><br><span class="line">      <span class="attr">operator:</span> <span class="string">&quot;Exists&quot;</span></span><br><span class="line">      <span class="attr">effect:</span> <span class="string">&quot;NoSchedule&quot;</span></span><br><span class="line">  <span class="attr">resources:</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">requests:</span></span><br><span class="line">      <span class="attr">memory:</span> <span class="string">&quot;512Mi&quot;</span></span><br><span class="line">      <span class="attr">cpu:</span> <span class="string">&quot;500m&quot;</span></span><br><span class="line">    <span class="attr">limits:</span></span><br><span class="line">      <span class="attr">memory:</span> <span class="string">&quot;512Mi&quot;</span></span><br><span class="line">      <span class="attr">cpu:</span> <span class="string">&quot;500m&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">datanode:</span></span><br><span class="line">  <span class="comment"># DataNode 要使用的磁盘，可以挂载多块</span></span><br><span class="line">  <span class="comment"># 格式: 挂载点:保留的空间</span></span><br><span class="line">  <span class="comment"># 保留的空间: 单位字节，当磁盘剩余空间小于该值时将不会再在该磁盘上写入数据</span></span><br><span class="line">  <span class="attr">disks:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">/data0:10000000000</span></span><br><span class="line">  <span class="attr">tolerations:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">key:</span> <span class="string">&quot;node-role.kubernetes.io/control-plane&quot;</span></span><br><span class="line">      <span class="attr">operator:</span> <span class="string">&quot;Exists&quot;</span></span><br><span class="line">      <span class="attr">effect:</span> <span class="string">&quot;NoSchedule&quot;</span></span><br><span class="line">  <span class="attr">resources:</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">requests:</span></span><br><span class="line">      <span class="attr">memory:</span> <span class="string">&quot;512Mi&quot;</span></span><br><span class="line">      <span class="attr">cpu:</span> <span class="string">&quot;500m&quot;</span></span><br><span class="line">    <span class="attr">limits:</span></span><br><span class="line">      <span class="attr">memory:</span> <span class="string">&quot;512Mi&quot;</span></span><br><span class="line">      <span class="attr">cpu:</span> <span class="string">&quot;500m&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="attr">csi:</span></span><br><span class="line">  <span class="attr">driverName:</span> <span class="string">csi.cubefs.com</span></span><br><span class="line">  <span class="attr">logLevel:</span> <span class="string">error</span></span><br><span class="line">  <span class="attr">kubeletPath:</span> <span class="string">/var/lib/kubelet</span></span><br><span class="line">  <span class="attr">controller:</span></span><br><span class="line">    <span class="attr">tolerations:</span> []</span><br><span class="line">    <span class="attr">nodeSelector:</span></span><br><span class="line">      <span class="attr">component.cubefs.io/csi:</span> <span class="string">&quot;enabled&quot;</span></span><br><span class="line">  <span class="attr">node:</span></span><br><span class="line">    <span class="attr">tolerations:</span> []</span><br><span class="line">    <span class="attr">nodeSelector:</span></span><br><span class="line">      <span class="attr">component.cubefs.io/csi:</span> <span class="string">&quot;enabled&quot;</span></span><br><span class="line">    <span class="attr">resources:</span></span><br><span class="line">      <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">      <span class="attr">requests:</span></span><br><span class="line">        <span class="attr">memory:</span> <span class="string">&quot;512Mi&quot;</span></span><br><span class="line">        <span class="attr">cpu:</span> <span class="string">&quot;500m&quot;</span></span><br><span class="line">      <span class="attr">limits:</span></span><br><span class="line">        <span class="attr">memory:</span> <span class="string">&quot;512Mi&quot;</span></span><br><span class="line">        <span class="attr">cpu:</span> <span class="string">&quot;500m&quot;</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">storageClass:</span></span><br><span class="line">    <span class="attr">setToDefault:</span> <span class="literal">false</span></span><br><span class="line">    <span class="attr">reclaimPolicy:</span> <span class="string">&quot;Delete&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># CSI 客户端配置</span></span><br><span class="line"><span class="attr">provisioner:</span></span><br><span class="line">  <span class="comment"># Kubelet 的主目录</span></span><br><span class="line">  <span class="attr">kubelet_path:</span> <span class="string">/var/lib/kubelet</span></span><br></pre></td></tr></table></figure>
+
+<p>然后使用如下命令进行 CubeFS 部署：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">helm upgrade --install cubefs -n cubefs-system ./cubefs-helm/cubefs -f cubefs-values.yaml --create-namespace</span><br></pre></td></tr></table></figure>
+
+<p>部署完成后可以使用命令 <code>kubectl get pods -n cubefs-system</code> 等待所有组件状态变为 Running 即可：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl get pods -n cubefs-system</span><br><span class="line">NAME                                  READY   STATUS     RESTARTS   AGE</span><br><span class="line">cfs-csi-controller-66cdbb664f-pqkp6   4/4     Running    0          28m</span><br><span class="line">cfs-csi-node-966t9                    2/2     Running    0          25m</span><br><span class="line">cfs-csi-node-9f4ts                    2/2     Running    0          25m</span><br><span class="line">datanode-4zfhc                        1/1     Running    0          28m</span><br><span class="line">datanode-blc8w                        1/1     Running    0          28m</span><br><span class="line">datanode-ldj72                        1/1     Running    0          28m</span><br><span class="line">master-0                              1/1     Running    0          28m</span><br><span class="line">master-1                              1/1     Running    0          23m</span><br><span class="line">master-2                              1/1     Running    0          23m</span><br><span class="line">metanode-5csgt                        1/1     Running    0          7m31s</span><br><span class="line">metanode-jvqnl                        1/1     Running    0          7m31s</span><br><span class="line">metanode-vpjtj                        1/1     Running    0          7m31s</span><br></pre></td></tr></table></figure>
+
+<p>各个组件的关键日志会在容器标准输出中输出。</p>
+<p>此外还会自动创建一个 <code>StorageClass</code> 对象，可以通过 <code>kubectl get sc</code> 查看：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl get sc</span><br><span class="line">NAME         PROVISIONER                                   RECLAIMPOLICY   VOLUMEBINDINGMODE   ALLOWVOLUMEEXPANSION   AGE</span><br><span class="line">cfs-sc       csi.cubefs.com                                Delete          Immediate           <span class="literal">true</span>                   29m</span><br></pre></td></tr></table></figure>
+
+<h2 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h2><p>现在我们有了一个可用的 StorageClass 对象了，接下来可以创建一个 PVC 对象来测试 CubeFS 的存储功能。如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># cubefs-pvc.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PersistentVolumeClaim</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">cubefs-pvc</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">default</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">accessModes:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">ReadWriteOnce</span></span><br><span class="line">  <span class="attr">resources:</span></span><br><span class="line">    <span class="attr">requests:</span></span><br><span class="line">      <span class="attr">storage:</span> <span class="string">5Gi</span></span><br><span class="line">  <span class="attr">storageClassName:</span> <span class="string">cfs-sc</span></span><br></pre></td></tr></table></figure>
+
+<p>上面的 PVC 对象中我们通过 <code>storageClassName</code> 指定了使用的 StorageClass 名称，这里是 <code>cfs-sc</code>，这个名称需要和我们之前创建的 StorageClass 名称一致，这样就会根据 <code>cubefs-sc</code> 中定义的参数来创建存储卷。当我们在编写 pvc yaml 主要注意一下参数：</p>
+<ul>
+<li><code>metadata.name</code>：pvc 的名称，可以按需修改，同一个 namespace 下 pvc 名称是唯一的，不允许有两个相同的名称。</li>
+<li><code>metadata.namespace</code>：pvc 所在的命名空间，按需修改</li>
+<li><code>spec.resources.request.storage</code>：pvc 容量大小。</li>
+<li><code>storageClassName</code>：这是 storage class 的名称。如果想知道当前集群有哪些 storageclass，可以通过命令 <code>kubectl get sc</code> 来查看。</li>
+</ul>
+<p>这里直接应用这个 yaml 文件即可：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl apply -f cubefs-pvc.yaml</span><br></pre></td></tr></table></figure>
+
+<p>执行命令完成后，可以通过命令 <code>kubectl get pvc -n 命名空间</code> 来查看对应 pvc 的状态，Pending 代表正在等待，Bound 代表创建成功。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl get pvc</span><br><span class="line">NAME         STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE</span><br><span class="line">cubefs-pvc   Bound    pvc-53cc95b7-8a05-43f8-8903-f1c6f7b11c05   5Gi        RWO            cfs-sc         3s</span><br></pre></td></tr></table></figure>
+
+<p>如果 PVC 的状态一直处于 Pending，可以通过命令查看原因：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl describe pvc -n 命名空间 PVC 名称</span><br></pre></td></tr></table></figure>
+
+<p>如果报错消息不明显或者看不出错误，则可以使用 <code>kubectl logs</code> 相关命令先查看 csi controller pod 里面的 <code>csi-provisioner</code> 容器的报错信息，<code>csi-provisioner</code> 是 k8s 与 csi driver 的中间桥梁，很多信息都可以在这里的日志查看。</p>
+<p>如果 <code>csi-provisioner</code> 的日志还看不出具体问题，则使用 <code>kubectl exec</code> 相关命令查看 csi controller pod 里面的 cfs-driver 容器的日志，它的日志放在容器里面的 <code>/cfs/logs</code> 下。</p>
+<p>这里不能使用 Kubectl logs 相关命令是因为 cfs-driver 的日志并不是打印到标准输出，而其它几个类似 <code>csi-provisioner</code> 的 sidecar 容器的日志是打印到标准输出的，所以可以使用 <code>kubectl logs</code> 相关命令查看。</p>
+<p>有了 PVC 则接下来就可以在应用中挂载到指定目录了，比如我们这里有一个如下所示的示例：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># cfs-csi-demo.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">cfs-csi-demo</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">default</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">cfs-csi-demo-pod</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">cfs-csi-demo-pod</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">nodeSelector:</span></span><br><span class="line">        <span class="attr">component.cubefs.io/csi:</span> <span class="string">enabled</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">cfs-csi-demo</span></span><br><span class="line">          <span class="attr">image:</span> <span class="string">nginx:1.17.9</span></span><br><span class="line">          <span class="attr">imagePullPolicy:</span> <span class="string">&quot;IfNotPresent&quot;</span></span><br><span class="line">          <span class="attr">ports:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">80</span></span><br><span class="line">              <span class="attr">name:</span> <span class="string">&quot;http-server&quot;</span></span><br><span class="line">          <span class="attr">volumeMounts:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">mountPath:</span> <span class="string">&quot;/usr/share/nginx/html&quot;</span></span><br><span class="line">              <span class="attr">mountPropagation:</span> <span class="string">HostToContainer</span></span><br><span class="line">              <span class="attr">name:</span> <span class="string">mypvc</span></span><br><span class="line">      <span class="attr">volumes:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">mypvc</span></span><br><span class="line">          <span class="attr">persistentVolumeClaim:</span></span><br><span class="line">            <span class="attr">claimName:</span> <span class="string">cubefs-pvc</span></span><br></pre></td></tr></table></figure>
+
+<p>上面的资源清单中我们将一个名称为 <code>cubefs-pvc</code> 的 PVC 挂载到 <code>cfs-csi-demo</code> 容器里面的 <code>/usr/share/nginx/html</code> 下。</p>
+<p>同样直接创建这个资源清单即可：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl apply -f cfs-csi-demo.yaml</span><br></pre></td></tr></table></figure>
+
+<p>创建完成后可以通过 <code>kubectl get pods</code> 查看 Pod 的状态：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl get pods -owide</span><br><span class="line">NAME                                      READY   STATUS    RESTARTS       AGE   IP           NODE    NOMINATED NODE   READINESS GATES</span><br><span class="line">cfs-csi-demo-5d456c8d97-sjsvw             1/1     Running   0              78s   10.0.1.85    node1   &lt;none&gt;           &lt;none&gt;</span><br></pre></td></tr></table></figure>
+
+<p>我们可以直接通过往 <code>/usr/share/nginx/html</code> 目录写入文件来测试 CubeFS 的存储功能：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl <span class="built_in">exec</span> -it cfs-csi-demo-5d456c8d97-sjsvw -- /bin/bash</span><br><span class="line">root@cfs-csi-demo-5d456c8d97-sjsvw:/# <span class="built_in">echo</span> <span class="string">&quot;Hello, CubeFS&quot;</span> &gt; /usr/share/nginx/html/index.html</span><br><span class="line">root@cfs-csi-demo-5d456c8d97-sjsvw:/#</span><br></pre></td></tr></table></figure>
+
+<p>然后我们可以将这个 Pod 删除重建，然后查看是否还有这个文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl delete pod cfs-csi-demo-5d456c8d97-sjsvw</span><br><span class="line">$ kubectl get pods</span><br><span class="line">NAME                                      READY   STATUS    RESTARTS       AGE</span><br><span class="line">cfs-csi-demo-5d456c8d97-c245z             1/1     Running   0              3m22s</span><br><span class="line">$ kubectl <span class="built_in">exec</span> -it cfs-csi-demo-5d456c8d97-c245z -- <span class="built_in">ls</span> /usr/share/nginx/html</span><br><span class="line">index.html</span><br><span class="line">$ kubectl <span class="built_in">exec</span> -it cfs-csi-demo-5d456c8d97-c245z -- <span class="built_in">cat</span> /usr/share/nginx/html/index.html</span><br><span class="line">Hello, CubeFS</span><br></pre></td></tr></table></figure>
+
+<p>如果能够看到 <code>Hello, CubeFS</code> 则说明 CubeFS 的存储功能正常。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0/" rel="prev" title="服务发现">
+      <i class="fa fa-chevron-left"></i> 服务发现
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E6%95%B0%E6%8D%AE%E7%AE%A1%E7%90%86%E5%B9%B3%E5%8F%B0%20KubeBlocks/" rel="next" title="数据管理平台 KubeBlocks">
+      数据管理平台 KubeBlocks <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%96%B0%E4%B8%80%E4%BB%A3%E4%BA%91%E5%8E%9F%E7%94%9F%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F-CubeFS"><span class="nav-number">1.</span> <span class="nav-text">新一代云原生存储系统 CubeFS</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%89%B9%E6%80%A7"><span class="nav-number">1.1.</span> <span class="nav-text">特性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84"><span class="nav-number">1.2.</span> <span class="nav-text">整体架构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85"><span class="nav-number">1.3.</span> <span class="nav-text">安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%8B%E8%AF%95"><span class="nav-number">1.4.</span> <span class="nav-text">测试</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Linux 操作系统中的进程与线程的区别 进程 (Process)在 Linux 中，进程 是操作系统进行资源分配的最小单位。它是一个程序的执行实例，拥有独立的内存空间、文件描述符、打开的文件、信号处理、堆栈、程序计数器等资源。每个进程都是相互独立的。 核心特点：  独立性： 每个进程都有自己独立的地址空间，这意味着一个进程的内存崩溃不会直接影响到另一个进程。这提供了强大的隔离性。 资源拥有者：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux 操作系统中的进程与线程的区别">
+<meta property="og:url" content="http://example.com/2025/09/11/Linux%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E4%B8%AD%E7%9A%84%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%8C%BA%E5%88%AB/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="Linux 操作系统中的进程与线程的区别 进程 (Process)在 Linux 中，进程 是操作系统进行资源分配的最小单位。它是一个程序的执行实例，拥有独立的内存空间、文件描述符、打开的文件、信号处理、堆栈、程序计数器等资源。每个进程都是相互独立的。 核心特点：  独立性： 每个进程都有自己独立的地址空间，这意味着一个进程的内存崩溃不会直接影响到另一个进程。这提供了强大的隔离性。 资源拥有者：">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:46:43.306Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/Linux%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E4%B8%AD%E7%9A%84%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%8C%BA%E5%88%AB/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Linux 操作系统中的进程与线程的区别 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Linux%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E4%B8%AD%E7%9A%84%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%8C%BA%E5%88%AB/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Linux 操作系统中的进程与线程的区别
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:46:43" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/Manage/" itemprop="url" rel="index"><span itemprop="name">Manage</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.1k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="Linux-操作系统中的进程与线程的区别"><a href="#Linux-操作系统中的进程与线程的区别" class="headerlink" title="Linux 操作系统中的进程与线程的区别"></a>Linux 操作系统中的进程与线程的区别</h3><hr>
+<h3 id="进程-Process"><a href="#进程-Process" class="headerlink" title="进程 (Process)"></a>进程 (Process)</h3><p>在 Linux 中，<strong>进程</strong> 是操作系统进行<strong>资源分配的最小单位</strong>。它是一个程序的执行实例，拥有独立的内存空间、文件描述符、打开的文件、信号处理、堆栈、程序计数器等资源。每个进程都是相互独立的。</p>
+<p><strong>核心特点：</strong></p>
+<ol>
+<li><strong>独立性：</strong> 每个进程都有自己独立的地址空间，这意味着一个进程的内存崩溃不会直接影响到另一个进程。这提供了<strong>强大的隔离性</strong>。</li>
+<li><strong>资源拥有者：</strong> 进程是系统资源的分配单位，它拥有代码段、数据段、堆、栈、文件描述符、信号、权限等。</li>
+<li><strong>上下文切换开销大：</strong> 进程之间的切换需要保存和恢复完整的上下文（包括所有寄存器、内存映射、打开的文件等），开销相对较大。</li>
+<li><strong>通信复杂：</strong> 进程间通信（IPC，Inter-Process Communication）需要通过特定的机制（如管道、消息队列、共享内存、信号量、套接字等）进行，相对复杂且通常涉及内核介入。</li>
+</ol>
+<hr>
+<h3 id="线程-Thread"><a href="#线程-Thread" class="headerlink" title="线程 (Thread)"></a>线程 (Thread)</h3><p><strong>线程</strong> 是操作系统进行调度的最小单位。一个进程可以包含一个或多个线程。线程是在进程内部执行的独立序列，它们共享进程的地址空间和大部分资源，但拥有独立的程序计数器、栈、寄存器集合等。</p>
+<p><strong>核心特点：</strong></p>
+<ol>
+<li><strong>共享资源：</strong> 同一进程内的所有线程共享该进程的地址空间、文件描述符、全局变量、堆等资源。这意味着它们可以很容易地访问和修改同一份数据。</li>
+<li><strong>轻量级：</strong> 由于线程共享进程的资源，创建和销毁线程的开销比进程小得多。</li>
+<li><strong>上下文切换开销小：</strong> 线程之间的切换只需要保存和恢复线程私有的上下文（栈、寄存器等），比进程切换开销小很多。</li>
+<li><strong>通信简单：</strong> 同一进程内的线程之间可以直接读写共享内存中的数据，通信非常高效和直接（但也容易引发同步问题）。</li>
+<li><strong>不提供隔离性：</strong> 由于共享内存空间，一个线程的崩溃可能会影响到同一进程中的其他线程，甚至导致整个进程崩溃。</li>
+</ol>
+<hr>
+<h3 id="进程与线程的区别总结"><a href="#进程与线程的区别总结" class="headerlink" title="进程与线程的区别总结"></a>进程与线程的区别总结</h3><table>
+<thead>
+<tr>
+<th align="left">特性</th>
+<th align="left">进程 (Process)</th>
+<th align="left">线程 (Thread)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>资源分配</strong></td>
+<td align="left">操作系统进行<strong>资源分配</strong>的最小单位</td>
+<td align="left">操作系统进行<strong>调度</strong>的最小单位</td>
+</tr>
+<tr>
+<td align="left"><strong>拥有资源</strong></td>
+<td align="left">拥有独立的地址空间、文件描述符、资源句柄等</td>
+<td align="left">共享进程的地址空间和大部分资源，有独立的栈和寄存器</td>
+</tr>
+<tr>
+<td align="left"><strong>开销</strong></td>
+<td align="left">创建、销毁、切换开销大</td>
+<td align="left">创建、销毁、切换开销小</td>
+</tr>
+<tr>
+<td align="left"><strong>独立性&#x2F;隔离</strong></td>
+<td align="left">独立性强，崩溃不影响其他进程</td>
+<td align="left">独立性弱，一个线程崩溃可能影响整个进程</td>
+</tr>
+<tr>
+<td align="left"><strong>通信</strong></td>
+<td align="left">复杂（IPC 机制）</td>
+<td align="left">简单（共享内存）</td>
+</tr>
+<tr>
+<td align="left"><strong>是否可并发</strong></td>
+<td align="left">是（进程间并发）</td>
+<td align="left">是（线程间并发，同一进程内）</td>
+</tr>
+<tr>
+<td align="left"><strong>别名</strong></td>
+<td align="left">重量级进程</td>
+<td align="left">轻量级进程（LWP, Light-Weight Process）</td>
+</tr>
+</tbody></table>
+<hr>
+<h3 id="进程的应用场景"><a href="#进程的应用场景" class="headerlink" title="进程的应用场景"></a>进程的应用场景</h3><p>进程因其强大的隔离性而适用于需要独立运行、互相不受影响的任务。</p>
+<ol>
+<li><p><strong>Web 服务器（如 Nginx, Apache）：</strong></p>
+<ul>
+<li><strong>场景说明：</strong> Nginx 或 Apache 通常会启动多个工作进程（worker processes）。每个工作进程处理一部分客户端请求。</li>
+<li><strong>为什么用进程：</strong> 即使一个工作进程因为处理某个请求出错而崩溃，其他工作进程仍然可以继续运行，从而保证服务的可用性。由于每个进程都有独立的内存空间，一个进程的内存泄漏或错误不会扩散到其他进程，提高了系统的健壮性。</li>
+<li><strong>运维视角：</strong> 当一个 Web 服务出现问题时，你可以直接杀死有问题的进程，而不会影响到其他正在运行的实例，这使得故障排查和恢复更加容易。</li>
+</ul>
+</li>
+<li><p><strong>数据库服务器（如 MySQL, PostgreSQL）：</strong></p>
+<ul>
+<li><strong>场景说明：</strong> 数据库服务器可能有多个独立的后台进程，负责不同的任务，如连接管理、查询优化、日志写入、备份等。</li>
+<li><strong>为什么用进程：</strong> 每个子进程可以处理一个客户端连接或特定任务，互相隔离。如果某个查询导致一个进程崩溃，其他连接和任务不会立即受到影响。</li>
+<li><strong>运维视角：</strong> 可以通过 <code>ps aux</code> 查看各个数据库相关进程的状态，根据 CPU&#x2F;内存占用判断是哪个组件或哪个客户端连接导致的问题。</li>
+</ul>
+</li>
+<li><p><strong>Shell 命令执行：</strong></p>
+<ul>
+<li><strong>场景说明：</strong> 当你在命令行中执行一个命令（如 <code>ls</code>、<code>grep</code>、<code>vi</code>）时，系统会为这个命令创建一个新的进程。</li>
+<li><strong>为什么用进程：</strong> 每个命令都在自己的独立环境中运行，互不干扰。即使一个命令执行失败或卡死，也不会影响到你的 Shell 会话或其他正在运行的命令。</li>
+<li><strong>运维视角：</strong> <code>nohup</code> 和 <code>&amp;</code> 符号就是用来让命令在后台作为独立进程运行，即使你关闭终端也不会中断。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3 id="线程的应用场景"><a href="#线程的应用场景" class="headerlink" title="线程的应用场景"></a>线程的应用场景</h3><p>线程因其轻量级和高效的通信而适用于需要共享数据、实现高并发且对隔离性要求不那么极致的任务。</p>
+<ol>
+<li><p><strong>多线程 Web 应用（如 Java Spring Boot, Python Flask&#x2F;Django with Gunicorn&#x2F;uWSGI）：</strong></p>
+<ul>
+<li><strong>场景说明：</strong> 一个 Java Web 应用或 Python Web 服务器进程在接收到多个客户端请求时，可以通过创建多个线程来并发处理这些请求。</li>
+<li><strong>为什么用线程：</strong> 多个请求通常需要访问相同的数据库连接池、缓存或配置文件等资源。线程共享进程的内存空间，使得这些资源的共享和通信变得非常高效，避免了进程间通信的复杂性。创建和销毁线程的开销也比进程小，适合处理大量短生命周期的请求。</li>
+<li><strong>运维视角：</strong> 当这类应用响应缓慢时，我们通常会查看线程池的状态、分析线程的堆栈信息（如 Java 的 <code>jstack</code>），找出是哪个线程阻塞或消耗了大量 CPU。</li>
+</ul>
+</li>
+<li><p><strong>图像处理&#x2F;视频编码&#x2F;科学计算：</strong></p>
+<ul>
+<li><strong>场景说明：</strong> 这些任务通常涉及大量并行计算。例如，图像处理可能需要对图像的不同区域同时进行像素操作，视频编码可能需要同时处理视频的不同帧。</li>
+<li><strong>为什么用线程：</strong> 将大型任务分解成多个小任务，每个小任务分配给一个线程执行。这些线程可以共享输入数据（图像像素数据、视频帧数据），并在不同的 CPU 核心上并行运行，从而显著提高处理速度。</li>
+<li><strong>运维视角：</strong> 在监控这类服务时，会关注其 CPU 利用率是否能充分利用多核处理器，以及是否存在线程死锁或过度竞争的情况。</li>
+</ul>
+</li>
+<li><p><strong>GUI 应用程序（桌面应用）：</strong></p>
+<ul>
+<li><strong>场景说明：</strong> 许多桌面应用程序会使用一个主线程来处理用户界面（UI）的事件和绘制，而将耗时的操作（如文件加载、网络请求、数据处理）放在单独的工作线程中。</li>
+<li><strong>为什么用线程：</strong> 如果耗时操作阻塞了主 UI 线程，应用程序就会“卡死”，无法响应用户操作。通过将这些操作放入独立线程，UI 线程可以保持响应，提高用户体验。这些线程可能需要共享一些应用状态或数据。</li>
+<li><strong>运维视角：</strong> 虽然通常不是直接运维桌面应用，但这体现了线程在保证用户体验和资源利用方面的作用。</li>
+</ul>
+</li>
+<li><p><strong>数据库连接池：</strong></p>
+<ul>
+<li><strong>场景说明：</strong> 应用程序为了避免每次请求都建立新的数据库连接，会维护一个连接池。当有请求来时，从池中获取连接；用完后归还。</li>
+<li><strong>为什么用线程：</strong> 通常由一个或多个后台线程来管理连接池的生命周期、清理过期连接等。这些线程需要访问和更新共享的连接池数据结构。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3 id="运维角度的考量"><a href="#运维角度的考量" class="headerlink" title="运维角度的考量"></a>运维角度的考量</h3><p>作为运维，理解进程与线程的区别，能帮助我们：</p>
+<ul>
+<li><strong>资源监控：</strong> 通过 <code>top</code>&#x2F;<code>htop</code>、<code>ps</code> 等命令，区分进程的 CPU&#x2F;内存占用和线程的活动状态。例如，一个进程内存使用高，可能是某个线程导致了内存泄漏。</li>
+<li><strong>故障排查：</strong><ul>
+<li>如果一个服务进程崩溃，查看其生成的核心转储（core dump）文件，分析其崩溃原因。</li>
+<li>如果一个 Java 应用响应慢，可能是某个线程阻塞，需要使用 <code>jstack</code> 查看线程堆栈。</li>
+</ul>
+</li>
+<li><strong>性能优化：</strong><ul>
+<li>根据应用特点选择合适的并发模型（多进程 vs. 多线程）。</li>
+<li>调整进程数或线程池大小，以适应不同的负载。</li>
+<li>识别并解决进程&#x2F;线程间的资源竞争或死锁问题。</li>
+</ul>
+</li>
+<li><strong>架构设计：</strong> 在部署服务时，决定是采用多进程模式（如 Nginx）还是多线程模式（如大部分 Java 应用），这取决于对隔离性、性能和复杂度的权衡。</li>
+</ul>
+<p>总结来说，进程提供了强大的隔离性，是资源调度的基本单位；线程提供了高效的并发和数据共享能力，是 CPU 调度的基本单位。它们在 Linux 操作系统中各司其职，共同构建了高效、稳定的并发执行环境。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Linux%20%E6%95%85%E9%9A%9C%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7/" rel="prev" title="Linux 故障诊断工具">
+      <i class="fa fa-chevron-left"></i> Linux 故障诊断工具
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Linux%20%E6%8E%92%E6%9F%A5%E5%91%BD%E4%BB%A4/" rel="next" title="Linux 排查命令">
+      Linux 排查命令 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Linux-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E4%B8%AD%E7%9A%84%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-number">1.</span> <span class="nav-text">Linux 操作系统中的进程与线程的区别</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B-Process"><span class="nav-number">2.</span> <span class="nav-text">进程 (Process)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B-Thread"><span class="nav-number">3.</span> <span class="nav-text">线程 (Thread)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%8C%BA%E5%88%AB%E6%80%BB%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">进程与线程的区别总结</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E7%9A%84%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">5.</span> <span class="nav-text">进程的应用场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">6.</span> <span class="nav-text">线程的应用场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%90%E7%BB%B4%E8%A7%92%E5%BA%A6%E7%9A%84%E8%80%83%E9%87%8F"><span class="nav-number">7.</span> <span class="nav-text">运维角度的考量</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

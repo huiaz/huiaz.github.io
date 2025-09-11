@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="rune 和 byte   核心区别：代表的“单位”不同简洁地说：  byte 代表一个字节 (8 bits)。 rune 代表一个 Unicode 码点（即一个字符）。   详细解析1. byte 类型 底层类型： byte 是 uint8 的别名。 1type byte &#x3D; uint8 这意味着 byte 类型就是一个无符号的 8 位整型，其值范围是 0 到 255。  代表意义：  一个字节">
+<meta property="og:type" content="article">
+<meta property="og:title" content="byte">
+<meta property="og:url" content="http://example.com/2025/09/11/byte/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="rune 和 byte   核心区别：代表的“单位”不同简洁地说：  byte 代表一个字节 (8 bits)。 rune 代表一个 Unicode 码点（即一个字符）。   详细解析1. byte 类型 底层类型： byte 是 uint8 的别名。 1type byte &#x3D; uint8 这意味着 byte 类型就是一个无符号的 8 位整型，其值范围是 0 到 255。  代表意义：  一个字节">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:24:52.681Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Go">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/byte/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>byte | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/byte/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          byte
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:24:52" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/go/" itemprop="url" rel="index"><span itemprop="name">go</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.8k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><code>rune</code> 和 <code>byte</code> </p>
+<hr>
+<h3 id="核心区别：代表的“单位”不同"><a href="#核心区别：代表的“单位”不同" class="headerlink" title="核心区别：代表的“单位”不同"></a>核心区别：代表的“单位”不同</h3><p>简洁地说：</p>
+<ul>
+<li><strong><code>byte</code> 代表一个字节 (8 bits)。</strong></li>
+<li><strong><code>rune</code> 代表一个 Unicode 码点（即一个字符）。</strong></li>
+</ul>
+<hr>
+<h3 id="详细解析"><a href="#详细解析" class="headerlink" title="详细解析"></a>详细解析</h3><h4 id="1-byte-类型"><a href="#1-byte-类型" class="headerlink" title="1. byte 类型"></a>1. <code>byte</code> 类型</h4><ul>
+<li><p><strong>底层类型：</strong> <code>byte</code> 是 <code>uint8</code> 的别名。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> <span class="type">byte</span> = <span class="type">uint8</span></span><br></pre></td></tr></table></figure>
+<p>这意味着 <code>byte</code> 类型就是一个无符号的 8 位整型，其值范围是 0 到 255。</p>
+</li>
+<li><p><strong>代表意义：</strong></p>
+<ul>
+<li><strong>一个字节：</strong> 它是计算机内存中可寻址的最小单位。</li>
+<li><strong>原始数据：</strong> <code>byte</code> 通常用于处理原始的二进制数据流，比如网络传输中的数据包、文件内容、图片数据等。</li>
+<li><strong>ASCII 字符：</strong> 对于 ASCII 字符集（英文字母、数字、常见符号），一个字符恰好占用一个字节，所以 <code>byte</code> 也可以表示这些单一字节的字符。</li>
+</ul>
+</li>
+<li><p><strong>Go 字符串与 <code>byte</code>：</strong></p>
+<ul>
+<li>在 Go 语言中，**字符串的底层是 UTF-8 编码的字节序列(<code>[]byte</code>)**。<code>len(someString)</code> 返回的是字符串的字节数，而不是字符数。</li>
+<li>当你直接对字符串进行索引访问时（如 <code>s[0]</code>），你得到的是一个 <code>byte</code> 值，代表该索引位置的原始字节。</li>
+<li>当使用 <code>for i, v := range someString &#123;&#125;</code> 循环字符串时，如果 <code>v</code> 被推断为 <code>byte</code>，那么循环会按字节进行，这对于多字节字符（如汉字）是不正确的。然而，Go 语言的 <code>for range</code> 对字符串有特殊处理，它会按 <strong><code>rune</code></strong> 来迭代。</li>
+</ul>
+</li>
+<li><p><strong>示例：</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    s := <span class="string">&quot;Hello&quot;</span></span><br><span class="line">    b := s[<span class="number">0</span>] <span class="comment">// 获取第一个字节 &#x27;H&#x27; 的 ASCII 值</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;s[0] is a byte: %v (as int), %c (as char)\n&quot;</span>, b, b) <span class="comment">// 输出: s[0] is a byte: 72 (as int), H (as char)</span></span><br><span class="line"></span><br><span class="line">    data := []<span class="type">byte</span>&#123;<span class="number">0x48</span>, <span class="number">0x65</span>, <span class="number">0x6C</span>, <span class="number">0x6C</span>, <span class="number">0x6F</span>&#125; <span class="comment">// 直接创建字节切片</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;Byte slice: %v, converted to string: %s\n&quot;</span>, data, <span class="type">string</span>(data)) <span class="comment">// 输出: Byte slice: [72 101 108 108 111], converted to string: Hello</span></span><br><span class="line"></span><br><span class="line">    chineseStrBytes := []<span class="type">byte</span>(<span class="string">&quot;你好&quot;</span>) <span class="comment">// Go 字符串字面量默认UTF-8编码</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;中文 &#x27;你好&#x27; 的字节长度: %d\n&quot;</span>, <span class="built_in">len</span>(chineseStrBytes)) <span class="comment">// 输出: 6 (每个汉字3个字节)</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;中文 &#x27;你好&#x27; 的字节表示: %v\n&quot;</span>, chineseStrBytes) <span class="comment">// 输出: [228 189 160 229 165 189]</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h4 id="2-rune-类型"><a href="#2-rune-类型" class="headerlink" title="2. rune 类型"></a>2. <code>rune</code> 类型</h4><ul>
+<li><p><strong>底层类型：</strong> <code>rune</code> 是 <code>int32</code> 的别名。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> <span class="type">rune</span> = <span class="type">int32</span></span><br></pre></td></tr></table></figure>
+<p>这意味着 <code>rune</code> 类型是一个 32 位整型，其值范围足以覆盖所有可能的 Unicode 码点（从 U+0000 到 U+10FFFF）。</p>
+</li>
+<li><p><strong>代表意义：</strong></p>
+<ul>
+<li><strong>一个 Unicode 码点：</strong> 它是对单个字符的抽象，无论这个字符在 UTF-8 编码中占用多少个字节（1到4个字节）。</li>
+<li><strong>字符处理：</strong> <code>rune</code> 主要用于处理人类可读的文本，特别是当涉及到多语言（如中文、日文、韩文）或特殊符号（如表情符号）时。</li>
+</ul>
+</li>
+<li><p><strong>Go 字符串与 <code>rune</code>：</strong></p>
+<ul>
+<li>当你想要获取字符串的“字符”长度时，你需要将字符串转换为 <code>[]rune</code> 切片，再获取其长度：<code>len([]rune(someString))</code>。</li>
+<li><code>for range</code> 循环字符串时，它会自动解码 UTF-8 字节序列，每次迭代返回一个 <code>rune</code>（字符）和一个字节索引（该字符在原字符串中的起始字节位置）。这是 Go 语言处理 Unicode 字符串的<strong>惯用且推荐的方式</strong>。</li>
+</ul>
+</li>
+<li><p><strong>示例：</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    s := <span class="string">&quot;你好Go😀&quot;</span> <span class="comment">// 中文 + 英文 + 表情符号</span></span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 字符串的字节长度</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;字符串的字节长度: %d\n&quot;</span>, <span class="built_in">len</span>(s)) <span class="comment">// 输出: 11 (你3字节，好3字节，G1字节，o1字节，😀4字节)</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 转换为 []rune 切片，获取字符长度</span></span><br><span class="line">    runes := []<span class="type">rune</span>(s)</span><br><span class="line">    fmt.Printf(<span class="string">&quot;字符串的字符长度 (rune count): %d\n&quot;</span>, <span class="built_in">len</span>(runes)) <span class="comment">// 输出: 5 (你，好，G，o，😀)</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 使用 for range 遍历字符串，获取的是 rune</span></span><br><span class="line">    fmt.Println(<span class="string">&quot;\n使用 for range 遍历字符串:&quot;</span>)</span><br><span class="line">    <span class="keyword">for</span> i, r := <span class="keyword">range</span> s &#123; <span class="comment">// i 是字符在原始字符串中的起始字节索引；r 是 rune</span></span><br><span class="line">        fmt.Printf(<span class="string">&quot;字节索引: %d, rune值: %d (%U), 字符: %c\n&quot;</span>, i, r, r, r)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 输出:</span></span><br><span class="line">    <span class="comment">// 字节索引: 0, rune值: 20320 (U+4F60), 字符: 你  (占用 s[0], s[1], s[2])</span></span><br><span class="line">    <span class="comment">// 字节索引: 3, rune值: 22909 (U+597D), 字符: 好  (占用 s[3], s[4], s[5])</span></span><br><span class="line">    <span class="comment">// 字节索引: 6, rune值: 71 (U+0047), 字符: G   (占用 s[6])</span></span><br><span class="line">    <span class="comment">// 字节索引: 7, rune值: 111 (U+006F), 字符: o   (占用 s[7])</span></span><br><span class="line">    <span class="comment">// 字节索引: 8, rune值: 128512 (U+1F600), 字符: 😀 (占用 s[8], s[9], s[10], s[11])</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<hr>
+<h3 id="对比总结"><a href="#对比总结" class="headerlink" title="对比总结"></a>对比总结</h3><table>
+<thead>
+<tr>
+<th align="left">特性&#x2F;方面</th>
+<th align="left"><code>byte</code> (<code>uint8</code>)</th>
+<th align="left"><code>rune</code> (<code>int32</code>)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>含义</strong></td>
+<td align="left">一个 8 位的字节值</td>
+<td align="left">一个 Unicode 码点（即一个字符）</td>
+</tr>
+<tr>
+<td align="left"><strong>大小</strong></td>
+<td align="left">1 字节</td>
+<td align="left">4 字节</td>
+</tr>
+<tr>
+<td align="left"><strong>范围</strong></td>
+<td align="left">0 到 255</td>
+<td align="left">0x0 到 0x10FFFF (所有 Unicode 码点范围)</td>
+</tr>
+<tr>
+<td align="left"><strong>主要用途</strong></td>
+<td align="left">原始二进制数据、网络传输、文件 I&#x2F;O、ASCII 字符</td>
+<td align="left">多语言文本处理、计算字符数、按字符遍历、国际化应用</td>
+</tr>
+<tr>
+<td align="left"><strong>与字符串关系</strong></td>
+<td align="left">Go 字符串底层是 <code>[]byte</code>（UTF-8 编码），<code>len(s)</code> 返回字节数，<code>s[i]</code> 返回字节</td>
+<td align="left"><code>for range</code> 字符串默认迭代 <code>rune</code>，<code>len([]rune(s))</code> 返回字符数</td>
+</tr>
+<tr>
+<td align="left"><strong>典型场景</strong></td>
+<td align="left"><code>io.Reader/Writer</code>, <code>net.Conn</code>, <code>encoding/binary</code></td>
+<td align="left"><code>unicode</code> 包函数 (如 <code>unicode.IsLetter</code>), <code>strings</code> 包中的字符操作函数</td>
+</tr>
+</tbody></table>
+<p>理解 <code>rune</code> 和 <code>byte</code> 的区别，尤其是 Go 字符串的 UTF-8 编码特性，是编写正确且健壮的 Go 文本处理代码的关键。在处理任何可能包含非 ASCII 字符的文本时，都应优先考虑使用 <code>rune</code> 来进行字符级别的操作。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Go/" rel="tag"># Go</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/configmap/" rel="prev" title="configmap">
+      <i class="fa fa-chevron-left"></i> configmap
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Traefik/" rel="next" title="Traefik">
+      Traefik <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E5%8C%BA%E5%88%AB%EF%BC%9A%E4%BB%A3%E8%A1%A8%E7%9A%84%E2%80%9C%E5%8D%95%E4%BD%8D%E2%80%9D%E4%B8%8D%E5%90%8C"><span class="nav-number">1.</span> <span class="nav-text">核心区别：代表的“单位”不同</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%A6%E7%BB%86%E8%A7%A3%E6%9E%90"><span class="nav-number">2.</span> <span class="nav-text">详细解析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-byte-%E7%B1%BB%E5%9E%8B"><span class="nav-number">2.1.</span> <span class="nav-text">1. byte 类型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-rune-%E7%B1%BB%E5%9E%8B"><span class="nav-number">2.2.</span> <span class="nav-text">2. rune 类型</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AF%B9%E6%AF%94%E6%80%BB%E7%BB%93"><span class="nav-number">3.</span> <span class="nav-text">对比总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

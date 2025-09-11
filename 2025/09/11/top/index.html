@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Linux top 命令top 命令是什么？top（Table of Processes 的缩写）是 Linux 和其他类 Unix 操作系统中最常用的性能监控工具之一。它提供了一个动态、实时的系统进程视图，可以帮助系统管理员和开发者监控系统负载、识别资源占用高的进程，从而进行性能分析和故障排查。  top 命令界面详解当您在终端输入 top 并回车后，会看到一个全屏的、持续更新的界面。这个界面主">
+<meta property="og:type" content="article">
+<meta property="og:title" content="top">
+<meta property="og:url" content="http://example.com/2025/09/11/top/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="Linux top 命令top 命令是什么？top（Table of Processes 的缩写）是 Linux 和其他类 Unix 操作系统中最常用的性能监控工具之一。它提供了一个动态、实时的系统进程视图，可以帮助系统管理员和开发者监控系统负载、识别资源占用高的进程，从而进行性能分析和故障排查。  top 命令界面详解当您在终端输入 top 并回车后，会看到一个全屏的、持续更新的界面。这个界面主">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:08:29.792Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/top/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>top | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/top/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          top
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:08:29" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/Command/" itemprop="url" rel="index"><span itemprop="name">Command</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="Linux-top-命令"><a href="#Linux-top-命令" class="headerlink" title="Linux top 命令"></a>Linux <code>top</code> 命令</h3><h3 id="top-命令是什么？"><a href="#top-命令是什么？" class="headerlink" title="top 命令是什么？"></a><code>top</code> 命令是什么？</h3><p><code>top</code>（Table of Processes 的缩写）是 Linux 和其他类 Unix 操作系统中最常用的性能监控工具之一。它提供了一个动态、实时的系统进程视图，可以帮助系统管理员和开发者监控系统负载、识别资源占用高的进程，从而进行性能分析和故障排查。</p>
+<hr>
+<h3 id="top-命令界面详解"><a href="#top-命令界面详解" class="headerlink" title="top 命令界面详解"></a><code>top</code> 命令界面详解</h3><p>当您在终端输入 <code>top</code> 并回车后，会看到一个全屏的、持续更新的界面。这个界面主要分为两部分：<strong>系统摘要信息区</strong> 和 <strong>进程列表区</strong>。</p>
+<figure class="highlight tap"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">top - 14:30:50 up<span class="number"> 3 </span>days, 21:22, <span class="number"> 1 </span>user,  load average: 0.05, 0.08, 0.09</span><br><span class="line">Tasks:<span class="number"> 236 </span>total,  <span class="number"> 1 </span>running,<span class="number"> 235 </span>sleeping,  <span class="number"> 0 </span>stopped,  <span class="number"> 0 </span>zombie</span><br><span class="line">%Cpu(s):  1.5 us,  0.5 sy,  0.0 ni, 98.0 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st</span><br><span class="line">MiB Mem :  15833.6 total,   7938.4 free,   4855.2 used,   3040.0 buff/cache</span><br><span class="line">MiB Swap:   2048.0 total,   2048.0 free,      0.0 used.  10654.7 avail Mem</span><br><span class="line"></span><br><span class="line">    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND</span><br><span class="line"> <span class="number"> 1234 </span>root     <span class="number"> 20 </span> <span class="number"> 0 </span> 12.5g   1.1g   123m S   3.0   7.2   12:34.56 application</span><br><span class="line"> <span class="number"> 5678 </span>mysql    <span class="number"> 20 </span> <span class="number"> 0 </span>  8.2g 512.5m    12m S   1.5   3.2   5:43.21  mysqld</span><br><span class="line">   ...</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="第一部分：系统摘要信息-Summary-Area"><a href="#第一部分：系统摘要信息-Summary-Area" class="headerlink" title="第一部分：系统摘要信息 (Summary Area)"></a>第一部分：系统摘要信息 (Summary Area)</h4><ol>
+<li><strong>第一行：任务队列信息</strong><ul>
+<li><code>top - 14:30:50</code>：当前系统时间。</li>
+<li><code>up 3 days, 21:22</code>：系统已运行时间。</li>
+<li><code>1 user</code>：当前登录的用户数。</li>
+<li><code>load average: 0.05, 0.08, 0.09</code>：系统负载平均值，分别对应过去 1 分钟、5 分钟、15 分钟的平均负载。这个值可以直观地表示系统的繁忙程度。<ul>
+<li><strong>解读</strong>：如果这个值除以 CPU 核心数，结果持续大于 1，说明 CPU 可能存在瓶颈。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>第二行：任务（进程）状态</strong><ul>
+<li><code>Tasks: 236 total</code>：当前总进程数。</li>
+<li><code>1 running</code>：正在运行的进程数。</li>
+<li><code>235 sleeping</code>：正在“睡眠”（等待事件或资源）的进程数。</li>
+<li><code>0 stopped</code>：被停止的进程数（例如通过 <code>Ctrl+Z</code>）。</li>
+<li><code>0 zombie</code>：僵尸进程数。如果这个值不为 0，需要关注，可能存在程序缺陷。</li>
+</ul>
+</li>
+<li><strong>第三行：CPU 状态</strong><ul>
+<li><code>%Cpu(s):</code> 显示了 CPU 时间的分配情况。</li>
+<li><code>us</code> (user)：用户空间程序占用的 CPU 百分比。</li>
+<li><code>sy</code> (system)：内核空间程序占用的 CPU 百分比。</li>
+<li><code>ni</code> (nice)：被调整过优先级的用户进程占用的 CPU 百分比。</li>
+<li><code>id</code> (idle)：空闲 CPU 百分比。<strong>这个值越高，说明 CPU 越空闲</strong>。</li>
+<li><code>wa</code> (I&#x2F;O wait)：等待 I&#x2F;O 操作完成所占用的 CPU 百分比。<strong>这个值如果持续很高，表明磁盘 I&#x2F;O 可能存在瓶颈</strong>。</li>
+<li><code>hi</code> (hardware interrupt)：处理硬件中断所占用的 CPU 百分比。</li>
+<li><code>si</code> (software interrupt)：处理软件中断所占用的 CPU 百分比。</li>
+<li><code>st</code> (steal time)：（主要用于虚拟机）被虚拟化管理程序“偷走”的 CPU 时间。</li>
+</ul>
+</li>
+<li><strong>第四行：物理内存（RAM）使用情况</strong><ul>
+<li><code>MiB Mem :</code></li>
+<li><code>total</code>：总物理内存。</li>
+<li><code>free</code>：空闲内存。</li>
+<li><code>used</code>：已使用内存。</li>
+<li><code>buff/cache</code>：用作内核缓冲区和页面缓存的内存。Linux 会尽可能利用空闲内存做缓存以提升性能，所以 <code>used</code> 高不一定代表内存不足。</li>
+</ul>
+</li>
+<li><strong>第五行：交换空间（Swap）使用情况</strong><ul>
+<li><code>MiB Swap:</code></li>
+<li><code>total</code>：总交换空间大小。</li>
+<li><code>free</code>：空闲交换空间。</li>
+<li><code>used</code>：已使用交换空间。如果这个值持续增加，说明物理内存可能不足。</li>
+<li><code>avail Mem</code>：可用的内存，是 <code>free</code> 和大部分 <code>buff/cache</code> 的总和，这个指标比 <code>free</code> 更能真实地反映系统可用内存。</li>
+</ul>
+</li>
+</ol>
+<h4 id="第二部分：进程列表区-Process-List-Area"><a href="#第二部分：进程列表区-Process-List-Area" class="headerlink" title="第二部分：进程列表区 (Process List Area)"></a>第二部分：进程列表区 (Process List Area)</h4><p>这里列出了当前系统中的各个进程信息，默认按 CPU 使用率降序排列。</p>
+<ul>
+<li><code>PID</code>：进程 ID。</li>
+<li><code>USER</code>：进程所有者的用户名。</li>
+<li><code>PR</code>：进程优先级（Priority）。</li>
+<li><code>NI</code>：Nice 值。负值表示高优先级，正值表示低优先级。</li>
+<li><code>VIRT</code> (Virtual Memory Size)：进程使用的虚拟内存总量 (KB)。</li>
+<li><code>RES</code> (Resident Memory Size)：进程使用的、未被换出的物理内存大小 (KB)。<strong>这是衡量进程实际内存占用的重要指标</strong>。</li>
+<li><code>SHR</code> (Shared Memory Size)：共享内存大小 (KB)。</li>
+<li><code>S</code>：进程状态（D&#x3D;不可中断的睡眠状态, R&#x3D;运行, S&#x3D;睡眠, T&#x3D;跟踪&#x2F;停止, Z&#x3D;僵尸进程）。</li>
+<li><code>%CPU</code>：自上次更新以来进程所使用的 CPU 时间百分比。</li>
+<li><code>%MEM</code>：进程使用的物理内存百分比。</li>
+<li><code>TIME+</code>：进程启动后累计使用的 CPU 时间，精确到百分之一秒。</li>
+<li><code>COMMAND</code>：启动进程的命令名或命令行。</li>
+</ul>
+<hr>
+<h3 id="日常使用交互命令"><a href="#日常使用交互命令" class="headerlink" title="日常使用交互命令"></a>日常使用交互命令</h3><p>在 <code>top</code> 运行界面，可以输入以下单字符命令进行交互，无需回车：</p>
+<table>
+<thead>
+<tr>
+<th>按键</th>
+<th>功能</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>P</code></td>
+<td>按 <strong>CPU</strong> 使用率排序</td>
+<td>(大写 P) 这是默认排序方式，用于快速找到最耗 CPU 的进程。</td>
+</tr>
+<tr>
+<td><code>M</code></td>
+<td>按 <strong>内存</strong> 使用率排序</td>
+<td>(大写 M) 用于快速找到最耗内存的进程。</td>
+</tr>
+<tr>
+<td><code>N</code></td>
+<td>按 <strong>PID</strong> 排序</td>
+<td>(大写 N)</td>
+</tr>
+<tr>
+<td><code>T</code></td>
+<td>按 <strong>运行时间</strong> 排序</td>
+<td>(大写 T)</td>
+</tr>
+<tr>
+<td><code>q</code></td>
+<td><strong>退出</strong> <code>top</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>k</code></td>
+<td><strong>终止</strong> (kill) 进程</td>
+<td>会提示输入要终止的 PID 和发送的信号（默认是 15，即 SIGTERM）。</td>
+</tr>
+<tr>
+<td><code>r</code></td>
+<td><strong>重新设置</strong> (renice) 进程优先级</td>
+<td>会提示输入要操作的 PID 和新的 nice 值。</td>
+</tr>
+<tr>
+<td><code>h</code></td>
+<td>显示<strong>帮助</strong>菜单</td>
+<td></td>
+</tr>
+<tr>
+<td><code>1</code></td>
+<td>切换 <strong>CPU 核心</strong> 显示模式</td>
+<td>在多核 CPU 系统上，按 <code>1</code> 可以在总览和各核心独立显示之间切换。这对于观察 CPU 核心负载是否均衡非常有用。</td>
+</tr>
+<tr>
+<td><code>f</code></td>
+<td><strong>字段管理</strong></td>
+<td>进入字段选择界面，可以自定义显示或隐藏哪些列。</td>
+</tr>
+<tr>
+<td><code>c</code></td>
+<td>切换 <strong>命令</strong> 显示模式</td>
+<td>在 <code>COMMAND</code> 列切换显示命令名和完整的命令行路径及参数。</td>
+</tr>
+<tr>
+<td><code>z</code></td>
+<td><strong>彩色</strong>显示</td>
+<td>切换是否使用彩色高亮显示，便于观察。</td>
+</tr>
+<tr>
+<td><code>u</code></td>
+<td>按<strong>用户</strong>过滤</td>
+<td>输入用户名，只显示该用户的进程。</td>
+</tr>
+</tbody></table>
+<hr>
+<h3 id="问题排查案例"><a href="#问题排查案例" class="headerlink" title="问题排查案例"></a>问题排查案例</h3><p><code>top</code> 是排查线上问题的“第一现场”，以下是几个经典案例。</p>
+<h4 id="案例一：发现并处理-CPU-占用率过高的进程"><a href="#案例一：发现并处理-CPU-占用率过高的进程" class="headerlink" title="案例一：发现并处理 CPU 占用率过高的进程"></a>案例一：发现并处理 CPU 占用率过高的进程</h4><p><strong>问题场景</strong>：应用响应缓慢，感觉服务器很卡。</p>
+<p><strong>排查步骤</strong>：</p>
+<ol>
+<li><p>打开 top：</p>
+<p>在终端输入 top。默认就是按 CPU 使用率 %CPU 降序排列。</p>
+</li>
+<li><p>定位元凶：</p>
+<p>观察列表顶部的几个进程。假设发现一个名为 java 的进程 %CPU 持续在 100% 甚至更高（在多核系统上可能超过 100%）。这通常就是问题的根源。记下它的 PID，例如 1234。</p>
+</li>
+<li><p><strong>分析进程（可选但推荐）</strong>：</p>
+<ul>
+<li><strong>查看完整命令</strong>：按 <code>c</code> 键，查看 <code>COMMAND</code> 列，确认这个 <code>java</code> 进程是哪个应用。例如，可能会显示为 <code>java -jar my-app.jar</code>。</li>
+<li><strong>分析线程</strong>：在 <code>top</code> 界面按 <code>H</code>（大写），可以切换到线程视图，看到是该 <code>java</code> 进程下的哪个线程在消耗 CPU。这对于 Java 应用问题排查（结合 <code>jstack</code>）尤其有用。</li>
+</ul>
+</li>
+<li><p><strong>处理进程</strong>：</p>
+<ul>
+<li><strong>优雅地终止</strong>：按 <code>k</code>，输入 <code>PID</code> <code>1234</code>，然后按回车（使用默认信号 15&#x2F;SIGTERM）。这会尝试让程序正常关闭。</li>
+<li><strong>强制杀死</strong>：如果优雅终止无效，再次按 <code>k</code>，输入 <code>PID</code> <code>1234</code>，然后输入信号 <code>9</code> (SIGKILL)，回车强制杀死。</li>
+<li><strong>重启服务</strong>：杀死进程后，根据业务需要，手动或通过服务管理工具（如 <code>systemctl</code>）重启应用。</li>
+</ul>
+</li>
+</ol>
+<h4 id="案例二：发现并处理内存泄漏"><a href="#案例二：发现并处理内存泄漏" class="headerlink" title="案例二：发现并处理内存泄漏"></a>案例二：发现并处理内存泄漏</h4><p><strong>问题场景</strong>：系统越来越慢，Swap 分区开始被使用，最终可能导致应用被 OOM Killer（Out of Memory Killer）杀死。</p>
+<p><strong>排查步骤</strong>：</p>
+<ol>
+<li><p>打开 top 并按内存排序：</p>
+<p>输入 top，然后按 M (大写 M)，进程列表会按 %MEM 或 RES (物理内存占用) 降序排列。</p>
+</li>
+<li><p>定位元凶：</p>
+<p>观察列表顶部的进程。如果发现某个进程的 RES (物理内存占用) 和 %MEM (内存使用百分比) 持续、缓慢地增长，并且从不下降，那么这个进程很可能存在内存泄漏。同时，观察摘要区的 Swap used 是否在增加。</p>
+</li>
+<li><p>确认问题：</p>
+<p>记下该进程的 PID。持续观察几分钟甚至几小时，确认内存占用确实是只增不减的趋势。</p>
+</li>
+<li><p><strong>处理与分析</strong>：</p>
+<ul>
+<li><strong>临时解决方案</strong>：如果系统濒临崩溃，可以先 <code>kill</code> 掉该进程并重启，暂时恢复服务。</li>
+<li><strong>根本原因分析</strong>：内存泄漏需要代码层面的修复。你需要通知相关的开发人员，并提供你观察到的现象（哪个进程、内存增长情况等）。开发者可能会使用如 Valgrind (C&#x2F;C++)、MAT (Java) 或 memory-profiler (Python) 等更专业的工具来定位具体的泄漏点。</li>
+</ul>
+</li>
+</ol>
+<h4 id="案例三：排查-I-O-瓶颈"><a href="#案例三：排查-I-O-瓶颈" class="headerlink" title="案例三：排查 I&#x2F;O 瓶颈"></a>案例三：排查 I&#x2F;O 瓶颈</h4><p><strong>问题场景</strong>：应用响应慢，但 <code>top</code> 显示 CPU 空闲率 <code>%id</code> 很高，CPU 并没有跑满。</p>
+<p><strong>排查步骤</strong>：</p>
+<ol>
+<li><p>观察 CPU 等待 I&#x2F;O (wa)：</p>
+<p>在 top 的摘要信息区，重点关注 %Cpu(s) 这一行的 wa 值。如果这个值持续很高（例如，超过 20%），说明 CPU 有大量时间在等待磁盘或网络 I&#x2F;O 操作完成。</p>
+</li>
+<li><p>定位引起 I&#x2F;O 的进程：</p>
+<p>虽然 top 本身不能直接按 I&#x2F;O 排序，但通常高 I&#x2F;O 的进程也会伴随一定的 sy (系统内核) CPU 占用。你可以观察 S (状态) 列，如果一个进程长时间处于 D (不可中断的睡眠) 状态，它很可能就在等待 I&#x2F;O。</p>
+</li>
+<li><p>使用更专业的工具确认：</p>
+<p>当 top 指示出 I&#x2F;O 问题时，通常需要结合其他工具进一步分析。</p>
+<ul>
+<li><code>iotop</code>：一个类似 <code>top</code> 的工具，专门用来显示磁盘 I&#x2F;O 的使用情况，可以清晰地看到哪个进程正在进行大量的读写操作。</li>
+<li><code>iostat -x 1</code>：可以详细地看到每个磁盘设备的读写速率、等待时间等关键指标。</li>
+</ul>
+</li>
+<li><p><strong>解决问题</strong>：</p>
+<ul>
+<li><strong>数据库问题</strong>：可能是慢查询导致了大量的磁盘读。需要优化 SQL 或索引。</li>
+<li><strong>日志写入过多</strong>：应用产生了大量日志，占满了磁盘带宽。可以调整日志级别或优化日志写入方式。</li>
+<li><strong>磁盘性能不足</strong>：物理磁盘本身性能达到了瓶颈，考虑更换更快的磁盘（如 SSD）。</li>
+</ul>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/shell/" rel="prev" title="shell-mail">
+      <i class="fa fa-chevron-left"></i> shell-mail
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/shell-%E7%AE%A1%E9%81%93/" rel="next" title="shell-管道">
+      shell-管道 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Linux-top-%E5%91%BD%E4%BB%A4"><span class="nav-number">1.</span> <span class="nav-text">Linux top 命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#top-%E5%91%BD%E4%BB%A4%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="nav-number">2.</span> <span class="nav-text">top 命令是什么？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#top-%E5%91%BD%E4%BB%A4%E7%95%8C%E9%9D%A2%E8%AF%A6%E8%A7%A3"><span class="nav-number">3.</span> <span class="nav-text">top 命令界面详解</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E9%83%A8%E5%88%86%EF%BC%9A%E7%B3%BB%E7%BB%9F%E6%91%98%E8%A6%81%E4%BF%A1%E6%81%AF-Summary-Area"><span class="nav-number">3.1.</span> <span class="nav-text">第一部分：系统摘要信息 (Summary Area)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E9%83%A8%E5%88%86%EF%BC%9A%E8%BF%9B%E7%A8%8B%E5%88%97%E8%A1%A8%E5%8C%BA-Process-List-Area"><span class="nav-number">3.2.</span> <span class="nav-text">第二部分：进程列表区 (Process List Area)</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%97%A5%E5%B8%B8%E4%BD%BF%E7%94%A8%E4%BA%A4%E4%BA%92%E5%91%BD%E4%BB%A4"><span class="nav-number">4.</span> <span class="nav-text">日常使用交互命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5%E6%A1%88%E4%BE%8B"><span class="nav-number">5.</span> <span class="nav-text">问题排查案例</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%A1%88%E4%BE%8B%E4%B8%80%EF%BC%9A%E5%8F%91%E7%8E%B0%E5%B9%B6%E5%A4%84%E7%90%86-CPU-%E5%8D%A0%E7%94%A8%E7%8E%87%E8%BF%87%E9%AB%98%E7%9A%84%E8%BF%9B%E7%A8%8B"><span class="nav-number">5.1.</span> <span class="nav-text">案例一：发现并处理 CPU 占用率过高的进程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%A1%88%E4%BE%8B%E4%BA%8C%EF%BC%9A%E5%8F%91%E7%8E%B0%E5%B9%B6%E5%A4%84%E7%90%86%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F"><span class="nav-number">5.2.</span> <span class="nav-text">案例二：发现并处理内存泄漏</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%A1%88%E4%BE%8B%E4%B8%89%EF%BC%9A%E6%8E%92%E6%9F%A5-I-O-%E7%93%B6%E9%A2%88"><span class="nav-number">5.3.</span> <span class="nav-text">案例三：排查 I&#x2F;O 瓶颈</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="应用监控前面我们和大家介绍了 Prometheus 的数据指标是通过一个公开的 HTTP(S) 数据接口获取到的，我们不需要单独安装监控的 agent，只需要暴露一个 metrics 接口，Prometheus 就会定期去拉取数据；对于一些普通的 HTTP 服务，我们完全可以直接重用这个服务，添加一个 &#x2F;metrics 接口暴露给 Prometheus；而且获取到的指标数据格式是非常易懂的，不需要">
+<meta property="og:type" content="article">
+<meta property="og:title" content="应用监控">
+<meta property="og:url" content="http://example.com/2025/09/11/%E5%BA%94%E7%94%A8%E7%9B%91%E6%8E%A7/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="应用监控前面我们和大家介绍了 Prometheus 的数据指标是通过一个公开的 HTTP(S) 数据接口获取到的，我们不需要单独安装监控的 agent，只需要暴露一个 metrics 接口，Prometheus 就会定期去拉取数据；对于一些普通的 HTTP 服务，我们完全可以直接重用这个服务，添加一个 &#x2F;metrics 接口暴露给 Prometheus；而且获取到的指标数据格式是非常易懂的，不需要">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/s9m1dd.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/ycw6t9.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/qp8wyj.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/gjt6os.png">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:19:28.192Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta property="article:tag" content="Prometheus">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://mudutestmenu.mudu.tv/upload/s9m1dd.png">
+
+<link rel="canonical" href="http://example.com/2025/09/11/%E5%BA%94%E7%94%A8%E7%9B%91%E6%8E%A7/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>应用监控 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/%E5%BA%94%E7%94%A8%E7%9B%91%E6%8E%A7/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          应用监控
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:19:28" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/" itemprop="url" rel="index"><span itemprop="name">k8s-monitor</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/Prometheus/" itemprop="url" rel="index"><span itemprop="name">Prometheus</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/Prometheus/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>6.8k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>6 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="应用监控"><a href="#应用监控" class="headerlink" title="应用监控"></a>应用监控</h1><p>前面我们和大家介绍了 Prometheus 的数据指标是通过一个公开的 HTTP(S) 数据接口获取到的，我们不需要单独安装监控的 agent，只需要暴露一个 <code>metrics</code> 接口，Prometheus 就会定期去拉取数据；对于一些普通的 HTTP 服务，我们完全可以直接重用这个服务，添加一个 <code>/metrics</code> 接口暴露给 Prometheus；而且获取到的指标数据格式是非常易懂的，不需要太高的学习成本。</p>
+<p>现在很多服务从一开始就内置了一个 <code>/metrics</code> 接口，比如 Kubernetes 的各个组件都直接提供了数据指标接口，有一些服务即使没有原生集成该接口，也完全可以使用一些 <code>exporter</code> 来获取到指标数据，比如 <code>mysqld_exporter</code>、<code>node_exporter</code>，这些 <code>exporter</code> 就有点类似于传统监控服务中的 agent，作为服务一直存在，用来收集目标服务的指标数据然后直接暴露给 Prometheus。</p>
+<h2 id="普通应用"><a href="#普通应用" class="headerlink" title="普通应用"></a>普通应用</h2><p>对于普通应用只需要能够提供一个满足 Prometheus 格式要求的 <code>/metrics</code> 接口就可以让 Prometheus 来接管监控，比如 Kubernetes 集群中非常重要的 CoreDNS 插件，一般默认情况下就开启了 <code>/metrics</code> 接口：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">☸ ➜ kubectl get cm coredns -n kube-system -o yaml</span><br><span class="line">apiVersion: v1</span><br><span class="line">data:</span><br><span class="line">  Corefile: |</span><br><span class="line">    .:53 &#123;</span><br><span class="line">        errors</span><br><span class="line">        health &#123;</span><br><span class="line">           lameduck 5s</span><br><span class="line">        &#125;</span><br><span class="line">        ready</span><br><span class="line">        kubernetes cluster.local in-addr.arpa ip6.arpa &#123;</span><br><span class="line">           pods insecure</span><br><span class="line">           fallthrough in-addr.arpa ip6.arpa</span><br><span class="line">           ttl 30</span><br><span class="line">        &#125;</span><br><span class="line">        prometheus :9153  # 开启 metrics</span><br><span class="line">        forward . /etc/resolv.conf &#123;</span><br><span class="line">           max_concurrent 1000</span><br><span class="line">        &#125;</span><br><span class="line">        cache 30</span><br><span class="line">        loop</span><br><span class="line">        reload</span><br><span class="line">        loadbalance</span><br><span class="line">    &#125;</span><br><span class="line">kind: ConfigMap</span><br><span class="line">metadata:</span><br><span class="line">  creationTimestamp: &quot;2021-10-25T12:33:14Z&quot;</span><br><span class="line">  managedFields:</span><br><span class="line">  - apiVersion: v1</span><br><span class="line">    fieldsType: FieldsV1</span><br><span class="line">    fieldsV1:</span><br><span class="line">      f:data:</span><br><span class="line">        .: &#123;&#125;</span><br><span class="line">        f:Corefile: &#123;&#125;</span><br><span class="line">    manager: kubeadm</span><br><span class="line">    operation: Update</span><br><span class="line">    time: &quot;2021-10-25T12:33:14Z&quot;</span><br><span class="line">  name: coredns</span><br><span class="line">  namespace: kube-system</span><br><span class="line">  resourceVersion: &quot;266&quot;</span><br><span class="line">  uid: a93814d5-53a8-4bf6-9804-db6ec4c726cd</span><br></pre></td></tr></table></figure>
+
+
+
+<p>上面 ConfigMap 中 <code>prometheus :9153</code> 就是开启 prometheus 的插件：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">☸ ➜ kubectl get pods -n kube-system -l k8s-app=kube-dns -o wide</span><br><span class="line">NAME                       READY   STATUS    RESTARTS        AGE     IP            NODE      NOMINATED NODE   READINESS GATES</span><br><span class="line">coredns-7568f67dbd-jw9cc   1/1     Running   5 (9m54s ago)   2d19h   10.244.0.23   master1   &lt;none&gt;           &lt;none&gt;</span><br><span class="line">coredns-7568f67dbd-vv5v5   1/1     Running   5 (9m54s ago)   2d19h   10.244.0.25   master1   &lt;none&gt;           &lt;none&gt;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>我们可以先尝试手动访问下 <code>/metrics</code> 接口，如果能够手动访问到那证明接口是没有任何问题的：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">☸ ➜ curl http://10.244.0.25:9153/metrics</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">HELP coredns_build_info A metric with a constant <span class="string">&#x27;1&#x27;</span> value labeled by version, revision, and goversion from <span class="built_in">which</span> CoreDNS was built.</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">TYPE coredns_build_info gauge</span></span><br><span class="line">coredns_build_info&#123;goversion=&quot;go1.16.4&quot;,revision=&quot;053c4d5&quot;,version=&quot;1.8.4&quot;&#125; 1</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">HELP coredns_cache_entries The number of elements <span class="keyword">in</span> the cache.</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">TYPE coredns_cache_entries gauge</span></span><br><span class="line">coredns_cache_entries&#123;server=&quot;dns://:53&quot;,type=&quot;denial&quot;&#125; 2</span><br><span class="line">coredns_cache_entries&#123;server=&quot;dns://:53&quot;,type=&quot;success&quot;&#125; 1</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">HELP coredns_cache_hits_total The count of cache hits.</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">TYPE coredns_cache_hits_total counter</span></span><br><span class="line">coredns_cache_hits_total&#123;server=&quot;dns://:53&quot;,type=&quot;success&quot;&#125; 20</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">HELP coredns_cache_misses_total The count of cache misses.</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">TYPE coredns_cache_misses_total counter</span></span><br><span class="line">coredns_cache_misses_total&#123;server=&quot;dns://:53&quot;&#125; 4</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+
+
+
+<p>我们可以看到可以正常访问到，从这里可以看到 CoreDNS 的监控数据接口是正常的了，然后我们就可以将这个 <code>/metrics</code> 接口配置到 <code>prometheus.yml</code> 中去了，直接加到默认的 prometheus 这个 <code>job</code> 下面：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># prometheus-cm.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ConfigMap</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">prometheus-config</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-mon</span></span><br><span class="line"><span class="attr">data:</span></span><br><span class="line">  <span class="attr">prometheus.yml:</span> <span class="string">|</span></span><br><span class="line"><span class="string">    global:</span></span><br><span class="line"><span class="string">      scrape_interval: 15s</span></span><br><span class="line"><span class="string">      scrape_timeout: 15s</span></span><br><span class="line"><span class="string"></span></span><br><span class="line">    <span class="attr">scrape_configs:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">job_name:</span> <span class="string">&#x27;prometheus&#x27;</span></span><br><span class="line">      <span class="attr">static_configs:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">targets:</span> [<span class="string">&#x27;localhost:9090&#x27;</span>]</span><br><span class="line"></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">job_name:</span> <span class="string">&#x27;coredns&#x27;</span></span><br><span class="line">      <span class="attr">static_configs:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">targets:</span> [<span class="string">&#x27;10.244.0.23:9153&#x27;</span>, <span class="string">&#x27;10.244.0.25:9153&#x27;</span>]</span><br></pre></td></tr></table></figure>
+
+<p>当然，我们这里只是一个很简单的配置，<code>scrape_configs</code> 下面可以支持很多参数，例如：</p>
+<ul>
+<li><code>basic_auth</code> 和 <code>bearer_token</code>：比如我们提供的 <code>/metrics</code> 接口需要 basic 认证的时候，通过传统的用户名&#x2F;密码或者在请求的 header 中添加对应的 token 都可以支持</li>
+<li><code>kubernetes_sd_configs</code> 或 <code>consul_sd_configs</code>：可以用来自动发现一些应用的监控数据</li>
+</ul>
+<p>这些大部分属性前面我们已经介绍过了，现在我们重新更新这个 ConfigMap 资源对象：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">☸ ➜ kubectl apply -f https://p8s.io/docs/k8s/manifests/prometheus/config-2.yaml</span><br><span class="line">configmap/prometheus-config configured</span><br></pre></td></tr></table></figure>
+
+<p>配置文件内容变更后，隔一会儿被挂载到 Pod 中的 <code>prometheus.yml</code> 文件也会更新，由于我们之前的 Prometheus 启动参数中添加了 <code>--web.enable-lifecycle</code> 参数，所以现在我们只需要执行一个 <code>reload</code> 命令即可让配置生效：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">☸ ➜ kubectl get pods -n kube-mon -o wide</span><br><span class="line">NAME                          READY   STATUS    RESTARTS      AGE   IP            NODE    NOMINATED NODE   READINESS GATES</span><br><span class="line">prometheus-649968556c-t4prd   1/1     Running   1 (17m ago)   27h   10.244.2.46   node2   &lt;none&gt;           &lt;none&gt;</span><br><span class="line">☸ ➜ curl -X POST &quot;http://10.244.2.46:9090/-/reload&quot;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>由于 ConfigMap 通过 Volume 的形式挂载到 Pod 中去的热更新需要一定的间隔时间才会生效，所以需要稍微等一小会儿。</p>
+</blockquote>
+<p>这个时候我们再去看 Prometheus 的 Dashboard 中查看采集的目标数据：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/s9m1dd.png" alt="prometheus webui coredns"></p>
+<p>可以看到我们刚刚添加的 coredns 这个任务已经出现了，然后同样的我们可以切换到 Graph 下面去，我们可以找到一些 CoreDNS 的指标数据，至于这些指标数据代表什么意义，一般情况下，我们可以去查看对应的 <code>/metrics</code> 接口，里面一般情况下都会有对应的注释。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/ycw6t9.png" alt="prometheus webui coredns metrics"></p>
+<p>到这里我们就在 Prometheus 上配置了第一个 Kubernetes 应用。</p>
+<h2 id="使用-exporter-监控"><a href="#使用-exporter-监控" class="headerlink" title="使用 exporter 监控"></a>使用 exporter 监控</h2><p>上面我们也说过有一些应用可能没有自带 <code>/metrics</code> 接口供 Prometheus 使用，在这种情况下，我们就需要利用 <code>exporter</code> 服务来为 Prometheus 提供指标数据了。Prometheus 官方为许多应用就提供了对应的 <code>exporter</code> 应用，也有许多第三方的实现，我们可以前往官方网站进行查看：<a target="_blank" rel="noopener" href="https://prometheus.io/docs/instrumenting/exporters/">exporters</a>，当然如果你的应用本身也没有 exporter 实现，那么就要我们自己想办法去实现一个 <code>/metrics</code> 接口了，只要你能提供一个合法的 <code>/metrics</code> 接口，Prometheus 就可以监控你的应用。</p>
+<p>比如我们这里通过一个 <a target="_blank" rel="noopener" href="https://github.com/oliver006/redis_exporter">redis-exporter</a> 的服务来监控 redis 服务，对于这类应用，我们一般会以 <code>sidecar</code> 的形式和主应用部署在同一个 Pod 中，比如我们这里来部署一个 redis 应用，并用 redis-exporter 的方式来采集监控数据供 Prometheus 使用，如下资源清单文件：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">redis</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-mon</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">redis</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">redis</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">redis</span></span><br><span class="line">          <span class="attr">image:</span> <span class="string">redis:4</span></span><br><span class="line">          <span class="attr">resources:</span></span><br><span class="line">            <span class="attr">requests:</span></span><br><span class="line">              <span class="attr">cpu:</span> <span class="string">100m</span></span><br><span class="line">              <span class="attr">memory:</span> <span class="string">100Mi</span></span><br><span class="line">          <span class="attr">ports:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">6379</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">redis-exporter</span></span><br><span class="line">          <span class="attr">image:</span> <span class="string">oliver006/redis_exporter:latest</span></span><br><span class="line">          <span class="attr">resources:</span></span><br><span class="line">            <span class="attr">requests:</span></span><br><span class="line">              <span class="attr">cpu:</span> <span class="string">100m</span></span><br><span class="line">              <span class="attr">memory:</span> <span class="string">100Mi</span></span><br><span class="line">          <span class="attr">ports:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">9121</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">redis</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-mon</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">redis</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">redis</span></span><br><span class="line">      <span class="attr">port:</span> <span class="number">6379</span></span><br><span class="line">      <span class="attr">targetPort:</span> <span class="number">6379</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">prom</span></span><br><span class="line">      <span class="attr">port:</span> <span class="number">9121</span></span><br><span class="line">      <span class="attr">targetPort:</span> <span class="number">9121</span></span><br></pre></td></tr></table></figure>
+
+<p>可以看到上面我们在 redis 这个 Pod 中包含了两个容器，一个就是 redis 本身的主应用，另外一个容器就是 redis_exporter。现在直接创建上面的应用：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">☸ ➜ kubectl apply -f https://p8s.io/docs/k8s/manifests/prometheus/redis.yaml</span><br></pre></td></tr></table></figure>
+
+<p>创建完成后，我们可以看到 redis 的 Pod 里面包含有两个容器：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">☸ ➜ kubectl get pods -n kube-mon</span><br><span class="line">NAME                          READY   STATUS    RESTARTS   AGE</span><br><span class="line">prometheus-79b8774f68-7m8zr   1/1     Running   0          54m</span><br><span class="line">redis-7c8bdd45cc-ssjbz        2/2     Running   0          2m1s</span><br><span class="line">☸ ➜ kubectl get svc -n kube-mon</span><br><span class="line">NAME         TYPE       CLUSTER-IP       EXTERNAL-IP   PORT(S)          AGE</span><br><span class="line">prometheus   NodePort   10.111.160.152   &lt;none&gt;        9090:30407/TCP   27h</span><br><span class="line">redis        ClusterIP   10.110.14.69   &lt;none&gt;        6379/TCP,9121/TCP   2m14s</span><br></pre></td></tr></table></figure>
+
+<p>我们可以通过 9121 端口来校验是否能够采集到数据：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">☸ ➜ curl 10.110.14.69:9121/metrics</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">HELP go_gc_duration_seconds A summary of the GC invocation durations.</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">TYPE go_gc_duration_seconds summary</span></span><br><span class="line">go_gc_duration_seconds&#123;quantile=&quot;0&quot;&#125; 0</span><br><span class="line">go_gc_duration_seconds&#123;quantile=&quot;0.25&quot;&#125; 0</span><br><span class="line">go_gc_duration_seconds&#123;quantile=&quot;0.5&quot;&#125; 0</span><br><span class="line">go_gc_duration_seconds&#123;quantile=&quot;0.75&quot;&#125; 0</span><br><span class="line">go_gc_duration_seconds&#123;quantile=&quot;1&quot;&#125; 0</span><br><span class="line">go_gc_duration_seconds_sum 0</span><br><span class="line">go_gc_duration_seconds_count 0</span><br><span class="line">......</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">HELP redis_up Information about the Redis instance</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">TYPE redis_up gauge</span></span><br><span class="line">redis_up 1</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">HELP redis_uptime_in_seconds uptime_in_seconds metric</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">TYPE redis_uptime_in_seconds gauge</span></span><br><span class="line">redis_uptime_in_seconds 100</span><br></pre></td></tr></table></figure>
+
+<p>同样的，现在我们只需要更新 Prometheus 的配置文件：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">job_name:</span> <span class="string">&quot;redis&quot;</span></span><br><span class="line">  <span class="attr">static_configs:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">targets:</span> [<span class="string">&quot;redis:9121&quot;</span>]</span><br></pre></td></tr></table></figure>
+
+<p>由于我们这里是通过 Service 去配置的 redis 服务，当然直接配置 Pod IP 也是可以的，因为和 Prometheus 处于同一个 namespace，所以我们直接使用 servicename 即可。配置文件更新后，重新加载：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">☸ ➜ kubectl apply -f https://p8s.io/docs/k8s/manifests/prometheus/config-3.yaml</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">隔一会儿执行reload操作</span></span><br><span class="line">☸ ➜ curl -X POST &quot;http://10.244.3.174:9090/-/reload&quot;</span><br></pre></td></tr></table></figure>
+
+<p>这个时候我们再去看 Prometheus 的 Dashboard 中查看采集的目标数据：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/qp8wyj.png" alt="prometheus webui redis"></p>
+<p>可以看到配置的 redis 这个 job 已经生效了。切换到 Graph 下面可以看到很多关于 redis 的指标数据，我们选择任意一个指标，比如 <code>redis_exporter_scrapes_total</code>，然后点击执行就可以看到对应的数据图表了：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/gjt6os.png" alt="prometheus webui redisquery"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+              <a href="/tags/Prometheus/" rel="tag"># Prometheus</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" rel="prev" title="性能优化">
+      <i class="fa fa-chevron-left"></i> 性能优化
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E5%B8%B8%E8%A7%81%E7%9A%84%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E6%A8%A1%E5%9E%8B/" rel="next" title="常见的消息队列模型">
+      常见的消息队列模型 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BA%94%E7%94%A8%E7%9B%91%E6%8E%A7"><span class="nav-number">1.</span> <span class="nav-text">应用监控</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%99%AE%E9%80%9A%E5%BA%94%E7%94%A8"><span class="nav-number">1.1.</span> <span class="nav-text">普通应用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-exporter-%E7%9B%91%E6%8E%A7"><span class="nav-number">1.2.</span> <span class="nav-text">使用 exporter 监控</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

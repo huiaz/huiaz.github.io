@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="除了标准的 TCP 四次挥手，还有一些其他方法或特殊情况可以导致连接断开，但它们通常不如四次挥手那样优雅和受控，可能会伴随数据丢失或异常。 1. RST 报文断开连接 (Reset)RST (Reset) 报文是一种 TCP 错误或异常的指示，它会立即终止连接，不会进行标准的四次挥手过程，也不会等待任何未发送或未确认的数据。 RST 报文的常见使用场景：  连接被拒绝： 当客户端尝试连接到一个不存">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TCP 超时重传机制">
+<meta property="og:url" content="http://example.com/2025/09/11/TCP%20%E8%B6%85%E6%97%B6%E9%87%8D%E4%BC%A0%E6%9C%BA%E5%88%B6/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="除了标准的 TCP 四次挥手，还有一些其他方法或特殊情况可以导致连接断开，但它们通常不如四次挥手那样优雅和受控，可能会伴随数据丢失或异常。 1. RST 报文断开连接 (Reset)RST (Reset) 报文是一种 TCP 错误或异常的指示，它会立即终止连接，不会进行标准的四次挥手过程，也不会等待任何未发送或未确认的数据。 RST 报文的常见使用场景：  连接被拒绝： 当客户端尝试连接到一个不存">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:06:25.725Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Network">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/TCP%20%E8%B6%85%E6%97%B6%E9%87%8D%E4%BC%A0%E6%9C%BA%E5%88%B6/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>TCP 超时重传机制 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/TCP%20%E8%B6%85%E6%97%B6%E9%87%8D%E4%BC%A0%E6%9C%BA%E5%88%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          TCP 超时重传机制
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:06:25" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/" itemprop="url" rel="index"><span itemprop="name">WEB</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/Http/" itemprop="url" rel="index"><span itemprop="name">Http</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/Http/TCP/" itemprop="url" rel="index"><span itemprop="name">TCP</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.7k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>2 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>除了标准的 TCP 四次挥手，还有一些其他方法或特殊情况可以导致连接断开，但它们通常不如四次挥手那样优雅和受控，可能会伴随数据丢失或异常。</p>
+<h3 id="1-RST-报文断开连接-Reset"><a href="#1-RST-报文断开连接-Reset" class="headerlink" title="1. RST 报文断开连接 (Reset)"></a>1. RST 报文断开连接 (Reset)</h3><p><code>RST</code> (Reset) 报文是一种 TCP 错误或异常的指示，它会<strong>立即终止</strong>连接，不会进行标准的四次挥手过程，也不会等待任何未发送或未确认的数据。</p>
+<p><strong><code>RST</code> 报文的常见使用场景：</strong></p>
+<ul>
+<li><strong>连接被拒绝：</strong> 当客户端尝试连接到一个不存在的端口或一个拒绝连接的服务器端口时，服务器通常会回复一个 <code>RST</code> 报文，表示连接无法建立。</li>
+<li><strong>中止连接：</strong> 当一方决定突然中止一个连接，而不是通过正常的挥手过程关闭时，会发送 <code>RST</code>。这意味着不再关心对方是否已收到所有数据，也不希望进一步的通信。例如，应用程序调用 <code>SO_LINGER</code> 且 <code>l_onoff</code> 为真，<code>l_linger</code> 为 0 时。</li>
+<li><strong>检测半开连接：</strong> 如果一方的连接已经关闭（比如进程崩溃），而另一方在试图向已关闭的连接发送数据时，操作系统会检测到这个异常并回复一个 <code>RST</code> 报文。</li>
+<li><strong>端口扫描：</strong> 端口扫描工具通常会向目标端口发送 SYN 包，根据收到的响应（SYN-ACK 或 RST）来判断端口是否开放。</li>
+<li><strong>检测连接超时：</strong> 在某些情况下，如果一方长时间没有收到对方的响应，可能会发送一个 <code>RST</code> 来强制关闭连接。</li>
+</ul>
+<p><strong><code>RST</code> 的特点：</strong></p>
+<ul>
+<li><strong>立即关闭：</strong> 连接立即被重置，不再有数据传输或等待。</li>
+<li><strong>无数据确认：</strong> 不会确认任何未送达的数据，可能会导致数据丢失。</li>
+<li><strong>不优雅：</strong> 通常被视为一种异常或错误终止的方式。</li>
+</ul>
+<h3 id="2-半关闭-Half-close"><a href="#2-半关闭-Half-close" class="headerlink" title="2. 半关闭 (Half-close)"></a>2. 半关闭 (Half-close)</h3><p>TCP 连接是全双工的，这意味着数据可以在两个方向上独立传输。半关闭是指<strong>关闭一个方向的数据传输，而保持另一个方向的开放</strong>。这通常通过调用 <code>shutdown()</code> 函数来实现，而不是 <code>close()</code>。</p>
+<ul>
+<li><strong><code>shutdown(sockfd, SHUT_WR)</code>：</strong> 表示关闭套接字的写入方向，即不再发送数据。这会发送一个 <code>FIN</code> 报文给对方。对方会收到 <code>FIN</code>，并确认，但自己的写入方向仍然是开放的，可以继续接收数据。</li>
+<li><strong><code>shutdown(sockfd, SHUT_RD)</code>：</strong> 表示关闭套接字的读取方向，即不再接收数据。这不会发送 <code>FIN</code> 报文给对方。</li>
+<li><strong><code>shutdown(sockfd, SHUT_RDWR)</code>：</strong> 等同于 <code>close()</code>，关闭了读写两个方向，发送 <code>FIN</code> 报文并进行四次挥手。</li>
+</ul>
+<p><strong>用途：</strong> 允许一方发送完所有数据后，告知对方自己不再发送，但仍然可以接收对方可能发送的剩余数据。例如，FTP 协议的某些数据传输模式会利用半关闭。</p>
+<h3 id="3-连接超时或故障"><a href="#3-连接超时或故障" class="headerlink" title="3. 连接超时或故障"></a>3. 连接超时或故障</h3><p>如果一方的连接因为长时间没有活动而超时，或者因为硬件&#x2F;网络故障（如网线拔掉、路由器崩溃、电源故障等）导致无法通信，连接也可能“断开”。</p>
+<ul>
+<li><strong>TCP Keep-alive：</strong> TCP 有一个 <code>Keep-alive</code> 机制，如果长时间没有数据传输，它会发送小探测包来检查连接是否仍然活跃。如果多次探测没有收到响应，TCP 会认为连接已断开，然后通常会在后台发送一个 <code>RST</code> 或报告错误给应用程序。</li>
+<li><strong>应用程序层心跳：</strong> 应用程序自己也可以实现心跳机制，定期发送探测消息来确认对端是否仍然在线，并在超时时主动关闭连接或进行错误处理。</li>
+<li><strong>物理链路中断：</strong> 这是最彻底也是最不优雅的断开方式。当物理连接中断时，TCP 协议栈无法正常收发数据，最终会通过超时等机制感知到连接的断开，并通知应用程序。这种情况下，通常不会有 TCP 报文发出（因为链路已经不通）。</li>
+</ul>
+<h3 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h3><ul>
+<li><strong>四次挥手：</strong> 最优雅和推荐的连接关闭方式，确保数据完全传输且不发生混乱。</li>
+<li><strong>RST 报文：</strong> 强制、立即终止连接，可能导致数据丢失，常用于错误或异常情况。</li>
+<li><strong>半关闭 (<code>shutdown</code>)：</strong> 控制关闭单个方向的传输，常用于特定协议或应用场景。</li>
+<li><strong>超时&#x2F;故障：</strong> 非协议层面的主动断开，由底层网络或操作系统机制发现并处理，可能也涉及隐式的 <code>RST</code> 或错误报告。</li>
+</ul>
+<p>在实际应用中，我们总是应该优先使用标准的四次挥手来关闭连接，以确保数据的完整性和连接的可靠性。只有在特定错误处理或特殊协议需求下，才会考虑其他关闭方式。</p>
+<p>TCP 超时重传机制是 TCP 可靠性传输的核心组成部分之一，它主要为了解决以下核心问题：</p>
+<h3 id="1-网络传输的不可靠性"><a href="#1-网络传输的不可靠性" class="headerlink" title="1. 网络传输的不可靠性"></a>1. 网络传输的不可靠性</h3><p>互联网是一个复杂的、分布式、尽力而为（best-effort）的网络，它不保证数据的可靠传输。在传输过程中，数据包可能会遇到各种问题：</p>
+<ul>
+<li><strong>丢包 (Packet Loss)：</strong> 这是最常见的问题。数据包可能因为网络拥塞、路由器故障、数据链路层错误（如噪声干扰导致帧损坏被丢弃）等原因，在到达目的地之前就丢失了。</li>
+<li><strong>乱序 (Packet Reordering)：</strong> 数据包可能不按发送顺序到达目的地。虽然这不是直接导致重传的原因（因为 TCP 会在接收端进行排序），但如果乱序太严重，或者接收端缓冲区不足，也可能间接导致发送方误判为丢包而重传。</li>
+<li><strong>延迟 (Delay)：</strong> 数据包的传输时间不是恒定的。有些包可能会因为网络拥塞或路由选择变化而经历很长的延迟。</li>
+</ul>
+<h3 id="TCP-超时重传机制如何解决这些问题："><a href="#TCP-超时重传机制如何解决这些问题：" class="headerlink" title="TCP 超时重传机制如何解决这些问题："></a>TCP 超时重传机制如何解决这些问题：</h3><p>TCP 通过以下核心步骤来应对上述不可靠性，实现可靠传输：</p>
+<ol>
+<li><p><strong>确认机制 (Acknowledgement - ACK)：</strong></p>
+<ul>
+<li>发送方发送一个 TCP 报文段后，会启动一个定时器。</li>
+<li>接收方成功收到数据后，会发送一个 <code>ACK</code> 报文给发送方，确认已经收到的数据（通常是它期望收到的下一个字节的序列号）。</li>
+</ul>
+</li>
+<li><p><strong>超时定时器 (Retransmission Timer)：</strong></p>
+<ul>
+<li>当发送方发送数据时，它会为这些数据设置一个重传定时器。</li>
+<li>如果在定时器到期之前，发送方没有收到该数据的 <code>ACK</code> 确认，发送方就会认为该数据包或其 <code>ACK</code> 包已经丢失了。</li>
+</ul>
+</li>
+<li><p><strong>重传 (Retransmission)：</strong></p>
+<ul>
+<li>一旦定时器超时，发送方就会<strong>重新发送</strong>之前未被确认的数据包。</li>
+<li>同时，通常会调整重传定时器的时间，使得下一次重传的等待时间更长（指数退避算法），以适应网络拥塞等情况。</li>
+</ul>
+</li>
+</ol>
+<h3 id="总结-TCP-超时重传机制解决的核心问题："><a href="#总结-TCP-超时重传机制解决的核心问题：" class="headerlink" title="总结 TCP 超时重传机制解决的核心问题："></a>总结 TCP 超时重传机制解决的核心问题：</h3><ul>
+<li><strong>数据丢失：</strong> 这是最主要解决的问题。通过定时器和 ACK 机制，TCP 能够发现哪些数据包没有被成功接收，并进行重传，确保所有数据最终都能到达目的地。</li>
+<li><strong>连接的可靠性：</strong> 结合序列号和确认号，重传机制保证了数据传输的完整性和顺序性，使得应用程序不必担心网络层的不可靠性，可以假定数据是可靠、按序到达的。</li>
+<li><strong>网络效率与拥塞控制的基础：</strong> 超时重传机制不仅仅是简单的重发，它与 TCP 的拥塞控制和流量控制机制紧密结合。当发生重传时，TCP 会降低发送速率（拥塞窗口减小），这有助于缓解网络拥塞，防止情况恶化。重传超时时间（RTO）的动态调整也是关键，它能够适应不断变化的网络条件，避免不必要的重传，同时在真正丢包时又能及时重传。</li>
+</ul>
+<p><strong>简单来说，TCP 超时重传机制就是 TCP 提供“可靠性”的基石，它让应用程序可以放心地发送数据，因为无论底层网络如何波动，TCP 都会确保数据最终完整且按序地交付。</strong></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Network/" rel="tag"># Network</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/TCP-%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B/" rel="prev" title="TCP-四次挥手">
+      <i class="fa fa-chevron-left"></i> TCP-四次挥手
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/TCP%20%E7%9A%84%E7%B2%98%E5%8C%85%E5%92%8C%E6%8B%86%E5%8C%85/" rel="next" title="TCP 的粘包和拆包">
+      TCP 的粘包和拆包 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-RST-%E6%8A%A5%E6%96%87%E6%96%AD%E5%BC%80%E8%BF%9E%E6%8E%A5-Reset"><span class="nav-number">1.</span> <span class="nav-text">1. RST 报文断开连接 (Reset)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%8D%8A%E5%85%B3%E9%97%AD-Half-close"><span class="nav-number">2.</span> <span class="nav-text">2. 半关闭 (Half-close)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E8%BF%9E%E6%8E%A5%E8%B6%85%E6%97%B6%E6%88%96%E6%95%85%E9%9A%9C"><span class="nav-number">3.</span> <span class="nav-text">3. 连接超时或故障</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%EF%BC%9A"><span class="nav-number">4.</span> <span class="nav-text">总结：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E7%BD%91%E7%BB%9C%E4%BC%A0%E8%BE%93%E7%9A%84%E4%B8%8D%E5%8F%AF%E9%9D%A0%E6%80%A7"><span class="nav-number">5.</span> <span class="nav-text">1. 网络传输的不可靠性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP-%E8%B6%85%E6%97%B6%E9%87%8D%E4%BC%A0%E6%9C%BA%E5%88%B6%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3%E8%BF%99%E4%BA%9B%E9%97%AE%E9%A2%98%EF%BC%9A"><span class="nav-number">6.</span> <span class="nav-text">TCP 超时重传机制如何解决这些问题：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93-TCP-%E8%B6%85%E6%97%B6%E9%87%8D%E4%BC%A0%E6%9C%BA%E5%88%B6%E8%A7%A3%E5%86%B3%E7%9A%84%E6%A0%B8%E5%BF%83%E9%97%AE%E9%A2%98%EF%BC%9A"><span class="nav-number">7.</span> <span class="nav-text">总结 TCP 超时重传机制解决的核心问题：</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

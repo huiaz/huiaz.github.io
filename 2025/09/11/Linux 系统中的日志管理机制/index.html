@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Linux 的日志管理机制 一、Linux 日志管理机制概述Linux 系统主要通过 rsyslog (或早期版本中的 syslog-ng, syslogd) 和 journald (systemd 日志管理器) 这两种机制来收集、处理和存储系统日志。 1. rsyslog (或 syslog-ng) 传统且广泛使用： rsyslog 是一个强大的日志处理工具，它能够从内核、应用程序和网络设备收集">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux 系统中的日志管理机制">
+<meta property="og:url" content="http://example.com/2025/09/11/Linux%20%E7%B3%BB%E7%BB%9F%E4%B8%AD%E7%9A%84%E6%97%A5%E5%BF%97%E7%AE%A1%E7%90%86%E6%9C%BA%E5%88%B6/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="Linux 的日志管理机制 一、Linux 日志管理机制概述Linux 系统主要通过 rsyslog (或早期版本中的 syslog-ng, syslogd) 和 journald (systemd 日志管理器) 这两种机制来收集、处理和存储系统日志。 1. rsyslog (或 syslog-ng) 传统且广泛使用： rsyslog 是一个强大的日志处理工具，它能够从内核、应用程序和网络设备收集">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:47:39.388Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/Linux%20%E7%B3%BB%E7%BB%9F%E4%B8%AD%E7%9A%84%E6%97%A5%E5%BF%97%E7%AE%A1%E7%90%86%E6%9C%BA%E5%88%B6/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Linux 系统中的日志管理机制 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Linux%20%E7%B3%BB%E7%BB%9F%E4%B8%AD%E7%9A%84%E6%97%A5%E5%BF%97%E7%AE%A1%E7%90%86%E6%9C%BA%E5%88%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Linux 系统中的日志管理机制
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:47:39" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/Command/" itemprop="url" rel="index"><span itemprop="name">Command</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>5.4k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="Linux-的日志管理机制"><a href="#Linux-的日志管理机制" class="headerlink" title="Linux 的日志管理机制"></a>Linux 的日志管理机制</h3><hr>
+<h3 id="一、Linux-日志管理机制概述"><a href="#一、Linux-日志管理机制概述" class="headerlink" title="一、Linux 日志管理机制概述"></a>一、Linux 日志管理机制概述</h3><p>Linux 系统主要通过 <strong>rsyslog</strong> (或早期版本中的 <code>syslog-ng</code>, <code>syslogd</code>) 和 <strong>journald</strong> (systemd 日志管理器) 这两种机制来收集、处理和存储系统日志。</p>
+<h4 id="1-rsyslog-或-syslog-ng"><a href="#1-rsyslog-或-syslog-ng" class="headerlink" title="1. rsyslog (或 syslog-ng)"></a>1. <code>rsyslog</code> (或 <code>syslog-ng</code>)</h4><ul>
+<li><strong>传统且广泛使用：</strong> <code>rsyslog</code> 是一个强大的日志处理工具，它能够从内核、应用程序和网络设备收集日志，并根据配置文件将日志写入到本地文件、转发到远程服务器或执行其他操作。</li>
+<li><strong>文件存储：</strong> 日志通常以纯文本形式存储在 <code>/var/log</code> 目录下，按类型分类。</li>
+<li><strong>配置文件：</strong> 主要配置文件是 <code>/etc/rsyslog.conf</code>。</li>
+<li><strong>日志轮转：</strong> 配合 <code>logrotate</code> 工具进行日志文件的轮转、压缩和清理，防止日志文件无限增长填满磁盘。</li>
+</ul>
+<h4 id="2-journald-systemd-Journal"><a href="#2-journald-systemd-Journal" class="headerlink" title="2. journald (systemd Journal)"></a>2. <code>journald</code> (systemd Journal)</h4><ul>
+<li><strong>现代 Linux 的核心日志系统：</strong> <code>journald</code> 是 <code>systemd</code> 组建的一部分，是现代 Linux 发行版（如 CentOS 7+, Ubuntu 15.04+）中默认的日志记录服务。</li>
+<li><strong>二进制存储：</strong> <code>journald</code> 将所有日志事件存储在一个结构化的二进制文件中，而不是传统的纯文本文件。这使得日志的查询和分析更加高效，支持按字段过滤和结构化输出。</li>
+<li><strong>统一收集：</strong> 它收集来自内核、<code>systemd</code> 服务、各种应用程序以及标准输出&#x2F;错误的日志。</li>
+<li><strong>临时或持久化：</strong> 默认情况下，<code>journald</code> 日志存储在内存中 (<code>/run/log/journal</code>)，系统重启后会丢失。但可以配置为持久化存储到磁盘 (<code>/var/log/journal</code>)。</li>
+</ul>
+<hr>
+<h3 id="二、如何查看系统日志"><a href="#二、如何查看系统日志" class="headerlink" title="二、如何查看系统日志"></a>二、如何查看系统日志</h3><h4 id="1-使用-journalctl-主要针对-journald-日志"><a href="#1-使用-journalctl-主要针对-journald-日志" class="headerlink" title="1. 使用 journalctl (主要针对 journald 日志)"></a>1. 使用 <code>journalctl</code> (主要针对 <code>journald</code> 日志)</h4><p><code>journalctl</code> 是 <code>systemd</code> 日志管理器的客户端工具，它是查看 <code>journald</code> 日志的首选命令。</p>
+<ul>
+<li><p><strong>查看所有日志：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">journalctl</span><br></pre></td></tr></table></figure>
+<p>（输出可能非常多，按 <code>Page Up/Down</code> 翻页，<code>q</code> 退出）</p>
+</li>
+<li><p><strong>实时查看最新日志 (类似 <code>tail -f</code>)：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">journalctl -f</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>按时间过滤：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">journalctl --since <span class="string">&quot;2023-10-26 10:00:00&quot;</span></span><br><span class="line">journalctl --since <span class="string">&quot;yesterday&quot;</span> --<span class="keyword">until</span> <span class="string">&quot;now&quot;</span></span><br><span class="line">journalctl -S <span class="string">&quot;2 days ago&quot;</span>     <span class="comment"># 查看最近2天的日志</span></span><br><span class="line">journalctl -u <span class="string">&quot;1 hour ago&quot;</span>     <span class="comment"># 查看最近1小时的日志（请注意这个参数U是unit，不是指时间）</span></span><br></pre></td></tr></table></figure>
+<p><strong>更正：</strong> 查看最近时间段的日志通常使用 <code>-S</code> 或 <code>--since</code> 和 <code>-U</code> 或 <code>--until</code>。<br><br><code>--since &quot;2 days ago&quot;</code> 是正确的。<br><br><code>--since &quot;1 hour ago&quot;</code> 是正确的。<br></p>
+</li>
+<li><p><strong>按服务单元过滤：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">journalctl -u sshd.service     <span class="comment"># 查看 sshd 服务的日志</span></span><br><span class="line">journalctl -u nginx.service --since <span class="string">&quot;1 hour ago&quot;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>按优先级过滤 (debug, info, notice, warning, err, crit, alert, emerg)：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">journalctl -p err              <span class="comment"># 查看所有错误级别及以上的日志</span></span><br><span class="line">journalctl -p warning -u httpd.service <span class="comment"># 查看 httpd 服务的警告及以上日志</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>按可执行文件路径过滤：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">journalctl /usr/sbin/sshd</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>按用户 ID (UID) 过滤：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">journalctl _UID=1000</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>按进程 ID (PID) 过滤：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">journalctl _PID=1234</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>显示内核日志：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">journalctl -k</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>显示人类可读的输出格式：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">journalctl -o short            <span class="comment"># 默认短格式</span></span><br><span class="line">journalctl -o verbose          <span class="comment"># 详细格式</span></span><br><span class="line">journalctl -o json             <span class="comment"># JSON 格式，便于机器解析</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>查看指定数量的最新日志条目：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">journalctl -n 20               <span class="comment"># 显示最新的20条日志</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<h4 id="2-查看-var-log-目录下的日志文件-主要针对-rsyslog-传统日志"><a href="#2-查看-var-log-目录下的日志文件-主要针对-rsyslog-传统日志" class="headerlink" title="2. 查看 /var/log 目录下的日志文件 (主要针对 rsyslog &#x2F; 传统日志)"></a>2. 查看 <code>/var/log</code> 目录下的日志文件 (主要针对 <code>rsyslog</code> &#x2F; 传统日志)</h4><p>虽然 <code>journald</code> 越来越普及，但许多系统仍然配置 <code>rsyslog</code> 将日志写入 <code>/var/log</code>。很多应用程序也会直接将日志写入这里。</p>
+<ul>
+<li><p><strong>常用命令：</strong> <code>cat</code>, <code>less</code>, <code>more</code>, <code>tail</code>, <code>grep</code>。</p>
+</li>
+<li><p><strong><code>/var/log/messages</code> 或 <code>/var/log/syslog</code>：</strong></p>
+<ul>
+<li><strong>用途：</strong> 存放系统核心日志信息，包括启动信息、内核消息、服务信息等。</li>
+<li><strong>查看：</strong><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">tail</span> -f /var/log/messages    <span class="comment"># 实时查看最新消息</span></span><br><span class="line">less /var/log/syslog         <span class="comment"># 逐页查看</span></span><br><span class="line">grep <span class="string">&quot;error&quot;</span> /var/log/messages <span class="comment"># 搜索错误信息</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p><strong><code>/var/log/auth.log</code> (Debian&#x2F;Ubuntu) 或 <code>/var/log/secure</code> (CentOS&#x2F;RHEL)：</strong></p>
+<ul>
+<li><strong>用途：</strong> 存放与认证和安全相关的日志，如用户登录、sudo 命令使用、SSH 连接尝试等。</li>
+<li><strong>查看：</strong><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">tail</span> -f /var/log/auth.log</span><br><span class="line">grep <span class="string">&quot;Failed password&quot;</span> /var/log/secure <span class="comment"># 查找 SSH 暴力破解尝试</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p><strong><code>/var/log/kern.log</code>：</strong></p>
+<ul>
+<li><strong>用途：</strong> 存放内核相关的日志，包括硬件错误、驱动问题等。</li>
+</ul>
+</li>
+<li><p><strong><code>/var/log/dmesg</code>：</strong></p>
+<ul>
+<li><strong>用途：</strong> 存放系统启动时的内核环缓冲信息。也可以直接使用 <code>dmesg</code> 命令查看。</li>
+<li><strong>查看：</strong><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">dmesg -T <span class="comment"># 显示带时间戳的内核日志</span></span><br><span class="line">dmesg | grep -i error <span class="comment"># 查找错误信息</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p><strong><code>/var/log/faillog</code>：</strong> 记录用户登录失败信息（二进制文件，使用 <code>faillog</code> 命令查看）。</p>
+</li>
+<li><p><strong><code>/var/log/&lt;application_name&gt;/</code>：</strong></p>
+<ul>
+<li><strong>用途：</strong> 许多应用程序会在 <code>/var/log</code> 下创建自己的子目录来存放日志。例如，Web 服务器 (Apache&#x2F;Nginx)、数据库 (MySQL&#x2F;PostgreSQL) 等。</li>
+<li><strong>示例：</strong><ul>
+<li>Nginx 访问日志: <code>/var/log/nginx/access.log</code></li>
+<li>Apache 错误日志: <code>/var/log/apache2/error.log</code> (Ubuntu) 或 <code>/var/log/httpd/error_log</code> (CentOS)</li>
+<li>MySQL 日志: <code>/var/log/mysql/error.log</code> 或 <code>/var/log/mysqld.log</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="三、如何管理系统日志"><a href="#三、如何管理系统日志" class="headerlink" title="三、如何管理系统日志"></a>三、如何管理系统日志</h3><p>日志管理不仅仅是查看，还包括配置、轮转和清理，以防止日志文件无限制地增长并占用大量磁盘空间。</p>
+<h4 id="1-journald-日志管理"><a href="#1-journald-日志管理" class="headerlink" title="1. journald 日志管理"></a>1. <code>journald</code> 日志管理</h4><ul>
+<li><p><strong>持久化存储：</strong> 默认情况下，<code>journald</code> 日志存储在 <code>/run/log/journal</code>，重启后清空。要持久化存储，需要创建 <code>/var/log/journal</code> 目录并适当设置权限：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> <span class="built_in">mkdir</span> -p /var/log/journal</span><br><span class="line"><span class="built_in">sudo</span> systemd-tmpfiles --create --prefix /var/log/journal</span><br><span class="line"><span class="built_in">sudo</span> systemctl restart systemd-journald</span><br></pre></td></tr></table></figure>
+<ul>
+<li>这样日志会存储到 <code>/var/log/journal/&lt;machine-id&gt;/</code> 目录下。</li>
+</ul>
+</li>
+<li><p><strong>限制日志大小：</strong> 编辑 <code>/etc/systemd/journald.conf</code> 文件。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> vim /etc/systemd/journald.conf</span><br></pre></td></tr></table></figure>
+<p>查找或添加以下行来限制日志大小：</p>
+<ul>
+<li><code>SystemMaxUse=500M</code>：限制所有持久化日志文件的总大小不超过 500MB。</li>
+<li><code>SystemKeepFree=15%</code>：确保至少有 15% 的磁盘空间可用。</li>
+<li><code>RuntimeMaxUse=100M</code>：限制内存中日志的总大小不超过 100MB (针对非持久化存储)。<br>修改后重启 <code>journald</code> 服务：<code>sudo systemctl restart systemd-journald</code>。</li>
+</ul>
+</li>
+<li><p><strong>手动清理日志：</strong></p>
+<ul>
+<li>按大小清理（保留最新 100M）：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> journalctl --vacuum-size=100M</span><br></pre></td></tr></table></figure></li>
+<li>按时间清理（保留最新 7 天的日志）：<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> journalctl --vacuum-time=7d</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+</ul>
+<h4 id="2-rsyslog-logrotate-日志管理"><a href="#2-rsyslog-logrotate-日志管理" class="headerlink" title="2. rsyslog &#x2F; logrotate 日志管理"></a>2. <code>rsyslog</code> &#x2F; <code>logrotate</code> 日志管理</h4><p><code>logrotate</code> 是一个用于管理和轮转日志文件的实用工具。它通常作为 cron job 每日运行。</p>
+<ul>
+<li><p><strong><code>logrotate</code> 主配置文件：</strong> <code>/etc/logrotate.conf</code></p>
+<ul>
+<li>定义了默认的轮转策略，并包含其他配置目录。</li>
+</ul>
+</li>
+<li><p><strong>应用程序特定的轮转配置：</strong> <code>logrotate</code> 会从 <code>/etc/logrotate.d/</code> 目录中读取各个应用程序的配置文件。</p>
+<ul>
+<li><strong>示例：</strong> <code>/etc/logrotate.d/nginx</code> 可能包含 Nginx 日志的轮转配置。</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">/var/log/nginx/*.<span class="built_in">log</span> &#123;            <span class="comment"># 指定要轮转的日志文件</span></span><br><span class="line">    daily                         <span class="comment"># 每天轮转</span></span><br><span class="line">    missingok                     <span class="comment"># 如果日志文件丢失，不报错</span></span><br><span class="line">    rotate 7                      <span class="comment"># 保留 7 份旧日志文件</span></span><br><span class="line">    compress                      <span class="comment"># 压缩旧日志文件</span></span><br><span class="line">    delaycompress                 <span class="comment"># 在下一次轮转时才压缩最近的旧日志（避免服务写到被压缩的文件）</span></span><br><span class="line">    notifempty                    <span class="comment"># 如果日志文件为空，不轮转</span></span><br><span class="line">    create 0640 nginx adm         <span class="comment"># 轮转后创建新日志文件，并设置权限和属主/组</span></span><br><span class="line">    sharedscripts                 <span class="comment"># 共享脚本，只在所有日志文件处理完毕后执行一次</span></span><br><span class="line">    postrotate                    <span class="comment"># 轮转后执行的命令</span></span><br><span class="line">        <span class="keyword">if</span> [ -f /var/run/nginx.pid ]; <span class="keyword">then</span></span><br><span class="line">            <span class="built_in">kill</span> -USR1 `<span class="built_in">cat</span> /var/run/nginx.pid` <span class="comment"># 重启 Nginx 以打开新的日志文件</span></span><br><span class="line">        <span class="keyword">fi</span></span><br><span class="line">    endscript</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>常用配置项解释：</strong></p>
+<ul>
+<li><code>daily</code>, <code>weekly</code>, <code>monthly</code>, <code>yearly</code>：轮转频率。</li>
+<li><code>rotate N</code>：保留 N 份旧日志文件。</li>
+<li><code>compress</code>：压缩轮转后的日志文件。</li>
+<li><code>delaycompress</code>：延迟压缩。</li>
+<li><code>notifempty</code>：如果日志文件为空，不轮转。</li>
+<li><code>missingok</code>：如果日志文件不存在，不报错。</li>
+<li><code>create [mode owner group]</code>：轮转后创建新的空日志文件并设置权限。</li>
+<li><code>mail user</code>：将旧日志发送给指定用户。</li>
+<li><code>postrotate / endscript</code>：在轮转后执行的脚本。</li>
+<li><code>prerotate / endscript</code>：在轮转前执行的脚本。</li>
+</ul>
+</li>
+<li><p><strong>手动执行 <code>logrotate</code> (测试配置)：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> logrotate -f /etc/logrotate.d/nginx <span class="comment"># 强制轮转指定的配置文件</span></span><br><span class="line"><span class="built_in">sudo</span> logrotate -d /etc/logrotate.d/nginx <span class="comment"># 调试模式，只显示将要执行的操作，不实际执行</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<h4 id="3-配置-rsyslog-高级管理"><a href="#3-配置-rsyslog-高级管理" class="headerlink" title="3. 配置 rsyslog (高级管理)"></a>3. 配置 <code>rsyslog</code> (高级管理)</h4><p><code>rsyslog</code> 的配置文件 <code>/etc/rsyslog.conf</code> 允许你定义日志源、目的地和处理规则。</p>
+<ul>
+<li><p><strong>模块加载：</strong></p>
+<figure class="highlight clean"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">module</span>(load=<span class="string">&quot;imuxsock&quot;</span>)  # 从本地 Unix socket 接收日志</span><br><span class="line"><span class="keyword">module</span>(load=<span class="string">&quot;imjournal&quot;</span>) # 从 journald 接收日志</span><br><span class="line"><span class="keyword">module</span>(load=<span class="string">&quot;imudp&quot;</span>)     # 接收 UDP 协议的日志 (通常是远程设备)</span><br><span class="line"><span class="keyword">module</span>(load=<span class="string">&quot;imtcp&quot;</span>)     # 接收 TCP 协议的日志 (通常是远程设备)</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>规则定义 (facility.priority action)：</strong></p>
+<ul>
+<li><code>facility</code> (来源)：<code>auth</code>, <code>cron</code>, <code>daemon</code>, <code>kern</code>, <code>mail</code>, <code>syslog</code>, <code>user</code>, <code>local0</code>-<code>local7</code> 等。</li>
+<li><code>priority</code> (级别)：<code>debug</code>, <code>info</code>, <code>notice</code>, <code>warning</code>, <code>err</code>, <code>crit</code>, <code>alert</code>, <code>emerg</code>。</li>
+<li><code>action</code> (操作)：文件路径、远程主机、用户等。</li>
+</ul>
+<figure class="highlight stata"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">*.info;mail.none;authpriv.none;cron.none                /var/log/messages # 将除邮件、认证、定时任务外的所有 info 级别日志写入 /var/log/messages</span></span><br><span class="line">authpriv.*                                              /<span class="keyword">var</span>/<span class="keyword">log</span>/secure   # 所有认证相关的日志写入 /<span class="keyword">var</span>/<span class="keyword">log</span>/secure</span><br><span class="line">mail.*                                                  -/<span class="keyword">var</span>/<span class="keyword">log</span>/maillog # 所有邮件日志写入 /<span class="keyword">var</span>/<span class="keyword">log</span>/maillog (开头`-`表示异步写入，不阻塞)</span><br><span class="line">cron.*                                                  /<span class="keyword">var</span>/<span class="keyword">log</span>/cron</span><br><span class="line">kern.*                                                  /<span class="keyword">var</span>/<span class="keyword">log</span>/kern.<span class="keyword">log</span></span><br><span class="line">uucp,<span class="keyword">news</span>.crit                                          /<span class="keyword">var</span>/<span class="keyword">log</span>/spooler</span><br><span class="line">local7.*                                                /<span class="keyword">var</span>/<span class="keyword">log</span>/<span class="keyword">boot</span>.<span class="keyword">log</span></span><br><span class="line"># 转发所有认证日志到远程服务器 192.168.1.10 的 UDP 端口 514</span><br><span class="line">auth.*                                                  @192.168.1.10:514</span><br><span class="line"># 或 TCP 协议 (更可靠):</span><br><span class="line">auth.*                                                  @@192.168.1.10:514</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>重启 <code>rsyslog</code> 服务使配置生效：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> systemctl restart rsyslog</span><br></pre></td></tr></table></figure></li>
+</ul>
+<hr>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>有效的日志管理是运维工作不可或缺的一部分。掌握 <code>journalctl</code> 命令可以高效查询现代 Linux 系统的大部分日志，而理解 <code>/var/log</code> 目录结构和 <code>logrotate</code> 配置则能帮助我们管理传统的基于文件的日志，并确保日志信息不会耗尽存储空间。通过结合这些工具和最佳实践，运维工程师能够更好地监控、排查和保障 Linux 系统的稳定运行。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Linux%20%E7%B3%BB%E7%BB%9F%E6%96%87%E4%BB%B6%E9%94%99%E8%AF%AF%E4%BF%AE%E6%8A%A4/" rel="prev" title="Linux 系统文件错误修护">
+      <i class="fa fa-chevron-left"></i> Linux 系统文件错误修护
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Linux%20%E7%B3%BB%E7%BB%9F%E4%B8%AD%E7%9A%84%E5%86%85%E6%A0%B8%E6%A8%A1%E5%9D%97%E7%AE%A1%E7%90%86/" rel="next" title="Linux 系统中的内核模块管理">
+      Linux 系统中的内核模块管理 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Linux-%E7%9A%84%E6%97%A5%E5%BF%97%E7%AE%A1%E7%90%86%E6%9C%BA%E5%88%B6"><span class="nav-number">1.</span> <span class="nav-text">Linux 的日志管理机制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E3%80%81Linux-%E6%97%A5%E5%BF%97%E7%AE%A1%E7%90%86%E6%9C%BA%E5%88%B6%E6%A6%82%E8%BF%B0"><span class="nav-number">2.</span> <span class="nav-text">一、Linux 日志管理机制概述</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-rsyslog-%E6%88%96-syslog-ng"><span class="nav-number">2.1.</span> <span class="nav-text">1. rsyslog (或 syslog-ng)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-journald-systemd-Journal"><span class="nav-number">2.2.</span> <span class="nav-text">2. journald (systemd Journal)</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E5%A6%82%E4%BD%95%E6%9F%A5%E7%9C%8B%E7%B3%BB%E7%BB%9F%E6%97%A5%E5%BF%97"><span class="nav-number">3.</span> <span class="nav-text">二、如何查看系统日志</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E4%BD%BF%E7%94%A8-journalctl-%E4%B8%BB%E8%A6%81%E9%92%88%E5%AF%B9-journald-%E6%97%A5%E5%BF%97"><span class="nav-number">3.1.</span> <span class="nav-text">1. 使用 journalctl (主要针对 journald 日志)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E6%9F%A5%E7%9C%8B-var-log-%E7%9B%AE%E5%BD%95%E4%B8%8B%E7%9A%84%E6%97%A5%E5%BF%97%E6%96%87%E4%BB%B6-%E4%B8%BB%E8%A6%81%E9%92%88%E5%AF%B9-rsyslog-%E4%BC%A0%E7%BB%9F%E6%97%A5%E5%BF%97"><span class="nav-number">3.2.</span> <span class="nav-text">2. 查看 &#x2F;var&#x2F;log 目录下的日志文件 (主要针对 rsyslog &#x2F; 传统日志)</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E3%80%81%E5%A6%82%E4%BD%95%E7%AE%A1%E7%90%86%E7%B3%BB%E7%BB%9F%E6%97%A5%E5%BF%97"><span class="nav-number">4.</span> <span class="nav-text">三、如何管理系统日志</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-journald-%E6%97%A5%E5%BF%97%E7%AE%A1%E7%90%86"><span class="nav-number">4.1.</span> <span class="nav-text">1. journald 日志管理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-rsyslog-logrotate-%E6%97%A5%E5%BF%97%E7%AE%A1%E7%90%86"><span class="nav-number">4.2.</span> <span class="nav-text">2. rsyslog &#x2F; logrotate 日志管理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E9%85%8D%E7%BD%AE-rsyslog-%E9%AB%98%E7%BA%A7%E7%AE%A1%E7%90%86"><span class="nav-number">4.3.</span> <span class="nav-text">3. 配置 rsyslog (高级管理)</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">5.</span> <span class="nav-text">总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

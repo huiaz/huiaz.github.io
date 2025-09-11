@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="您好，这是一个非常棒的问题，它触及了 Go 语言类型系统的核心。 核心答案是：是的，从语言语法的角度来看，对于任何一个已定义的类型 T，你都可以构造出其对应的指针类型 *T。 * 符号在 Go 中是一个类型构造器（Type Constructor）。它的作用就是，给定一个类型 T，它会创建一个新类型，这个新类型就是“指向 T 的指针”。这个规则是普适的，适用于几乎所有类型。  原理解析与示例让我们">
+<meta property="og:type" content="article">
+<meta property="og:title" content="T 类型">
+<meta property="og:url" content="http://example.com/2025/09/11/T%20%E7%B1%BB%E5%9E%8B/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="您好，这是一个非常棒的问题，它触及了 Go 语言类型系统的核心。 核心答案是：是的，从语言语法的角度来看，对于任何一个已定义的类型 T，你都可以构造出其对应的指针类型 *T。 * 符号在 Go 中是一个类型构造器（Type Constructor）。它的作用就是，给定一个类型 T，它会创建一个新类型，这个新类型就是“指向 T 的指针”。这个规则是普适的，适用于几乎所有类型。  原理解析与示例让我们">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:06:10.779Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Go">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/T%20%E7%B1%BB%E5%9E%8B/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>T 类型 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/T%20%E7%B1%BB%E5%9E%8B/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          T 类型
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:06:10" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/go/" itemprop="url" rel="index"><span itemprop="name">go</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.4k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>2 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>您好，这是一个非常棒的问题，它触及了 Go 语言类型系统的核心。</p>
+<p><strong>核心答案是：是的，从语言语法的角度来看，对于任何一个已定义的类型 <code>T</code>，你都可以构造出其对应的指针类型 <code>*T</code>。</strong></p>
+<p><code>*</code> 符号在 Go 中是一个<strong>类型构造器（Type Constructor）</strong>。它的作用就是，给定一个类型 <code>T</code>，它会创建一个新类型，这个新类型就是“指向 <code>T</code> 的指针”。这个规则是普适的，适用于几乎所有类型。</p>
+<hr>
+<h3 id="原理解析与示例"><a href="#原理解析与示例" class="headerlink" title="原理解析与示例"></a>原理解析与示例</h3><p>让我们通过不同种类的 <code>T</code> 来验证这个规则：</p>
+<h4 id="1-基本类型-Basic-Types"><a href="#1-基本类型-Basic-Types" class="headerlink" title="1. 基本类型 (Basic Types)"></a>1. 基本类型 (Basic Types)</h4><p>对于 <code>int</code>, <code>float64</code>, <code>string</code>, <code>bool</code> 等基础类型，都可以创建它们的指针类型。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> i <span class="type">int</span>       <span class="comment">// 类型 T 是 int</span></span><br><span class="line"><span class="keyword">var</span> p_i *<span class="type">int</span>    <span class="comment">// 类型 *T 是 *int</span></span><br><span class="line">p_i = &amp;i</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> s <span class="type">string</span>    <span class="comment">// 类型 T 是 string</span></span><br><span class="line"><span class="keyword">var</span> p_s *<span class="type">string</span> <span class="comment">// 类型 *T 是 *string</span></span><br><span class="line">p_s = &amp;s</span><br></pre></td></tr></table></figure>
+
+<p><strong>用途：</strong> 主要用于在函数间共享或修改变量的值。</p>
+<h4 id="2-复合类型-Composite-Types"><a href="#2-复合类型-Composite-Types" class="headerlink" title="2. 复合类型 (Composite Types)"></a>2. 复合类型 (Composite Types)</h4><p>对于 <code>struct</code> 和 <code>array</code>，同样可以创建它们的指针类型。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> User <span class="keyword">struct</span>&#123; Name <span class="type">string</span> &#125;</span><br><span class="line"><span class="keyword">var</span> u User          <span class="comment">// 类型 T 是 User</span></span><br><span class="line"><span class="keyword">var</span> p_u *User       <span class="comment">// 类型 *T 是 *User</span></span><br><span class="line">p_u = &amp;u</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> arr [<span class="number">5</span>]<span class="type">int</span>    <span class="comment">// 类型 T 是 [5]int (数组)</span></span><br><span class="line"><span class="keyword">var</span> p_arr *[<span class="number">5</span>]<span class="type">int</span>  <span class="comment">// 类型 *T 是 *[5]int</span></span><br><span class="line">p_arr = &amp;arr</span><br></pre></td></tr></table></figure>
+
+<p><strong>用途：</strong> 对于 <code>struct</code>，使用指针非常普遍，可以避免在函数调用时发生大对象的拷贝，并且可以直接修改原对象。对于数组，虽然不常见，但语法上完全支持。</p>
+<h4 id="3-指针类型本身-Pointer-to-Pointer"><a href="#3-指针类型本身-Pointer-to-Pointer" class="headerlink" title="3. 指针类型本身 (Pointer to Pointer)"></a>3. 指针类型本身 (Pointer to Pointer)</h4><p>你甚至可以为一个指针类型创建指针，形成多级指针。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> p *<span class="type">int</span>         <span class="comment">// 类型 T 是 *int</span></span><br><span class="line"><span class="keyword">var</span> pp **<span class="type">int</span>       <span class="comment">// 类型 *T 是 **int</span></span><br><span class="line">pp = &amp;p</span><br></pre></td></tr></table></figure>
+<p>这里，<code>T</code> 是 <code>*int</code>，那么 <code>*T</code> 就是 <code>*(*int)</code>，也就是 <code>**int</code>。</p>
+<h4 id="4-函数类型-Function-Types"><a href="#4-函数类型-Function-Types" class="headerlink" title="4. 函数类型 (Function Types)"></a>4. 函数类型 (Function Types)</h4><p>函数类型也可以拥有其指针类型。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> MyFunc <span class="function"><span class="keyword">func</span><span class="params">(<span class="type">int</span>)</span></span> <span class="type">string</span>  <span class="comment">// 定义一个函数类型 T</span></span><br><span class="line"><span class="keyword">var</span> f MyFunc                   <span class="comment">// 类型 T 是 MyFunc</span></span><br><span class="line"><span class="keyword">var</span> p_f *MyFunc                <span class="comment">// 类型 *T 是 *MyFunc</span></span><br><span class="line">p_f = &amp;f</span><br></pre></td></tr></table></figure>
+
+<p><strong>用途：</strong> 这种情况非常罕见。因为函数变量本身就像引用一样工作，直接传递函数变量即可，几乎没有必要使用函数指针。</p>
+<h4 id="5-接口类型-Interface-Types"><a href="#5-接口类型-Interface-Types" class="headerlink" title="5. 接口类型 (Interface Types)"></a>5. 接口类型 (Interface Types)</h4><p>接口类型也可以有指针。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> e <span class="type">error</span>       <span class="comment">// 类型 T 是 error (接口)</span></span><br><span class="line"><span class="keyword">var</span> p_e *<span class="type">error</span>      <span class="comment">// 类型 *T 是 *error</span></span><br><span class="line">p_e = &amp;e</span><br></pre></td></tr></table></figure>
+
+<p><strong>用途：</strong> 同样非常罕见。接口本身就包含了一个指向底层具体类型实例的指针，它已经具有指针的行为。对接口变量再取一次指针（<code>*error</code>）通常意味着逻辑上的混淆，只在极少数需要修改接口变量本身指向的场景下才可能用到。</p>
+<hr>
+<h3 id="重要区别：语法可行性-vs-实践必要性"><a href="#重要区别：语法可行性-vs-实践必要性" class="headerlink" title="重要区别：语法可行性 vs. 实践必要性"></a>重要区别：语法可行性 vs. 实践必要性</h3><p>虽然语法上所有 <code>T</code> 都有 <code>*T</code>，但在<strong>实际开发中，我们并不会对所有类型都使用其指针形式</strong>。这里最需要区分的就是 Go 的<strong>引用类型</strong>。</p>
+<p><strong>切片 (Slices), 映射 (Maps), 通道 (Channels)</strong> 这三种是<strong>引用类型</strong>。</p>
+<p>这意味着它们变量本身就是一个“描述符”或“头结构”（header），其内部已经包含了指向底层数据结构的指针。</p>
+<p><strong>示例：切片 (<code>[]T</code>)</strong></p>
+<p>一个切片变量的结构大致如下：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> sliceHeader <span class="keyword">struct</span> &#123;</span><br><span class="line">    Data <span class="type">uintptr</span> <span class="comment">// 指向底层数组的指针</span></span><br><span class="line">    Len  <span class="type">int</span>     <span class="comment">// 长度</span></span><br><span class="line">    Cap  <span class="type">int</span>     <span class="comment">// 容量</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>当你将一个切片传递给函数时，你传递的是这个 <code>sliceHeader</code> 的一个副本。因为 <code>Data</code> 指针被复制了，所以函数内部对切片元素的修改会影响到原始切片。</p>
+<p>因此，你<strong>几乎不需要</strong>定义一个指向切片的指针 <code>*[]int</code>。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// s 的类型 T 是 []int</span></span><br><span class="line"><span class="keyword">var</span> s []<span class="type">int</span> </span><br><span class="line"></span><br><span class="line"><span class="comment">// p_s 的类型 *T 是 *[]int。语法上正确，但通常没有必要。</span></span><br><span class="line"><span class="keyword">var</span> p_s *[]<span class="type">int</span> </span><br><span class="line">p_s = &amp;s </span><br></pre></td></tr></table></figure>
+
+<p><strong>什么时候需要 <code>*[]int</code>？</strong><br>只有当你需要在函数内部修改<strong>切片头自身</strong>时，比如重新给一个 <code>nil</code> 切片分配内存。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reallocate</span><span class="params">(s *[]<span class="type">int</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">if</span> s == <span class="literal">nil</span> || *s == <span class="literal">nil</span> &#123;</span><br><span class="line">        *s = <span class="built_in">make</span>([]<span class="type">int</span>, <span class="number">10</span>) <span class="comment">// 这里必须用指针才能修改调用方的切片变量本身</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>但更地道的 Go 写法是让函数返回修改后的新切片，而不是使用指针参数。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">reallocateAppend</span><span class="params">(s []<span class="type">int</span>)</span></span> []<span class="type">int</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">append</span>(s, <span class="number">1</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="总结-T-和-T-的实践"><a href="#总结-T-和-T-的实践" class="headerlink" title="总结 T 和 *T 的实践"></a>总结 T 和 *T 的实践</h3><table>
+<thead>
+<tr>
+<th align="left">类型 <code>T</code></th>
+<th align="left"><code>*T</code> 是否存在 (语法)</th>
+<th align="left"><code>*T</code> 是否常用 (实践)</th>
+<th align="left">备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>int</code>, <code>bool</code>, <code>string</code></td>
+<td align="left"><strong>是</strong></td>
+<td align="left"><strong>常用</strong></td>
+<td align="left">用于在函数中修改原始值。</td>
+</tr>
+<tr>
+<td align="left"><code>struct</code></td>
+<td align="left"><strong>是</strong></td>
+<td align="left"><strong>非常常用</strong></td>
+<td align="left">避免大对象拷贝，修改原始对象。</td>
+</tr>
+<tr>
+<td align="left"><code>array</code></td>
+<td align="left"><strong>是</strong></td>
+<td align="left"><strong>不常用</strong></td>
+<td align="left">数组是值类型，传递数组指针可避免拷贝，但通常直接用切片替代。</td>
+</tr>
+<tr>
+<td align="left"><strong><code>slice</code> (<code>[]T</code>)</strong></td>
+<td align="left"><strong>是</strong></td>
+<td align="left"><strong>极不常用</strong></td>
+<td align="left">切片本身是引用类型，通常直接传递即可。</td>
+</tr>
+<tr>
+<td align="left"><strong><code>map</code> (<code>map[K]V</code>)</strong></td>
+<td align="left"><strong>是</strong></td>
+<td align="left"><strong>极不常用</strong></td>
+<td align="left">Map 本身是引用类型。</td>
+</tr>
+<tr>
+<td align="left"><strong><code>channel</code> (<code>chan T</code>)</strong></td>
+<td align="left"><strong>是</strong></td>
+<td align="left"><strong>极不常用</strong></td>
+<td align="left">Channel 本身是引用类型。</td>
+</tr>
+<tr>
+<td align="left"><code>interface</code></td>
+<td align="left"><strong>是</strong></td>
+<td align="left"><strong>极不常用</strong></td>
+<td align="left">接口已经是引用&#x2F;指针的语义。</td>
+</tr>
+<tr>
+<td align="left"><code>func</code></td>
+<td align="left"><strong>是</strong></td>
+<td align="left"><strong>极不常用</strong></td>
+<td align="left">函数变量本身就是引用。</td>
+</tr>
+</tbody></table>
+<p><strong>结论：</strong></p>
+<p>从纯粹的类型系统规则来看，对于任何类型 <code>T</code>，<code>*T</code> 都是一个合法的、可以被构造出来的类型。但从编程实践和语言设计的角度来看，对于已经是引用语义的类型（slice, map, channel），使用它们的指针形式 <code>*T</code> 是没有必要的，甚至可能是一种坏味道（code smell），除非你有非常明确的理由需要修改那个引用头本身。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Go/" rel="tag"># Go</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/TCP%20vs.%20UDP/" rel="prev" title="TCP vs. UDP">
+      <i class="fa fa-chevron-left"></i> TCP vs. UDP
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/StatefulSet/" rel="next" title="StatefulSet">
+      StatefulSet <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90%E4%B8%8E%E7%A4%BA%E4%BE%8B"><span class="nav-number">1.</span> <span class="nav-text">原理解析与示例</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E5%9F%BA%E6%9C%AC%E7%B1%BB%E5%9E%8B-Basic-Types"><span class="nav-number">1.1.</span> <span class="nav-text">1. 基本类型 (Basic Types)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E5%A4%8D%E5%90%88%E7%B1%BB%E5%9E%8B-Composite-Types"><span class="nav-number">1.2.</span> <span class="nav-text">2. 复合类型 (Composite Types)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E6%8C%87%E9%92%88%E7%B1%BB%E5%9E%8B%E6%9C%AC%E8%BA%AB-Pointer-to-Pointer"><span class="nav-number">1.3.</span> <span class="nav-text">3. 指针类型本身 (Pointer to Pointer)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-%E5%87%BD%E6%95%B0%E7%B1%BB%E5%9E%8B-Function-Types"><span class="nav-number">1.4.</span> <span class="nav-text">4. 函数类型 (Function Types)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-%E6%8E%A5%E5%8F%A3%E7%B1%BB%E5%9E%8B-Interface-Types"><span class="nav-number">1.5.</span> <span class="nav-text">5. 接口类型 (Interface Types)</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%87%8D%E8%A6%81%E5%8C%BA%E5%88%AB%EF%BC%9A%E8%AF%AD%E6%B3%95%E5%8F%AF%E8%A1%8C%E6%80%A7-vs-%E5%AE%9E%E8%B7%B5%E5%BF%85%E8%A6%81%E6%80%A7"><span class="nav-number">2.</span> <span class="nav-text">重要区别：语法可行性 vs. 实践必要性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93-T-%E5%92%8C-T-%E7%9A%84%E5%AE%9E%E8%B7%B5"><span class="nav-number">3.</span> <span class="nav-text">总结 T 和 *T 的实践</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

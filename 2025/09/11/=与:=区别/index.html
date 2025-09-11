@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="1. :&#x3D; (短变量声明 Short Variable Declaration):&#x3D; 是 Go 语言中特有的短变量声明运算符。它用于声明并初始化一个或多个变量。 特点：  声明并初始化： 它是 var 关键字的一种更简洁的替代方案，用于同时完成变量的声明和初始化。 类型推断： 编译器会自动根据等号右侧的值来推断变量的类型。您不需要显式指定类型。 作用域限制： :&#x3D; 只能在函数内部使用，不能用于声明">
+<meta property="og:type" content="article">
+<meta property="og:title" content="&#x3D;与:&#x3D;区别">
+<meta property="og:url" content="http://example.com/2025/09/11/=%E4%B8%8E:=%E5%8C%BA%E5%88%AB/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="1. :&#x3D; (短变量声明 Short Variable Declaration):&#x3D; 是 Go 语言中特有的短变量声明运算符。它用于声明并初始化一个或多个变量。 特点：  声明并初始化： 它是 var 关键字的一种更简洁的替代方案，用于同时完成变量的声明和初始化。 类型推断： 编译器会自动根据等号右侧的值来推断变量的类型。您不需要显式指定类型。 作用域限制： :&#x3D; 只能在函数内部使用，不能用于声明">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:09:42.146Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Go">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/=%E4%B8%8E:=%E5%8C%BA%E5%88%AB/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>=与:=区别 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/=%E4%B8%8E:=%E5%8C%BA%E5%88%AB/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          =与:=区别
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:09:42" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/go/" itemprop="url" rel="index"><span itemprop="name">go</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="1-短变量声明-Short-Variable-Declaration"><a href="#1-短变量声明-Short-Variable-Declaration" class="headerlink" title="1. := (短变量声明 Short Variable Declaration)"></a>1. <code>:=</code> (短变量声明 Short Variable Declaration)</h3><p><code>:=</code> 是 Go 语言中特有的<strong>短变量声明</strong>运算符。它用于<strong>声明并初始化</strong>一个或多个变量。</p>
+<p><strong>特点：</strong></p>
+<ul>
+<li><strong>声明并初始化：</strong> 它是 <code>var</code> 关键字的一种更简洁的替代方案，用于同时完成变量的声明和初始化。</li>
+<li><strong>类型推断：</strong> 编译器会自动根据等号右侧的值来推断变量的类型。您不需要显式指定类型。</li>
+<li><strong>作用域限制：</strong> <code>:=</code> 只能在<strong>函数内部</strong>使用，不能用于声明包级别的变量（全局变量）。</li>
+<li><strong>“至少一个新变量”规则：</strong> 在多变量声明中，<code>:=</code> 要求<strong>左侧至少有一个新变量被声明</strong>。如果左侧的所有变量都在当前作用域内已经声明过，那么 <code>:=</code> 会导致编译错误。这是为了防止意外的重声明，同时允许在处理多返回值时简洁地更新现有变量。</li>
+</ul>
+<p><strong>示例：</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// var name = &quot;GlobalName&quot; // 错误: := 不能在函数外使用，这里只能用 var name string = &quot;GlobalName&quot;</span></span><br><span class="line"><span class="comment">// 或者 var name = &quot;GlobalName&quot; (会隐式报错，因为Go推荐 := for local vars)</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="comment">// 声明并初始化一个新变量，类型被推断为 int</span></span><br><span class="line">	count := <span class="number">10</span></span><br><span class="line">	fmt.Printf(<span class="string">&quot;count: %v (type: %T)\n&quot;</span>, count, count) <span class="comment">// 输出: count: 10 (type: int)</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// 声明并初始化多个变量</span></span><br><span class="line">	name, age := <span class="string">&quot;Alice&quot;</span>, <span class="number">30</span></span><br><span class="line">	fmt.Printf(<span class="string">&quot;name: %v (type: %T), age: %v (type: %T)\n&quot;</span>, name, name, age, age) <span class="comment">// 输出: name: Alice (type: string), age: 30 (type: int)</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// 接收函数的多返回值，并使用 := 声明新变量</span></span><br><span class="line">	result, err := someFunction() <span class="comment">// result 和 err 都是新声明的变量</span></span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Println(<span class="string">&quot;Error:&quot;</span>, err)</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		fmt.Println(<span class="string">&quot;Result:&quot;</span>, result)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// “至少一个新变量”规则示例：</span></span><br><span class="line">	<span class="comment">// 在新的作用域内重新声明 count 是允许的，因为它是一个新的变量。</span></span><br><span class="line">	<span class="comment">// 但在同一作用域内，如果 count 已经存在，则不能再次使用 := 来声明。</span></span><br><span class="line">	<span class="comment">// count := 20 // 编译错误: no new variables on left side of :=</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// 但是，如果与一个新变量一起使用，则允许重新赋值现有变量：</span></span><br><span class="line">	price := <span class="number">100</span> <span class="comment">// price 是新变量</span></span><br><span class="line">	<span class="comment">// someOtherNewVar 是新变量, price 是现有变量的重新赋值</span></span><br><span class="line">	someOtherNewVar, price := <span class="string">&quot;apple&quot;</span>, <span class="number">120</span></span><br><span class="line">	fmt.Printf(<span class="string">&quot;someOtherNewVar: %v, price: %v\n&quot;</span>, someOtherNewVar, price) <span class="comment">// 输出: someOtherNewVar: apple, price: 120</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// 错误示例：没有新变量则报错</span></span><br><span class="line">	<span class="comment">// var existedVar int = 1</span></span><br><span class="line">	<span class="comment">// existedVar := 2 // 编译错误：no new variables on left side of :=</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">someFunction</span><span class="params">()</span></span> (<span class="type">string</span>, <span class="type">error</span>) &#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="string">&quot;Success&quot;</span>, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-赋值运算符-Assignment-Operator"><a href="#2-赋值运算符-Assignment-Operator" class="headerlink" title="2. = (赋值运算符 Assignment Operator)"></a>2. <code>=</code> (赋值运算符 Assignment Operator)</h3><p><code>=</code> 是标准的<strong>赋值运算符</strong>，用于为一个<strong>已经声明过</strong>的变量赋予新的值。</p>
+<p><strong>特点：</strong></p>
+<ul>
+<li><strong>仅用于赋值：</strong> 它不会声明新的变量。</li>
+<li><strong>需要先声明：</strong> 变量必须在使用 <code>=</code> 进行赋值之前，通过 <code>var</code> 或 <code>:=</code> 运算符进行声明。</li>
+<li><strong>作用域无限制：</strong> 可以在函数内部和函数外部（包级别）使用。</li>
+</ul>
+<p><strong>示例：</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 包级别变量声明 (必须使用 var)</span></span><br><span class="line"><span class="keyword">var</span> globalMessage <span class="type">string</span> = <span class="string">&quot;Hello, Go!&quot;</span></span><br><span class="line"><span class="keyword">var</span> globalCounter <span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="comment">// 使用 var 关键字声明变量</span></span><br><span class="line">	<span class="keyword">var</span> x <span class="type">int</span></span><br><span class="line">	x = <span class="number">5</span> <span class="comment">// 赋值</span></span><br><span class="line"></span><br><span class="line">	fmt.Printf(<span class="string">&quot;x: %v (type: %T)\n&quot;</span>, x, x) <span class="comment">// 输出: x: 5 (type: int)</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// 对已声明的变量重新赋值 (可能是通过 := 声明的)</span></span><br><span class="line">	myVar := <span class="string">&quot;initial value&quot;</span></span><br><span class="line">	fmt.Println(<span class="string">&quot;myVar (initial):&quot;</span>, myVar) <span class="comment">// 输出: myVar (initial): initial value</span></span><br><span class="line"></span><br><span class="line">	myVar = <span class="string">&quot;new value&quot;</span> <span class="comment">// 重新赋值</span></span><br><span class="line">	fmt.Println(<span class="string">&quot;myVar (after assignment):&quot;</span>, myVar) <span class="comment">// 输出: myVar (after assignment): new value</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// 对包级别变量赋值</span></span><br><span class="line">	globalCounter = <span class="number">100</span></span><br><span class="line">	fmt.Printf(<span class="string">&quot;globalMessage: %v, globalCounter: %v\n&quot;</span>, globalMessage, globalCounter)</span><br><span class="line">	<span class="comment">// 输出: globalMessage: Hello, Go!, globalCounter: 100</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="核心区别总结"><a href="#核心区别总结" class="headerlink" title="核心区别总结"></a>核心区别总结</h3><table>
+<thead>
+<tr>
+<th align="left">特性</th>
+<th align="left"><code>:=</code> (短变量声明)</th>
+<th align="left"><code>=</code> (赋值运算符)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>功能</strong></td>
+<td align="left"><strong>声明并初始化</strong>变量</td>
+<td align="left"><strong>为已声明的变量赋值</strong></td>
+</tr>
+<tr>
+<td align="left"><strong>类型推断</strong></td>
+<td align="left">总是进行类型推断</td>
+<td align="left">不进行类型推断 (变量类型已在声明时确定)</td>
+</tr>
+<tr>
+<td align="left"><strong>适用范围</strong></td>
+<td align="left"><strong>仅限函数内部</strong> (或短语句块如 <code>if</code>, <code>for</code>)</td>
+<td align="left">可以在任何地方使用 (包级别、函数内部)，但变量需先声明</td>
+</tr>
+<tr>
+<td align="left"><strong>新变量声明</strong></td>
+<td align="left"><strong>必须至少声明一个新变量</strong></td>
+<td align="left">不声明新变量</td>
+</tr>
+<tr>
+<td align="left"><strong>语法</strong></td>
+<td align="left">简洁，不需要 <code>var</code> 关键字</td>
+<td align="left">需要配合 <code>var</code> 关键字进行声明，或用于已声明的变量</td>
+</tr>
+</tbody></table>
+<h3 id="何时使用哪个？"><a href="#何时使用哪个？" class="headerlink" title="何时使用哪个？"></a>何时使用哪个？</h3><ul>
+<li><strong>优先使用 <code>:=</code> 简洁性：</strong> 在函数内部，当您需要声明并初始化一个新变量时，<code>:=</code> 是 Go 语言的首选和惯用法。它非常简洁，并且通过类型推断使代码更易读。<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 大多数局部变量的声明和初始化都用这个</span></span><br><span class="line">data, err := readFromFile(<span class="string">&quot;path/to/file.txt&quot;</span>)</span><br><span class="line"><span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><strong>使用 <code>var</code> 和 <code>=</code> 明确性：</strong><ul>
+<li><strong>在函数外部声明包级别变量时。</strong><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> connections <span class="type">int</span> <span class="comment">// Package-level variable</span></span><br></pre></td></tr></table></figure></li>
+<li><strong>当您需要声明一个变量而不立即初始化它时</strong>（它会被初始化为其类型的零值）。<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> client *http.Client <span class="comment">// client 会是 nil</span></span><br></pre></td></tr></table></figure></li>
+<li><strong>当您需要显式地指定变量类型，即使类型推断也能工作</strong>（这在某些情况下可以提高代码清晰度）。<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> port <span class="type">uint16</span> = <span class="number">8080</span> <span class="comment">// 确保端口是 uint16 类型</span></span><br></pre></td></tr></table></figure></li>
+<li><strong>当您只是为现有变量重新赋值时。</strong><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">counter := <span class="number">0</span> <span class="comment">// 声明</span></span><br><span class="line">counter = <span class="number">1</span>  <span class="comment">// 赋值</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Go/" rel="tag"># Go</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/AMQP%E5%8D%8F%E8%AE%AE/" rel="prev" title="AMQP协议">
+      <i class="fa fa-chevron-left"></i> AMQP协议
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/shell-%E6%AD%A3%E5%88%99/" rel="next" title="Shell-正则">
+      Shell-正则 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E7%9F%AD%E5%8F%98%E9%87%8F%E5%A3%B0%E6%98%8E-Short-Variable-Declaration"><span class="nav-number">1.</span> <span class="nav-text">1. :&#x3D; (短变量声明 Short Variable Declaration)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E8%B5%8B%E5%80%BC%E8%BF%90%E7%AE%97%E7%AC%A6-Assignment-Operator"><span class="nav-number">2.</span> <span class="nav-text">2. &#x3D; (赋值运算符 Assignment Operator)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E5%8C%BA%E5%88%AB%E6%80%BB%E7%BB%93"><span class="nav-number">3.</span> <span class="nav-text">核心区别总结</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%95%E6%97%B6%E4%BD%BF%E7%94%A8%E5%93%AA%E4%B8%AA%EF%BC%9F"><span class="nav-number">4.</span> <span class="nav-text">何时使用哪个？</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

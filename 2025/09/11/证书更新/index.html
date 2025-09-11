@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="更新一个10年有效期的 Kubernetes 证书使用 kubeadm 安装 kubernetes 集群非常方便，但是也有一个比较烦人的问题就是默认的证书有效期只有一年时间，所以需要考虑证书升级的问题，本文的演示集群版本为 v1.16.2 版本，不保证下面的操作对其他版本也适用，在操作之前一定要先对证书目录进行备份，防止操作错误进行回滚。本文主要介绍两种方式来更新集群证书。 手动更新证书由 kub">
+<meta property="og:type" content="article">
+<meta property="og:title" content="证书更新">
+<meta property="og:url" content="http://example.com/2025/09/11/%E8%AF%81%E4%B9%A6%E6%9B%B4%E6%96%B0/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="更新一个10年有效期的 Kubernetes 证书使用 kubeadm 安装 kubernetes 集群非常方便，但是也有一个比较烦人的问题就是默认的证书有效期只有一年时间，所以需要考虑证书升级的问题，本文的演示集群版本为 v1.16.2 版本，不保证下面的操作对其他版本也适用，在操作之前一定要先对证书目录进行备份，防止操作错误进行回滚。本文主要介绍两种方式来更新集群证书。 手动更新证书由 kub">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:20:13.612Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/%E8%AF%81%E4%B9%A6%E6%9B%B4%E6%96%B0/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>证书更新 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/%E8%AF%81%E4%B9%A6%E6%9B%B4%E6%96%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          证书更新
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:20:13" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E9%9B%86%E7%BE%A4%E7%AE%A1%E7%90%86/" itemprop="url" rel="index"><span itemprop="name">集群管理</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>7.6k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>7 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="更新一个10年有效期的-Kubernetes-证书"><a href="#更新一个10年有效期的-Kubernetes-证书" class="headerlink" title="更新一个10年有效期的 Kubernetes 证书"></a>更新一个10年有效期的 Kubernetes 证书</h1><p>使用 kubeadm 安装 kubernetes 集群非常方便，但是也有一个比较烦人的问题就是默认的证书有效期只有一年时间，所以需要考虑证书升级的问题，本文的演示集群版本为 v1.16.2 版本，不保证下面的操作对其他版本也适用，<strong>在操作之前一定要先对证书目录进行备份，防止操作错误进行回滚</strong>。本文主要介绍两种方式来更新集群证书。</p>
+<h3 id="手动更新证书"><a href="#手动更新证书" class="headerlink" title="手动更新证书"></a>手动更新证书</h3><p>由 kubeadm 生成的客户端证书默认只有一年有效期，我们可以通过 <code>check-expiration</code> 命令来检查证书是否过期：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubeadm alpha certs check-expiration</span></span><br><span class="line">CERTIFICATE                EXPIRES                  RESIDUAL TIME   EXTERNALLY MANAGED</span><br><span class="line">admin.conf                 Nov 07, 2020 11:59 UTC   73d             no</span><br><span class="line">apiserver                  Nov 07, 2020 11:59 UTC   73d             no</span><br><span class="line">apiserver-etcd-client      Nov 07, 2020 11:59 UTC   73d             no</span><br><span class="line">apiserver-kubelet-client   Nov 07, 2020 11:59 UTC   73d             no</span><br><span class="line">controller-manager.conf    Nov 07, 2020 11:59 UTC   73d             no</span><br><span class="line">etcd-healthcheck-client    Nov 07, 2020 11:59 UTC   73d             no</span><br><span class="line">etcd-peer                  Nov 07, 2020 11:59 UTC   73d             no</span><br><span class="line">etcd-server                Nov 07, 2020 11:59 UTC   73d             no</span><br><span class="line">front-proxy-client         Nov 07, 2020 11:59 UTC   73d             no</span><br><span class="line">scheduler.conf             Nov 07, 2020 11:59 UTC   73d             no</span><br></pre></td></tr></table></figure>
+
+<p>该命令显示 <code>/etc/kubernetes/pki</code> 文件夹中的客户端证书以及 kubeadm 使用的 <code>KUBECONFIG</code> 文件中嵌入的客户端证书的到期时间&#x2F;剩余时间。</p>
+<blockquote>
+<p><code>kubeadm</code> 不能管理由外部 CA 签名的证书，如果是外部得证书，需要自己手动去管理证书的更新。</p>
+</blockquote>
+<p>另外需要说明的是上面的列表中没有包含 <code>kubelet.conf</code>，因为 kubeadm 将 kubelet 配置为自动更新证书。</p>
+<p>另外 kubeadm 会在控制面板升级的时候自动更新所有证书，所以使用 kubeadm 搭建得集群最佳的做法是经常升级集群，这样可以确保你的集群保持最新状态并保持合理的安全性。但是对于实际的生产环境我们可能并不会去频繁得升级集群，所以这个时候我们就需要去手动更新证书。</p>
+<p>要手动更新证书也非常方便，我们只需要通过 <code>kubeadm alpha certs renew</code> 命令即可更新你的证书，这个命令用 CA（或者 front-proxy-CA ）证书和存储在 <code>/etc/kubernetes/pki</code> 中的密钥执行更新。</p>
+<blockquote>
+<p>如果你运行了一个高可用的集群，这个命令需要在所有控制面板节点上执行。</p>
+</blockquote>
+<p>接下来我们来更新我们的集群证书，下面的操作都是在 master 节点上进行，首先备份原有证书：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">mkdir</span> /etc/kubernetes.bak</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">cp</span> -r /etc/kubernetes/pki/ /etc/kubernetes.bak</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">cp</span> /etc/kubernetes/*.conf /etc/kubernetes.bak</span></span><br></pre></td></tr></table></figure>
+
+<p>然后备份 etcd 数据目录：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">cp</span> -r /var/lib/etcd /var/lib/etcd.bak</span></span><br></pre></td></tr></table></figure>
+
+<p>接下来执行更新证书的命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubeadm alpha certs renew all --config=kubeadm.yaml</span></span><br><span class="line">kubeadm alpha certs renew all --config=kubeadm.yaml</span><br><span class="line">certificate embedded in the kubeconfig file for the admin to use and for kubeadm itself renewed</span><br><span class="line">certificate for serving the Kubernetes API renewed</span><br><span class="line">certificate the apiserver uses to access etcd renewed</span><br><span class="line">certificate for the API server to connect to kubelet renewed</span><br><span class="line">certificate embedded in the kubeconfig file for the controller manager to use renewed</span><br><span class="line">certificate for liveness probes to healthcheck etcd renewed</span><br><span class="line">certificate for etcd nodes to communicate with each other renewed</span><br><span class="line">certificate for serving etcd renewed</span><br><span class="line">certificate for the front proxy client renewed</span><br><span class="line">certificate embedded in the kubeconfig file for the scheduler manager to use renewed</span><br></pre></td></tr></table></figure>
+
+<p>通过上面的命令证书就一键更新完成了，这个时候查看上面的证书可以看到过期时间已经是一年后的时间了：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubeadm alpha certs check-expiration</span></span><br><span class="line">CERTIFICATE                EXPIRES                  RESIDUAL TIME   EXTERNALLY MANAGED</span><br><span class="line">admin.conf                 Aug 26, 2021 03:47 UTC   364d            no</span><br><span class="line">apiserver                  Aug 26, 2021 03:47 UTC   364d            no</span><br><span class="line">apiserver-etcd-client      Aug 26, 2021 03:47 UTC   364d            no</span><br><span class="line">apiserver-kubelet-client   Aug 26, 2021 03:47 UTC   364d            no</span><br><span class="line">controller-manager.conf    Aug 26, 2021 03:47 UTC   364d            no</span><br><span class="line">etcd-healthcheck-client    Aug 26, 2021 03:47 UTC   364d            no</span><br><span class="line">etcd-peer                  Aug 26, 2021 03:47 UTC   364d            no</span><br><span class="line">etcd-server                Aug 26, 2021 03:47 UTC   364d            no</span><br><span class="line">front-proxy-client         Aug 26, 2021 03:47 UTC   364d            no</span><br><span class="line">scheduler.conf             Aug 26, 2021 03:47 UTC   364d            no</span><br></pre></td></tr></table></figure>
+
+<p>然后记得更新下 kubeconfig 文件：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubeadm init phase kubeconfig all --config kubeadm.yaml</span></span><br><span class="line">[kubeconfig] Using kubeconfig folder &quot;/etc/kubernetes&quot;</span><br><span class="line">[kubeconfig] Using existing kubeconfig file: &quot;/etc/kubernetes/admin.conf&quot;</span><br><span class="line">[kubeconfig] Using existing kubeconfig file: &quot;/etc/kubernetes/kubelet.conf&quot;</span><br><span class="line">[kubeconfig] Using existing kubeconfig file: &quot;/etc/kubernetes/controller-manager.conf&quot;</span><br><span class="line">[kubeconfig] Using existing kubeconfig file: &quot;/etc/kubernetes/scheduler.conf&quot;</span><br></pre></td></tr></table></figure>
+
+<p>将新生成的 admin 配置文件覆盖掉原本的 admin 文件:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">mv</span> <span class="variable">$HOME</span>/.kube/config <span class="variable">$HOME</span>/.kube/config.old</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">cp</span> -i /etc/kubernetes/admin.conf <span class="variable">$HOME</span>/.kube/config</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">chown</span> $(<span class="built_in">id</span> -u):$(<span class="built_in">id</span> -g) <span class="variable">$HOME</span>/.kube/config</span></span><br></pre></td></tr></table></figure>
+
+<p>完成后重启 kube-apiserver、kube-controller、kube-scheduler、etcd 这 4 个容器即可，我们可以查看 apiserver 的证书的有效期来验证是否更新成功：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">echo</span> | openssl s_client -showcerts -connect 127.0.0.1:6443 -servername api 2&gt;/dev/null | openssl x509 -noout -enddate</span></span><br><span class="line">notAfter=Aug 26 03:47:23 2021 GMT</span><br></pre></td></tr></table></figure>
+
+<p>可以看到现在的有效期是一年过后的，证明已经更新成功了。</p>
+<h3 id="用-Kubernetes-证书-API-更新证书"><a href="#用-Kubernetes-证书-API-更新证书" class="headerlink" title="用 Kubernetes 证书 API 更新证书"></a>用 Kubernetes 证书 API 更新证书</h3><p>除了上述的一键手动更新证书之外，还可以使用 Kubernetes 证书 API 执行手动证书更新。对于线上环境我们可能并不会去冒险经常更新集群或者去更新证书，这些毕竟是有风险的，所以我们希望生成的证书有效期足够长，虽然从安全性角度来说不推荐这样做，但是对于某些场景下一个足够长的证书有效期也是非常有必要的。有很多管理员就是去手动更改 kubeadm 的源码为 10 年，然后重新编译来创建集群，这种方式虽然可以达到目的，但是不推荐使用这种方式，特别是当你想要更新集群的时候，还得用新版本进行更新。其实 Kubernetes 提供了一种 API 的方式可以来帮助我们生成一个足够长证书有效期。</p>
+<p>要使用内置的 API 方式来签名，首先我们需要配置 kube-controller-manager 组件的 <code>--experimental-cluster-signing-duration</code> 参数，将其调整为 10 年，我们这里是 kubeadm 安装的集群，所以直接修改静态 Pod 的 yaml 文件即可:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">vi /etc/kubernetes/manifests/kube-controller-manager.yaml</span></span><br><span class="line">......</span><br><span class="line">spec:</span><br><span class="line">  containers:</span><br><span class="line">  - command:</span><br><span class="line">    - kube-controller-manager</span><br><span class="line">    # 设置证书有效期为 10 年</span><br><span class="line">    - --experimental-cluster-signing-duration=87600h</span><br><span class="line">    - --client-ca-file=/etc/kubernetes/pki/ca.crt</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+
+<p>修改完成后 kube-controller-manager 会自动重启生效。然后我们需要使用下面的命令为 Kubernetes 证书 API 创建一个证书签名请求。如果您设置例如 <code>cert-manager</code> 等外部签名者，则会自动批准证书签名请求（CSRs）。否者，您必须使用 <code>kubectl certificate</code> 命令手动批准证书。以下 kubeadm 命令输出要批准的证书名称，然后等待批准发生：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubeadm alpha certs renew all --use-api --config kubeadm.yaml &amp;</span></span><br></pre></td></tr></table></figure>
+
+<p>输出类似于以下内容：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">[1] 2890</span><br><span class="line">[certs] Certificate request &quot;kubeadm-cert-kubernetes-admin-pn99f&quot; created</span><br></pre></td></tr></table></figure>
+
+<p>然后接下来我们需要去手动批准证书：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get csr</span></span><br><span class="line">NAME                                  AGE   REQUESTOR          CONDITION</span><br><span class="line">kubeadm-cert-kubernetes-admin-pn99f   64s   kubernetes-admin   Pending</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">手动批准证书</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl certificate approve kubeadm-cert-kubernetes-admin-pn99f</span></span><br><span class="line">certificatesigningrequest.certificates.k8s.io/kubeadm-cert-kubernetes-admin-pn99f approved</span><br></pre></td></tr></table></figure>
+
+<p>用同样的方式为处于 Pending 状态的 csr 执行批准操作，直到所有的 csr 都批准完成为止。最后所有的 csr 列表状态如下所示：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get csr</span></span><br><span class="line">NAME                                                AGE     REQUESTOR          CONDITION</span><br><span class="line">kubeadm-cert-front-proxy-client-llhrj               30s     kubernetes-admin   Approved,Issued</span><br><span class="line">kubeadm-cert-kube-apiserver-2s6kf                   2m43s   kubernetes-admin   Approved,Issued</span><br><span class="line">kubeadm-cert-kube-apiserver-etcd-client-t9pkx       2m7s    kubernetes-admin   Approved,Issued</span><br><span class="line">kubeadm-cert-kube-apiserver-kubelet-client-pjbjm    108s    kubernetes-admin   Approved,Issued</span><br><span class="line">kubeadm-cert-kube-etcd-healthcheck-client-8dcn8     64s     kubernetes-admin   Approved,Issued</span><br><span class="line">kubeadm-cert-kubernetes-admin-pn99f                 4m29s   kubernetes-admin   Approved,Issued</span><br><span class="line">kubeadm-cert-system:kube-controller-manager-mr86h   79s     kubernetes-admin   Approved,Issued</span><br><span class="line">kubeadm-cert-system:kube-scheduler-t8lnw            17s     kubernetes-admin   Approved,Issued</span><br><span class="line">kubeadm-cert-ydzs-master-cqh4s                      52s     kubernetes-admin   Approved,Issued</span><br><span class="line">kubeadm-cert-ydzs-master-lvbr5                      41s     kubernetes-admin   Approved,Issued</span><br></pre></td></tr></table></figure>
+
+<p>批准完成后检查证书的有效期：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubeadm alpha certs check-expiration</span></span><br><span class="line">CERTIFICATE                EXPIRES                  RESIDUAL TIME   EXTERNALLY MANAGED</span><br><span class="line">admin.conf                 Nov 05, 2029 11:53 UTC   9y              no</span><br><span class="line">apiserver                  Nov 05, 2029 11:54 UTC   9y              no</span><br><span class="line">apiserver-etcd-client      Nov 05, 2029 11:53 UTC   9y              no</span><br><span class="line">apiserver-kubelet-client   Nov 05, 2029 11:54 UTC   9y              no</span><br><span class="line">controller-manager.conf    Nov 05, 2029 11:54 UTC   9y              no</span><br><span class="line">etcd-healthcheck-client    Nov 05, 2029 11:53 UTC   9y              no</span><br><span class="line">etcd-peer                  Nov 05, 2029 11:53 UTC   9y              no</span><br><span class="line">etcd-server                Nov 05, 2029 11:54 UTC   9y              no</span><br><span class="line">front-proxy-client         Nov 05, 2029 11:54 UTC   9y              no</span><br><span class="line">scheduler.conf             Nov 05, 2029 11:53 UTC   9y              no</span><br></pre></td></tr></table></figure>
+
+<p>我们可以看到已经延长小 10 年了，这是因为 ca 证书的有效期只有 10 年。</p>
+<p>但是现在我们还不能直接重启控制面板的几个组件，这是因为使用 kubeadm 安装的集群对应的 etcd 默认是使用的 <code>/etc/kubernetes/pki/etcd/ca.crt</code> 这个证书进行前面的，而上面我们用命令 <code>kubectl certificate approve</code> 批准过后的证书是使用的默认的 <code>/etc/kubernetes/pki/ca.crt</code> 证书进行签发的，所以我们需要替换 etcd 中的 ca 机构证书:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">先拷贝静态 Pod 资源清单</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">cp</span> -r /etc/kubernetes/manifests/ /etc/kubernetes/manifests.bak</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">vi /etc/kubernetes/manifests/etcd.yaml</span></span><br><span class="line">......</span><br><span class="line">spec:</span><br><span class="line">  containers:</span><br><span class="line">  - command:</span><br><span class="line">    - etcd</span><br><span class="line">    # 修改为 CA 文件</span><br><span class="line">    - --peer-trusted-ca-file=/etc/kubernetes/pki/ca.crt</span><br><span class="line">    - --trusted-ca-file=/etc/kubernetes/pki/ca.crt</span><br><span class="line">......</span><br><span class="line">    volumeMounts:</span><br><span class="line">    - mountPath: /var/lib/etcd</span><br><span class="line">      name: etcd-data</span><br><span class="line">    - mountPath: /etc/kubernetes/pki  # 更改证书目录</span><br><span class="line">      name: etcd-certs</span><br><span class="line">  volumes:</span><br><span class="line">  - hostPath:</span><br><span class="line">      path: /etc/kubernetes/pki  # 将 pki 目录挂载到 etcd 中去</span><br><span class="line">      type: DirectoryOrCreate</span><br><span class="line">    name: etcd-certs</span><br><span class="line">  - hostPath:</span><br><span class="line">      path: /var/lib/etcd</span><br><span class="line">      type: DirectoryOrCreate</span><br><span class="line">    name: etcd-data</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+
+<p>由于 kube-apiserver 要连接 etcd 集群，所以也需要重新修改对应的 etcd ca 文件：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">vi /etc/kubernetes/manifests/kube-apiserver.yaml</span></span><br><span class="line">......</span><br><span class="line">spec:</span><br><span class="line">  containers:</span><br><span class="line">  - command:</span><br><span class="line">    - kube-apiserver</span><br><span class="line">    # 将etcd ca文件修改为默认的ca.crt文件</span><br><span class="line">    - --etcd-cafile=/etc/kubernetes/pki/ca.crt</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+
+<p>除此之外还需要替换 <code>requestheader-client-ca-file</code> 文件，默认是 <code>/etc/kubernetes/pki/front-proxy-ca.crt</code> 文件，现在也需要替换成默认的 CA 文件，否则使用聚合 API，比如安装了 metrics-server 后执行 <code>kubectl top</code> 命令就会报错：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">cp</span> /etc/kubernetes/pki/ca.crt /etc/kubernetes/pki/front-proxy-ca.crt</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">cp</span> /etc/kubernetes/pki/ca.key /etc/kubernetes/pki/front-proxy-ca.key</span></span><br></pre></td></tr></table></figure>
+
+<p>由于是静态 Pod，修改完成后上面的组件都会自动重启生效。由于我们当前版本的 kubelet 默认开启了证书自动轮转，所以 kubelet 的证书也不用再去管理了，这样我就将证书更新成 10 有效期了。<strong>在操作之前一定要先对证书目录进行备份，防止操作错误进行回滚</strong>。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1/" rel="prev" title="负载均衡">
+      <i class="fa fa-chevron-left"></i> 负载均衡
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E8%AE%BF%E9%97%AE%E6%8E%A7%E5%88%B6/" rel="next" title="访问控制">
+      访问控制 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9B%B4%E6%96%B0%E4%B8%80%E4%B8%AA10%E5%B9%B4%E6%9C%89%E6%95%88%E6%9C%9F%E7%9A%84-Kubernetes-%E8%AF%81%E4%B9%A6"><span class="nav-number">1.</span> <span class="nav-text">更新一个10年有效期的 Kubernetes 证书</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%89%8B%E5%8A%A8%E6%9B%B4%E6%96%B0%E8%AF%81%E4%B9%A6"><span class="nav-number">1.0.1.</span> <span class="nav-text">手动更新证书</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%94%A8-Kubernetes-%E8%AF%81%E4%B9%A6-API-%E6%9B%B4%E6%96%B0%E8%AF%81%E4%B9%A6"><span class="nav-number">1.0.2.</span> <span class="nav-text">用 Kubernetes 证书 API 更新证书</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

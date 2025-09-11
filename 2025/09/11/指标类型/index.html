@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="指标类型从存储上来讲所有的监控指标都是相同的，但是在不同的场景下这些指标又有一些细微的差异。 例如，在 Node Exporter 返回的样本中指标 node_load1 反应的是当前系统的负载状态，随着时间的变化这个指标返回的样本数据是在不断变化的。而指标 node_cpu_seconds_total 所获取到的样本数据却不同，它是一个持续增大的值，因为其反应的是 CPU 的累计使用时间，从理论">
+<meta property="og:type" content="article">
+<meta property="og:title" content="指标类型">
+<meta property="og:url" content="http://example.com/2025/09/11/%E6%8C%87%E6%A0%87%E7%B1%BB%E5%9E%8B/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="指标类型从存储上来讲所有的监控指标都是相同的，但是在不同的场景下这些指标又有一些细微的差异。 例如，在 Node Exporter 返回的样本中指标 node_load1 反应的是当前系统的负载状态，随着时间的变化这个指标返回的样本数据是在不断变化的。而指标 node_cpu_seconds_total 所获取到的样本数据却不同，它是一个持续增大的值，因为其反应的是 CPU 的累计使用时间，从理论">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/ccof9e.jpg">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/jpwcbm.jpg">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/uvuw7v.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/r0l37c.jpg">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/ucqgwi.jpg">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:20:29.570Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta property="article:tag" content="Prometheus">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://mudutestmenu.mudu.tv/upload/ccof9e.jpg">
+
+<link rel="canonical" href="http://example.com/2025/09/11/%E6%8C%87%E6%A0%87%E7%B1%BB%E5%9E%8B/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>指标类型 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/%E6%8C%87%E6%A0%87%E7%B1%BB%E5%9E%8B/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          指标类型
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:20:29" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/" itemprop="url" rel="index"><span itemprop="name">k8s-monitor</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/Prometheus/" itemprop="url" rel="index"><span itemprop="name">Prometheus</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>5.1k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="指标类型"><a href="#指标类型" class="headerlink" title="指标类型"></a>指标类型</h1><p>从存储上来讲所有的监控指标都是相同的，但是在不同的场景下这些指标又有一些细微的差异。 例如，在 Node Exporter 返回的样本中指标 <code>node_load1</code> 反应的是当前系统的负载状态，随着时间的变化这个指标返回的样本数据是在不断变化的。而指标 <code>node_cpu_seconds_total</code> 所获取到的样本数据却不同，它是一个持续增大的值，因为其反应的是 CPU 的累计使用时间，从理论上讲只要系统不关机，这个值是会一直变大。</p>
+<p>为了能够帮助用户理解和区分这些不同监控指标之间的差异，Prometheus 定义了 4 种不同的指标类型：<code>Counter（计数器）</code>、<code>Gauge（仪表盘）</code>、<code>Histogram（直方图）</code>、<code>Summary（摘要）</code>。</p>
+<p>在 node-exporter（后面会详细讲解）返回的样本数据中，其注释中也包含了该样本的类型。例如：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># HELP node_cpu_seconds_total Seconds the cpus spent in each mode.</span><br><span class="line"># TYPE node_cpu_seconds_total counter</span><br><span class="line">node_cpu_seconds_total&#123;cpu=&quot;cpu0&quot;,mode=&quot;idle&quot;&#125; 362812.7890625</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="Counter"><a href="#Counter" class="headerlink" title="Counter"></a>Counter</h2><p><code>Counter</code> (只增不减的计数器) 类型的指标其工作方式和计数器一样，只增不减，所以它对于存储诸如服务的 HTTP 请求数量或使用的 CPU 时间之类的信息非常有用。常见的监控指标，如 <code>http_requests_total</code>、<code>node_cpu_seconds_total</code> 都是 <code>Counter</code> 类型的监控指标。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/ccof9e.jpg" alt="Counter"></p>
+<p>可能你会觉得一直增加的数据没什么用处，了解服务从开始有多少请求有什么价值吗？但是需要记住，每个指标都存储了时间戳的，所有你的 HTTP 请求数现在可能是 1000 万，但是 Prometheus 也会记录之前某个时间点的值，我们可以去查询过去一个小时内的请求数，当然更多的时候我们想要看到的是请求数增加或减少的速度有多快，因此通常情况对于 <code>Counter</code> 指标我们都是去查看变化率而不是本身的数字。<code>PromQL</code> 内置的聚合操作和函数可以让用户对这些数据进行进一步的分析，例如，通过 <code>rate()</code> 函数获取 HTTP 请求的增长率：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rate(http_requests_total[5m])</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="Gauge"><a href="#Gauge" class="headerlink" title="Gauge"></a>Gauge</h2><p>与 <code>Counter</code> 不同，<code>Gauge</code>（可增可减的仪表盘）类型的指标侧重于反应系统的当前状态，因此这类指标的样本数据可增可减。常见指标如 <code>node_memory_MemFree_bytes</code>（当前主机空闲的内存大小）、<code>node_memory_MemAvailable_bytes</code>（可用内存大小）都是 <code>Gauge</code> 类型的监控指标。由于 Gauge 指标仍然带有时间戳存储，所有我们可以看到随时间变化的值，通常可以直接把它们绘制出来，这样就可以看到值本身而不是变化率了，通过 <code>Gauge</code> 指标，用户可以直接查看系统的当前状态。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/jpwcbm.jpg" alt="Gauge"></p>
+<p>这些简单的指标类型都只是为每个样本获取一个数字，但 Prometheus 的强大之处在于如何让你跟踪它们，比如我们绘制了两张图，一个是 HTTP 请求的变化率，另一个是分配的 gauge 类型的实际内存，直接从图上就可以看出这两个之间有一种关联性，当请求出现峰值的时候，内存的使用也会出现峰值，但是我们仔细观察也会发现在峰值过后，内存使用量并没有恢复到峰值前的水平，整体上它在逐渐增加，这表明很可能应用程序中存在内存泄露的问题，通过这些简单的指标就可以帮助我们找到这些可能存在的问题。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/uvuw7v.png" alt="关联性"></p>
+<p>对于 <code>Gauge</code> 类型的监控指标，通过 <code>PromQL</code> 内置函数 <code>delta()</code> 可以获取样本在一段时间范围内的变化情况。例如，计算 CPU 温度在两个小时内的差异：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">delta(cpu_temp_celsius&#123;host=&quot;zeus&quot;&#125;[2h])</span><br></pre></td></tr></table></figure>
+
+
+
+<p>还可以直接使用 <code>predict_linear()</code> 对数据的变化趋势进行预测。例如，预测系统磁盘空间在 4 个小时之后的剩余情况：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">predict_linear(node_filesystem_free_bytes[1h], 4 * 3600)</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="Histogram-和-Summary"><a href="#Histogram-和-Summary" class="headerlink" title="Histogram 和 Summary"></a>Histogram 和 Summary</h2><p>除了 <code>Counter</code> 和 <code>Gauge</code> 类型的监控指标以外，Prometheus 还定义了 <code>Histogram</code> 和 <code>Summary</code> 的指标类型。<code>Histogram</code> 和 <code>Summary</code> 主用用于统计和分析样本的分布情况。</p>
+<p>在大多数情况下人们都倾向于使用某些量化指标的平均值，例如 CPU 的平均使用率、页面的平均响应时间，这种方式也有很明显的问题，以系统 API 调用的平均响应时间为例：如果大多数 API 请求都维持在 100ms 的响应时间范围内，而个别请求的响应时间需要 5s，那么就会导致某些 WEB 页面的响应时间落到<strong>中位数</strong>上，而这种现象被称为<strong>长尾问题</strong>。</p>
+<p>为了区分是平均的慢还是长尾的慢，最简单的方式就是按照请求延迟的范围进行分组。例如，统计延迟在 <code>0~10ms</code> 之间的请求数有多少而 <code>10~20ms</code> 之间的请求数又有多少。通过这种方式可以快速分析系统慢的原因。<code>Histogram</code> 和 <code>Summary</code> 都是为了能够解决这样的问题存在的，通过 <code>Histogram</code> 和<code>Summary</code> 类型的监控指标，我们可以快速了解监控样本的分布情况。</p>
+<p><strong>Summary</strong></p>
+<p>摘要用于记录某些东西的平均大小，可能是计算所需的时间或处理的文件大小，摘要显示两个相关的信息：<code>count</code>（事件发生的次数）和 <code>sum</code>（所有事件的总大小），如下图计算摘要指标可以返回次数为 3 和总和 15，也就意味着 3 次计算总共需要 15s 来处理，平均每次计算需要花费 5s。下一个样本的次数为 10，总和为 113，那么平均值为 11.3，因为两组指标都记录有时间戳，所以我们可以使用摘要来构建一个图表，显示平均值的变化率，比如图上的语句表示的是 5 分钟时间段内的平均速率。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/r0l37c.jpg" alt="Summary"></p>
+<p>例如，指标 <code>prometheus_tsdb_wal_fsync_duration_seconds</code> 的指标类型为 <code>Summary</code>，它记录了 Prometheus Server 中 <code>wal_fsync</code> 的处理时间，通过访问 Prometheus Server 的 <code>/metrics</code> 地址，可以获取到以下监控样本数据：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"># HELP prometheus_tsdb_wal_fsync_duration_seconds Duration of WAL fsync.</span><br><span class="line"># TYPE prometheus_tsdb_wal_fsync_duration_seconds summary</span><br><span class="line">prometheus_tsdb_wal_fsync_duration_seconds&#123;quantile=&quot;0.5&quot;&#125; 0.012352463</span><br><span class="line">prometheus_tsdb_wal_fsync_duration_seconds&#123;quantile=&quot;0.9&quot;&#125; 0.014458005</span><br><span class="line">prometheus_tsdb_wal_fsync_duration_seconds&#123;quantile=&quot;0.99&quot;&#125; 0.017316173</span><br><span class="line">prometheus_tsdb_wal_fsync_duration_seconds_sum 2.888716127000002</span><br><span class="line">prometheus_tsdb_wal_fsync_duration_seconds_count 216</span><br></pre></td></tr></table></figure>
+
+
+
+<p>从上面的样本中可以得知当前 Prometheus Server 进行 <code>wal_fsync</code> 操作的总次数为 216 次，耗时 2.888716127000002s。其中中位数（quantile&#x3D;0.5）的耗时为 0.012352463，9 分位数（quantile&#x3D;0.9）的耗时为 0.014458005s。</p>
+<p><strong>Histogram</strong></p>
+<p>摘要非常有用，但是平均值会隐藏一些细节，上图中 10 与 113 的总和包含非常广的范围，如果我们想查看时间花在什么地方了，那么我们就需要直方图了。直方图以 bucket 桶的形式记录数据，所以我们可能有一个桶用于需要 1s 或更少的计算，另一个桶用于 5 秒或更少、10 秒或更少、20 秒或更少、60 秒或更少。该指标返回每个存储桶的计数，其中 3 个在 5 秒或更短的时间内完成，6 个在 10 秒或更短的时间内完成。Prometheus 中的直方图是<strong>累积</strong>的，因此所有 10 次计算都属于 60 秒或更少的时间段，而在这 10 次中，有 9 次的处理时间为 20 秒或更少，这显示了数据的分布。所以可以看到我们的大部分计算都在 10 秒以下，只有一个超过 20 秒，这对于计算百分位数很有用。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/ucqgwi.jpg" alt="Histogram"></p>
+<p>在 Prometheus Server 自身返回的样本数据中，我们也能找到类型为 Histogram 的监控指标<code>prometheus_tsdb_compaction_chunk_range_seconds_bucket</code>：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"># HELP prometheus_tsdb_compaction_chunk_range_seconds Final time range of chunks on their first compaction</span><br><span class="line"># TYPE prometheus_tsdb_compaction_chunk_range_seconds histogram</span><br><span class="line">prometheus_tsdb_compaction_chunk_range_seconds_bucket&#123;le=&quot;100&quot;&#125; 71</span><br><span class="line">prometheus_tsdb_compaction_chunk_range_seconds_bucket&#123;le=&quot;400&quot;&#125; 71</span><br><span class="line">prometheus_tsdb_compaction_chunk_range_seconds_bucket&#123;le=&quot;1600&quot;&#125; 71</span><br><span class="line">prometheus_tsdb_compaction_chunk_range_seconds_bucket&#123;le=&quot;6400&quot;&#125; 71</span><br><span class="line">prometheus_tsdb_compaction_chunk_range_seconds_bucket&#123;le=&quot;25600&quot;&#125; 405</span><br><span class="line">prometheus_tsdb_compaction_chunk_range_seconds_bucket&#123;le=&quot;102400&quot;&#125; 25690</span><br><span class="line">prometheus_tsdb_compaction_chunk_range_seconds_bucket&#123;le=&quot;409600&quot;&#125; 71863</span><br><span class="line">prometheus_tsdb_compaction_chunk_range_seconds_bucket&#123;le=&quot;1.6384e+06&quot;&#125; 115928</span><br><span class="line">prometheus_tsdb_compaction_chunk_range_seconds_bucket&#123;le=&quot;6.5536e+06&quot;&#125; 2.5687892e+07</span><br><span class="line">prometheus_tsdb_compaction_chunk_range_seconds_bucket&#123;le=&quot;2.62144e+07&quot;&#125; 2.5687896e+07</span><br><span class="line">prometheus_tsdb_compaction_chunk_range_seconds_bucket&#123;le=&quot;+Inf&quot;&#125; 2.5687896e+07</span><br><span class="line">prometheus_tsdb_compaction_chunk_range_seconds_sum 4.7728699529576e+13</span><br><span class="line">prometheus_tsdb_compaction_chunk_range_seconds_count 2.5687896e+07</span><br></pre></td></tr></table></figure>
+
+
+
+<p>与 <code>Summary</code> 类型的指标相似之处在于 <code>Histogram</code> 类型的样本同样会反应当前指标的记录的总数(以 <code>_count</code> 作为后缀)以及其值的总量（以 <code>_sum</code> 作为后缀）。不同在于 <code>Histogram</code> 指标直接反应了在不同区间内样本的个数，区间通过标签 <code>le</code> 进行定义。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+              <a href="/tags/Prometheus/" rel="tag"># Prometheus</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E6%8C%87%E9%92%88/" rel="prev" title="指针">
+      <i class="fa fa-chevron-left"></i> 指针
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/" rel="next" title="性能优化">
+      性能优化 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%8C%87%E6%A0%87%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.</span> <span class="nav-text">指标类型</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Counter"><span class="nav-number">1.1.</span> <span class="nav-text">Counter</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Gauge"><span class="nav-number">1.2.</span> <span class="nav-text">Gauge</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Histogram-%E5%92%8C-Summary"><span class="nav-number">1.3.</span> <span class="nav-text">Histogram 和 Summary</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="深入理解 Go 语言 map 的扩容机制，对于后端开发人员来说至关重要，因为它直接影响到服务的性能和资源消耗。Go map 的扩容机制是其高效性的关键之一，它采用了增量式（Incremental Resizing）的策略，避免了传统哈希表在扩容时可能导致的长时间停顿（Stop-The-World）。  Go 语言 Map 的扩容机制概述Go 语言的 map 是一个散列表（hash table）的实">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go 语言 Map 的扩容机制">
+<meta property="og:url" content="http://example.com/2025/09/11/Go%20%E8%AF%AD%E8%A8%80%20Map%20%E7%9A%84%E6%89%A9%E5%AE%B9%E6%9C%BA%E5%88%B6/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="深入理解 Go 语言 map 的扩容机制，对于后端开发人员来说至关重要，因为它直接影响到服务的性能和资源消耗。Go map 的扩容机制是其高效性的关键之一，它采用了增量式（Incremental Resizing）的策略，避免了传统哈希表在扩容时可能导致的长时间停顿（Stop-The-World）。  Go 语言 Map 的扩容机制概述Go 语言的 map 是一个散列表（hash table）的实">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:32:55.806Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Go">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/Go%20%E8%AF%AD%E8%A8%80%20Map%20%E7%9A%84%E6%89%A9%E5%AE%B9%E6%9C%BA%E5%88%B6/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Go 语言 Map 的扩容机制 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Go%20%E8%AF%AD%E8%A8%80%20Map%20%E7%9A%84%E6%89%A9%E5%AE%B9%E6%9C%BA%E5%88%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Go 语言 Map 的扩容机制
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:32:55" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/go/" itemprop="url" rel="index"><span itemprop="name">go</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>5k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>深入理解 Go 语言 <code>map</code> 的扩容机制，对于后端开发人员来说至关重要，因为它直接影响到服务的性能和资源消耗。Go <code>map</code> 的扩容机制是其高效性的关键之一，它采用了<strong>增量式（Incremental Resizing）</strong>的策略，避免了传统哈希表在扩容时可能导致的长时间停顿（Stop-The-World）。</p>
+<hr>
+<h3 id="Go-语言-Map-的扩容机制概述"><a href="#Go-语言-Map-的扩容机制概述" class="headerlink" title="Go 语言 Map 的扩容机制概述"></a>Go 语言 Map 的扩容机制概述</h3><p>Go 语言的 <code>map</code> 是一个散列表（hash table）的实现，其底层结构是一个 <code>hmap</code>。<code>map</code> 的扩容发生在两种主要情况下：</p>
+<ol>
+<li>**负载因子过高 (Overload Factor)**：当 <code>map</code> 中存储的键值对数量与桶数量的比值超过预设阈值时。Go 默认的负载因子阈值是 <strong>6.5</strong>。这意味着当 <code>map</code> 中每个桶平均存储的键值对超过 6.5 个时，就会触发扩容。</li>
+<li>**溢出桶过多 (Too Many Overflow Buckets)**：即使负载因子不高，如果哈希冲突严重，导致大量的键都集中在少数几个桶及其溢出链上，也会触发扩容以重新均匀分布数据。</li>
+</ol>
+<p>当 <code>map</code> 满足扩容条件时，它不会一次性将所有数据迁移到新的、更大的存储空间。相反，它会启动一个<strong>渐进式的数据迁移过程</strong>。</p>
+<hr>
+<h3 id="结合源代码分析-map-的扩容机制"><a href="#结合源代码分析-map-的扩容机制" class="headerlink" title="结合源代码分析 map 的扩容机制"></a>结合源代码分析 <code>map</code> 的扩容机制</h3><p>我们将深入 Go 运行时（<code>runtime</code>）包中的相关源代码，主要关注 <code>src/runtime/map.go</code> 和 <code>src/runtime/hashmap.go</code> 文件。</p>
+<h4 id="1-核心数据结构-hmap-和-bmap"><a href="#1-核心数据结构-hmap-和-bmap" class="headerlink" title="1. 核心数据结构 hmap 和 bmap"></a>1. 核心数据结构 <code>hmap</code> 和 <code>bmap</code></h4><p>首先，了解 <code>map</code> 的核心数据结构：</p>
+<p><strong><code>hmap</code> (map header)</strong><br>这是 <code>map</code> 的运行时表示。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> hmap <span class="keyword">struct</span> &#123;</span><br><span class="line">    count     <span class="type">int</span>    <span class="comment">// 当前 map 中键值对的数量</span></span><br><span class="line">    flags     <span class="type">uint8</span>  <span class="comment">// 标识 map 状态的标志位</span></span><br><span class="line">    B         <span class="type">uint8</span>  <span class="comment">// log_2 of # of buckets (bucket 数量的 log2 值，即：桶数量 = 2^B)</span></span><br><span class="line">    noverflow <span class="type">uint16</span> <span class="comment">// 溢出桶的大致数量</span></span><br><span class="line">    hash0     <span class="type">uint32</span> <span class="comment">// 哈希种子</span></span><br><span class="line"></span><br><span class="line">    buckets    unsafe.Pointer <span class="comment">// 当前主哈希桶数组</span></span><br><span class="line">    oldbuckets unsafe.Pointer <span class="comment">// 扩容时，指向旧的主哈希桶数组 (增量迁移过程中存在)</span></span><br><span class="line">    nevacuate  <span class="type">uintptr</span>        <span class="comment">// 标识迁移进度，表示还有多少个旧桶需要被迁移</span></span><br><span class="line">    <span class="comment">// ... 其他字段 (type info, iterators)</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong><code>bmap</code> (bucket)</strong><br>这是哈希桶的结构。每个桶可以存储 8 个键值对。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> bmap <span class="keyword">struct</span> &#123;</span><br><span class="line">    tophash [<span class="number">8</span>]<span class="type">uint8</span> <span class="comment">// 存储每个键哈希值的高 8 位，用于快速查找</span></span><br><span class="line">    <span class="comment">// followed by keys and values in memory</span></span><br><span class="line">    <span class="comment">// followed by an overflow pointer</span></span><br><span class="line">    <span class="comment">// ovf *bmap // 指向下一个溢出桶</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="2-扩容触发：mapassign-函数中的条件检查"><a href="#2-扩容触发：mapassign-函数中的条件检查" class="headerlink" title="2. 扩容触发：mapassign 函数中的条件检查"></a>2. 扩容触发：<code>mapassign</code> 函数中的条件检查</h4><p>当我们向 <code>map</code> 中插入一个键值对时（例如 <code>m[k] = v</code>），会调用 <code>runtime.mapassign</code> 函数。在这个函数内部，会在写入前进行扩容条件的检查：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// src/runtime/map.go</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">mapassign</span><span class="params">(t *maptype, h *hmap, key unsafe.Pointer)</span></span> unsafe.Pointer &#123;</span><br><span class="line">    <span class="comment">// ... (省略前期处理，如原子计数器检查、哈希计算等)</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 如果 map 正在进行增量式扩容，则协助迁移</span></span><br><span class="line">    <span class="keyword">if</span> h.oldbuckets != <span class="literal">nil</span> &#123;</span><br><span class="line">        growWork(t, h, bucket) <span class="comment">// 每次操作迁移少量桶</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 检查是否需要触发新的扩容</span></span><br><span class="line">    <span class="comment">// overLoadFactor(h.count+1, h.B) 检查负载因子</span></span><br><span class="line">    <span class="comment">// tooManyOldBuckets(h.noverflow, h.B) 检查溢出桶数量</span></span><br><span class="line">    <span class="keyword">if</span> !h.growing() &amp;&amp; (overLoadFactor(h.count+<span class="number">1</span>, h.B) || tooManyOldBuckets(h.noverflow, h.B)) &#123;</span><br><span class="line">        hashGrow(t, h) <span class="comment">// 触发扩容过程的开始</span></span><br><span class="line">        <span class="comment">// ... 继续进行增量迁移，每次只迁移一两个桶</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// ... (后续是查找键、插入/更新键值对的逻辑)</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从 <code>mapassign</code> 中我们可以看到：</p>
+<ul>
+<li>如果 <code>h.oldbuckets != nil</code>，说明 <code>map</code> 正处于扩容迁移过程中。此时会调用 <code>growWork</code> 来推动数据迁移。</li>
+<li>如果没有处于扩容中 (<code>!h.growing()</code>)，则会检查 <code>overLoadFactor</code> 和 <code>tooManyOldBuckets</code>。如果满足条件，则调用 <code>hashGrow</code> 启动新的扩容。</li>
+</ul>
+<h4 id="3-启动扩容：hashGrow-函数"><a href="#3-启动扩容：hashGrow-函数" class="headerlink" title="3. 启动扩容：hashGrow 函数"></a>3. 启动扩容：<code>hashGrow</code> 函数</h4><p>当 <code>map</code> 需要扩容时，<code>hashGrow</code> 函数被调用。它的主要任务是分配一个新的、更大的桶数组，并设置好 <code>hmap</code> 的相关字段，将旧桶数组标记为待迁移。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// src/runtime/map.go</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">hashGrow</span><span class="params">(t *maptype, h *hmap)</span></span> &#123;</span><br><span class="line">    <span class="comment">// 标记 map 处于 growing 状态</span></span><br><span class="line">    h.flags |= map_growing</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 新的桶数量是旧桶数量的两倍，所以 B 增加 1</span></span><br><span class="line">    newB := h.B + <span class="number">1</span></span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 分配新的桶数组。</span></span><br><span class="line">    <span class="comment">// oldbuckets 此时指向当前的桶数组</span></span><br><span class="line">    h.oldbuckets = h.buckets</span><br><span class="line">  </span><br><span class="line">    <span class="comment">// newbuckets 指向新分配的、更大的桶数组</span></span><br><span class="line">    newbuckets, _ := makeBucketArray(t, newB, <span class="literal">nil</span>)</span><br><span class="line">    h.buckets = newbuckets</span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 更新 B (桶数量的 log2 值)</span></span><br><span class="line">    h.B = newB</span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 初始化 nevacuate，表示需要迁移的旧桶数量</span></span><br><span class="line">    <span class="comment">// 就是旧桶数组的总长度 (2^B)</span></span><br><span class="line">    h.nevacuate = <span class="number">1</span> &lt;&lt; h.oldB() <span class="comment">// oldB() == h.B - 1</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在 <code>hashGrow</code> 执行后，<code>h.buckets</code> 指向新分配的空桶数组，<code>h.oldbuckets</code> 指向旧的、包含所有数据的桶数组。<code>h.nevacuate</code> 被设置为旧桶的数量，表示所有旧桶都需要被迁移。</p>
+<h4 id="4-渐进式迁移：growWork-和-evacuate-函数"><a href="#4-渐进式迁移：growWork-和-evacuate-函数" class="headerlink" title="4. 渐进式迁移：growWork 和 evacuate 函数"></a>4. 渐进式迁移：<code>growWork</code> 和 <code>evacuate</code> 函数</h4><p><code>map</code> 的增量式扩容的核心在于 <code>growWork</code> 和 <code>evacuate</code>。每次对 <code>map</code> 进行<strong>写入操作</strong>（插入、删除<code>mapassign</code>或<code>mapdelete</code>）时，<code>runtime</code> 都会调用 <code>growWork</code> 来迁移少量的旧桶。</p>
+<p><strong><code>growWork</code> 函数</strong>：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// src/runtime/map.go</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">growWork</span><span class="params">(t *maptype, h *hmap, bucket <span class="type">uintptr</span>)</span></span> &#123;</span><br><span class="line">    <span class="comment">// 迁移一个或两个旧桶</span></span><br><span class="line">    evacuate(t, h, h.nevacuate<span class="number">-1</span>) <span class="comment">// 迁移一个 (通常是当前访问的旧桶)</span></span><br><span class="line">    <span class="keyword">if</span> h.growing() &#123; <span class="comment">// 如果 map 仍在扩容中</span></span><br><span class="line">        evacuate(t, h, h.nevacuate<span class="number">-1</span>) <span class="comment">// 再迁移一个额外的桶</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong><code>evacuate</code> 函数</strong>：<br>这是实际将数据从旧桶迁移到新桶的核心函数。它负责将一个指定的旧桶（及其溢出链上的所有数据）中的键值对，根据新的哈希规则分散到新桶数组的两个对应位置。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// src/runtime/map.go</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">evacuate</span><span class="params">(t *maptype, h *hmap, oldbucketID <span class="type">uintptr</span>)</span></span> &#123;</span><br><span class="line">    b := (*bmap)(add(h.oldbuckets, oldbucketID*<span class="type">uintptr</span>(t.bucketsize)))</span><br><span class="line">  </span><br><span class="line">    <span class="comment">// ... 标记旧桶已迁移 (evacuated)</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 遍历旧桶及其溢出链上的所有键值对</span></span><br><span class="line">    <span class="keyword">for</span> ; b != <span class="literal">nil</span>; b = b.overflow(t) &#123;</span><br><span class="line">        <span class="keyword">for</span> i := <span class="number">0</span>; i &lt; bucketCnt; i++ &#123; <span class="comment">// bucketCnt 通常是 8</span></span><br><span class="line">            k := add(b, dataOffset+<span class="type">uintptr</span>(i)*<span class="number">2</span>*keySize) <span class="comment">// 获取键</span></span><br><span class="line">            <span class="comment">// ... 获取值</span></span><br><span class="line">          </span><br><span class="line">            <span class="comment">// 计算键在新桶数组中的位置</span></span><br><span class="line">            hash := t.hasher(k, h.hash0)</span><br><span class="line">            newbucketID := hash &amp; (<span class="type">uintptr</span>(<span class="number">1</span>&lt;&lt;h.B) - <span class="number">1</span>) <span class="comment">// 新的桶索引</span></span><br><span class="line"></span><br><span class="line">            <span class="comment">// 关键：新的桶数量是旧的两倍 (2^B -&gt; 2^(B+1))</span></span><br><span class="line">            <span class="comment">// 所以一个旧桶的数据会分流到两个新桶中的一个：</span></span><br><span class="line">            <span class="comment">// 1. 低位桶: hash &amp; (old_bucket_count - 1)，这个索引和旧桶索引相同</span></span><br><span class="line">            <span class="comment">// 2. 高位桶: hash &amp; (old_bucket_count - 1) + old_bucket_count</span></span><br><span class="line">          </span><br><span class="line">            <span class="comment">// Go 通过检查哈希值的第 h.oldB() 位（也就是新增加的那一位 `B`）来决定</span></span><br><span class="line">            <span class="comment">// 如果这一位是 0，则去低位桶；如果是 1，则去高位桶</span></span><br><span class="line">            <span class="keyword">if</span> (hash &amp; (<span class="number">1</span> &lt;&lt; h.oldB())) != <span class="number">0</span> &#123;</span><br><span class="line">                <span class="comment">// 如果第 h.oldB() 位为 1，则将其 hash 值调整到高位桶</span></span><br><span class="line">                newbucketID += (<span class="number">1</span> &lt;&lt; h.oldB()) </span><br><span class="line">            &#125;</span><br><span class="line">          </span><br><span class="line">            <span class="comment">// 将键值对插入到新的桶中 (如果该桶满了，则会创建溢出桶)</span></span><br><span class="line">            <span class="comment">// 该过程是在 oldbuckets 未被完全迁移完之前，将 oldbucketID 的数据写入到 newbuckets</span></span><br><span class="line">            <span class="comment">// ... (将键值对复制到 newbuckets 或其溢出链)</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 迁移了一个旧桶，nevacuate 计数减一 (表示还剩多少旧桶待迁移)</span></span><br><span class="line">    atomic.Xadd64(&amp;h.nevacuate, ^<span class="type">uintptr</span>(<span class="number">0</span>)) <span class="comment">// 减 1</span></span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 如果所有旧桶都已迁移完毕</span></span><br><span class="line">    <span class="keyword">if</span> h.nevacuate == <span class="number">0</span> &#123;</span><br><span class="line">        <span class="comment">// ... 清理 oldbuckets，标记 map 状态为非 growing</span></span><br><span class="line">        h.oldbuckets = <span class="literal">nil</span></span><br><span class="line">        h.flags &amp;^= map_growing</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从 <code>evacuate</code> 中可以看到，一个旧桶中的键值对会被重新散列（实际上是根据新的桶数量计算新的位置），然后被分配到新桶数组的两个可能位置之一。这个过程是一个位运算的优化，非常高效。</p>
+<h4 id="5-读操作与扩容"><a href="#5-读操作与扩容" class="headerlink" title="5. 读操作与扩容"></a>5. 读操作与扩容</h4><p>在渐进式扩容期间，<code>map</code> 的读操作（<code>mapaccess</code> 函数）也必须能从新旧两个桶数组中查找数据：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// src/runtime/map.go</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">mapaccess</span><span class="params">(t *maptype, h *hmap, key unsafe.Pointer)</span></span> unsafe.Pointer &#123;</span><br><span class="line">    <span class="comment">// ... (哈希计算等)</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 如果 map 正在扩容，也触发 growWork，可能迁移一两个桶</span></span><br><span class="line">    <span class="keyword">if</span> h.oldbuckets != <span class="literal">nil</span> &#123;</span><br><span class="line">        growWork(t, h, bucket) <span class="comment">// 读操作也会推动迁移进度</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 首先在新桶中查找</span></span><br><span class="line">    <span class="comment">// ... 在 h.buckets 中查找</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 如果未找到且有旧桶 (仍在扩容中)</span></span><br><span class="line">    <span class="keyword">if</span> h.oldbuckets != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="comment">// 在 oldbuckets 中查找</span></span><br><span class="line">        <span class="comment">// ... 在 h.oldbuckets 中查找</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这意味着在扩容期间，读操作的性能可能会略受影响，因为它们可能需要在两个桶数组中进行查找。然而，由于每次只迁移少量数据，并且最终数据会集中在新桶中，所以这种影响是可接受的，且总体的平均时间复杂度依然是 <code>O(1)</code>。</p>
+<h4 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h4><p>Go 语言 <code>map</code> 的增量式扩容机制是其设计上的一个亮点，它通过以下方式实现了高效且平滑的扩容：</p>
+<ol>
+<li><strong>分阶段进行</strong>：不一次性完成所有数据的迁移，避免了单次操作的长时间停顿。</li>
+<li><strong>写时协助迁移</strong>：在每次对 <code>map</code> 进行写操作时，顺带迁移一到两个旧桶的数据，将扩容的开销分摊到多次操作中。</li>
+<li><strong>读写双向兼容</strong>：在迁移过程中，新旧桶数组并行存在，读操作可以在两个数组中查找，保证了服务的可用性。</li>
+<li><strong>高效的数据分流</strong>：利用哈希值新增的比特位来决定数据迁移到新桶的哪个区域，减少了计算开销。</li>
+</ol>
+<p>这种设计使得 Go <code>map</code> 在性能和实时性之间取得了很好的平衡，非常适合后端服务中对数据结构的要求。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Go/" rel="tag"># Go</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Go%20%E8%AF%AD%E8%A8%80%20tag/" rel="prev" title="Go 语言 tag">
+      <i class="fa fa-chevron-left"></i> Go 语言 tag
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Go%20%E7%BC%BA%E7%9C%81%E5%80%BC/" rel="next" title="Go 缺省值">
+      Go 缺省值 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Go-%E8%AF%AD%E8%A8%80-Map-%E7%9A%84%E6%89%A9%E5%AE%B9%E6%9C%BA%E5%88%B6%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">Go 语言 Map 的扩容机制概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%93%E5%90%88%E6%BA%90%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90-map-%E7%9A%84%E6%89%A9%E5%AE%B9%E6%9C%BA%E5%88%B6"><span class="nav-number">2.</span> <span class="nav-text">结合源代码分析 map 的扩容机制</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E6%A0%B8%E5%BF%83%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84-hmap-%E5%92%8C-bmap"><span class="nav-number">2.1.</span> <span class="nav-text">1. 核心数据结构 hmap 和 bmap</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E6%89%A9%E5%AE%B9%E8%A7%A6%E5%8F%91%EF%BC%9Amapassign-%E5%87%BD%E6%95%B0%E4%B8%AD%E7%9A%84%E6%9D%A1%E4%BB%B6%E6%A3%80%E6%9F%A5"><span class="nav-number">2.2.</span> <span class="nav-text">2. 扩容触发：mapassign 函数中的条件检查</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E5%90%AF%E5%8A%A8%E6%89%A9%E5%AE%B9%EF%BC%9AhashGrow-%E5%87%BD%E6%95%B0"><span class="nav-number">2.3.</span> <span class="nav-text">3. 启动扩容：hashGrow 函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-%E6%B8%90%E8%BF%9B%E5%BC%8F%E8%BF%81%E7%A7%BB%EF%BC%9AgrowWork-%E5%92%8C-evacuate-%E5%87%BD%E6%95%B0"><span class="nav-number">2.4.</span> <span class="nav-text">4. 渐进式迁移：growWork 和 evacuate 函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-%E8%AF%BB%E6%93%8D%E4%BD%9C%E4%B8%8E%E6%89%A9%E5%AE%B9"><span class="nav-number">2.5.</span> <span class="nav-text">5. 读操作与扩容</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">2.6.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Store 组件上面我们安装了 Thanos 的 Sidecar 和 Querier 组件，已经可以做到 Prometheus 的高可用，通过 Querier 提供一个统一的入口来查询监控数据，而且还可以对监控数据自动去重，但是还有一个非常重要的地方是还没有配置对象存储，如果想要查看历史监控数据就不行了，这个时候我们就需要去配置 Thanos Store 组件，将历史监控指标存储在对象存储中去。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Thanos Store">
+<meta property="og:url" content="http://example.com/2025/09/11/Thanos%20Store/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="Store 组件上面我们安装了 Thanos 的 Sidecar 和 Querier 组件，已经可以做到 Prometheus 的高可用，通过 Querier 提供一个统一的入口来查询监控数据，而且还可以对监控数据自动去重，但是还有一个非常重要的地方是还没有配置对象存储，如果想要查看历史监控数据就不行了，这个时候我们就需要去配置 Thanos Store 组件，将历史监控指标存储在对象存储中去。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://picdn.youdianzhishi.com/images/20200401105052.png">
+<meta property="og:image" content="https://picdn.youdianzhishi.com/images/20220321110506.png">
+<meta property="og:image" content="https://picdn.youdianzhishi.com/images/20220321110706.png">
+<meta property="og:image" content="https://picdn.youdianzhishi.com/images/20220321180715.png">
+<meta property="og:image" content="https://picdn.youdianzhishi.com/images/20200401130226.png">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:08:16.412Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta property="article:tag" content="Prometheus">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://picdn.youdianzhishi.com/images/20200401105052.png">
+
+<link rel="canonical" href="http://example.com/2025/09/11/Thanos%20Store/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Thanos Store | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Thanos%20Store/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Thanos Store
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:08:16" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/" itemprop="url" rel="index"><span itemprop="name">k8s-monitor</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/Thanos/" itemprop="url" rel="index"><span itemprop="name">Thanos</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>5.6k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Store-组件"><a href="#Store-组件" class="headerlink" title="Store 组件"></a>Store 组件</h1><p>上面我们安装了 Thanos 的 Sidecar 和 Querier 组件，已经可以做到 Prometheus 的高可用，通过 Querier 提供一个统一的入口来查询监控数据，而且还可以对监控数据自动去重，但是还有一个非常重要的地方是还没有配置对象存储，如果想要查看历史监控数据就不行了，这个时候我们就需要去配置 Thanos Store 组件，将历史监控指标存储在对象存储中去。</p>
+<p>目前 Thanos 支持的对象存储有：</p>
+<p><img data-src="https://picdn.youdianzhishi.com/images/20200401105052.png" alt="Thanos Store Object Store"></p>
+<p>要在生产环境使用最好使用 <code>Stable</code> 状态的，比如 S3 或者兼容 S3 的服务，比如 Ceph、Minio 等等。</p>
+<p>对于国内用户当然最方便的还是直接使用阿里云 OSS 或者腾讯云 COS 这样的服务，但是很多时候可能我们的服务并不是跑在公有云上面的，所以这里我们用 Minio 来部署一个兼容 S3 协议的对象存储服务。</p>
+<h2 id="安装-Minio"><a href="#安装-Minio" class="headerlink" title="安装 Minio"></a>安装 Minio</h2><p><a target="_blank" rel="noopener" href="https://min.io/">MinIO</a> 是一个基于 Apache License v2.0 开源协议的高性能分布式对象存储服务，为大规模私有云基础设施而设计。它兼容亚马逊 S3 云存储服务接口，非常适合于存储大容量非结构化的数据，例如图片、视频、日志文件、备份数据和容器&#x2F;虚拟机镜像等，而一个对象文件可以是任意大小，从几 kb 到最大 5T 不等。</p>
+<p>要安装 Minio 非常容易的，同样我们这里将 Minio 安装到 Kubernetes 集群中，可以直接参考官方文档 <a target="_blank" rel="noopener" href="https://docs.min.io/cn/deploy-minio-on-kubernetes.html">使用 Kubernetes 部署 MinIO</a>，在 Kubernetes 集群下面可以部署独立、分布式或共享几种模式，可以根据实际情况部署，我们这里只是单纯测试用最简单的独立模式即可。</p>
+<p>直接使用如下所示的 Deployment 来管理 Minio 的服务：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># minio-deploy.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">minio</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">minio</span></span><br><span class="line">  <span class="attr">strategy:</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">Recreate</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">minio</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">volumes:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">data</span></span><br><span class="line">          <span class="attr">persistentVolumeClaim:</span></span><br><span class="line">            <span class="attr">claimName:</span> <span class="string">minio-pvc</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">minio</span></span><br><span class="line">          <span class="attr">volumeMounts:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">data</span></span><br><span class="line">              <span class="attr">mountPath:</span> <span class="string">&#x27;/data&#x27;</span></span><br><span class="line">          <span class="attr">image:</span> <span class="string">minio/minio:latest</span></span><br><span class="line">          <span class="attr">args:</span> [<span class="string">&#x27;server&#x27;</span>, <span class="string">&#x27;--console-address&#x27;</span>, <span class="string">&#x27;:9001&#x27;</span>, <span class="string">&#x27;/data&#x27;</span>]</span><br><span class="line">          <span class="attr">env:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">MINIO_ACCESS_KEY</span></span><br><span class="line">              <span class="attr">value:</span> <span class="string">&#x27;minio&#x27;</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">MINIO_SECRET_KEY</span></span><br><span class="line">              <span class="attr">value:</span> <span class="string">&#x27;minio123&#x27;</span></span><br><span class="line">          <span class="attr">ports:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">9000</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">9001</span></span><br><span class="line">          <span class="attr">readinessProbe:</span></span><br><span class="line">            <span class="attr">httpGet:</span></span><br><span class="line">              <span class="attr">path:</span> <span class="string">/minio/health/ready</span></span><br><span class="line">              <span class="attr">port:</span> <span class="number">9000</span></span><br><span class="line">            <span class="attr">initialDelaySeconds:</span> <span class="number">10</span></span><br><span class="line">            <span class="attr">periodSeconds:</span> <span class="number">10</span></span><br><span class="line">          <span class="attr">livenessProbe:</span></span><br><span class="line">            <span class="attr">httpGet:</span></span><br><span class="line">              <span class="attr">path:</span> <span class="string">/minio/health/live</span></span><br><span class="line">              <span class="attr">port:</span> <span class="number">9000</span></span><br><span class="line">            <span class="attr">initialDelaySeconds:</span> <span class="number">10</span></span><br><span class="line">            <span class="attr">periodSeconds:</span> <span class="number">10</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>由于新版本的镜像区分了 Console 和 API 两个服务的端口，所以在启动的时候我们需要通过 <code>--console-address</code> 参数来指定 Console 服务的端口，默认的 API 服务在 9000 端口上。</p>
+<p>然后通过一个名为 <code>minio-pvc</code> 的 PVC 对象将数据持久化：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># minio-pvc.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PersistentVolumeClaim</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">minio-pvc</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">accessModes:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">ReadWriteOnce</span></span><br><span class="line">  <span class="attr">resources:</span></span><br><span class="line">    <span class="attr">requests:</span></span><br><span class="line">      <span class="attr">storage:</span> <span class="string">10G</span></span><br><span class="line">  <span class="attr">storageClassName:</span> <span class="string">longhorn</span> <span class="comment"># 最好使用LocalPV</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>最后我们可以通过 NodePort 类型的 Service 服务将 Minio 暴露给外部用户使用：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># minio-svc.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">minio</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">console</span></span><br><span class="line">      <span class="attr">port:</span> <span class="number">9001</span></span><br><span class="line">      <span class="attr">targetPort:</span> <span class="number">9001</span></span><br><span class="line">      <span class="attr">nodePort:</span> <span class="number">30091</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">api</span></span><br><span class="line">      <span class="attr">port:</span> <span class="number">9000</span></span><br><span class="line">      <span class="attr">targetPort:</span> <span class="number">9000</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">minio</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">NodePort</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>直接创建上面的资源对象即可：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">☸ ➜ kubectl apply -f https://p8s.io/docs/thanos/manifests/minio.yaml</span><br></pre></td></tr></table></figure>
+
+
+
+<p>部署成功后，可以在浏览器中访问 <code>http://&lt;nodeip&gt;:30091</code> 访问到 MinIO Console 服务，通过上面定义的 <code>MINIO_ACCESS_KEY</code> 和 <code>MINIO_SECRET_KEY</code> 即可登录：</p>
+<p><img data-src="https://picdn.youdianzhishi.com/images/20220321110506.png" alt="MinIO"></p>
+<p>然后创建一个名为 <code>thanos</code> 的 bucket 桶：</p>
+<p><img data-src="https://picdn.youdianzhishi.com/images/20220321110706.png" alt="Bucket"></p>
+<h2 id="安装-Thanos-Store"><a href="#安装-Thanos-Store" class="headerlink" title="安装 Thanos Store"></a>安装 Thanos Store</h2><p>现在对象存储准备好了，我们就可以来部署 Store 组件了，该组件会从对象存储给 Querier 提供 metrics 数据。</p>
+<p>根据上面创建的 Minio 创建一个如下所示的对象存储配置文件：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># thanos-storage-minio.yaml</span></span><br><span class="line"><span class="attr">type:</span> <span class="string">s3</span></span><br><span class="line"><span class="attr">config:</span></span><br><span class="line">  <span class="attr">bucket:</span> <span class="string">thanos</span></span><br><span class="line">  <span class="attr">endpoint:</span> <span class="string">minio.default.svc.cluster.local:9000</span></span><br><span class="line">  <span class="attr">access_key:</span> <span class="string">minio</span></span><br><span class="line">  <span class="attr">secret_key:</span> <span class="string">minio123</span></span><br><span class="line">  <span class="attr">insecure:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">signature_version2:</span> <span class="literal">false</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>使用上面的配置文件来创建一个 Secret 对象：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">☸ ➜ kubectl create secret generic thanos-objectstorage --from-file=thanos.yaml=thanos-storage-minio.yaml -n kube-mon</span><br></pre></td></tr></table></figure>
+
+
+
+<p>然后创建 Store 组件的资源清单文件，这里有一个需要注意的地方是需要添加一个 <code>thanos-store-api: &quot;true&quot;</code> 的标签，这样前面我们创建的 <code>thanos-store-gateway</code> 这个 Headless Service 就可以自动发现到这个服务，Querier 组件查询数据的时候除了可以通过 Sidecar 去获取数据也可以通过这个 Store 组件去对象存储里面获取数据了。将上面的 Secret 对象通过 Volume 形式挂载到容器中的 <code>/etc/secret</code> 目录下，通过 <code>objstore.config-file</code> 参数指定即可：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># thanos-store.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">StatefulSet</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">thanos-store-gateway</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-mon</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">thanos-store-gateway</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">2</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">thanos-store-gateway</span></span><br><span class="line">  <span class="attr">serviceName:</span> <span class="string">thanos-store-gateway</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">thanos-store-gateway</span></span><br><span class="line">        <span class="attr">thanos-store-api:</span> <span class="string">&#x27;true&#x27;</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">affinity:</span></span><br><span class="line">        <span class="attr">podAntiAffinity:</span></span><br><span class="line">          <span class="attr">preferredDuringSchedulingIgnoredDuringExecution:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">weight:</span> <span class="number">100</span></span><br><span class="line">              <span class="attr">podAffinityTerm:</span></span><br><span class="line">                <span class="attr">topologyKey:</span> <span class="string">kubernetes.io/hostname</span></span><br><span class="line">                <span class="attr">labelSelector:</span></span><br><span class="line">                  <span class="attr">matchExpressions:</span></span><br><span class="line">                    <span class="bullet">-</span> <span class="attr">key:</span> <span class="string">app</span></span><br><span class="line">                      <span class="attr">operator:</span> <span class="string">In</span></span><br><span class="line">                      <span class="attr">values:</span></span><br><span class="line">                        <span class="bullet">-</span> <span class="string">thanos-store-gateway</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">thanos</span></span><br><span class="line">          <span class="attr">image:</span> <span class="string">thanosio/thanos:v0.25.1</span></span><br><span class="line">          <span class="attr">args:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">&#x27;store&#x27;</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">&#x27;--log.level=debug&#x27;</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">&#x27;--data-dir=/data&#x27;</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">&#x27;--objstore.config-file=/etc/secret/thanos.yaml&#x27;</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">&#x27;--index-cache-size=500MB&#x27;</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">&#x27;--chunk-pool-size=500MB&#x27;</span></span><br><span class="line">          <span class="attr">ports:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">http</span></span><br><span class="line">              <span class="attr">containerPort:</span> <span class="number">10902</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">grpc</span></span><br><span class="line">              <span class="attr">containerPort:</span> <span class="number">10901</span></span><br><span class="line">          <span class="attr">livenessProbe:</span></span><br><span class="line">            <span class="attr">httpGet:</span></span><br><span class="line">              <span class="attr">port:</span> <span class="number">10902</span></span><br><span class="line">              <span class="attr">path:</span> <span class="string">/-/healthy</span></span><br><span class="line">          <span class="attr">readinessProbe:</span></span><br><span class="line">            <span class="attr">httpGet:</span></span><br><span class="line">              <span class="attr">port:</span> <span class="number">10902</span></span><br><span class="line">              <span class="attr">path:</span> <span class="string">/-/ready</span></span><br><span class="line">          <span class="attr">volumeMounts:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">object-storage-config</span></span><br><span class="line">              <span class="attr">mountPath:</span> <span class="string">/etc/secret</span></span><br><span class="line">              <span class="attr">readOnly:</span> <span class="literal">false</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">mountPath:</span> <span class="string">/data</span></span><br><span class="line">              <span class="attr">name:</span> <span class="string">data</span></span><br><span class="line">      <span class="attr">volumes:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">object-storage-config</span></span><br><span class="line">          <span class="attr">secret:</span></span><br><span class="line">            <span class="attr">secretName:</span> <span class="string">thanos-objectstorage</span></span><br><span class="line">  <span class="attr">volumeClaimTemplates:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">metadata:</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">data</span></span><br><span class="line">      <span class="attr">spec:</span></span><br><span class="line">        <span class="attr">accessModes:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="string">ReadWriteOnce</span></span><br><span class="line">        <span class="attr">storageClassName:</span> <span class="string">longhorn</span></span><br><span class="line">        <span class="attr">resources:</span></span><br><span class="line">          <span class="attr">requests:</span></span><br><span class="line">            <span class="attr">storage:</span> <span class="string">1Gi</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>Store Gateway 实际也可以做到一定程度的无状态，它会需要一点磁盘空间来对对象存储做索引以加速查询，但数据不那么重要，是可以删除的，删除后会自动去拉对象存储查数据重新建立索引，这里为了避免每次重启都重新建立索引，所以用 StatefulSet 部署 Store Gateway，挂载一个小容量的 PV。部署两个副本，可以实现 Store Gateway 的高可用。</p>
+<p>然后直接创建上面的资源对象即可：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">☸ ➜ kubectl apply -f https://p8s.io/docs/thanos/manifests/thanos-store.yaml</span><br><span class="line">☸ ➜ kubectl get pods -n kube-mon -l thanos-store-api=true</span><br><span class="line">NAME                     READY   STATUS    RESTARTS      AGE</span><br><span class="line">prometheus-0             2/2     Running   0             20m</span><br><span class="line">prometheus-1             2/2     Running   0             21m</span><br><span class="line">thanos-store-gateway-0   1/1     Running   0             24m</span><br><span class="line">thanos-store-gateway-1   1/1     Running   0             24m</span><br></pre></td></tr></table></figure>
+
+
+
+<p>部署成功后这个时候去 Thano 的 Querier 页面上查看 Store 信息就可以发现这里我们配置的 Store 组件了：</p>
+<p><img data-src="https://picdn.youdianzhishi.com/images/20220321180715.png" alt="Thano Store"></p>
+<p>到这里证明我们的 Store 组件也配置成功了。但是还有一个明显的问题是这里我们只是配置去对象存储中查询数据的，那什么地方往对象存储中写入数据呢？当然还是在 Sidecar 组件里面了。所以同样我们需要把 <code>objstore.config-file</code> 参数和 Secret 对象也要配置到 Sidecar 组件中去：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">......</span></span><br><span class="line"><span class="attr">volumes:</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">object-storage-config</span></span><br><span class="line">  <span class="attr">secret:</span></span><br><span class="line">    <span class="attr">secretName:</span> <span class="string">thanos-objectstorage</span></span><br><span class="line"><span class="string">......</span></span><br><span class="line"><span class="attr">args:</span></span><br><span class="line"><span class="bullet">-</span> <span class="string">sidecar</span></span><br><span class="line"><span class="bullet">-</span> <span class="string">--log.level=debug</span></span><br><span class="line"><span class="bullet">-</span> <span class="string">--tsdb.path=/prometheus</span></span><br><span class="line"><span class="bullet">-</span> <span class="string">--prometheus.url=http://localhost:9090</span></span><br><span class="line"><span class="bullet">-</span> <span class="string">--reloader.config-file=/etc/prometheus/prometheus.yaml.tmpl</span></span><br><span class="line"><span class="bullet">-</span> <span class="string">--reloader.config-envsubst-file=/etc/prometheus-shared/prometheus.yaml</span></span><br><span class="line"><span class="bullet">-</span> <span class="string">--reloader.rule-dir=/etc/prometheus/rules/</span></span><br><span class="line"><span class="bullet">-</span> <span class="string">--objstore.config-file=/etc/secret/thanos.yaml</span></span><br><span class="line"><span class="string">......</span></span><br><span class="line"><span class="attr">volumeMounts:</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">object-storage-config</span></span><br><span class="line">  <span class="attr">mountPath:</span> <span class="string">/etc/secret</span></span><br><span class="line">  <span class="attr">readOnly:</span> <span class="literal">false</span></span><br><span class="line"><span class="string">......</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>配置完成后重新更新 Sidecar 组件即可，配置生效过后正常的话就会有数据传入到 MinIO 里面去了（本地有超过两小时的 TSDB 块数据），我们可以去 MinIO 的页面上查看验证：</p>
+<p><img data-src="https://picdn.youdianzhishi.com/images/20200401130226.png" alt="MinIO"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+              <a href="/tags/Prometheus/" rel="tag"># Prometheus</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Thanos%20Querier/" rel="prev" title="Thanos Querier">
+      <i class="fa fa-chevron-left"></i> Thanos Querier
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Thanos%20Receiver/" rel="next" title="Thanos Receiver">
+      Thanos Receiver <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Store-%E7%BB%84%E4%BB%B6"><span class="nav-number">1.</span> <span class="nav-text">Store 组件</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85-Minio"><span class="nav-number">1.1.</span> <span class="nav-text">安装 Minio</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85-Thanos-Store"><span class="nav-number">1.2.</span> <span class="nav-text">安装 Thanos Store</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

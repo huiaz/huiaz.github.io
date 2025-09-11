@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="您好！分布式事务是后端系统中非常关键的环节，而 RocketMQ 在这方面提供了强大的事务消息（Transaction Message）机制，旨在解决分布式系统中的数据最终一致性问题。它的实现基于经典的两阶段提交（Two-Phase Commit, 2PC）思想，但对其进行了优化，使其更适合异步消息场景。 我将从以下几个方面专业且逻辑清晰地阐述 RocketMQ 事务消息的实现：  一、 核心思想">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RocketMQ 中关于事务消息的实现">
+<meta property="og:url" content="http://example.com/2025/09/11/RocketMQ%20%E4%B8%AD%E5%85%B3%E4%BA%8E%E4%BA%8B%E5%8A%A1%E6%B6%88%E6%81%AF%E7%9A%84%E5%AE%9E%E7%8E%B0/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="您好！分布式事务是后端系统中非常关键的环节，而 RocketMQ 在这方面提供了强大的事务消息（Transaction Message）机制，旨在解决分布式系统中的数据最终一致性问题。它的实现基于经典的两阶段提交（Two-Phase Commit, 2PC）思想，但对其进行了优化，使其更适合异步消息场景。 我将从以下几个方面专业且逻辑清晰地阐述 RocketMQ 事务消息的实现：  一、 核心思想">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:54:29.826Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="中间件">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/RocketMQ%20%E4%B8%AD%E5%85%B3%E4%BA%8E%E4%BA%8B%E5%8A%A1%E6%B6%88%E6%81%AF%E7%9A%84%E5%AE%9E%E7%8E%B0/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>RocketMQ 中关于事务消息的实现 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/RocketMQ%20%E4%B8%AD%E5%85%B3%E4%BA%8E%E4%BA%8B%E5%8A%A1%E6%B6%88%E6%81%AF%E7%9A%84%E5%AE%9E%E7%8E%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          RocketMQ 中关于事务消息的实现
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:54:29" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MQ/" itemprop="url" rel="index"><span itemprop="name">MQ</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MQ/RocketMQ/" itemprop="url" rel="index"><span itemprop="name">RocketMQ</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>您好！分布式事务是后端系统中非常关键的环节，而 RocketMQ 在这方面提供了强大的<strong>事务消息（Transaction Message）</strong>机制，旨在解决分布式系统中的数据最终一致性问题。它的实现基于经典的<strong>两阶段提交（Two-Phase Commit, 2PC）</strong>思想，但对其进行了优化，使其更适合异步消息场景。</p>
+<p>我将从以下几个方面专业且逻辑清晰地阐述 RocketMQ 事务消息的实现：</p>
+<hr>
+<h3 id="一、-核心思想：两阶段提交（2PC）的优化与异步化"><a href="#一、-核心思想：两阶段提交（2PC）的优化与异步化" class="headerlink" title="一、 核心思想：两阶段提交（2PC）的优化与异步化"></a>一、 核心思想：两阶段提交（2PC）的优化与异步化</h3><p>RocketMQ 的事务消息旨在确保生产者发送消息和执行本地事务的原子性。它将传统的同步两阶段提交分解为异步的“半消息”和“消息确认&#x2F;回滚”两个阶段，并通过<strong>事务消息回查</strong>机制来处理异常情况。</p>
+<p>其核心流程可以概括为：</p>
+<ol>
+<li><strong>第一阶段（准备阶段）：发送半消息 (Half Message)</strong><br>生产者将消息发送到 Broker，但此时消息是“半态”或“预处理”状态，对消费者是不可见的。</li>
+<li><strong>第二阶段（执行&#x2F;提交阶段）：执行本地事务并确认</strong><br>生产者执行自己的本地事务。根据本地事务的执行结果（成功或失败），向 Broker 发送 Commit（提交）或 Rollback（回滚）指令。</li>
+<li><strong>补偿阶段（事务回查）：处理异常</strong><br>如果生产者在发送完半消息后，但在发送 Commit&#x2F;Rollback 指令前宕机，或者长时间未发送指令，Broker 会主动向生产者发起回查，查询本地事务的真实状态，然后根据回查结果决定消息的最终状态。</li>
+</ol>
+<hr>
+<h3 id="二、-事务消息的实现流程详解"><a href="#二、-事务消息的实现流程详解" class="headerlink" title="二、 事务消息的实现流程详解"></a>二、 事务消息的实现流程详解</h3><p>我们通过一个经典的<strong>订单创建与库存扣减</strong>场景来详细说明流程：</p>
+<h4 id="参与者："><a href="#参与者：" class="headerlink" title="参与者："></a>参与者：</h4><ul>
+<li><strong>Producer（生产者）：</strong> 业务应用，例如订单服务。</li>
+<li><strong>Broker（消息代理）：</strong> RocketMQ 服务器，负责消息存储和传递。</li>
+<li><strong>Consumer（消费者）：</strong> 业务应用，例如库存服务。</li>
+</ul>
+<h4 id="内部使用的特殊-Topic-对开发者透明-："><a href="#内部使用的特殊-Topic-对开发者透明-：" class="headerlink" title="内部使用的特殊 Topic (对开发者透明)："></a>内部使用的特殊 Topic (对开发者透明)：</h4><ul>
+<li><code>RMQ_SYS_TRANS_HALF_TOPIC</code>：用于存储处于“半消息”状态的消息。消费者无法订阅此 Topic。</li>
+<li><code>RMQ_SYS_TRANS_OP_TOPIC</code>：用于记录事务操作日志（Commit&#x2F;Rollback等），辅助事务消息的最终状态维护和恢复。</li>
+</ul>
+<h4 id="具体步骤："><a href="#具体步骤：" class="headerlink" title="具体步骤："></a>具体步骤：</h4><ol>
+<li><p><strong>生产者发送事务预处理消息（Half Message）</strong></p>
+<ul>
+<li><strong>操作：</strong> 生产者调用 <code>sendMessageInTransaction</code> API，将一个“半消息”发送到 Broker。</li>
+<li><strong>Broker 行为：</strong><ul>
+<li>Broker 收到半消息后，不立即将其投递到实际的 Topic，而是存储在内部的 <code>RMQ_SYS_TRANS_HALF_TOPIC</code>。</li>
+<li>Broker 会给消息打上 <code>Prepared</code>（预处理）状态，并记录消息的生产者地址和事务 ID。</li>
+<li>Broker 成功接收后，会返回 <code>SEND_OK</code> 给生产者。</li>
+</ul>
+</li>
+<li><strong>状态：</strong> 此时，消息对消费者是不可见的。</li>
+</ul>
+</li>
+<li><p><strong>生产者执行本地事务</strong></p>
+<ul>
+<li><strong>操作：</strong> 生产者接收到 Broker 的 <code>SEND_OK</code> 响应后，执行与该业务消息相关的本地事务。例如：订单服务将订单数据写入数据库。</li>
+<li><strong>核心：</strong> 生产者需要实现一个 <code>TransactionListener</code> 接口（旧版本是 <code>LocalTransactionExecutor</code>），其中包含 <code>executeLocalTransaction</code> 方法。在这个方法中执行本地事务逻辑。</li>
+</ul>
+</li>
+<li><p><strong>生产者根据本地事务结果发送二次确认&#x2F;回滚指令</strong></p>
+<ul>
+<li><strong>操作：</strong><ul>
+<li>如果本地事务执行成功，生产者返回 <code>LocalTransactionState.COMMIT_MESSAGE</code>。</li>
+<li>如果本地事务执行失败，生产者返回 <code>LocalTransactionState.ROLLBACK_MESSAGE</code>。</li>
+<li>如果本地事务状态不明确（例如：数据库连接断开），生产者返回 <code>LocalTransactionState.UNKNOW</code>。</li>
+</ul>
+</li>
+<li><strong>Broker 行为（根据生产者指令）：</strong><ul>
+<li><strong>COMMIT_MESSAGE：</strong> Broker 将 <code>RMQ_SYS_TRANS_HALF_TOPIC</code> 中的半消息，真正投递到目标 Topic（例如 <code>OrderTopic</code>），并标记为 <code>Commit</code> 状态。此时，消息对消费者可见。</li>
+<li><strong>ROLLBACK_MESSAGE：</strong> Broker 将 <code>RMQ_SYS_TRANS_HALF_TOPIC</code> 中的半消息删除或标记为无效，永远不会投递到目标 Topic。</li>
+<li><strong>UNKNOWN：</strong> Broker 不做任何处理，等待后续的回查。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>Broker 端的事务回查机制（Transaction Checker）</strong><br>这是 RocketMQ 事务消息能够处理异常、保证最终一致性的关键所在。</p>
+<ul>
+<li><strong>触发条件：</strong><ul>
+<li>生产者在发送半消息后未能及时发送第二次 OPeration（Commit&#x2F;Rollback）消息给 Broker（例如生产者宕机）。</li>
+<li>生产者发送的第二次 Operation 消息是 <code>UNKNOWN</code> 状态。</li>
+</ul>
+</li>
+<li><strong>Broker 行为：</strong><ul>
+<li>Broker 会定期（例如，每隔 1 分钟）扫描 <code>RMQ_SYS_TRANS_HALF_TOPIC</code>，查找长时间处于 <code>Prepared</code> 状态（例如超过 6 秒，默认值可配置）的半消息。</li>
+<li>对于这些“悬而未决”的半消息，Broker 会根据消息中记录的生产者地址，向原始生产者发送<strong>事务回查请求</strong>。</li>
+</ul>
+</li>
+<li><strong>生产者行为（事务回查）：</strong><ul>
+<li>生产者需要实现 <code>TransactionListener</code> 接口中的 <code>checkLocalTransaction</code> 方法。</li>
+<li>在这个方法中，生产者会查询其本地数据库中对应事务的真实状态（例如，根据订单 ID 查询订单是否已创建成功）。</li>
+<li>根据查询结果，生产者再次返回 <code>LocalTransactionState.COMMIT_MESSAGE</code>、<code>ROLLBACK_MESSAGE</code> 或 <code>UNKNOWN</code> 给 Broker。</li>
+</ul>
+</li>
+<li><strong>Broker 后续处理：</strong> Broker 根据生产者回查的结果，执行 Commit 或 Rollback 操作。</li>
+<li><strong>重试与死信：</strong> 如果多次回查（默认 3 次）仍然返回 <code>UNKNOWN</code>，或者生产者始终不在线无法响应回查，Broker会根据配置的策略处理。通常，经过多次重试仍无法确定的消息会被丢弃（Rollback），或者进入死信队列进行人工干预。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3 id="三、-RocketMQ-事务消息的优势与注意事项"><a href="#三、-RocketMQ-事务消息的优势与注意事项" class="headerlink" title="三、 RocketMQ 事务消息的优势与注意事项"></a>三、 RocketMQ 事务消息的优势与注意事项</h3><h4 id="优势："><a href="#优势：" class="headerlink" title="优势："></a>优势：</h4><ol>
+<li><strong>实现最终一致性：</strong> 确保了生产者本地事务与消息发送的原子性，从而保证了分布式环境下数据的一致性。</li>
+<li><strong>高性能：</strong> 相较于 XA 类型的分布式事务，RocketMQ 的事务消息是异步的，不锁定资源，对性能影响小。</li>
+<li><strong>高可用：</strong> 即使生产者在某个阶段宕机，Broker 的回查机制也能确保事务的最终完成或回滚。</li>
+<li><strong>低耦合：</strong> 生产者和消费者之间通过消息队列解耦，系统扩展性更好。</li>
+</ol>
+<h4 id="注意事项："><a href="#注意事项：" class="headerlink" title="注意事项："></a>注意事项：</h4><ol>
+<li><strong>生产者 <code>checkLocalTransaction</code> 的正确性：</strong> 这是整个机制的核心和难点。生产者必须能够准确地查询到本地事务的真实状态，并且这个查询操作本身是幂等的和可靠的。通常，这意味着本地事务的关键步骤需要记录到持久化存储（如数据库）中。</li>
+<li><strong>消费者幂等性：</strong> 即使使用了事务消息，消费者仍然应该实现幂等性。因为消息 Commit 成功后，仍然可能由于网络抖动或其他因素，导致消费者收到重复消息。</li>
+<li><strong>事务超时处理：</strong> 合理设置事务回查的超时时间非常重要。如果太短可能会导致频繁回查，太长则可能延长事务不确定的时间。</li>
+<li><strong><code>UNKNOWN</code> 状态的处理：</strong> 生产者在 <code>checkLocalTransaction</code> 中返回 <code>UNKNOWN</code> 时，Broker 会继续进行回查。如果多次回查仍是 <code>UNKNOWN</code>，最终结果可能根据配置决定（通常是回滚），因此应尽量避免 <code>UNKNOWN</code> 状态的长期存在。</li>
+</ol>
+<hr>
+<p>通过上述机制，RocketMQ 的事务消息提供了一种强大且相对轻量级的解决方案，用于在分布式系统中可靠地管理和协调数据的一致性。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/%E4%B8%AD%E9%97%B4%E4%BB%B6/" rel="tag"># 中间件</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/SNMP/" rel="prev" title="SNMP">
+      <i class="fa fa-chevron-left"></i> SNMP
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/ReplicaSet/" rel="next" title="ReplicaSet">
+      ReplicaSet <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E3%80%81-%E6%A0%B8%E5%BF%83%E6%80%9D%E6%83%B3%EF%BC%9A%E4%B8%A4%E9%98%B6%E6%AE%B5%E6%8F%90%E4%BA%A4%EF%BC%882PC%EF%BC%89%E7%9A%84%E4%BC%98%E5%8C%96%E4%B8%8E%E5%BC%82%E6%AD%A5%E5%8C%96"><span class="nav-number">1.</span> <span class="nav-text">一、 核心思想：两阶段提交（2PC）的优化与异步化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E3%80%81-%E4%BA%8B%E5%8A%A1%E6%B6%88%E6%81%AF%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%B5%81%E7%A8%8B%E8%AF%A6%E8%A7%A3"><span class="nav-number">2.</span> <span class="nav-text">二、 事务消息的实现流程详解</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%82%E4%B8%8E%E8%80%85%EF%BC%9A"><span class="nav-number">2.1.</span> <span class="nav-text">参与者：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%86%85%E9%83%A8%E4%BD%BF%E7%94%A8%E7%9A%84%E7%89%B9%E6%AE%8A-Topic-%E5%AF%B9%E5%BC%80%E5%8F%91%E8%80%85%E9%80%8F%E6%98%8E-%EF%BC%9A"><span class="nav-number">2.2.</span> <span class="nav-text">内部使用的特殊 Topic (对开发者透明)：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%85%B7%E4%BD%93%E6%AD%A5%E9%AA%A4%EF%BC%9A"><span class="nav-number">2.3.</span> <span class="nav-text">具体步骤：</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E3%80%81-RocketMQ-%E4%BA%8B%E5%8A%A1%E6%B6%88%E6%81%AF%E7%9A%84%E4%BC%98%E5%8A%BF%E4%B8%8E%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9"><span class="nav-number">3.</span> <span class="nav-text">三、 RocketMQ 事务消息的优势与注意事项</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BC%98%E5%8A%BF%EF%BC%9A"><span class="nav-number">3.1.</span> <span class="nav-text">优势：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9%EF%BC%9A"><span class="nav-number">3.2.</span> <span class="nav-text">注意事项：</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

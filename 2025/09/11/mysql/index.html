@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="好的，没问题。我们接着刚才安装 MySQL 的 Playbook 进行扩展，加入分发自定义配置文件、确保 MySQL 安全性（类似 mysql_secure_installation）、创建数据库和用户这几个关键任务。 这是一个更完整、更贴近生产环境的 Playbook。  项目文件结构为了更好地管理配置文件和敏感信息，我们采用以下文件结构： 1234567.├── inventory.ini">
+<meta property="og:type" content="article">
+<meta property="og:title" content="mysql-ansible">
+<meta property="og:url" content="http://example.com/2025/09/11/mysql/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="好的，没问题。我们接着刚才安装 MySQL 的 Playbook 进行扩展，加入分发自定义配置文件、确保 MySQL 安全性（类似 mysql_secure_installation）、创建数据库和用户这几个关键任务。 这是一个更完整、更贴近生产环境的 Playbook。  项目文件结构为了更好地管理配置文件和敏感信息，我们采用以下文件结构： 1234567.├── inventory.ini">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:49:41.951Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Dadabase">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/mysql/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>mysql-ansible | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/mysql/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          mysql-ansible
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:49:41" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/scripts/" itemprop="url" rel="index"><span itemprop="name">scripts</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/scripts/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>5k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>好的，没问题。我们接着刚才安装 MySQL 的 Playbook 进行扩展，加入<strong>分发自定义配置文件</strong>、<strong>确保 MySQL 安全性（类似 <code>mysql_secure_installation</code>）</strong>、<strong>创建数据库和用户</strong>这几个关键任务。</p>
+<p>这是一个更完整、更贴近生产环境的 Playbook。</p>
+<hr>
+<h3 id="项目文件结构"><a href="#项目文件结构" class="headerlink" title="项目文件结构"></a>项目文件结构</h3><p>为了更好地管理配置文件和敏感信息，我们采用以下文件结构：</p>
+<figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">.</span><br><span class="line">├── inventory.ini             <span class="comment"># 资产清单</span></span><br><span class="line">├── mysql_playbook.yml      <span class="comment"># 主 Playbook 文件</span></span><br><span class="line">├── templates/</span><br><span class="line">│   └── <span class="keyword">my</span>.cnf.j2             <span class="comment"># MySQL 配置文件模板</span></span><br><span class="line">└── files/</span><br><span class="line">    └── .<span class="keyword">my</span>.cnf               <span class="comment"># 用于 Ansible 控制节点连接数据库的认证文件</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="1-templates-my-cnf-j2-配置文件模板"><a href="#1-templates-my-cnf-j2-配置文件模板" class="headerlink" title="1. templates/my.cnf.j2 (配置文件模板)"></a>1. <code>templates/my.cnf.j2</code> (配置文件模板)</h3><p>这是一个 Jinja2 模板。它允许我们使用 Ansible 的变量来动态生成配置文件内容。</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># templates/my.cnf.j2</span></span><br><span class="line"><span class="comment"># This configuration is managed by Ansible. Do not edit manually.</span></span><br><span class="line"></span><br><span class="line"><span class="section">[mysqld]</span></span><br><span class="line"><span class="attr">bind-address</span>            = &#123;&#123; mysql_bind_address &#125;&#125;</span><br><span class="line"><span class="attr">max_connections</span>         = &#123;&#123; mysql_max_connections &#125;&#125;</span><br><span class="line"><span class="attr">innodb_buffer_pool_size</span> = &#123;&#123; (ansible_memtotal_mb * <span class="number">0.6</span>) | int &#125;&#125;M</span><br><span class="line"><span class="comment"># ... 其他你需要的配置项</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>&#123;&#123; variable &#125;&#125;</code>: 这是 Jinja2 的语法，Ansible 会在执行时用 Playbook 中定义的变量替换它。</li>
+<li><code>&#123;&#123; (ansible_memtotal_mb * 0.6) | int &#125;&#125;M</code>: 这是一个高级用法。它使用了 Ansible 自动收集的 <strong>Fact</strong> (<code>ansible_memtotal_mb</code>)，动态计算出合适的 <code>innodb_buffer_pool_size</code> (这里设置为总内存的 60%)，并确保结果是整数。这让配置可以自适应不同规格的服务器。</li>
+</ul>
+<h3 id="2-files-my-cnf-数据库认证文件"><a href="#2-files-my-cnf-数据库认证文件" class="headerlink" title="2. files/.my.cnf (数据库认证文件)"></a>2. <code>files/.my.cnf</code> (数据库认证文件)</h3><p>为了让 Ansible 能够登录 MySQL 并执行管理任务（如创建用户），我们需要提供 root 用户的密码。直接在 Playbook 里写明文密码是不安全的。一个较好的实践是，在<strong>首次配置</strong>MySQL root 密码后，将密码存放在一个受控的文件中。</p>
+<p><strong>注意：</strong> 这个文件应该严格控制权限 (<code>chmod 600</code>)，并且在生产中，推荐使用 Ansible Vault 来加密它。</p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># files/.my.cnf</span></span><br><span class="line"><span class="section">[client]</span></span><br><span class="line"><span class="attr">user</span>=root</span><br><span class="line"><span class="attr">password</span>=<span class="string">&quot;Your_Secure_Root_Password&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="3-mysql-playbook-yml-完整的-Playbook"><a href="#3-mysql-playbook-yml-完整的-Playbook" class="headerlink" title="3. mysql_playbook.yml (完整的 Playbook)"></a>3. <code>mysql_playbook.yml</code> (完整的 Playbook)</h3><p>这个 Playbook 在之前的基础上增加了新的 <code>roles</code> 和 <code>tasks</code>。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Install</span> <span class="string">and</span> <span class="string">Secure</span> <span class="string">MySQL</span> <span class="string">Server</span></span><br><span class="line">  <span class="attr">hosts:</span> <span class="string">databases</span></span><br><span class="line">  <span class="attr">become:</span> <span class="literal">yes</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">vars:</span></span><br><span class="line">    <span class="comment"># --- 包和服务相关的变量 ---</span></span><br><span class="line">    <span class="attr">mysql_package_name:</span> <span class="string">mysql-server</span></span><br><span class="line">    <span class="attr">mysql_service_name:</span> <span class="string">mysql</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># --- 自定义配置相关的变量 ---</span></span><br><span class="line">    <span class="attr">mysql_bind_address:</span> <span class="string">&quot;0.0.0.0&quot;</span>       <span class="comment"># 允许远程连接</span></span><br><span class="line">    <span class="attr">mysql_max_connections:</span> <span class="number">500</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># --- 数据库和用户相关的变量 ---</span></span><br><span class="line">    <span class="attr">db_name:</span> <span class="string">&quot;my_app_db&quot;</span></span><br><span class="line">    <span class="attr">db_user:</span> <span class="string">&quot;my_app_user&quot;</span></span><br><span class="line">    <span class="attr">db_password:</span> <span class="string">&quot;A_Very_Strong_Password_For_App&quot;</span> <span class="comment"># 生产环境建议使用 Ansible Vault 加密</span></span><br><span class="line">    <span class="attr">db_host:</span> <span class="string">&quot;%&quot;</span> <span class="comment"># &#x27;%&#x27; 允许任何主机连接, &#x27;localhost&#x27; 仅本地</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">tasks:</span></span><br><span class="line">    <span class="comment"># ------------------ 任务1: 安装 ------------------</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Update</span> <span class="string">APT</span> <span class="string">cache</span> <span class="string">(for</span> <span class="string">Debian/Ubuntu)</span></span><br><span class="line">      <span class="attr">ansible.builtin.apt:</span></span><br><span class="line">        <span class="attr">update_cache:</span> <span class="literal">yes</span></span><br><span class="line">      <span class="attr">when:</span> <span class="string">ansible_os_family</span> <span class="string">==</span> <span class="string">&quot;Debian&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Install</span> <span class="string">MySQL</span> <span class="string">packages</span> <span class="string">and</span> <span class="string">Python</span> <span class="string">dependencies</span></span><br><span class="line">      <span class="attr">ansible.builtin.package:</span></span><br><span class="line">        <span class="attr">name:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="string">&quot;<span class="template-variable">&#123;&#123; mysql_package_name &#125;&#125;</span>&quot;</span></span><br><span class="line">          <span class="bullet">-</span> <span class="string">python3-pymysql</span>  <span class="comment"># Ansible 操作 MySQL 需要的 Python 库</span></span><br><span class="line">        <span class="attr">state:</span> <span class="string">present</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># ------------------ 任务2: 分发配置文件 ------------------</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Distribute</span> <span class="string">custom</span> <span class="string">MySQL</span> <span class="string">configuration</span> <span class="string">file</span></span><br><span class="line">      <span class="attr">ansible.builtin.template:</span></span><br><span class="line">        <span class="attr">src:</span> <span class="string">templates/my.cnf.j2</span> <span class="comment"># 源文件是模板文件</span></span><br><span class="line">        <span class="attr">dest:</span> <span class="string">/etc/mysql/mysql.conf.d/mysqld.cnf</span> <span class="comment"># 目标路径</span></span><br><span class="line">        <span class="attr">owner:</span> <span class="string">root</span></span><br><span class="line">        <span class="attr">group:</span> <span class="string">root</span></span><br><span class="line">        <span class="attr">mode:</span> <span class="string">&#x27;0644&#x27;</span></span><br><span class="line">      <span class="attr">notify:</span> <span class="string">Restart</span> <span class="string">MySQL</span> <span class="string">Service</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># ------------------ 任务3: 启动并使能服务 ------------------</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Ensure</span> <span class="string">MySQL</span> <span class="string">service</span> <span class="string">is</span> <span class="string">running</span> <span class="string">and</span> <span class="string">enabled</span></span><br><span class="line">      <span class="attr">ansible.builtin.service:</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">&quot;<span class="template-variable">&#123;&#123; mysql_service_name &#125;&#125;</span>&quot;</span></span><br><span class="line">        <span class="attr">state:</span> <span class="string">started</span></span><br><span class="line">        <span class="attr">enabled:</span> <span class="literal">yes</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># ------------------ 任务4: 确保数据库安全 ------------------</span></span><br><span class="line">    <span class="comment"># 这是一个幂等的安全设置流程，替代手动运行 mysql_secure_installation</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Set</span> <span class="string">the</span> <span class="string">root</span> <span class="string">password</span> <span class="string">for</span> <span class="string">the</span> <span class="string">first</span> <span class="string">time</span></span><br><span class="line">      <span class="attr">community.mysql.mysql_user:</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">root</span></span><br><span class="line">        <span class="attr">host:</span> <span class="string">localhost</span></span><br><span class="line">        <span class="attr">password:</span> <span class="string">&quot;Your_Secure_Root_Password&quot;</span> <span class="comment"># 同样，生产环境用 Vault</span></span><br><span class="line">        <span class="attr">login_unix_socket:</span> <span class="string">/var/run/mysqld/mysqld.sock</span></span><br><span class="line">      <span class="attr">when:</span> <span class="literal">True</span> <span class="comment"># 实际场景中可能需要更复杂的逻辑判断是否首次运行</span></span><br><span class="line"></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Copy</span> <span class="string">.my.cnf</span> <span class="string">file</span> <span class="string">with</span> <span class="string">root</span> <span class="string">password</span> <span class="string">to</span> <span class="string">the</span> <span class="string">remote</span> <span class="string">root</span> <span class="string">user&#x27;s</span> <span class="string">home</span></span><br><span class="line">      <span class="attr">ansible.builtin.copy:</span></span><br><span class="line">        <span class="attr">src:</span> <span class="string">files/.my.cnf</span></span><br><span class="line">        <span class="attr">dest:</span> <span class="string">/root/.my.cnf</span></span><br><span class="line">        <span class="attr">owner:</span> <span class="string">root</span></span><br><span class="line">        <span class="attr">group:</span> <span class="string">root</span></span><br><span class="line">        <span class="attr">mode:</span> <span class="string">&#x27;0600&#x27;</span></span><br><span class="line"></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Remove</span> <span class="string">anonymous</span> <span class="string">MySQL</span> <span class="string">users</span></span><br><span class="line">      <span class="attr">community.mysql.mysql_user:</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">&quot;&quot;</span></span><br><span class="line">        <span class="attr">host_all:</span> <span class="literal">yes</span></span><br><span class="line">        <span class="attr">state:</span> <span class="string">absent</span></span><br><span class="line">        <span class="attr">login_user:</span> <span class="string">root</span></span><br><span class="line">        <span class="attr">login_password:</span> <span class="string">&quot;Your_Secure_Root_Password&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Remove</span> <span class="string">the</span> <span class="string">test</span> <span class="string">database</span></span><br><span class="line">      <span class="attr">community.mysql.mysql_db:</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">test</span></span><br><span class="line">        <span class="attr">state:</span> <span class="string">absent</span></span><br><span class="line">        <span class="attr">login_user:</span> <span class="string">root</span></span><br><span class="line">        <span class="attr">login_password:</span> <span class="string">&quot;Your_Secure_Root_Password&quot;</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="comment"># ------------------ 任务5: 创建应用数据库和用户 ------------------</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Create</span> <span class="string">the</span> <span class="string">application</span> <span class="string">database</span></span><br><span class="line">      <span class="attr">community.mysql.mysql_db:</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">&quot;<span class="template-variable">&#123;&#123; db_name &#125;&#125;</span>&quot;</span></span><br><span class="line">        <span class="attr">state:</span> <span class="string">present</span></span><br><span class="line">        <span class="attr">login_user:</span> <span class="string">root</span></span><br><span class="line">        <span class="attr">login_password:</span> <span class="string">&quot;Your_Secure_Root_Password&quot;</span></span><br><span class="line"></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Create</span> <span class="string">the</span> <span class="string">application</span> <span class="string">user</span></span><br><span class="line">      <span class="attr">community.mysql.mysql_user:</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">&quot;<span class="template-variable">&#123;&#123; db_user &#125;&#125;</span>&quot;</span></span><br><span class="line">        <span class="attr">password:</span> <span class="string">&quot;<span class="template-variable">&#123;&#123; db_password &#125;&#125;</span>&quot;</span></span><br><span class="line">        <span class="attr">priv:</span> <span class="string">&quot;<span class="template-variable">&#123;&#123; db_name &#125;&#125;</span>.*:ALL&quot;</span> <span class="comment"># 授予用户在指定数据库上的所有权限</span></span><br><span class="line">        <span class="attr">host:</span> <span class="string">&quot;<span class="template-variable">&#123;&#123; db_host &#125;&#125;</span>&quot;</span></span><br><span class="line">        <span class="attr">state:</span> <span class="string">present</span></span><br><span class="line">        <span class="attr">login_user:</span> <span class="string">root</span></span><br><span class="line">        <span class="attr">login_password:</span> <span class="string">&quot;Your_Secure_Root_Password&quot;</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">handlers:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Restart</span> <span class="string">MySQL</span> <span class="string">Service</span></span><br><span class="line">      <span class="attr">ansible.builtin.service:</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">&quot;<span class="template-variable">&#123;&#123; mysql_service_name &#125;&#125;</span>&quot;</span></span><br><span class="line">        <span class="attr">state:</span> <span class="string">restarted</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="关键解读与改进"><a href="#关键解读与改进" class="headerlink" title="关键解读与改进"></a>关键解读与改进</h3><ol>
+<li><p><strong>分发配置文件 (任务2)</strong>:</p>
+<ul>
+<li>我们使用 <code>ansible.builtin.template</code> 模块，它能识别 Jinja2 模板并进行渲染。</li>
+<li><code>src</code> 指向控制节点上的模板文件，<code>dest</code> 指向受管节点上的目标路径。</li>
+<li><code>notify: Restart MySQL Service</code> 确保了只要配置文件发生变更，MySQL 服务就会自动重启以应用新配置。</li>
+</ul>
+</li>
+<li><p><strong>确保数据库安全 (任务4)</strong>:</p>
+<ul>
+<li>这一系列任务以<strong>幂等</strong>的方式实现了 <code>mysql_secure_installation</code> 脚本的核心功能：设置 root 密码、删除匿名用户、移除 test 数据库。</li>
+<li><strong><code>community.mysql.mysql_user</code></strong> 和 <strong><code>community.mysql.mysql_db</code></strong> 是 Ansible 社区提供的专用模块，用于管理 MySQL 用户和数据库，功能强大。</li>
+<li>为了让 Ansible 能以 root 身份登录数据库执行这些操作，我们先通过 <code>copy</code> 模块将包含 root 密码的 <code>.my.cnf</code> 文件安全地放置到服务器的 <code>/root/</code> 目录下。后续的 <code>mysql_*</code> 模块会自动读取这个文件进行认证。这是比在每个任务中都写 <code>login_password</code> 更优雅的方式。</li>
+</ul>
+</li>
+<li><p><strong>创建数据库和用户 (任务5)</strong>:</p>
+<ul>
+<li>同样使用 <code>mysql_db</code> 和 <code>mysql_user</code> 模块。</li>
+<li><code>priv: &quot;&#123;&#123; db_name &#125;&#125;.*:ALL&quot;</code> 是一个非常关键的参数，它精确地授予了新用户在指定数据库上的所有权限 (<code>GRANT ALL ON my_app_db.* TO ...</code>)。</li>
+<li>所有的数据库名、用户名、密码都通过 <code>vars</code> 定义，使得整个 Playbook <strong>配置驱动</strong>，修改时只需调整变量区即可，无需改动任务逻辑。</li>
+</ul>
+</li>
+<li><p><strong>依赖安装</strong>:</p>
+<ul>
+<li>注意，我们在安装任务中加入了 <code>python3-pymysql</code>。这是 Ansible 操作 MySQL 所必需的 Python 库，必须在受管节点上安装。</li>
+</ul>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Dadabase/" rel="tag"># Dadabase</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/panic/" rel="prev" title="panic">
+      <i class="fa fa-chevron-left"></i> panic
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/nginx%20%E5%8A%A8%E9%9D%99%E5%88%86%E7%A6%BB/" rel="next" title="nginx 动静分离">
+      nginx 动静分离 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%A1%B9%E7%9B%AE%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84"><span class="nav-number">1.</span> <span class="nav-text">项目文件结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-templates-my-cnf-j2-%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E6%A8%A1%E6%9D%BF"><span class="nav-number">2.</span> <span class="nav-text">1. templates&#x2F;my.cnf.j2 (配置文件模板)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-files-my-cnf-%E6%95%B0%E6%8D%AE%E5%BA%93%E8%AE%A4%E8%AF%81%E6%96%87%E4%BB%B6"><span class="nav-number">3.</span> <span class="nav-text">2. files&#x2F;.my.cnf (数据库认证文件)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-mysql-playbook-yml-%E5%AE%8C%E6%95%B4%E7%9A%84-Playbook"><span class="nav-number">4.</span> <span class="nav-text">3. mysql_playbook.yml (完整的 Playbook)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B3%E9%94%AE%E8%A7%A3%E8%AF%BB%E4%B8%8E%E6%94%B9%E8%BF%9B"><span class="nav-number">5.</span> <span class="nav-text">关键解读与改进</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

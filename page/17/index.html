@@ -1,0 +1,1820 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta property="og:type" content="website">
+<meta property="og:title" content="Hui&#39;s Blog">
+<meta property="og:url" content="http://example.com/page/17/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:author" content="六一">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/page/17/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : true,
+    isPost : false,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content index posts-expand">
+            
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/docker-volume/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/docker-volume/" class="post-title-link" itemprop="url">docker-volume</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:31:12" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/docker/" itemprop="url" rel="index"><span itemprop="name">docker</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.2k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>2 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>———— | :———————————– | :———————————– |<br>| <strong>管理方</strong>       | Docker 引擎                          | 用户&#x2F;宿主机                          |<br>| <strong>宿主机位置</strong>   | Docker 管理的特定目录                | 用户指定的任意路径                   |<br>| <strong>可移植性</strong>     | <strong>高</strong>，不依赖宿主机路径             | <strong>低</strong>，依赖宿主机特定路径           |<br>| <strong>安全性</strong>       | <strong>高</strong>，与宿主机文件系统隔离         | <strong>较低</strong>，容器可修改宿主机文件       |<br>| <strong>推荐使用场景</strong> | <strong>生产环境、数据库、应用数据持久化</strong> | <strong>开发环境、共享配置文件、代码同步</strong> |</p>
+<p><strong>作为运维工程师，我的核心建议是：</strong></p>
+<ol>
+<li>**首选命名数据卷 (Named Volumes)**：为所有生产数据的持久化使用命名数据卷，因为它们清晰、易于管理且安全。</li>
+<li><strong>谨慎使用绑定挂载</strong>：仅在开发、调试或需要明确操作宿主机文件的受控场景下使用。在生产环境中要严格审查其安全风险。</li>
+<li><strong>定期清理</strong>：养成定期运行 <code>docker volume prune</code> 的习惯，防止无用的数据卷占用大量磁盘空间。</li>
+<li><strong>备份策略</strong>：对于重要的数据卷，要建立定期的备份机制。可以利用 <code>docker volume inspect</code> 找到其在宿主机的路径，然后使用 <code>tar</code>、<code>rsync</code> 等工具进行备份。</li>
+</ol>
+<p>关于 Docker 中 Volume 和 Bind Mount 的 I&#x2F;O 性能问题，我的结论是：</p>
+<p><strong>在 Linux 系统上，两者的性能几乎没有显著差异。但在 macOS 和 Windows 系统上，Volume 的性能通常远优于 Bind Mount。</strong></p>
+<p>下面我来为你详细解释原因。</p>
+<hr>
+<h3 id="1-在-Linux-系统上-原生环境"><a href="#1-在-Linux-系统上-原生环境" class="headerlink" title="1. 在 Linux 系统上 (原生环境)"></a>1. 在 Linux 系统上 (原生环境)</h3><p>在 Linux 主机上，Docker 是原生运行的。无论是 Volume 还是 Bind Mount，它们在底层实现上都非常相似。</p>
+<ul>
+<li><strong>Volume (数据卷)</strong>: Docker 在宿主机的特定目录（通常是 <code>/var/lib/docker/volumes/</code>）下创建一个子目录，然后通过<strong>绑定挂载 (bind mount)</strong> 的系统调用，将这个目录挂载到容器内部。</li>
+<li><strong>Bind Mount (绑定挂载)</strong>: 你直接指定一个宿主机上的目录，Docker 同样通过<strong>绑定挂载 (bind mount)</strong> 的系统调用，将其挂载到容器内部。</li>
+</ul>
+<p><strong>结论</strong>：在 Linux 上，两者最终都是通过 Linux 内核的 <code>bind mount</code> 机制来实现的，唯一的区别是源目录的位置一个由 Docker 管理，一个由用户指定。因此，从 I&#x2F;O 路径来看，它们是等效的，<strong>性能上基本没有可感知的差别</strong>。任何微小的性能差异都可能源于文件系统本身的特性或磁盘硬件，而非挂载类型本身。</p>
+<h3 id="2-在-macOS-和-Windows-系统上-虚拟化环境"><a href="#2-在-macOS-和-Windows-系统上-虚拟化环境" class="headerlink" title="2. 在 macOS 和 Windows 系统上 (虚拟化环境)"></a>2. 在 macOS 和 Windows 系统上 (虚拟化环境)</h3><p>在 macOS 和 Windows 上，Docker Desktop 并不能像在 Linux 上那样原生运行。它需要一个轻量级的 <strong>Linux 虚拟机 (VM)</strong> 来运行 Docker 守护进程和容器。这个关键差异导致了 Volume 和 Bind Mount 性能上的巨大鸿沟。</p>
+<ul>
+<li><p><strong>Volume (数据卷)</strong>:</p>
+<ul>
+<li><strong>数据流</strong>：容器 -&gt; Docker 管理的 Volume -&gt; <strong>Linux VM 的文件系统</strong>。</li>
+<li><strong>工作原理</strong>：数据卷被创建在 Linux VM 内部的文件系统中（通常是 ext4）。所有 I&#x2F;O 操作都完全发生在这个 VM 内部。这是一个原生的、高效的路径。</li>
+</ul>
+</li>
+<li><p><strong>Bind Mount (绑定挂载)</strong>:</p>
+<ul>
+<li><strong>数据流</strong>：容器 -&gt; Linux VM 文件系统 -&gt; <strong>通过网络协议 (如 gRPC-FUSE, virtiofs) 同步到</strong> -&gt; <strong>宿主机 (macOS&#x2F;Windows) 的文件系统</strong>。</li>
+<li><strong>工作原理</strong>：当你把宿主机的一个目录（例如 <code>~/projects</code>）挂载到容器时，Docker Desktop 必须在宿主机的文件系统和 Linux VM 的文件系统之间建立一个文件共享和同步的通道。这个过程涉及：<ol>
+<li>复杂的协议转换和数据封包。</li>
+<li>上下文切换（从 VM 到宿主机内核）。</li>
+<li>文件系统事件的实时同步，以确保双方视图一致。</li>
+</ol>
+</li>
+<li><strong>性能瓶颈</strong>：这个跨越 VM 边界的文件共享和同步层带来了巨大的性能开销，尤其是在处理大量小文件（如 <code>node_modules</code> 目录）或进行频繁的元数据操作（如 <code>git status</code>）时，性能下降会非常明显。</li>
+</ul>
+</li>
+</ul>
+<p><strong>结论</strong>：在 macOS 和 Windows 上，由于 Bind Mount 需要跨越 VM 和宿主机之间的文件系统同步层，其 I&#x2F;O 性能<strong>显著低于</strong>完全在 VM 内部操作的 Volume。</p>
+<h3 id="运维实践总结与建议"><a href="#运维实践总结与建议" class="headerlink" title="运维实践总结与建议"></a>运维实践总结与建议</h3><table>
+<thead>
+<tr>
+<th align="left">操作系统</th>
+<th align="left">性能对比</th>
+<th align="left">推荐策略</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>Linux</strong></td>
+<td align="left"><strong>Volume ≈ Bind Mount</strong></td>
+<td align="left">- <strong>生产环境&#x2F;数据持久化</strong>：优先使用 <strong>Volume</strong>，因其易于管理、安全且解耦。<br>- <strong>开发环境&#x2F;共享代码</strong>：使用 <strong>Bind Mount</strong> 是完全可以接受的，性能无忧。</td>
+</tr>
+<tr>
+<td align="left"><strong>macOS &#x2F; Windows</strong></td>
+<td align="left"><strong>Volume &gt;&gt; Bind Mount</strong></td>
+<td align="left">- <strong>一切对 I&#x2F;O 性能敏感的场景</strong>：<strong>强烈推荐使用 Volume</strong>。例如数据库数据、编译缓存、包管理器缓存（如 <code>node_modules</code>, <code>maven .m2</code>）。<br>- <strong>开发代码同步</strong>：仍然需要使用 <strong>Bind Mount</strong>，但要接受其性能损失。可以通过一些技巧来优化，例如：<br>  - 将 <code>node_modules</code> 这种大而碎的目录用 Volume 挂载，而只把源代码目录用 Bind Mount 挂载。<br>  - 在 Docker Desktop 的新版本中，开启 <strong>VirtioFS</strong>（相较于旧的 gRPC-FUSE）可以显著提升 Bind Mount 的性能，但通常仍不及 Volume。</td>
+</tr>
+</tbody></table>
+<p><strong>一句话总结：在任何操作系统上，当你不确定该用哪个时，选择 Volume 总是更安全、更具可移植性且性能表现更稳定的选择。</strong></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/docker-swarm/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/docker-swarm/" class="post-title-link" itemprop="url">docker-swarm</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:31:00" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/docker/" itemprop="url" rel="index"><span itemprop="name">docker</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>274</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>————– | :———————————————– |<br>| <strong>集群管理</strong>       | 将多台机器整合成单一资源池，简化管理。           |<br>| <strong>声明式服务</strong>     | 从命令式操作转变为期望状态管理，更可靠、自动化。 |<br>| <strong>伸缩与负载均衡</strong> | 轻松应对流量变化，实现服务高可用。               |<br>| <strong>服务发现</strong>       | 解耦服务间的依赖，容器间通信无需硬编码 IP。      |<br>| <strong>自我修复</strong>       | 自动处理节点或容器故障，提升系统韧性。           |<br>| <strong>滚动更新</strong>       | 实现平滑、零停机的应用升级。                     |</p>
+<p>总而言之，Docker Swarm 是一个轻量级但功能完备的容器编排器。对于中小型集群或希望快速上手容器编排的团队来说，它是一个非常优秀的选择，能够极大地提升部署效率和系统的可靠性。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/docker-%E7%BB%84%E4%BB%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/docker-%E7%BB%84%E4%BB%B6/" class="post-title-link" itemprop="url">docker组件</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:29:10" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/docker/" itemprop="url" rel="index"><span itemprop="name">docker</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>2 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="一、基本概念"><a href="#一、基本概念" class="headerlink" title="一、基本概念"></a>一、基本概念</h3><p>理解 Docker，首先要掌握三个最核心的基本概念：<strong>镜像 (Image)<strong>、</strong>容器 (Container)</strong> 和 **仓库 (Registry)**。我们可以用一个简单的比喻来理解它们的关系：</p>
+<ul>
+<li><p><strong>镜像 (Image)：</strong> <strong>一个只读的模板，是创建容器的基础。</strong></p>
+<ul>
+<li><strong>比喻</strong>：可以把它想象成一个软件安装包，或者一个面向对象编程中的“类 (Class)”。</li>
+<li><strong>技术细节</strong>：镜像内部包含了一个完整的文件系统，里面打包了应用程序运行所需的一切：代码、运行时库、环境变量、配置文件等。镜像是分层构建的，每一层都是对前一层的一组修改，这种分层结构使得镜像的复用和分发非常高效。</li>
+</ul>
+</li>
+<li><p><strong>容器 (Container)：</strong> <strong>镜像的运行实例，是真正运行应用程序的地方。</strong></p>
+<ul>
+<li><strong>比喻</strong>：如果镜像是“类”，那么容器就是这个类的一个“实例 (Object)”。你可以用同一个镜像创建出任意多个相互隔离的容器。</li>
+<li><strong>技术细节</strong>：容器本质上是宿主机上的一个特殊进程，但它拥有自己独立的命名空间（Namespace），包括进程、网络、文件系统等，实现了与宿主机和其他容器的隔离。容器在镜像的只读层之上增加了一个可写的“容器层”，所有在容器内发生的修改（如写入文件、修改配置）都发生在这个可写层，不会影响到底层的镜像。</li>
+</ul>
+</li>
+<li><p><strong>仓库 (Registry)：</strong> <strong>集中存放和分发镜像的服务。</strong></p>
+<ul>
+<li><strong>比喻</strong>：可以把它看作是存放软件安装包的应用商店，或者存放代码的 GitHub。</li>
+<li><strong>技术细节</strong>：仓库分为公共仓库和私有仓库。<ul>
+<li>**公共仓库 (Public Registry)**：最著名的是 <strong>Docker Hub</strong>，官方维护了大量的常用高质量镜像。</li>
+<li>**私有仓库 (Private Registry)**：企业内部为了安全和速度，通常会搭建自己的私有仓库，如 Harbor、AWS ECR、Google GCR 等，用于管理公司内部的业务镜像。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><strong>三者关系总结：</strong> 我们从**仓库(Registry)<strong>拉取一个</strong>镜像(Image)<strong>到本地，然后以这个镜像为模板，运行一个或多个</strong>容器(Container)**来执行我们的应用。</p>
+<h3 id="二、核心组件"><a href="#二、核心组件" class="headerlink" title="二、核心组件"></a>二、核心组件</h3><p>Docker 采用的是标准的 <strong>C&#x2F;S (Client&#x2F;Server) 架构</strong>。其核心组件包括 <strong>Docker 客户端 (Client)<strong>、</strong>Docker 守护进程 (Daemon)</strong> 和 <strong>REST API</strong>。此外，<strong>Dockerfile</strong> 也是构建镜像的核心工具。</p>
+<ol>
+<li><p><strong>Docker 守护进程 (Docker Daemon &#x2F; <code>dockerd</code>)</strong></p>
+<ul>
+<li><strong>角色</strong>：Docker 的“大脑”和“引擎”，是服务器端组件。</li>
+<li><strong>功能</strong>：它是一个在宿主机上后台运行的进程，负责接收并处理来自客户端的请求。它承担了所有实际工作，包括：<ul>
+<li><strong>管理 Docker 对象</strong>：创建、运行、停止、删除容器。</li>
+<li><strong>管理镜像</strong>：从仓库拉取镜像、在本地存储镜像、构建镜像。</li>
+<li><strong>管理网络</strong>：创建和配置容器网络。</li>
+<li><strong>管理数据卷</strong>：创建和管理容器的数据持久化。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>Docker 客户端 (Docker Client &#x2F; <code>docker</code>)</strong></p>
+<ul>
+<li><strong>角色</strong>：用户的“遥控器”，是客户端组件。</li>
+<li><strong>功能</strong>：这是用户与 Docker Daemon 交互的主要工具，通常以命令行界面 (CLI) 的形式存在。当你输入 <code>docker run ...</code> 或 <code>docker build ...</code> 这样的命令时，你就是在和 Docker 客户端交互。客户端会将这些命令转换成 REST API 请求发送给 Docker Daemon。</li>
+</ul>
+</li>
+<li><p><strong>REST API</strong></p>
+<ul>
+<li><strong>角色</strong>：客户端与守护进程之间的“通信语言”。</li>
+<li><strong>功能</strong>：定义了客户端与守护进程之间通信的接口和协议。Docker 客户端通过这个 API 来指示守护进程执行各种操作。这也意味着，任何第三方工具只要遵循这套 API 规范，都可以与 Docker Daemon 进行交互，例如各种图形化管理工具（Portainer）或 CI&#x2F;CD 系统。</li>
+</ul>
+</li>
+<li><p><strong>Dockerfile</strong></p>
+<ul>
+<li><strong>角色</strong>：构建镜像的“说明书”或“菜谱”。</li>
+<li><strong>功能</strong>：它是一个文本文件，里面包含了一系列用户可以执行的指令。每一条指令都会在镜像中创建一个新的层。通过 <code>docker build</code> 命令，Docker Daemon 会读取 <code>Dockerfile</code> 的内容，并根据指令一步步地构建出一个自定义镜像。这是实现“基础设置即代码 (Infrastructure as Code)”的关键一环，保证了镜像构建过程的自动化、透明化和可复现。</li>
+</ul>
+</li>
+</ol>
+<h3 id="工作流程示例"><a href="#工作流程示例" class="headerlink" title="工作流程示例"></a>工作流程示例</h3><p>当你在终端输入 <code>docker run nginx</code> 命令时，整个流程是这样的：</p>
+<ol>
+<li><strong>客户端 (<code>docker</code>)</strong> 接收到你的命令。</li>
+<li>客户端通过 <strong>REST API</strong> 将“运行一个基于 nginx 镜像的容器”的请求发送给本机的 **Docker 守护进程 (<code>dockerd</code>)**。</li>
+<li><strong>守护进程</strong> 收到请求后，首先检查本地是否存在 <code>nginx</code> <strong>镜像</strong>。</li>
+<li>如果本地没有，守护进程会连接到默认的 **仓库 (Docker Hub)**，拉取 <code>nginx</code> 镜像。</li>
+<li>镜像下载完成后，守护进程会以这个镜像为模板，创建一个新的 <strong>容器</strong>。</li>
+<li>容器启动后，守护进程会将容器的输出结果或状态返回给客户端。</li>
+<li><strong>客户端</strong> 将接收到的信息显示在你的终端上。</li>
+</ol>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/docker/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/docker/" class="post-title-link" itemprop="url">docker介绍</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:31:40" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/docker/" itemprop="url" rel="index"><span itemprop="name">docker</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.9k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="1-什么是-Docker？"><a href="#1-什么是-Docker？" class="headerlink" title="1. 什么是 Docker？"></a>1. 什么是 Docker？</h3><p>从运维工程师的角度看，<strong>Docker 是一种轻量级的操作系统级虚拟化技术，它允许我们将应用程序及其所有依赖（库、配置文件、运行时环境等）打包到一个标准化的、可移植的单元中，这个单元被称为“容器”（Container）。</strong></p>
+<p>与传统的虚拟机（VM）相比，Docker 有本质的不同：</p>
+<ul>
+<li><strong>虚拟机 (VM)<strong>：虚拟化了一整套硬件（CPU、内存、硬盘、网卡），然后在上面运行一个完整的客户机操作系统（Guest OS），最后才在客户机操作系统里运行我们的应用。这导致它</strong>启动慢、资源占用高、隔离性强</strong>。</li>
+<li><strong>Docker 容器 (Container)<strong>：直接运行在宿主机的操作系统内核之上，共享宿主机的内核。它只虚拟化了应用的运行环境（文件系统、进程、网络空间等）。这使得它</strong>启动极快（秒级甚至毫秒级）、资源占用极低、隔离性适中</strong>。</li>
+</ul>
+<p>简单来说，<strong>Docker 就是一个标准化的“集装箱”，无论里面装的是什么应用（Web 服务、数据库、消息队列），都可以用同样的方式来打包、运输（分发）、启动和管理，而不用关心底层服务器的环境差异。</strong></p>
+<h3 id="2-为什么要在项目中用到-Docker？"><a href="#2-为什么要在项目中用到-Docker？" class="headerlink" title="2. 为什么要在项目中用到 Docker？"></a>2. 为什么要在项目中用到 Docker？</h3><p>在项目中引入 Docker，主要是为了解决一系列长期困扰开发、测试和运维的痛点。核心优势体现在以下几个方面：</p>
+<ol>
+<li><p><strong>环境一致性：终结“在我电脑上是好的”</strong></p>
+<ul>
+<li><strong>痛点</strong>：开发人员在自己的 Windows&#x2F;macOS 上开发，测试人员在测试环境的 Linux 上测试，生产环境又是另一个版本的 Linux。由于环境差异（如库版本、系统配置不同），应用经常出现意想不到的 Bug。</li>
+<li><strong>Docker 解决方案</strong>：通过 <code>Dockerfile</code> 将应用和其所有依赖打包成一个镜像（Image）。这个镜像包含了完整的、固定的运行环境。无论是在开发、测试还是生产环境，都运行同一个镜像，从而确保了环境的绝对一致性。</li>
+</ul>
+</li>
+<li><p><strong>快速部署与弹性伸缩</strong></p>
+<ul>
+<li><strong>痛点</strong>：传统的应用部署流程复杂且耗时，需要手动安装依赖、配置环境、启动服务。当流量高峰来临时，快速扩容新服务器是一个巨大挑战。</li>
+<li><strong>Docker 解决方案</strong>：部署一个新实例，只需要一行命令 <code>docker run ...</code>。结合容器编排工具（如 Kubernetes、Docker Swarm），可以轻松实现服务的自动化、秒级弹性伸缩，从容应对流量洪峰。</li>
+</ul>
+</li>
+<li><p><strong>资源利用率最大化</strong></p>
+<ul>
+<li><strong>痛点</strong>：一台物理服务器通常只运行少数几个应用，因为担心应用之间产生依赖冲突或资源抢占。这导致了大量的硬件资源闲置和浪费。</li>
+<li><strong>Docker 解决方案</strong>：由于容器的轻量级特性，可以在同一台宿主机上运行数十甚至数百个相互隔离的容器。这极大地提高了服务器的资源利用率，为公司节省了大量的硬件成本。</li>
+</ul>
+</li>
+<li><p><strong>简化运维与标准化流程</strong></p>
+<ul>
+<li><strong>痛点</strong>：运维需要为不同的应用（Java, Python, Node.js…）维护不同的部署和管理手册，学习成本高，操作易出错。</li>
+<li><strong>Docker 解决方案</strong>：所有应用都被打包成 Docker 镜像。运维人员不再需要关心应用的内部技术细节，只需要掌握一套标准的 Docker 命令（<code>build</code>, <code>run</code>, <code>stop</code>, <code>logs</code>, <code>exec</code>）即可管理所有服务。这大大简化了运维工作，降低了人为错误的风险。</li>
+</ul>
+</li>
+<li><p><strong>促进微服务架构</strong></p>
+<ul>
+<li><strong>痛点</strong>：在微服务架构中，一个系统被拆分成多个独立的服务。如果为每个服务都部署一台虚拟机，成本太高；如果部署在同一台机器上，又面临环境隔离和管理复杂性的问题。</li>
+<li><strong>Docker 解决方案</strong>：Docker 是实现微服务架构的理想选择。每个微服务都可以打包成一个独立的镜像，独立部署、独立伸缩、独立升级，互不影响。</li>
+</ul>
+</li>
+</ol>
+<h3 id="3-我在项目中是如何使用-Docker-的？"><a href="#3-我在项目中是如何使用-Docker-的？" class="headerlink" title="3. 我在项目中是如何使用 Docker 的？"></a>3. 我在项目中是如何使用 Docker 的？</h3><p>在我的实际工作中，Docker 已经渗透到了从开发到生产的整个软件生命周期（CI&#x2F;CD）中。</p>
+<h4 id="阶段一：开发与测试环境"><a href="#阶段一：开发与测试环境" class="headerlink" title="阶段一：开发与测试环境"></a><strong>阶段一：开发与测试环境</strong></h4><ol>
+<li><p><strong>编写 <code>Dockerfile</code></strong>: 我会为项目中的每个服务（例如，<code>backend-api</code>, <code>frontend-web</code>, <code>redis-cache</code>）编写一个 <code>Dockerfile</code>。这个文件定义了如何构建该服务的镜像，包括：</p>
+<ul>
+<li>指定一个基础镜像（如 <code>python:3.9-slim</code> 或 <code>nginx:latest</code>）。</li>
+<li>复制应用程序代码和配置文件到镜像中。</li>
+<li>安装所有必要的系统和语言库（如 <code>apt-get install</code>、<code>pip install</code>）。</li>
+<li>暴露服务端口（如 <code>EXPOSE 80</code>）。</li>
+<li>定义容器启动时要执行的命令（<code>CMD [&quot;python&quot;, &quot;app.py&quot;]</code>）。</li>
+</ul>
+</li>
+<li><p><strong>使用 <code>Docker Compose</code> 管理本地开发环境</strong>: 为了在本地一键启动整个应用（包含多个服务），我会编写一个 <code>docker-compose.yml</code> 文件。</p>
+<ul>
+<li>它定义了项目中所有的服务（<code>services</code>）、它们之间的依赖关系（<code>depends_on</code>）、网络配置（<code>networks</code>）以及数据卷挂载（<code>volumes</code>），这样代码修改可以实时同步到容器内，无需重新构建镜像。</li>
+<li>开发人员只需执行 <code>docker-compose up</code>，就能在本地拉起一套与生产环境高度一致的完整开发环境。</li>
+</ul>
+</li>
+</ol>
+<h4 id="阶段二：持续集成-持续部署-CI-CD"><a href="#阶段二：持续集成-持续部署-CI-CD" class="headerlink" title="阶段二：持续集成&#x2F;持续部署 (CI&#x2F;CD)"></a><strong>阶段二：持续集成&#x2F;持续部署 (CI&#x2F;CD)</strong></h4><ol>
+<li><strong>构建与推送镜像</strong>: 在 CI&#x2F;CD 流水线（如 Jenkins, GitLab CI）中，当代码被推送到 Git 仓库时，流水线会自动执行：<ul>
+<li><code>docker build -t my-registry.com/my-app:git-commit-hash .</code>：使用 <code>Dockerfile</code> 构建镜像，并用 Git 的提交哈希作为标签，保证版本可追溯。</li>
+<li><code>docker push my-registry.com/my-app:git-commit-hash</code>：将构建好的镜像推送到公司的私有镜像仓库（如 Harbor、AWS ECR）。</li>
+</ul>
+</li>
+</ol>
+<h4 id="阶段三：生产环境部署与运维"><a href="#阶段三：生产环境部署与运维" class="headerlink" title="阶段三：生产环境部署与运维"></a><strong>阶段三：生产环境部署与运维</strong></h4><ol>
+<li><p><strong>服务部署</strong>:</p>
+<ul>
+<li>在生产服务器上，我们不再手动执行 <code>docker run</code>。而是使用<strong>容器编排工具</strong>，最常用的是 **Kubernetes (K8s)**。</li>
+<li>我会编写 K8s 的部署文件（Deployment YAML），在其中指定要使用的镜像（就是 CI 流水线中构建的那个）、所需的副本数量、健康检查策略、资源限制（CPU&#x2F;Memory）等。</li>
+<li>当需要更新服务时，我只需要修改 Deployment YAML 中的镜像标签，然后 <code>kubectl apply -f deployment.yaml</code>，K8s 会自动以滚动更新（Rolling Update）的方式平滑地升级服务，保证业务不中断。</li>
+</ul>
+</li>
+<li><p><strong>日常运维</strong>:</p>
+<ul>
+<li><strong>监控</strong>：使用 Prometheus 抓取容器和应用的监控指标，用 Grafana 进行可视化展示，设置告警规则。</li>
+<li><strong>日志管理</strong>：配置 Docker 的日志驱动（如 <code>json-file</code> 或 <code>fluentd</code>），将所有容器的日志统一收集到 ELK（Elasticsearch, Logstash, Kibana）或 Loki 日志系统中，方便集中查询和分析。</li>
+<li><strong>故障排查</strong>：<ul>
+<li><code>kubectl logs &lt;pod-name&gt;</code>: 查看容器日志。</li>
+<li><code>kubectl exec -it &lt;pod-name&gt; -- /bin/bash</code>: 进入正在运行的容器内部进行调试。</li>
+<li><code>kubectl describe pod &lt;pod-name&gt;</code>: 查看容器的详细状态和事件，排查启动失败等问题。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<p>通过这样一整套流程，Docker 实现了从开发到生产的全面贯通，极大地提升了我们团队的交付速度、系统的稳定性和运维的效率。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/go-%E5%87%BD%E6%95%B0%E8%BF%94%E5%9B%9E%E5%B1%80%E9%83%A8%E5%8F%98%E9%87%8F%E7%9A%84%E6%8C%87%E9%92%88/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/go-%E5%87%BD%E6%95%B0%E8%BF%94%E5%9B%9E%E5%B1%80%E9%83%A8%E5%8F%98%E9%87%8F%E7%9A%84%E6%8C%87%E9%92%88/" class="post-title-link" itemprop="url">go-函数返回局部变量的指针</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:38:11" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/go/" itemprop="url" rel="index"><span itemprop="name">go</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>2 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="核心答案"><a href="#核心答案" class="headerlink" title="核心答案"></a>核心答案</h3><p>在 Go 语言中，<strong>函数返回局部变量的指针是完全安全的。</strong></p>
+<p>这与 C&#x2F;C++ 等语言有根本性的不同，在那些语言中，返回栈上局部变量的地址通常会导致“悬空指针”（dangling pointer）问题，因为函数返回后，栈帧会被销毁，局部变量所占用的内存可能被重复利用，导致指针指向的数据无效。</p>
+<p>Go 语言之所以安全，是因为它的编译器会进行一种称为<strong>“逃逸分析”（Escape Analysis）</strong>的优化。</p>
+<h3 id="为什么在-Go-中是安全的？——逃逸分析"><a href="#为什么在-Go-中是安全的？——逃逸分析" class="headerlink" title="为什么在 Go 中是安全的？——逃逸分析"></a>为什么在 Go 中是安全的？——逃逸分析</h3><ol>
+<li><p><strong>传统语言（如C&#x2F;C++）的问题：</strong></p>
+<ul>
+<li>局部变量通常分配在<strong>栈（Stack）</strong>上。</li>
+<li>函数调用结束后，该函数的栈帧会被销毁，栈上的内存会被回收。</li>
+<li>如果返回了栈上局部变量的地址，那么在函数返回后，这个地址可能指向一块无效或已被覆盖的内存区域。</li>
+</ul>
+</li>
+<li><p><strong>Go 语言的解决方案——逃逸分析：</strong></p>
+<ul>
+<li>Go 编译器在编译时会分析变量的生命周期。</li>
+<li>如果编译器发现一个局部变量的地址被取走（例如，通过 <code>&amp;</code> 操作符获取其指针），并且这个指针在函数外部仍然可能被引用（例如，作为函数返回值返回），那么编译器会判断这个变量“逃逸”了。</li>
+<li><strong>对于“逃逸”的变量，Go 编译器不会将其分配在栈上，而是自动将其分配在程序堆（Heap）上。</strong></li>
+<li>堆上的内存由 Go 的<strong>垃圾回收器（Garbage Collector, GC）</strong>管理。GC 会在变量不再被任何活跃的指针引用时自动回收其内存。</li>
+</ul>
+</li>
+</ol>
+<p>因此，当您返回一个局部变量的指针时，Go 运行时会确保该变量已经安全地分配在堆上，并且只有当它不再被任何地方引用时，GC 才会释放其内存。</p>
+<h3 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h3><p>让我们通过一个简单的例子来证明这一点：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// newInt 函数返回一个局部变量的指针</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">newInt</span><span class="params">()</span></span> *<span class="type">int</span> &#123;</span><br><span class="line">	<span class="keyword">var</span> i <span class="type">int</span> = <span class="number">100</span> <span class="comment">// 局部变量 i</span></span><br><span class="line">	fmt.Printf(<span class="string">&quot;Inside newInt: address of i is %p\n&quot;</span>, &amp;i)</span><br><span class="line">	<span class="keyword">return</span> &amp;i <span class="comment">// 返回局部变量 i 的地址</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	ptr := newInt() <span class="comment">// 调用函数并获取指针</span></span><br><span class="line">	fmt.Printf(<span class="string">&quot;Inside main: value at ptr is %d, address of ptr is %p\n&quot;</span>, *ptr, ptr)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 再次调用 newInt，如果是在栈上分配，可能会覆盖第一次的值</span></span><br><span class="line">	<span class="comment">// 但由于逃逸分析，它们都会分配在堆上不同的地址</span></span><br><span class="line">	ptr2 := newInt()</span><br><span class="line">	fmt.Printf(<span class="string">&quot;Inside main: value at ptr2 is %d, address of ptr2 is %p\n&quot;</span>, *ptr2, ptr2)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 验证第一次的 ptr 依然有效 (不会是悬空指针)</span></span><br><span class="line">	fmt.Printf(<span class="string">&quot;Inside main: value at original ptr (after newInt again) is %d\n&quot;</span>, *ptr)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 模拟修改ptr指向的值</span></span><br><span class="line">	*ptr = <span class="number">200</span></span><br><span class="line">	fmt.Printf(<span class="string">&quot;Inside main: modified value at ptr is %d\n&quot;</span>, *ptr)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>运行上述代码，您会看到类似以下输出（地址可能不同）：</strong></p>
+<figure class="highlight inform7"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">Inside</span> newInt: address <span class="keyword">of</span> i <span class="keyword">is</span> 0xc000018040 // 注意这里的地址，是堆地址</span><br><span class="line"><span class="keyword">Inside</span> main: value at ptr <span class="keyword">is</span> 100, address <span class="keyword">of</span> ptr <span class="keyword">is</span> 0xc000018040</span><br><span class="line"><span class="keyword">Inside</span> newInt: address <span class="keyword">of</span> i <span class="keyword">is</span> 0xc000018050 // 再次调用，分配到不同的堆地址</span><br><span class="line"><span class="keyword">Inside</span> main: value at ptr2 <span class="keyword">is</span> 100, address <span class="keyword">of</span> ptr2 <span class="keyword">is</span> 0xc000018050</span><br><span class="line"><span class="keyword">Inside</span> main: value at original ptr (after newInt again) <span class="keyword">is</span> 100</span><br><span class="line"><span class="keyword">Inside</span> main: modified value at ptr <span class="keyword">is</span> 200</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，尽管 <code>i</code> 是 <code>newInt</code> 函数的局部变量，但在函数返回后，通过返回的指针仍然可以安全地访问和修改它的值。这明确表示 <code>i</code> 被分配在了堆上，而不是栈上。</p>
+<h3 id="如何验证逃逸分析？"><a href="#如何验证逃逸分析？" class="headerlink" title="如何验证逃逸分析？"></a>如何验证逃逸分析？</h3><p>您可以使用 Go 编译器的 <code>-gcflags=&quot;-m&quot;</code> 选项来查看逃逸分析的输出：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go build -gcflags=<span class="string">&quot;-m&quot;</span> your_program.go</span><br></pre></td></tr></table></figure>
+
+<p>对于上面的 <code>newInt</code> 函数，您可能会看到类似这样的一行（或多行）：</p>
+<figure class="highlight vim"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./your_program.<span class="keyword">go</span>:<span class="number">8</span>:<span class="number">6</span>: moved <span class="keyword">to</span> heap: i</span><br></pre></td></tr></table></figure>
+
+<p>这明确告诉您局部变量 <code>i</code> 已经被编译器决定“逃逸”到了堆上。</p>
+<h3 id="带来的影响和考虑"><a href="#带来的影响和考虑" class="headerlink" title="带来的影响和考虑"></a>带来的影响和考虑</h3><ol>
+<li><p><strong>安全性：</strong> Go 程序员无需担心返回局部变量指针导致的悬空指针问题，这大大简化了内存管理的心智负担。</p>
+</li>
+<li><p><strong>性能：</strong> 堆分配相对于栈分配有轻微的开销，因为需要运行时进行协调，并且会增加垃圾回收器的压力。然而，Go 的逃逸分析非常智能，它会尽量将变量留在栈上 (Stack Allocation)，只有在必要时才将它们移到堆上 (Heap Allocation)。</p>
+</li>
+<li><p><strong>Go 惯用法：</strong> 在 Go 语言中，返回指向局部变量的指针是一种非常常见的且合法的惯用法，尤其是在创建新的结构体实例并返回时（例如 <code>return &amp;SomeStruct&#123;&#125;</code>）。</p>
+</li>
+</ol>
+<p><strong>结论：</strong> Go 语言的设计哲学之一就是让程序员专注于业务逻辑，而不是底层内存管理。逃逸分析机制优雅地解决了在传统语言中棘手的局部变量指针问题，使得返回局部变量的指针在 Go 中既安全又符合语言规范。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/docker-overlay%20network/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/docker-overlay%20network/" class="post-title-link" itemprop="url">docker-overlay network</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：20:40:44" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/docker/" itemprop="url" rel="index"><span itemprop="name">docker</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>Overlay 网络依赖于 <strong>Docker Swarm mode</strong>（或更早的 Docker UCP&#x2F;libnetwork 插件）。所以，配置 Overlay 网络的第一步是<strong>初始化或加入一个 Docker Swarm 集群</strong>。</p>
+<h3 id="配置-Overlay-网络模式的步骤"><a href="#配置-Overlay-网络模式的步骤" class="headerlink" title="配置 Overlay 网络模式的步骤"></a>配置 Overlay 网络模式的步骤</h3><h4 id="前提条件"><a href="#前提条件" class="headerlink" title="前提条件"></a>前提条件</h4><ol>
+<li><strong>多台 Docker 主机：</strong> 至少需要两台机器，每台机器都安装了 Docker Engine。</li>
+<li><strong>端口开放：</strong><ul>
+<li><strong>2377&#x2F;TCP (Swarm 管理):</strong> 管理节点之间通信。</li>
+<li><strong>7946&#x2F;TCP 和 7946&#x2F;UDP (容器集群通信):</strong> Swarm 节点通信。</li>
+<li><strong>4789&#x2F;UDP (Overlay 网络数据):</strong> VXLAN 隧道协议，用于容器数据传输。</li>
+<li><strong>防火墙规则：</strong> 确保这些端口在主机防火墙（ufw, firewalld, iptables 等）以及任何云服务提供商的安全组中都是开放的。</li>
+</ul>
+</li>
+</ol>
+<h4 id="步骤-1：初始化-Docker-Swarm-或加入现有-Swarm"><a href="#步骤-1：初始化-Docker-Swarm-或加入现有-Swarm" class="headerlink" title="步骤 1：初始化 Docker Swarm 或加入现有 Swarm"></a>步骤 1：初始化 Docker Swarm 或加入现有 Swarm</h4><p>在其中一台主机上（作为 Swarm Manager），执行初始化命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 在第一台主机（比如 host1）上执行</span></span><br><span class="line">docker swarm init --advertise-addr &lt;host1_ip&gt;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>&lt;host1_ip&gt;</code>：是这台主机对其他 Swarm 节点可访问的 IP 地址。</li>
+</ul>
+<p>执行后，你会得到一个输出，其中包含一个 <code>docker swarm join</code> 命令，用于其他主机加入到这个 Swarm 集群。</p>
+<p>在其他主机上（作为 Swarm Worker 或 Manager，取决于你的需求），执行加入命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 在其他主机（比如 host2, host3）上执行</span></span><br><span class="line">docker swarm <span class="built_in">join</span> --token &lt;token_from_init&gt; &lt;manager_ip&gt;:2377</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>&lt;token_from_init&gt;</code>：是 <code>docker swarm init</code> 命令输出中的 token。</li>
+<li><code>&lt;manager_ip&gt;</code>：是 Swarm Manager 的 IP 地址。</li>
+</ul>
+<p><strong>验证 Swarm 节点：</strong><br>在 Manager 节点上执行 <code>docker node ls</code> 查看所有加入的节点。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker node <span class="built_in">ls</span></span><br></pre></td></tr></table></figure>
+<p>你应该能看到所有主机都被列出，并且状态为 <code>Ready</code>。</p>
+<h4 id="步骤-2：创建-Overlay-网络"><a href="#步骤-2：创建-Overlay-网络" class="headerlink" title="步骤 2：创建 Overlay 网络"></a>步骤 2：创建 Overlay 网络</h4><p>在<strong>任何一个 Swarm Manager 节点</strong>上，创建 Overlay 网络。此网络会自动分发到所有 Swarm 节点。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker network create --driver overlay --subnet 10.0.9.0/24 --attachable my-overlay-network</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>--driver overlay</code>: 指定网络驱动为 overlay。</li>
+<li><code>--subnet 10.0.9.0/24</code>: (可选) 指定 Overlay 网络的 IP 子网。如果不指定，Docker 会自动选择一个。</li>
+<li><code>--attachable</code>: (可选，但推荐) 允许独立运行的容器（非 Swarm service 的一部分）连接到此 Overlay 网络。否则，只有 Swarm service 的任务才能使用此网络。</li>
+<li><code>my-overlay-network</code>: 你为这个网络取的名字。</li>
+</ul>
+<p><strong>验证网络创建：</strong><br>在任何一个 Swarm 节点上，执行 <code>docker network ls</code>。你应该能看到 <code>my-overlay-network</code> 类型的网络。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker network <span class="built_in">ls</span></span><br></pre></td></tr></table></figure>
+<p>输出中你应该看到类似：</p>
+<figure class="highlight node-repl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">NETWORK ID     NAME                  DRIVER    SCOPE</span><br><span class="line"><span class="meta prompt_">...</span></span><br><span class="line">&lt;NETWORK_ID&gt;   my-overlay-network    overlay   swarm</span><br><span class="line"><span class="meta prompt_">...</span></span><br></pre></td></tr></table></figure>
+<p>这里的 <code>SCOPE</code> 为 <code>swarm</code> 表示这是一个 Overlay 网络，并且已经在整个 Swarm 集群中可用。</p>
+<h4 id="步骤-3：在容器中使用-Overlay-网络"><a href="#步骤-3：在容器中使用-Overlay-网络" class="headerlink" title="步骤 3：在容器中使用 Overlay 网络"></a>步骤 3：在容器中使用 Overlay 网络</h4><p>现在你可以通过两种方式在容器中使用这个 Overlay 网络：</p>
+<p><strong>A. 用于 Docker Swarm Services (推荐方式)</strong></p>
+<p>这是 Overlay 网络最常见的用途。当你创建一个 Swarm Service，并将其连接到 Overlay 网络时，Swarm 会在不同的节点上调度 Service 的任务（容器），并确保它们可以通过 Overlay 网络互相通信。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 在 Swarm manager 节点上执行</span></span><br><span class="line">docker service create \</span><br><span class="line">  --name my-web-app \</span><br><span class="line">  --replicas 3 \</span><br><span class="line">  --network my-overlay-network \</span><br><span class="line">  nginx:latest</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>--network my-overlay-network</code>: 指定 Service 的任务连接到 <code>my-overlay-network</code>。</li>
+</ul>
+<p>现在 <code>my-web-app</code> 的所有 3 个副本，无论它们运行在哪个节点上，都可以通过容器名 <code>my-web-app</code> 或其内部 IP 互相通信。</p>
+<p><strong>B. 用于独立容器 (配合 <code>--attachable</code> 选项)</strong></p>
+<p>如果你在创建 Overlay 网络时使用了 <code>--attachable</code> 选项，那么你也可以将非 Swarm Service 的独立容器连接到这个网络。</p>
+<p>例如，在 <code>host1</code> 上启动一个容器：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 在 host1 上执行</span></span><br><span class="line">docker run -itd --name container1 --network my-overlay-network alpine/git sh</span><br></pre></td></tr></table></figure>
+
+<p>在 <code>host2</code> 上启动另一个容器：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 在 host2 上执行</span></span><br><span class="line">docker run -itd --name container2 --network my-overlay-network alpine/git sh</span><br></pre></td></tr></table></figure>
+
+<p>现在，<code>container1</code> 和 <code>container2</code> 尽管运行在不同的物理主机上，但它们可以通过其容器名互相 ping 通：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 假设在 container1 内部执行</span></span><br><span class="line">docker <span class="built_in">exec</span> container1 ping container2</span><br></pre></td></tr></table></figure>
+<p>你应该能看到 <code>container2</code> 的响应。</p>
+<h3 id="Overlay-网络的工作原理简述"><a href="#Overlay-网络的工作原理简述" class="headerlink" title="Overlay 网络的工作原理简述"></a>Overlay 网络的工作原理简述</h3><ol>
+<li><strong>VXLAN (Virtual eXtensible Local Area Network):</strong> Overlay 网络的核心是 VXLAN。Docker Daemon 在每个 Swarm 节点上创建 VXLAN 隧道，将容器数据包封装在 UDP 数据包中，并通过底层物理网络传输。</li>
+<li><strong>KV 存储 (Consul&#x2F;Etcd&#x2F;Zookeeper 或 Raft):</strong> Docker Engine 使用内置的 Raft 共识算法（作为 Swarm mode 的一部分），或配置外部 KV 存储（旧版本），来同步网络配置和容器 IP 地址信息，确保所有节点对网络拓扑有相同的视图。</li>
+<li><strong>Ingress 路由网格 (Service):</strong> 对于 Swarm Services，Docker 提供了一个内置的 DNS 服务和 Ingress 路由网格。当你访问一个 Service 的端口时，请求会被路由到该 Service 的任何一个健康副本，无论它运行在哪个节点上。这也是为什么服务发现如此简单。</li>
+</ol>
+<h3 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h3><ul>
+<li><strong>防火墙：</strong> 再次强调，确保必要的端口（尤其是 4789&#x2F;UDP）在所有主机之间开放，这是 Overlay 网络工作的基石。</li>
+<li><strong>MTU (Maximum Transmission Unit):</strong> VXLAN 封装会增加数据包大小。如果你的底层网络 MTU 较小，可能会导致性能问题。通常，Docker 会自动调整容器的 MTU，但如果遇到网络问题，这可能是一个排查点。</li>
+<li><strong>复杂性：</strong> 虽然配置简单，但底层原理涉及网络虚拟化，排查问题时可能需要更深入的网络知识。</li>
+</ul>
+<p>通过以上步骤，你就可以成功配置和使用 Docker Overlay 网络模式，实现容器的跨主机通信。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/go%20map%20key%20%E6%97%A0%E5%BA%8F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/go%20map%20key%20%E6%97%A0%E5%BA%8F/" class="post-title-link" itemprop="url">go map key 无序</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:38:05" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/go/" itemprop="url" rel="index"><span itemprop="name">go</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.7k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>2 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>您好。这个问题揭示了 Go 语言设计中一个非常重要的权衡：<strong>性能与特性之间的选择</strong>。Go 语言的 <code>map</code> key 是无序的，这并非一个疏忽或缺陷，而是一个经过深思熟虑的<strong>设计决策</strong>。</p>
+<p>作为后端开发专家，我将从三个层面为您深入剖析这个问题：<strong>数据结构的基础、Go 语言的特定设计以及实际开发的应对策略</strong>。</p>
+<hr>
+<h3 id="1-核心原因：底层数据结构是哈希表-Hash-Table"><a href="#1-核心原因：底层数据结构是哈希表-Hash-Table" class="headerlink" title="1. 核心原因：底层数据结构是哈希表 (Hash Table)"></a>1. 核心原因：底层数据结构是哈希表 (Hash Table)</h3><p>Go 语言的 <code>map</code> 是基于<strong>哈希表</strong>实现的。哈希表是计算机科学中一种极其高效的数据结构，它的核心工作原理如下：</p>
+<ol>
+<li><strong>哈希函数 (Hash Function):</strong> 当你向 <code>map</code> 中插入一个键值对 (<code>key-value</code>) 时，系统会首先对 <code>key</code> 应用一个哈希函数，生成一个哈希值（一个整数）。</li>
+<li><strong>定位桶 (Bucket):</strong> 系统使用这个哈希值来计算出一个索引，这个索引指向一个内部数组，数组的每个元素被称为“桶 (bucket)”。</li>
+<li><strong>存储数据:</strong> 键值对就存储在定位到的那个桶里。如果多个不同的 <code>key</code> 经过哈希计算后定位到了同一个桶（这被称为“哈希冲突”），它们会以链表或其他形式共同存储在这个桶中。</li>
+</ol>
+<p><strong>关键点在于：</strong> 哈希函数的设计目标是让键尽可能<strong>均匀地、随机地</strong>分布在不同的桶中，以减少冲突并保证 O(1) 的平均查找、插入和删除时间复杂度。这个过程本身就是<strong>非顺序</strong>的。一个键的哈希值与其在字母表或数字上的顺序毫无关系。</p>
+<p><strong>一个简单的类比：</strong><br>想象一个大型图书馆，图书不是按书名的字母顺序摆放的，而是通过一个复杂的分类号系统（类似哈希函数）决定它放在哪个书架（类似桶）上。书名以 “A” 开头的书可能在 3 楼，而书名以 “B” 开头的书可能在 1 楼。这种存放方式是为了让你能通过查询系统（哈希函数）快速找到任何一本书，但当你顺着书架走时，看到的书名顺序是完全混乱的。</p>
+<p>Go 的 <code>map</code> 就是这个图书馆，它的首要目标是<strong>快速存取</strong>，而不是<strong>有序遍历</strong>。</p>
+<hr>
+<h3 id="2-Go-语言的特定设计：强制无序的遍历"><a href="#2-Go-语言的特定设计：强制无序的遍历" class="headerlink" title="2. Go 语言的特定设计：强制无序的遍历"></a>2. Go 语言的特定设计：强制无序的遍历</h3><p>除了底层数据结构本身是无序的，Go 团队还做了一个更进一步的决定：<strong>在遍历 <code>map</code> 时，起始点是随机的</strong>。</p>
+<p><strong>为什么这么做？</strong></p>
+<p>在早期版本的 Go 中（以及在其他一些语言中），虽然 <code>map</code> 理论上是无序的，但由于其内部实现的细节，连续多次遍历同一个 <code>map</code> 可能会得到相同的顺序。这导致一些开发者<strong>错误地依赖</strong>上了这种看似稳定的顺序。</p>
+<p>这种依赖是非常危险和脆弱的，因为：</p>
+<ul>
+<li><strong>实现可能会变：</strong> 一旦 Go 语言在未来的版本中优化或改变了 <code>map</code> 的内部实现，这些依赖于隐式顺序的代码就会立刻崩溃。</li>
+<li><strong>跨平台不一致：</strong> 不同架构或操作系统下的哈希函数实现可能不同，导致遍历顺序也不同。</li>
+</ul>
+<p>为了从根本上杜绝这种坏习惯，Go 团队在 Go 1.0 版本中<strong>故意引入了随机化</strong>。每次你使用 <code>for...range</code> 遍历一个 <code>map</code> 时，Go 的运行时都会从一个随机的桶开始遍历。</p>
+<p><strong>这是一种强大的设计理念：通过在语言层面强制执行规则，来引导开发者编写更健壮、更可移植的代码。</strong> 它明确地告诉你：“不要对 <code>map</code> 的顺序做任何假设。”</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	m := <span class="keyword">map</span>[<span class="type">string</span>]<span class="type">int</span>&#123;</span><br><span class="line">		<span class="string">&quot;alpha&quot;</span>: <span class="number">1</span>,</span><br><span class="line">		<span class="string">&quot;beta&quot;</span>:  <span class="number">2</span>,</span><br><span class="line">		<span class="string">&quot;gamma&quot;</span>: <span class="number">3</span>,</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	fmt.Println(<span class="string">&quot;第一次遍历:&quot;</span>)</span><br><span class="line">	<span class="keyword">for</span> k, v := <span class="keyword">range</span> m &#123;</span><br><span class="line">		fmt.Printf(<span class="string">&quot;  %s: %d\n&quot;</span>, k, v)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	fmt.Println(<span class="string">&quot;\n第二次遍历:&quot;</span>)</span><br><span class="line">	<span class="keyword">for</span> k, v := <span class="keyword">range</span> m &#123;</span><br><span class="line">		fmt.Printf(<span class="string">&quot;  %s: %d\n&quot;</span>, k, v)</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>当你运行上面的代码时，你会发现两次遍历的输出顺序很可能是不同的。</p>
+<hr>
+<h3 id="3-如何在需要时获得有序的结果？"><a href="#3-如何在需要时获得有序的结果？" class="headerlink" title="3. 如何在需要时获得有序的结果？"></a>3. 如何在需要时获得有序的结果？</h3><p>既然 <code>map</code> 本身是无序的，那么当我们的业务逻辑确实需要按序处理数据时，该怎么办呢？Go 语言推荐的模式非常清晰和高效：</p>
+<p><strong>将键提取出来，对键进行排序，然后根据排好序的键来遍历 <code>map</code>。</strong></p>
+<p>这个过程分为三步：</p>
+<ol>
+<li><strong>提取 Keys：</strong> 创建一个切片（slice），遍历 <code>map</code> 将所有的 <code>key</code> 存入这个切片。</li>
+<li><strong>排序 Keys：</strong> 使用 Go 标准库 <code>sort</code> 包对这个 <code>key</code> 切片进行排序。</li>
+<li><strong>有序遍历：</strong> 遍历这个<strong>已排好序的切片</strong>，然后用切片中的每个 <code>key</code> 去 <code>map</code> 中获取对应的值。</li>
+</ol>
+<p><strong>代码示例：</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;sort&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	scores := <span class="keyword">map</span>[<span class="type">string</span>]<span class="type">int</span>&#123;</span><br><span class="line">		<span class="string">&quot;charlie&quot;</span>: <span class="number">80</span>,</span><br><span class="line">		<span class="string">&quot;alice&quot;</span>:   <span class="number">95</span>,</span><br><span class="line">		<span class="string">&quot;bob&quot;</span>:     <span class="number">90</span>,</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 1. 提取所有 keys</span></span><br><span class="line">	keys := <span class="built_in">make</span>([]<span class="type">string</span>, <span class="number">0</span>, <span class="built_in">len</span>(scores))</span><br><span class="line">	<span class="keyword">for</span> k := <span class="keyword">range</span> scores &#123;</span><br><span class="line">		keys = <span class="built_in">append</span>(keys, k)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 2. 对 keys 进行排序</span></span><br><span class="line">	sort.Strings(keys) <span class="comment">// 按字母顺序排序</span></span><br><span class="line"></span><br><span class="line">	fmt.Println(<span class="string">&quot;按字母顺序输出分数:&quot;</span>)</span><br><span class="line">	<span class="comment">// 3. 按照排好序的 keys 遍历 map</span></span><br><span class="line">	<span class="keyword">for</span> _, key := <span class="keyword">range</span> keys &#123;</span><br><span class="line">		fmt.Printf(<span class="string">&quot;%-10s: %d\n&quot;</span>, key, scores[key])</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>输出（始终稳定）：</strong></p>
+<figure class="highlight nestedtext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">按字母顺序输出分数</span><span class="punctuation">:</span></span><br><span class="line"><span class="attribute">alice</span><span class="punctuation">     :</span> <span class="string">95</span></span><br><span class="line"><span class="attribute">bob</span><span class="punctuation">       :</span> <span class="string">90</span></span><br><span class="line"><span class="attribute">charlie</span><span class="punctuation">   :</span> <span class="string">80</span></span><br></pre></td></tr></table></figure>
+<p>这种方法虽然代码多几行，但它非常**明确 (explicit)**，性能也很好。你获得了想要的顺序，同时又享受了 <code>map</code> 快速存取的优点。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><table>
+<thead>
+<tr>
+<th>原因</th>
+<th>解释</th>
+<th>带来的好处</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>底层是哈希表</strong></td>
+<td>数据根据哈希值存储在不同的“桶”中，这个过程本质上就是非顺序的。</td>
+<td><strong>极高的性能</strong>：平均 O(1) 的查找、插入、删除。</td>
+</tr>
+<tr>
+<td><strong>Go 的强制随机化遍历</strong></td>
+<td>Go 运行时在每次 <code>for range</code> 遍历时，故意从一个随机的起始点开始，防止开发者依赖隐式顺序。</td>
+<td><strong>代码健壮性</strong>：强迫开发者写出不依赖内部实现的可移植代码。</td>
+</tr>
+<tr>
+<td><strong>追求简约与高效的设计</strong></td>
+<td>保持 <code>map</code> 结构简单，不为有序性增加额外的性能和内存开销（如维护一个链表）。</td>
+<td><strong>更低的内存占用</strong> 和 <strong>更简单的实现</strong>。</td>
+</tr>
+</tbody></table>
+<p>总而言之，Go 的 <code>map</code> 无序是<strong>为了极致的性能、简单性和代码的长期健壮性</strong>而做出的明智权衡。当需要顺序时，Go 提供了清晰、高效的方式让你<strong>显式地</strong>去实现它，这完全符合 Go 的设计哲学。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/install/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/install/" class="post-title-link" itemprop="url">n9e client install</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:40:36" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/n9e/" itemprop="url" rel="index"><span itemprop="name">n9e</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>681</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">sudo curl -o /opt/categraf/conf/config.toml &quot;https://prod-tx-ops-arch-1305533294.cos.ap-shanghai.myqcloud.com/tools/tool/config.toml&quot; &amp;&amp; sudo systemctl restart categraf</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">sudo curl -o /opt/categraf/conf/config.toml  &quot;https://prod-tx-ops-arch-1305533294.cos.ap-shanghai.myqcloud.com/tools/tool/config-hw.toml&quot; &amp;&amp; sudo systemctl restart categraf</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">sudo hostnamectl set-hostname prod-tx-ops-mysql-archive &amp;&amp; sudo systemctl restart categraf</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">curl https://prod-tx-ops-arch-1305533294.cos.ap-shanghai.myqcloud.com/tools/tool/install_categraf.sh | sudo bash -s -- --force</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">timeout 10 curl -s --connect-timeout 5 --max-time 10 &quot;http://n9e.mudutv.com&quot; &amp;&gt;/dev/null</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/init%E5%87%BD%E6%95%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/init%E5%87%BD%E6%95%B0/" class="post-title-link" itemprop="url">init函数</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:40:05" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/go/" itemprop="url" rel="index"><span itemprop="name">go</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p><code>init()</code> 函数是 Go 语言中一个非常特殊且强大的函数，用于在程序正式执行前进行初始化工作。它的执行时机和顺序遵循一套严格而清晰的规则。</p>
+<h3 id="核心结论"><a href="#核心结论" class="headerlink" title="核心结论"></a>核心结论</h3><p><strong><code>init()</code> 函数的执行发生在程序启动的初始化阶段，具体顺序是：</strong></p>
+<ol>
+<li><strong>导入包 (Import Packages)：</strong> Go 程序首先会解析并加载所有需要导入的包，形成一个依赖关系图。</li>
+<li><strong>初始化包级变量 (Initialize Package-level Variables)：</strong> 在每个包内部，会先初始化所有定义在函数外的包级变量。</li>
+<li><strong>执行 <code>init()</code> 函数 (Execute <code>init()</code> functions)：</strong> 在包级变量初始化完成后，该包的 <code>init()</code> 函数会被调用。</li>
+<li><strong>执行 <code>main()</code> 函数 (Execute <code>main()</code> function)：</strong> 当所有被 <code>main</code> 包依赖的包都完成初始化（变量初始化和 <code>init()</code> 调用）后，最后才会初始化 <code>main</code> 包本身，并最终执行 <code>main.main()</code> 函数，程序开始正式运行。</li>
+</ol>
+<p>一句话概括：**<code>init()</code> 的执行在“包变量初始化之后、<code>main</code> 函数执行之前”。**</p>
+<hr>
+<h3 id="详细执行流程（The-Grand-Sequence）"><a href="#详细执行流程（The-Grand-Sequence）" class="headerlink" title="详细执行流程（The Grand Sequence）"></a>详细执行流程（The Grand Sequence）</h3><p>让我们用一个自上而下的流程来描述整个程序的启动过程：</p>
+<ol>
+<li><p><strong>确定执行顺序：</strong> 程序从 <code>main</code> 包开始，Go 的运行时会构建一个包的依赖关系树（或图）。<strong>初始化顺序是这个依赖关系的逆序</strong>。也就是说，最先被初始化的，是那个不依赖任何其他包的“最底层”包。</p>
+</li>
+<li><p><strong>单个包内的初始化流程：</strong> 对于每一个将被初始化的包，其内部遵循以下顺序：</p>
+<ul>
+<li><strong>第一步：初始化依赖包。</strong> 如果当前包 <code>A</code> 导入了包 <code>B</code>，那么会先完整地初始化包 <code>B</code>（包括 <code>B</code> 的变量和 <code>init()</code>）后，才会继续 <code>A</code> 的初始化。</li>
+<li><strong>第二步：初始化包级变量。</strong> 依次初始化当前包中所有的常量和变量声明。</li>
+<li><strong>第三步：执行 <code>init()</code> 函数。</strong> 调用当前包的 <code>init()</code> 函数。执行完毕后，这个包才算“初始化完成”。</li>
+</ul>
+</li>
+<li><p><strong><code>main</code> 包的特殊地位：</strong> <code>main</code> 包作为程序的入口，它会被安排在整个初始化序列的最后。当 <code>main</code> 包和它所有的依赖都初始化完毕后，<code>main.main()</code> 函数才会被调用。</p>
+</li>
+</ol>
+<hr>
+<h3 id="init-函数的关键特性"><a href="#init-函数的关键特性" class="headerlink" title="init() 函数的关键特性"></a><code>init()</code> 函数的关键特性</h3><ol>
+<li><strong>自动执行：</strong> <code>init()</code> 函数不能被任何代码显式调用，它是由运行时在程序初始化时自动调用的。</li>
+<li><strong>无参数、无返回值：</strong> <code>init()</code> 函数的签名必须是 <code>func init()</code>。</li>
+<li><strong>可有多个：</strong> 同一个包内，甚至同一个源文件中，都可以定义多个 <code>init()</code> 函数。它们的执行顺序是：<ul>
+<li>Go 编译器会按<strong>文件名（字典序）</strong>依次编译包内的 <code>.go</code> 文件。</li>
+<li>在单个文件中，按<strong>声明顺序</strong>从上到下执行。</li>
+<li>因此，多个 <code>init()</code> 的执行顺序是确定的，但依赖于编译实现，开发者<strong>不应该依赖这个顺序</strong>来编写代码。</li>
+</ul>
+</li>
+<li><strong>每个包执行一次：</strong> 即使一个包被多次导入，它的 <code>init()</code> 函数在整个程序生命周期中也只会被执行一次。</li>
+<li><strong>线程安全：</strong> Go 运行时会保证 <code>init()</code> 函数的执行是单线程的，且在 <code>main</code> 函数启动前完成。这意味着你在 <code>init()</code> 函数中初始化数据时，不需要担心并发冲突。</li>
+</ol>
+<hr>
+<h3 id="示例：一个多包场景"><a href="#示例：一个多包场景" class="headerlink" title="示例：一个多包场景"></a>示例：一个多包场景</h3><p>为了让您看得更清晰，我们来构建一个例子。</p>
+<p><strong>文件结构:</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">/myproject</span><br><span class="line">  ├─── libB/</span><br><span class="line">  │    └─── libB.<span class="keyword">go</span></span><br><span class="line">  ├─── libA/</span><br><span class="line">  │    └─── libA.<span class="keyword">go</span></span><br><span class="line">  └─── main.<span class="keyword">go</span></span><br></pre></td></tr></table></figure>
+
+<p><strong><code>libB/libB.go</code></strong> (最底层的包, 无依赖)</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> libB</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> VariableB = <span class="string">&quot;Variable in B initialized.&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(<span class="string">&quot;libB: init() triggered.&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(<span class="string">&quot;libB: second init() triggered.&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong><code>libA/libA.go</code></strong> (依赖 <code>libB</code>)</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> libA</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	_ <span class="string">&quot;goproject/libB&quot;</span> <span class="comment">// 使用 _ 导入，只为触发其初始化</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> VariableA = <span class="string">&quot;Variable in A initialized.&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(libB.VariableB) <span class="comment">// 可以访问 libB 的变量</span></span><br><span class="line">	fmt.Println(<span class="string">&quot;libA: init() triggered.&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong><code>main.go</code></strong> (依赖 <code>libA</code>)</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;goproject/libA&quot;</span> </span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> VariableMain = <span class="string">&quot;Variable in main initialized.&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(libA.VariableA) <span class="comment">//可以访问 libA 的变量</span></span><br><span class="line">	fmt.Println(<span class="string">&quot;main: init() triggered.&quot;</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	fmt.Println(<span class="string">&quot;main.main() function starts.&quot;</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>执行 <code>go run main.go</code> 的输出将会是：</strong></p>
+<figure class="highlight swift"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">libB: <span class="keyword">init</span>() triggered.</span><br><span class="line">libB: second <span class="keyword">init</span>() triggered.</span><br><span class="line"><span class="type">Variable</span> <span class="keyword">in</span> <span class="type">B</span> initialized.</span><br><span class="line">libA: <span class="keyword">init</span>() triggered.</span><br><span class="line"><span class="type">Variable</span> <span class="keyword">in</span> <span class="type">A</span> initialized.</span><br><span class="line">main: <span class="keyword">init</span>() triggered.</span><br><span class="line">main.main() function starts.</span><br></pre></td></tr></table></figure>
+
+<p><strong>输出分析 (完全符合规则):</strong></p>
+<ol>
+<li><strong>依赖关系：</strong> <code>main</code> -&gt; <code>libA</code> -&gt; <code>libB</code>。</li>
+<li><strong>初始化顺序 (逆序)：</strong> <code>libB</code> -&gt; <code>libA</code> -&gt; <code>main</code>。</li>
+<li><strong><code>libB</code> 初始化：</strong><ul>
+<li>（无依赖）</li>
+<li>初始化 <code>VariableB</code>。（这里它的值没有被打印，但已被设置）</li>
+<li>按顺序执行 <code>libB</code> 的两个 <code>init()</code> 函数。</li>
+</ul>
+</li>
+<li><strong><code>libA</code> 初始化：</strong><ul>
+<li><code>libA</code> 依赖 <code>libB</code>，但 <code>libB</code> 已完成初始化，跳过。</li>
+<li>初始化 <code>VariableA</code>。</li>
+<li>执行 <code>libA</code> 的 <code>init()</code>，此时它可以安全地访问 <code>libB</code> 中的导出成员。</li>
+</ul>
+</li>
+<li><strong><code>main</code> 初始化：</strong><ul>
+<li><code>main</code> 依赖 <code>libA</code>，但 <code>libA</code> 已完成初始化，跳过。</li>
+<li>初始化 <code>VariableMain</code>。</li>
+<li>执行 <code>main</code> 的 <code>init()</code>。</li>
+</ul>
+</li>
+<li><strong>程序执行：</strong> 所有初始化完成，最后调用 <code>main.main()</code>。</li>
+</ol>
+<hr>
+<h3 id="何时使用-init-？"><a href="#何时使用-init-？" class="headerlink" title="何时使用 init()？"></a>何时使用 <code>init()</code>？</h3><p><code>init()</code> 非常适合那些需要在程序运行前完成的、一次性的准备工作。</p>
+<ul>
+<li><strong>注册驱动：</strong> 最经典的例子是 <code>database/sql</code>，不同的数据库驱动通过在各自包的 <code>init()</code> 函数中调用 <code>sql.Register()</code> 来将自己注册到系统中。<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 在 mysql 驱动包内部</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">init</span><span class="params">()</span></span> &#123;</span><br><span class="line">    sql.Register(<span class="string">&quot;mysql&quot;</span>, &amp;Driver&#123;&#125;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><strong>设置或校验配置：</strong> 检查必要的环境变量或配置文件是否存在。</li>
+<li><strong>预计算数据：</strong> 如果有复杂的计算结果需要在程序启动时就准备好（如构建查找表），可以放在 <code>init()</code> 中。</li>
+</ul>
+<p><strong>注意：</strong> 不要滥用 <code>init()</code>。因为它是一种“隐式”的调用，过多的 <code>init()</code> 会让代码的执行流程变得不那么明确，难以追踪和测试。优先考虑在 <code>main()</code> 函数中显式地调用初始化函数。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/ipvs%20%E5%9F%BA%E6%9C%AC%E4%BB%8B%E7%BB%8D/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/ipvs%20%E5%9F%BA%E6%9C%AC%E4%BB%8B%E7%BB%8D/" class="post-title-link" itemprop="url">ipvs 基本介绍</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:41:08" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/" itemprop="url" rel="index"><span itemprop="name">基础知识</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>12k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>11 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="ipvs-基本介绍"><a href="#ipvs-基本介绍" class="headerlink" title="ipvs 基本介绍"></a>ipvs 基本介绍</h1><p><strong>ipvs (IP Virtual Server)</strong> 实现了传输层负载均衡，也就是我们常说的4层<code>LAN</code>交换，作为 Linux 内核的一部分。<code>ipvs</code>运行在主机上，在真实服务器集群前充当负载均衡器。<code>ipvs</code>可以将基于<code>TCP</code>和<code>UDP</code>的服务请求转发到真实服务器上，并使真实服务器的服务在单个 IP 地址上显示为虚拟服务。</p>
+<h2 id="ipvs-vs-iptables"><a href="#ipvs-vs-iptables" class="headerlink" title="ipvs vs. iptables"></a>ipvs vs. iptables</h2><p>我们知道<code>kube-proxy</code>支持 iptables 和 ipvs 两种模式， 在<code>kubernetes</code> v1.8 中引入了 ipvs 模式，在 v1.9 中处于 beta 阶段，在 v1.11 中已经正式可用了。iptables 模式在 v1.1 中就添加支持了，从 v1.2 版本开始 iptables 就是 kube-proxy 默认的操作模式，ipvs 和 iptables 都是基于<code>netfilter</code>的，那么 ipvs 模式和 iptables 模式之间有哪些差异呢？</p>
+<ul>
+<li>ipvs 为大型集群提供了更好的可扩展性和性能</li>
+<li>ipvs 支持比 iptables 更复杂的复制均衡算法（最小负载、最少连接、加权等等）</li>
+<li>ipvs 支持服务器健康检查和连接重试等功能</li>
+</ul>
+<h3 id="ipvs-依赖-iptables"><a href="#ipvs-依赖-iptables" class="headerlink" title="ipvs 依赖 iptables"></a>ipvs 依赖 iptables</h3><p>ipvs 会使用 iptables 进行包过滤、SNAT、masquared(伪装)。具体来说，ipvs 将使用<code>ipset</code>来存储需要<code>DROP</code>或<code>masquared</code>的流量的源或目标地址，以确保 iptables 规则的数量是恒定的，这样我们就不需要关心我们有多少服务了</p>
+<p>下表就是 ipvs 使用的 ipset 集合：</p>
+<table>
+<thead>
+<tr>
+<th align="left">set name</th>
+<th>members</th>
+<th>usage</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">KUBE-CLUSTER-IP</td>
+<td>All service IP + port</td>
+<td>Mark-Masq for cases that <code>masquerade-all=true</code> or <code>clusterCIDR</code> specified</td>
+</tr>
+<tr>
+<td align="left">KUBE-LOOP-BACK</td>
+<td>All service IP + port + IP</td>
+<td>masquerade for solving hairpin purpose</td>
+</tr>
+<tr>
+<td align="left">KUBE-EXTERNAL-IP</td>
+<td>service external IP + port</td>
+<td>masquerade for packages to external IPs</td>
+</tr>
+<tr>
+<td align="left">KUBE-LOAD-BALANCER</td>
+<td>load balancer ingress IP + port</td>
+<td>masquerade for packages to load balancer type service</td>
+</tr>
+<tr>
+<td align="left">KUBE-LOAD-BALANCER-LOCAL</td>
+<td>LB ingress IP + port with <code>externalTrafficPolicy=local</code></td>
+<td>accept packages to load balancer with <code>externalTrafficPolicy=local</code></td>
+</tr>
+<tr>
+<td align="left">KUBE-LOAD-BALANCER-FW</td>
+<td>load balancer ingress IP + port with <code>loadBalancerSourceRanges</code></td>
+<td>package filter for load balancer with <code>loadBalancerSourceRanges</code> specified</td>
+</tr>
+<tr>
+<td align="left">KUBE-LOAD-BALANCER-SOURCE-CIDR</td>
+<td>load balancer ingress IP + port + source CIDR</td>
+<td>package filter for load balancer with <code>loadBalancerSourceRanges</code> specified</td>
+</tr>
+<tr>
+<td align="left">KUBE-NODE-PORT-TCP</td>
+<td>nodeport type service TCP port</td>
+<td>masquerade for packets to nodePort(TCP)</td>
+</tr>
+<tr>
+<td align="left">KUBE-NODE-PORT-LOCAL-TCP</td>
+<td>nodeport type service TCP port with <code>externalTrafficPolicy=local</code></td>
+<td>accept packages to nodeport service with <code>externalTrafficPolicy=local</code></td>
+</tr>
+<tr>
+<td align="left">KUBE-NODE-PORT-UDP</td>
+<td>nodeport type service UDP port</td>
+<td>masquerade for packets to nodePort(UDP)</td>
+</tr>
+<tr>
+<td align="left">KUBE-NODE-PORT-LOCAL-UDP</td>
+<td>nodeport type service UDP port with <code>externalTrafficPolicy=local</code></td>
+<td>accept packages to nodeport service with <code>externalTrafficPolicy=local</code></td>
+</tr>
+</tbody></table>
+<p>在以下情况下，ipvs 将依赖于 iptables:</p>
+<p><strong>1. kube-proxy 配置参数 –masquerade-all&#x3D;true</strong></p>
+<p>如果 kube-proxy 配置了<code>--masquerade-all=true</code>参数，则 ipvs 将伪装所有访问 Service 的 Cluster IP 的流量，此时的行为和 iptables 是一致的，由 ipvs 添加的 iptables 规则如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">iptables -t nat -nL</span></span><br><span class="line"></span><br><span class="line">Chain PREROUTING (policy ACCEPT)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-SERVICES  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service portals */</span><br><span class="line"></span><br><span class="line">Chain OUTPUT (policy ACCEPT)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-SERVICES  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service portals */</span><br><span class="line"></span><br><span class="line">Chain POSTROUTING (policy ACCEPT)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-POSTROUTING  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes postrouting rules */</span><br><span class="line"></span><br><span class="line">Chain KUBE-MARK-MASQ (2 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">MARK       all  --  0.0.0.0/0            0.0.0.0/0            MARK or 0x4000</span><br><span class="line"></span><br><span class="line">Chain KUBE-POSTROUTING (1 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">MASQUERADE  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service traffic requiring SNAT */ mark match 0x4000/0x4000</span><br><span class="line">MASQUERADE  all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-LOOP-BACK dst,dst,src</span><br><span class="line"></span><br><span class="line">Chain KUBE-SERVICES (2 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-MARK-MASQ  all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-CLUSTER-IP dst,dst</span><br><span class="line">ACCEPT     all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-CLUSTER-IP dst,dst</span><br></pre></td></tr></table></figure>
+
+<p><strong>2. 在 kube-proxy 启动时指定集群 CIDR</strong></p>
+<p>如果 kube-proxy 配置了<code>--cluster-cidr=&lt;cidr&gt;</code>参数，则 ipvs 会伪装所有访问 Service Cluster IP 的外部流量，其行为和 iptables 相同，假设 kube-proxy 提供的集群 CIDR 值为：<strong>10.244.16.0&#x2F;24</strong>，那么 ipvs 添加的 iptables 规则应该如下所示：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">iptables -t nat -nL</span></span><br><span class="line"></span><br><span class="line">Chain PREROUTING (policy ACCEPT)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-SERVICES  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service portals */</span><br><span class="line"></span><br><span class="line">Chain OUTPUT (policy ACCEPT)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-SERVICES  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service portals */</span><br><span class="line"></span><br><span class="line">Chain POSTROUTING (policy ACCEPT)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-POSTROUTING  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes postrouting rules */</span><br><span class="line"></span><br><span class="line">Chain KUBE-MARK-MASQ (3 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">MARK       all  --  0.0.0.0/0            0.0.0.0/0            MARK or 0x4000</span><br><span class="line"></span><br><span class="line">Chain KUBE-POSTROUTING (1 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">MASQUERADE  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service traffic requiring SNAT */ mark match 0x4000/0x4000</span><br><span class="line">MASQUERADE  all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-LOOP-BACK dst,dst,src</span><br><span class="line"></span><br><span class="line">Chain KUBE-SERVICES (2 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-MARK-MASQ  all  -- !10.244.16.0/24       0.0.0.0/0            match-set KUBE-CLUSTER-IP dst,dst</span><br><span class="line">ACCEPT     all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-CLUSTER-IP dst,dst</span><br></pre></td></tr></table></figure>
+
+<p><strong>3. Load Balancer 类型的 Service</strong></p>
+<p>对于<code>loadBalancer</code>类型的服务，ipvs 将安装匹配 KUBE-LOAD-BALANCER 的 ipset 的 iptables 规则。特别当服务的 LoadBalancerSourceRanges 被指定或指定 externalTrafficPolicy&#x3D;local 的时候，ipvs 将创建 ipset 集合<code>KUBE-LOAD-BALANCER-LOCAL</code>&#x2F;<code>KUBE-LOAD-BALANCER-FW</code>&#x2F;<code>KUBE-LOAD-BALANCER-SOURCE-CIDR</code>，并添加相应的 iptables 规则，如下所示规则：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">iptables -t nat -nL</span></span><br><span class="line"></span><br><span class="line">Chain PREROUTING (policy ACCEPT)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-SERVICES  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service portals */</span><br><span class="line"></span><br><span class="line">Chain OUTPUT (policy ACCEPT)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-SERVICES  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service portals */</span><br><span class="line"></span><br><span class="line">Chain POSTROUTING (policy ACCEPT)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-POSTROUTING  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes postrouting rules */</span><br><span class="line"></span><br><span class="line">Chain KUBE-FIREWALL (1 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">RETURN     all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-LOAD-BALANCER-SOURCE-CIDR dst,dst,src</span><br><span class="line">KUBE-MARK-DROP  all  --  0.0.0.0/0            0.0.0.0/0</span><br><span class="line"></span><br><span class="line">Chain KUBE-LOAD-BALANCER (1 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-FIREWALL  all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-LOAD-BALANCER-FW dst,dst</span><br><span class="line">RETURN     all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-LOAD-BALANCER-LOCAL dst,dst</span><br><span class="line">KUBE-MARK-MASQ  all  --  0.0.0.0/0            0.0.0.0/0</span><br><span class="line"></span><br><span class="line">Chain KUBE-MARK-DROP (1 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">MARK       all  --  0.0.0.0/0            0.0.0.0/0            MARK or 0x8000</span><br><span class="line"></span><br><span class="line">Chain KUBE-MARK-MASQ (2 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">MARK       all  --  0.0.0.0/0            0.0.0.0/0            MARK or 0x4000</span><br><span class="line"></span><br><span class="line">Chain KUBE-POSTROUTING (1 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">MASQUERADE  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service traffic requiring SNAT */ mark match 0x4000/0x4000</span><br><span class="line">MASQUERADE  all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-LOOP-BACK dst,dst,src</span><br><span class="line"></span><br><span class="line">Chain KUBE-SERVICES (2 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-LOAD-BALANCER  all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-LOAD-BALANCER dst,dst</span><br><span class="line">ACCEPT     all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-LOAD-BALANCER dst,dst</span><br></pre></td></tr></table></figure>
+
+<p><strong>4. NodePort 类型的 Service</strong></p>
+<p>对于 NodePort 类型的服务，ipvs 将添加匹配<code>KUBE-NODE-PORT-TCP/KUBE-NODE-PORT-UDP</code>的 ipset 的iptables 规则。当指定<code>externalTrafficPolicy=local</code>时，ipvs 将创建 ipset 集<code>KUBE-NODE-PORT-LOCAL-TC/KUBE-NODE-PORT-LOCAL-UDP</code>并安装相应的 iptables 规则，如下所示：(假设服务使用 TCP 类型 nodePort)</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">Chain PREROUTING (policy ACCEPT)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-SERVICES  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service portals */</span><br><span class="line"></span><br><span class="line">Chain OUTPUT (policy ACCEPT)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-SERVICES  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service portals */</span><br><span class="line"></span><br><span class="line">Chain POSTROUTING (policy ACCEPT)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-POSTROUTING  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes postrouting rules */</span><br><span class="line"></span><br><span class="line">Chain KUBE-MARK-MASQ (2 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">MARK       all  --  0.0.0.0/0            0.0.0.0/0            MARK or 0x4000</span><br><span class="line"></span><br><span class="line">Chain KUBE-NODE-PORT (1 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">RETURN     all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-NODE-PORT-LOCAL-TCP dst</span><br><span class="line">KUBE-MARK-MASQ  all  --  0.0.0.0/0            0.0.0.0/0</span><br><span class="line"></span><br><span class="line">Chain KUBE-POSTROUTING (1 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">MASQUERADE  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service traffic requiring SNAT */ mark match 0x4000/0x4000</span><br><span class="line">MASQUERADE  all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-LOOP-BACK dst,dst,src</span><br><span class="line"></span><br><span class="line">Chain KUBE-SERVICES (2 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-NODE-PORT  all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-NODE-PORT-TCP dst</span><br></pre></td></tr></table></figure>
+
+<p><strong>5. 指定 externalIPs 的 Service</strong></p>
+<p>对于指定了<code>externalIPs</code>的 Service，ipvs 会安装匹配<code>KUBE-EXTERNAL-IP</code> ipset 集的 iptables 规则，假设我们有指定了 externalIPs 的 Service，则 iptables 规则应该如下所示：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">Chain PREROUTING (policy ACCEPT)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-SERVICES  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service portals */</span><br><span class="line"></span><br><span class="line">Chain OUTPUT (policy ACCEPT)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-SERVICES  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service portals */</span><br><span class="line"></span><br><span class="line">Chain POSTROUTING (policy ACCEPT)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-POSTROUTING  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes postrouting rules */</span><br><span class="line"></span><br><span class="line">Chain KUBE-MARK-MASQ (2 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">MARK       all  --  0.0.0.0/0            0.0.0.0/0            MARK or 0x4000</span><br><span class="line"></span><br><span class="line">Chain KUBE-POSTROUTING (1 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">MASQUERADE  all  --  0.0.0.0/0            0.0.0.0/0            /* kubernetes service traffic requiring SNAT */ mark match 0x4000/0x4000</span><br><span class="line">MASQUERADE  all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-LOOP-BACK dst,dst,src</span><br><span class="line"></span><br><span class="line">Chain KUBE-SERVICES (2 references)</span><br><span class="line">target     prot opt source               destination</span><br><span class="line">KUBE-MARK-MASQ  all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-EXTERNAL-IP dst,dst</span><br><span class="line">ACCEPT     all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-EXTERNAL-IP dst,dst PHYSDEV match ! --physdev-is-in ADDRTYPE match src-type !LOCAL</span><br><span class="line">ACCEPT     all  --  0.0.0.0/0            0.0.0.0/0            match-set KUBE-EXTERNAL-IP dst,dst ADDRTYPE match dst-type LOCAL</span><br></pre></td></tr></table></figure>
+
+<h2 id="kube-proxy-使用-ipvs-模式"><a href="#kube-proxy-使用-ipvs-模式" class="headerlink" title="kube-proxy 使用 ipvs 模式"></a>kube-proxy 使用 ipvs 模式</h2><p>目前，本地化脚本、GCE 脚本和<code>kubeadm</code>支持通过导入环境变量或者指定标志来切换 ipvs 代理模式</p>
+<h3 id="要求"><a href="#要求" class="headerlink" title="要求"></a>要求</h3><p>确保 ipvs 需要的内核模块，需要下面几个模块：ip_vs、ip_vs_rr、ip_vs_wrr、ip_vs_sh、nf_conntrack_ipv4</p>
+<p>已编译到节点内核中的，可以使用如下命令检查：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">grep -e ipvs -e nf_conntrack_ipv4 /lib/modules/$(<span class="built_in">uname</span> -r)/modules.builtin</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">如果相关内核模块已经编译到内核中，可以得到如下结果：</span></span><br><span class="line">kernel/net/ipv4/netfilter/nf_conntrack_ipv4.ko</span><br><span class="line">kernel/net/netfilter/ipvs/ip_vs.ko</span><br><span class="line">kernel/net/netfilter/ipvs/ip_vs_rr.ko</span><br><span class="line">kernel/net/netfilter/ipvs/ip_vs_wrr.ko</span><br><span class="line">kernel/net/netfilter/ipvs/ip_vs_lc.ko</span><br><span class="line">kernel/net/netfilter/ipvs/ip_vs_wlc.ko</span><br><span class="line">kernel/net/netfilter/ipvs/ip_vs_fo.ko</span><br><span class="line">kernel/net/netfilter/ipvs/ip_vs_ovf.ko</span><br><span class="line">kernel/net/netfilter/ipvs/ip_vs_lblc.ko</span><br><span class="line">kernel/net/netfilter/ipvs/ip_vs_lblcr.ko</span><br><span class="line">kernel/net/netfilter/ipvs/ip_vs_dh.ko</span><br><span class="line">kernel/net/netfilter/ipvs/ip_vs_sh.ko</span><br><span class="line">kernel/net/netfilter/ipvs/ip_vs_sed.ko</span><br><span class="line">kernel/net/netfilter/ipvs/ip_vs_nq.ko</span><br><span class="line">kernel/net/netfilter/ipvs/ip_vs_ftp.ko</span><br></pre></td></tr></table></figure>
+
+<p>已经加载。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">加载模块 &lt;module_name&gt;</span></span><br><span class="line">modprobe -- ip_vs</span><br><span class="line">modprobe -- ip_vs_rr</span><br><span class="line">modprobe -- ip_vs_wrr</span><br><span class="line">modprobe -- ip_vs_sh</span><br><span class="line">modprobe -- nf_conntrack_ipv4</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">检查加载的模块</span></span><br><span class="line">lsmod | grep -e ipvs -e nf_conntrack_ipv4</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">或者</span></span><br><span class="line">cut -f1 -d &quot; &quot;  /proc/modules | grep -e ip_vs -e nf_conntrack_ipv4</span><br></pre></td></tr></table></figure>
+
+<p>在使用 ipvs 模式之前，还应在节点上安装<code>ipset</code>相关的软件包，如果不满足需求 kube-proxy 会回退到 iptables 的模式。</p>
+<h3 id="本地集群"><a href="#本地集群" class="headerlink" title="本地集群"></a>本地集群</h3><p>在<a target="_blank" rel="noopener" href="https://github.com/kubernetes/community/blob/master/contributors/devel/running-locally.md">本地集群</a>中 kube-proxy 默认会运行 iptables 的模式。 要使用 ipvs 模式，在<a target="_blank" rel="noopener" href="https://github.com/kubernetes/community/blob/master/contributors/devel/running-locally.md#starting-the-cluster">启动集群</a>之前需要导入<code>KUBE_PROXY_MODE=ipvs</code>的环境变量：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">运行脚本 hack/local-up-cluster.sh 之前</span></span><br><span class="line">export KUBE_PROXY_MODE=ipvs</span><br></pre></td></tr></table></figure>
+
+<h3 id="GCE-集群"><a href="#GCE-集群" class="headerlink" title="GCE 集群"></a>GCE 集群</h3><p>和本地集群一样，<a target="_blank" rel="noopener" href="https://kubernetes.io/docs/getting-started-guides/gce/">GCE 集群</a>中的 kube-proxy 默认也是 iptables 模式，在<a target="_blank" rel="noopener" href="https://kubernetes.io/docs/getting-started-guides/gce/#starting-a-cluster">启动集群</a>之前同样需要导入环境变量<code>KUBE_PROXY_MODE=ipvs</code>:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">运行前选择下面的一条命令启动集群:</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">curl -sS https://get.k8s.io | bash</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">wget -q -O - https://get.k8s.io | bash</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">cluster/kube-up.sh</span></span><br><span class="line">export KUBE_PROXY_MODE=ipvs</span><br></pre></td></tr></table></figure>
+
+<h3 id="使用-kubeadm-搭建的集群"><a href="#使用-kubeadm-搭建的集群" class="headerlink" title="使用 kubeadm 搭建的集群"></a>使用 kubeadm 搭建的集群</h3><p>通过<a target="_blank" rel="noopener" href="https://www.qikqiak.com/post/how-to-use-ipvs-in-kubernetes/(https://kubernetes.io/docs/setup/independent/create-cluster-kubeadm/)">kubeadm</a>部署的集群中 kube-proxy 同样默认是 iptables 模式。</p>
+<p>如果你是通过<a target="_blank" rel="noopener" href="https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm-init/#config-file">配置文件</a>来使用的 kubeadm，则可以在<code>kubeProxy</code>属性下面添加<code>SupportIPVSProxyMode: true</code>来启用 ipvs 模式：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">kind:</span> <span class="string">MasterConfiguration</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">kubeadm.k8s.io/v1alpha1</span></span><br><span class="line"><span class="string">...</span></span><br><span class="line"><span class="attr">kubeProxy:</span></span><br><span class="line">  <span class="attr">config:</span></span><br><span class="line">    <span class="attr">mode:</span> <span class="string">ipvs</span></span><br><span class="line"><span class="string">...</span></span><br></pre></td></tr></table></figure>
+
+<p>然后执行初始化命令即可：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubeadm init --config &lt;path_to_configuration_file&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>如果你使用的是 v1.8 版本的 kubernetes，你也可以在<code>kubeadm init</code>命令中增加<code>--feature-gates=SupportIPVSProxyMode=true</code>标志来来启用 ipvs 模式：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ kubeadm init --feature-gates=SupportIPVSProxyMode=true</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>注意该参数在 v1.9 后已经弃用掉了</p>
+</blockquote>
+<h3 id="注意"><a href="#注意" class="headerlink" title="注意"></a>注意</h3><p>如果成功启用了 ipvs 模式，你应该可以使用<code>ipvsadm</code>之类的工具看到如下的一些 ipvs 代理规则：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"> # </span><span class="language-bash">ipvsadm -<span class="built_in">ln</span></span></span><br><span class="line">IP Virtual Server version 1.2.1 (size=4096)</span><br><span class="line">Prot LocalAddress:Port Scheduler Flags</span><br><span class="line"><span class="meta prompt_">  -&gt; </span><span class="language-bash">RemoteAddress:Port           Forward Weight ActiveConn InActConn</span></span><br><span class="line">TCP  10.0.0.1:443 rr persistent 10800</span><br><span class="line"><span class="meta prompt_">  -&gt; </span><span class="language-bash">192.168.0.1:6443             Masq    1      1          0</span></span><br></pre></td></tr></table></figure>
+
+<p>或者在 kube-proxy 日志中可以看到如下的一些日志信息：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Using ipvs Proxier.</span><br></pre></td></tr></table></figure>
+
+<p>当没有这些 ipvs 代理规则或者出现了下面的这些日志信息的时候表明 kube-proxy 的 ipvs 模式启用失败了：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Can&#x27;t use ipvs proxier, trying iptables proxier</span><br><span class="line">Using iptables Proxier.</span><br></pre></td></tr></table></figure>
+
+<p>可以参考下面的调试方法进行错误信息排查</p>
+<h2 id="调试"><a href="#调试" class="headerlink" title="调试"></a>调试</h2><h3 id="检查-ipvs-代理规则"><a href="#检查-ipvs-代理规则" class="headerlink" title="检查 ipvs 代理规则"></a>检查 ipvs 代理规则</h3><p>用户可以使用<code>ipvsadm</code>工具检查 kube-proxy 是否维护正确的 ipvs 规则，比如，我们在集群中有以下一些服务：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get svc --all-namespaces</span></span><br><span class="line">NAMESPACE     NAME         TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)         AGE</span><br><span class="line">default       kubernetes   ClusterIP   10.0.0.1     &lt;none&gt;        443/TCP         1d</span><br><span class="line">kube-system   kube-dns     ClusterIP   10.0.0.10    &lt;none&gt;        53/UDP,53/TCP   1d</span><br></pre></td></tr></table></figure>
+
+<p>我们可以得到如下的一些 ipvs 代理规则：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"> # </span><span class="language-bash">ipvsadm -<span class="built_in">ln</span></span></span><br><span class="line">IP Virtual Server version 1.2.1 (size=4096)</span><br><span class="line">Prot LocalAddress:Port Scheduler Flags</span><br><span class="line"><span class="meta prompt_">  -&gt; </span><span class="language-bash">RemoteAddress:Port           Forward Weight ActiveConn InActConn</span></span><br><span class="line">TCP  10.0.0.1:443 rr persistent 10800</span><br><span class="line"><span class="meta prompt_">  -&gt; </span><span class="language-bash">192.168.0.1:6443             Masq    1      1          0</span></span><br><span class="line">TCP  10.0.0.10:53 rr</span><br><span class="line"><span class="meta prompt_">  -&gt; </span><span class="language-bash">172.17.0.2:53                Masq    1      0          0</span></span><br><span class="line">UDP  10.0.0.10:53 rr</span><br><span class="line"><span class="meta prompt_">  -&gt; </span><span class="language-bash">172.17.0.2:53                Masq    1      0          0</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="为什么-kube-proxy-无法启动-ipvs模式"><a href="#为什么-kube-proxy-无法启动-ipvs模式" class="headerlink" title="为什么 kube-proxy 无法启动 ipvs模式"></a>为什么 kube-proxy 无法启动 ipvs模式</h3><p>可以使用下面的一些方法来帮助我们解决这些问题：</p>
+<p><strong>1. 启用 ipvs feature gate</strong></p>
+<p>对于 kubernetes v1.10 版本之后，feature gate <code>SupportIPVSProxyMode</code>已经被默认设置为<code>true</code>了，但是如果你是 v1.10 之前的版本，你需要手动设置<code>--feature-gates=SupportIPVSProxyMode=true</code>来启用该 feature。</p>
+<p><strong>2. 指定 proxy-mode&#x3D;ipvs</strong></p>
+<p>检查 kube-proxy 的 model 是否被设置为了<code>ipvs</code>。</p>
+<p><strong>3. 安装需要的内核模块和软件包</strong></p>
+<p>检查 ipvs 需要的内核模块是否已经被编译进内核模块中，以及需要的软件包（可以参考前面的环境要求部分）</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+
+  
+  <nav class="pagination">
+    <a class="extend prev" rel="prev" href="/page/16/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/16/">16</a><span class="page-number current">17</span><a class="page-number" href="/page/18/">18</a><span class="space">&hellip;</span><a class="page-number" href="/page/28/">28</a><a class="extend next" rel="next" href="/page/18/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+  </nav>
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

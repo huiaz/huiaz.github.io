@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="在 Kubernetes 上部署 Prometheus前面我们已经了解了 Prometheus 的基本使用方式，主要是使用的二进制方式进行部署的，在实际生产环境来说，Prometheus 更适合用来部署在 Kubernetes 集群中，本节我们将介绍如何用手动方式在 Kubernetes 集群上部署 Prometheus，关于 Kubernetes 本身的使用可以参考我们的另外课程《Kuberne">
+<meta property="og:type" content="article">
+<meta property="og:title" content="安装 prometheus">
+<meta property="og:url" content="http://example.com/2025/09/11/%E5%AE%89%E8%A3%85%20prometheus/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="在 Kubernetes 上部署 Prometheus前面我们已经了解了 Prometheus 的基本使用方式，主要是使用的二进制方式进行部署的，在实际生产环境来说，Prometheus 更适合用来部署在 Kubernetes 集群中，本节我们将介绍如何用手动方式在 Kubernetes 集群上部署 Prometheus，关于 Kubernetes 本身的使用可以参考我们的另外课程《Kuberne">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/w5nh70.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/qhxvpc.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/x9l56z.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/yenyl6.png">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:09:46.641Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Prometheus">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://mudutestmenu.mudu.tv/upload/w5nh70.png">
+
+<link rel="canonical" href="http://example.com/2025/09/11/%E5%AE%89%E8%A3%85%20prometheus/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>安装 prometheus | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/%E5%AE%89%E8%A3%85%20prometheus/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          安装 prometheus
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:09:46" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/" itemprop="url" rel="index"><span itemprop="name">k8s-monitor</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/Prometheus/" itemprop="url" rel="index"><span itemprop="name">Prometheus</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/Prometheus/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>9.1k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>8 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="在-Kubernetes-上部署-Prometheus"><a href="#在-Kubernetes-上部署-Prometheus" class="headerlink" title="在 Kubernetes 上部署 Prometheus"></a>在 Kubernetes 上部署 Prometheus</h1><p>前面我们已经了解了 Prometheus 的基本使用方式，主要是使用的二进制方式进行部署的，在实际生产环境来说，Prometheus 更适合用来部署在 Kubernetes 集群中，本节我们将介绍如何用手动方式在 Kubernetes 集群上部署 Prometheus，关于 Kubernetes 本身的使用可以参考我们的另外课程<a target="_blank" rel="noopener" href="https://youdianzhishi.com/web/course/1030">《Kubernetes 进阶训练营》</a>。</p>
+<h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><p>由于我们这里是要运行在 Kubernetes 系统中，所以我们直接用 Docker 镜像的方式运行。这里我们使用的实验环境是基于 Kubernetes v1.22 版本，一共 3 个节点：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">☸ ➜ kubectl get nodes</span><br><span class="line">NAME      STATUS   ROLES                  AGE   VERSION</span><br><span class="line">master1   Ready    control-plane,master   49d   v1.22.2</span><br><span class="line">node1     Ready    &lt;none&gt;                 49d   v1.22.2</span><br><span class="line">node2     Ready    &lt;none&gt;                 49d   v1.22.2</span><br></pre></td></tr></table></figure>
+
+<p>为了方便管理，我们将监控相关的所有资源对象都安装在 <code>kube-mon</code> 这个 namespace 下面，没有的话可以提前创建：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">☸ ➜ kubectl create ns kube-mon</span><br></pre></td></tr></table></figure>
+
+<p>为了能够方便的管理配置文件，我们这里将 <code>prometheus.yml</code> 配置文件用 <code>ConfigMap</code> 的形式进行管理：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># config.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ConfigMap</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">prometheus-config</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-mon</span></span><br><span class="line"><span class="attr">data:</span></span><br><span class="line">  <span class="attr">prometheus.yml:</span> <span class="string">|</span></span><br><span class="line"><span class="string">    global:</span></span><br><span class="line"><span class="string">      scrape_interval: 15s</span></span><br><span class="line"><span class="string">      scrape_timeout: 15s</span></span><br><span class="line"><span class="string">    scrape_configs:</span></span><br><span class="line"><span class="string">    - job_name: &#x27;prometheus&#x27;</span></span><br><span class="line"><span class="string">      static_configs:</span></span><br><span class="line"><span class="string">      - targets: [&#x27;localhost:9090&#x27;]</span></span><br></pre></td></tr></table></figure>
+
+<p>我们这里暂时只配置了对 prometheus 本身的监控，直接创建该资源对象：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">☸ ➜ kubectl apply -f https://p8s.io/docs/k8s/manifests/prometheus/config-1.yaml</span><br><span class="line">configmap &quot;prometheus-config&quot; created</span><br></pre></td></tr></table></figure>
+
+<p>配置文件创建完成了，以后如果我们有新的资源需要被监控，我们只需要将上面的 ConfigMap 对象更新即可。现在我们来创建 prometheus 的 Pod 资源：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># prometheus-deploy.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">prometheus</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-mon</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">prometheus</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">prometheus</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">prometheus</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">serviceAccountName:</span> <span class="string">prometheus</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">image:</span> <span class="string">prom/prometheus:v2.31.1</span></span><br><span class="line">          <span class="attr">name:</span> <span class="string">prometheus</span></span><br><span class="line">          <span class="attr">args:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">&#x27;--config.file=/etc/prometheus/prometheus.yml&#x27;</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">&#x27;--storage.tsdb.path=/prometheus&#x27;</span> <span class="comment"># 指定tsdb数据路径</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">&#x27;--storage.tsdb.retention.time=24h&#x27;</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">&#x27;--web.enable-admin-api&#x27;</span> <span class="comment"># 控制对admin HTTP API的访问，其中包括删除时间序列等功能</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">&#x27;--web.enable-lifecycle&#x27;</span> <span class="comment"># 支持热更新，直接执行localhost:9090/-/reload立即生效</span></span><br><span class="line">          <span class="attr">ports:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">9090</span></span><br><span class="line">              <span class="attr">name:</span> <span class="string">http</span></span><br><span class="line">          <span class="attr">volumeMounts:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">mountPath:</span> <span class="string">&#x27;/etc/prometheus&#x27;</span></span><br><span class="line">              <span class="attr">name:</span> <span class="string">config-volume</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">mountPath:</span> <span class="string">&#x27;/prometheus&#x27;</span></span><br><span class="line">              <span class="attr">name:</span> <span class="string">data</span></span><br><span class="line">          <span class="attr">resources:</span></span><br><span class="line">            <span class="attr">requests:</span></span><br><span class="line">              <span class="attr">cpu:</span> <span class="string">200m</span></span><br><span class="line">              <span class="attr">memory:</span> <span class="string">1024Mi</span></span><br><span class="line">            <span class="attr">limits:</span></span><br><span class="line">              <span class="attr">cpu:</span> <span class="string">200m</span></span><br><span class="line">              <span class="attr">memory:</span> <span class="string">1024Mi</span></span><br><span class="line">      <span class="attr">volumes:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">data</span></span><br><span class="line">          <span class="attr">persistentVolumeClaim:</span></span><br><span class="line">            <span class="attr">claimName:</span> <span class="string">prometheus-data</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">configMap:</span></span><br><span class="line">            <span class="attr">name:</span> <span class="string">prometheus-config</span></span><br><span class="line">          <span class="attr">name:</span> <span class="string">config-volume</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="持久化"><a href="#持久化" class="headerlink" title="持久化"></a>持久化</h2><p>另外为了 prometheus 的性能和数据持久化我们这里是直接将通过一个 LocalPV 来进行数据持久化的，<strong>注意一定不能使用 nfs 来持久化数据</strong>，通过 <code>--storage.tsdb.path=/prometheus</code> 指定数据目录，创建如下所示的一个 PVC 资源对象，注意是一个 LocalPV，和 node2 节点具有亲和性：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">storage.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">StorageClass</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">local-storage</span></span><br><span class="line"><span class="attr">provisioner:</span> <span class="string">kubernetes.io/no-provisioner</span></span><br><span class="line"><span class="attr">volumeBindingMode:</span> <span class="string">WaitForFirstConsumer</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PersistentVolume</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">prometheus-local</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">prometheus</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">accessModes:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">ReadWriteOnce</span></span><br><span class="line">  <span class="attr">capacity:</span></span><br><span class="line">    <span class="attr">storage:</span> <span class="string">20Gi</span></span><br><span class="line">  <span class="attr">storageClassName:</span> <span class="string">local-storage</span></span><br><span class="line">  <span class="attr">local:</span></span><br><span class="line">    <span class="attr">path:</span> <span class="string">/data/k8s/prometheus</span></span><br><span class="line">  <span class="attr">persistentVolumeReclaimPolicy:</span> <span class="string">Retain</span></span><br><span class="line">  <span class="attr">nodeAffinity:</span></span><br><span class="line">    <span class="attr">required:</span></span><br><span class="line">      <span class="attr">nodeSelectorTerms:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">matchExpressions:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">key:</span> <span class="string">kubernetes.io/hostname</span></span><br><span class="line">              <span class="attr">operator:</span> <span class="string">In</span></span><br><span class="line">              <span class="attr">values:</span></span><br><span class="line">                <span class="bullet">-</span> <span class="string">node2</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PersistentVolumeClaim</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">prometheus-data</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-mon</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">prometheus</span></span><br><span class="line">  <span class="attr">accessModes:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">ReadWriteOnce</span></span><br><span class="line">  <span class="attr">resources:</span></span><br><span class="line">    <span class="attr">requests:</span></span><br><span class="line">      <span class="attr">storage:</span> <span class="string">20Gi</span></span><br><span class="line">  <span class="attr">storageClassName:</span> <span class="string">local-storage</span></span><br></pre></td></tr></table></figure>
+
+<p>由于 prometheus 可以访问 Kubernetes 的一些资源对象，所以需要配置 rbac 相关认证，这里我们使用了一个名为 prometheus 的 serviceAccount 对象：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># rbac.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ServiceAccount</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">prometheus</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-mon</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">rbac.authorization.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ClusterRole</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">prometheus</span></span><br><span class="line"><span class="attr">rules:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">apiGroups:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&#x27;&#x27;</span></span><br><span class="line">    <span class="attr">resources:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">nodes</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">services</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">endpoints</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">pods</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">nodes/proxy</span></span><br><span class="line">    <span class="attr">verbs:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">get</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">list</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">watch</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">apiGroups:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&#x27;extensions&#x27;</span></span><br><span class="line">    <span class="attr">resources:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">ingresses</span></span><br><span class="line">    <span class="attr">verbs:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">get</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">list</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">watch</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">apiGroups:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&#x27;&#x27;</span></span><br><span class="line">    <span class="attr">resources:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">configmaps</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">nodes/metrics</span></span><br><span class="line">    <span class="attr">verbs:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">get</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">nonResourceURLs:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">/metrics</span></span><br><span class="line">    <span class="attr">verbs:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">get</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">rbac.authorization.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ClusterRoleBinding</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">prometheus</span></span><br><span class="line"><span class="attr">roleRef:</span></span><br><span class="line">  <span class="attr">apiGroup:</span> <span class="string">rbac.authorization.k8s.io</span></span><br><span class="line">  <span class="attr">kind:</span> <span class="string">ClusterRole</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">prometheus</span></span><br><span class="line"><span class="attr">subjects:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">kind:</span> <span class="string">ServiceAccount</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">prometheus</span></span><br><span class="line">    <span class="attr">namespace:</span> <span class="string">kube-mon</span></span><br></pre></td></tr></table></figure>
+
+<p>由于我们要获取的资源信息，在每一个 namespace 下面都有可能存在，所以我们这里使用的是 <code>ClusterRole</code> 的资源对象，值得一提的是我们这里的权限规则声明中有一个 <code>nonResourceURLs</code> 的属性，是用来对非资源型 metrics 进行操作的权限声明，这个在以前我们很少遇到过，然后直接创建上面的资源对象即可：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">☸ ➜ kubectl apply -f https://p8s.io/docs/k8s/manifests/prometheus/rbac.yaml</span><br><span class="line">serviceaccount &quot;prometheus&quot; created</span><br><span class="line">clusterrole.rbac.authorization.k8s.io &quot;prometheus&quot; created</span><br><span class="line">clusterrolebinding.rbac.authorization.k8s.io &quot;prometheus&quot; created</span><br></pre></td></tr></table></figure>
+
+<p>现在我们就可以添加 promethues 的资源对象了：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">☸ ➜ kubectl apply -f https://p8s.io/docs/k8s/manifests/prometheus/deploy.yaml</span><br><span class="line">deployment.apps/prometheus created</span><br><span class="line">☸ ➜ kubectl get pods -n kube-mon</span><br><span class="line">NAME                         READY   STATUS             RESTARTS   AGE</span><br><span class="line">prometheus-df4f47d95-vksmc   0/1     CrashLoopBackOff   3          98s</span><br><span class="line">☸ ➜ kubectl logs -f prometheus-df4f47d95-vksmc -n kube-mon</span><br><span class="line">level=info ts=2019-12-12T03:08:49.424Z caller=main.go:332 msg=&quot;Starting Prometheus&quot; version=&quot;(version=2.14.0, branch=HEAD, revision=edeb7a44cbf745f1d8be4ea6f215e79e651bfe19)&quot;</span><br><span class="line">level=info ts=2019-12-12T03:08:49.424Z caller=main.go:333 build_context=&quot;(go=go1.13.4, user=root@df2327081015, date=20191111-14:27:12)&quot;</span><br><span class="line">level=info ts=2019-12-12T03:08:49.425Z caller=main.go:334 host_details=&quot;(Linux 3.10.0-1062.4.1.el7.x86_64 #1 SMP Fri Oct 18 17:15:30 UTC 2019 x86_64 prometheus-df4f47d95-vksmc (none))&quot;</span><br><span class="line">level=info ts=2019-12-12T03:08:49.425Z caller=main.go:335 fd_limits=&quot;(soft=1048576, hard=1048576)&quot;</span><br><span class="line">level=info ts=2019-12-12T03:08:49.425Z caller=main.go:336 vm_limits=&quot;(soft=unlimited, hard=unlimited)&quot;</span><br><span class="line">level=error ts=2019-12-12T03:08:49.425Z caller=query_logger.go:85 component=activeQueryTracker msg=&quot;Error opening query log file&quot; file=/prometheus/queries.active err=&quot;open /prometheus/queries.active: permission denied&quot;</span><br><span class="line">panic: Unable to create mmap-ed active query log</span><br><span class="line"></span><br><span class="line">goroutine 1 [running]:</span><br><span class="line">github.com/prometheus/prometheus/promql.NewActiveQueryTracker(0x7ffd8cf6ec5d, 0xb, 0x14, 0x2b4f400, 0xc0006f33b0, 0x2b4f400)</span><br><span class="line">        /app/promql/query_logger.go:115 +0x48c</span><br><span class="line">main.main()</span><br><span class="line">        /app/cmd/prometheus/main.go:364 +0x5229</span><br></pre></td></tr></table></figure>
+
+<h2 id="权限"><a href="#权限" class="headerlink" title="权限"></a>权限</h2><p>创建 Pod 后，我们可以看到并没有成功运行，出现了 <code>open /prometheus/queries.active: permission denied</code> 这样的错误信息，这是因为我们的 prometheus 的镜像中是使用的 nobody 这个用户，然后现在我们通过 LocalPV 挂载到宿主机上面的目录的 <code>ownership</code> 却是 <code>root</code>：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">☸ ➜ ls -la /data/k8s</span><br><span class="line">total 36</span><br><span class="line">drwxr-xr-x   6 root root  4096 Dec 12 11:07 .</span><br><span class="line">dr-xr-xr-x. 19 root root  4096 Nov  9 23:19 ..</span><br><span class="line">drwxr-xr-x   2 root root  4096 Dec 12 11:07 prometheus</span><br></pre></td></tr></table></figure>
+
+<p>所以当然会出现操作权限问题了，这个时候我们就可以通过 <code>securityContext</code> 来为 Pod 设置下 volumes 的权限，通过设置 <code>runAsUser=0</code> 指定运行的用户为 root，也可以通过设置一个 initContainer 来修改数据目录权限：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">......</span></span><br><span class="line"><span class="attr">initContainers:</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">name:</span> <span class="string">fix-permissions</span></span><br><span class="line">  <span class="attr">image:</span> <span class="string">busybox</span></span><br><span class="line">  <span class="attr">command:</span> [<span class="string">chown</span>, <span class="string">-R</span>, <span class="string">&quot;nobody:nobody&quot;</span>, <span class="string">/prometheus</span>]</span><br><span class="line">  <span class="attr">volumeMounts:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">data</span></span><br><span class="line">    <span class="attr">mountPath:</span> <span class="string">/prometheus</span></span><br></pre></td></tr></table></figure>
+
+<p>这个时候我们重新更新下 prometheus：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">☸ ➜ kubectl apply -f https://p8s.io/docs/k8s/manifests/prometheus/deploy-fixed.yaml</span><br><span class="line">deployment.apps/prometheus configured</span><br><span class="line">☸ ➜ kubectl get pods -n kube-mon</span><br><span class="line">NAME                          READY   STATUS    RESTARTS      AGE</span><br><span class="line">prometheus-649968556c-t4prd   1/1     Running   1 (14m ago)   27h</span><br><span class="line">☸ ➜ kubectl logs -f prometheus-649968556c-t4prd -n kube-mon</span><br><span class="line">ts=2021-12-15T06:55:25.752Z caller=main.go:444 level=info msg=&quot;Starting Prometheus&quot; version=&quot;(version=2.31.1, branch=HEAD, revision=411021ada9ab41095923b8d2df9365b632fd40c3)&quot;</span><br><span class="line">ts=2021-12-15T06:55:25.752Z caller=main.go:449 level=info build_context=&quot;(go=go1.17.3, user=root@9419c9c2d4e0, date=20211105-20:35:02)&quot;</span><br><span class="line">ts=2021-12-15T06:55:25.752Z caller=main.go:450 level=info host_details=&quot;(Linux 3.10.0-1160.25.1.el7.x86_64 #1 SMP Wed Apr 28 21:49:45 UTC 2021 x86_64 prometheus-649968556c-t4prd (none))&quot;</span><br><span class="line">ts=2021-12-15T06:55:25.752Z caller=main.go:451 level=info fd_limits=&quot;(soft=1048576, hard=1048576)&quot;</span><br><span class="line">ts=2021-12-15T06:55:25.752Z caller=main.go:452 level=info vm_limits=&quot;(soft=unlimited, hard=unlimited)&quot;</span><br><span class="line">ts=2021-12-15T06:55:25.756Z caller=web.go:542 level=info component=web msg=&quot;Start listening for connections&quot; address=0.0.0.0:9090</span><br><span class="line">ts=2021-12-15T06:55:26.150Z caller=main.go:839 level=info msg=&quot;Starting TSDB ...&quot;</span><br><span class="line">......</span><br><span class="line">ts=2021-12-15T06:55:27.048Z caller=main.go:869 level=info msg=&quot;TSDB started&quot;</span><br><span class="line">ts=2021-12-15T06:55:27.048Z caller=main.go:996 level=info msg=&quot;Loading configuration file&quot; filename=/etc/prometheus/prometheus.yml</span><br><span class="line">ts=2021-12-15T06:55:27.050Z caller=main.go:1033 level=info msg=&quot;Completed loading of configuration file&quot; filename=/etc/prometheus/prometheus.yml totalDuration=1.555486ms db_storage=754ns remote_storage=38.847µs web_handler=433ns query_engine=852ns scrape=1.030952ms scrape_sd=73.933µs notify=894ns notify_sd=2.504µs rules=19.359µs</span><br><span class="line">ts=2021-12-15T06:55:27.050Z caller=main.go:811 level=info msg=&quot;Server is ready to receive web requests.&quot;</span><br></pre></td></tr></table></figure>
+
+<p>Pod 创建成功后，为了能够在外部访问到 prometheus 的 webui 服务，我们还需要创建一个 Service 对象：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># prometheus-svc.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">prometheus</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-mon</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">prometheus</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">prometheus</span></span><br><span class="line">  <span class="attr">type:</span> <span class="string">NodePort</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">web</span></span><br><span class="line">      <span class="attr">port:</span> <span class="number">9090</span></span><br><span class="line">      <span class="attr">targetPort:</span> <span class="string">http</span></span><br></pre></td></tr></table></figure>
+
+<p>为了方便测试，我们这里创建一个 <code>NodePort</code> 类型的服务，当然我们可以创建一个 <code>Ingress</code>对象，通过域名来进行访问：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">☸ ➜ kubectl apply -f https://p8s.io/docs/k8s/manifests/prometheus/svc.yaml</span><br><span class="line">service &quot;prometheus&quot; created</span><br><span class="line">☸ ➜ kubectl get svc -n kube-mon</span><br><span class="line">NAME         TYPE       CLUSTER-IP       EXTERNAL-IP   PORT(S)          AGE</span><br><span class="line">prometheus   NodePort   10.111.160.152   &lt;none&gt;        9090:30407/TCP   4m33s</span><br></pre></td></tr></table></figure>
+
+<p>现在我们就可以通过 <code>http://任意节点IP:30407</code> 访问 prometheus 的 webui 服务了：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/w5nh70.png" alt="prometheus webui"></p>
+<p>现在我们可以查看当前监控系统中的一些监控目标（Status -&gt; Targets）：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/qhxvpc.png" alt="prometheus webui targets"></p>
+<p>由于我们现在还没有配置任何的报警信息，所以 <code>Alerts</code> 菜单下面现在没有任何数据，隔一会儿，我们可以去 <code>Graph</code> 菜单下面查看我们抓取的 prometheus 本身的一些监控数据了：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/x9l56z.png" alt="prometheus webui metrics"></p>
+<p>比如我们这里就选择 <code>scrape_duration_seconds</code> 这个指标，然后点击 <code>Execute</code>，就可以看到类似于下面的图表数据了：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/yenyl6.png" alt="prometheus webui query"></p>
+<p><a target="_blank" rel="noopener" href="https://docs.youdianzhishi.com/prometheus/grafana/alerts/">
+</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Prometheus/" rel="tag"># Prometheus</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E5%AE%B9%E5%99%A8%E7%9B%91%E6%8E%A7/" rel="prev" title="容器监控">
+      <i class="fa fa-chevron-left"></i> 容器监控
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E5%AD%98%E5%82%A8%E6%8F%92%E4%BB%B6/" rel="next" title="存储插件">
+      存储插件 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9C%A8-Kubernetes-%E4%B8%8A%E9%83%A8%E7%BD%B2-Prometheus"><span class="nav-number">1.</span> <span class="nav-text">在 Kubernetes 上部署 Prometheus</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85"><span class="nav-number">1.1.</span> <span class="nav-text">安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8C%81%E4%B9%85%E5%8C%96"><span class="nav-number">1.2.</span> <span class="nav-text">持久化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9D%83%E9%99%90"><span class="nav-number">1.3.</span> <span class="nav-text">权限</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

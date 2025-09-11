@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="指针的本质：内存地址的引用在 Go 语言中，指针 (Pointer) 存储的是一个变量在内存中的地址。而不是变量的实际值本身。你可以把它想象成一个“门牌号”，通过这个门牌号，你可以找到存储在特定房间里的“人”（数据）。 Go 语言中指针的意义 (Why Pointers in Go?)虽然 Go 语言在设计上强调简洁和安全，并尝试隐藏底层的内存细节，但指针仍然是其强大和灵活的重要组成部分。其意义主">
+<meta property="og:type" content="article">
+<meta property="og:title" content="指针">
+<meta property="og:url" content="http://example.com/2025/09/11/%E6%8C%87%E9%92%88/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="指针的本质：内存地址的引用在 Go 语言中，指针 (Pointer) 存储的是一个变量在内存中的地址。而不是变量的实际值本身。你可以把它想象成一个“门牌号”，通过这个门牌号，你可以找到存储在特定房间里的“人”（数据）。 Go 语言中指针的意义 (Why Pointers in Go?)虽然 Go 语言在设计上强调简洁和安全，并尝试隐藏底层的内存细节，但指针仍然是其强大和灵活的重要组成部分。其意义主">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:20:38.096Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Go">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/%E6%8C%87%E9%92%88/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>指针 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/%E6%8C%87%E9%92%88/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          指针
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:20:38" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/go/" itemprop="url" rel="index"><span itemprop="name">go</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.9k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="指针的本质：内存地址的引用"><a href="#指针的本质：内存地址的引用" class="headerlink" title="指针的本质：内存地址的引用"></a>指针的本质：内存地址的引用</h3><p>在 Go 语言中，<strong>指针 (Pointer)</strong> 存储的是一个变量在内存中的<strong>地址</strong>。而不是变量的实际值本身。你可以把它想象成一个“门牌号”，通过这个门牌号，你可以找到存储在特定房间里的“人”（数据）。</p>
+<h3 id="Go-语言中指针的意义-Why-Pointers-in-Go"><a href="#Go-语言中指针的意义-Why-Pointers-in-Go" class="headerlink" title="Go 语言中指针的意义 (Why Pointers in Go?)"></a>Go 语言中指针的意义 (Why Pointers in Go?)</h3><p>虽然 Go 语言在设计上强调简洁和安全，并尝试隐藏底层的内存细节，但指针仍然是其强大和灵活的重要组成部分。其意义主要体现在以下几个方面：</p>
+<ol>
+<li><p><strong>允许函数修改调用者作用域中的变量：</strong></p>
+<ul>
+<li>Go 语言的函数参数传递默认是<strong>值传递</strong>。这意味着当您将一个变量传递给函数时，函数会收到该变量的一个副本。函数内部对副本的任何修改都不会影响到原始变量。</li>
+<li>然而，如果将变量的<strong>指针</strong>传递给函数，函数接收到的是变量地址的副本。通过这个地址，函数可以直接访问并修改原始变量在内存中的值。这是 Go 语言中实现“传引用”效果（即修改原数据）的唯一方式。</li>
+<li><strong>意义：</strong> 使得构建像 <code>fmt.Scanf</code> 这样能够将输入直接写入到变量的功能成为可能；允许实现一些需要改变外部状态的函数。</li>
+</ul>
+<p><strong>示例：</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">increment</span><span class="params">(num <span class="type">int</span>)</span></span> &#123; <span class="comment">// 值传递，不能修改外部变量</span></span><br><span class="line">    num++</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">incrementPtr</span><span class="params">(num *<span class="type">int</span>)</span></span> &#123; <span class="comment">// 指针传递，可以修改外部变量</span></span><br><span class="line">    *num++ <span class="comment">// 解引用并修改</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    a := <span class="number">10</span></span><br><span class="line">    increment(a)</span><br><span class="line">    fmt.Println(a) <span class="comment">// 输出: 10 (a 未变)</span></span><br><span class="line"></span><br><span class="line">    b := <span class="number">10</span></span><br><span class="line">    incrementPtr(&amp;b) <span class="comment">// 传递 b 的地址</span></span><br><span class="line">    fmt.Println(b) <span class="comment">// 输出: 11 (b 变了)</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>避免大数据结构的拷贝开销，提高性能：</strong></p>
+<ul>
+<li>当您传递大型数据结构（如大型结构体 <code>struct</code>）作为函数参数时，如果采用值传递，Go 运行时会为整个结构体创建一个完整的副本。这会消耗大量的内存和 CPU 时间，尤其是在频繁调用时。</li>
+<li>通过传递结构体的<strong>指针</strong>，您只需要拷贝一个内存地址（通常为 4 或 8 字节），而不是整个结构体的数据。这大大减少了内存拷贝的开销，从而提升了程序的性能。</li>
+<li><strong>意义：</strong> 这是优化 Go 应用程序性能的关键策略之一，特别是在处理网络请求中的数据、数据库行、或大型业务对象时。</li>
+</ul>
+<p><strong>示例：</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> LargeStruct <span class="keyword">struct</span> &#123;</span><br><span class="line">    Data [<span class="number">1024</span>]<span class="type">byte</span> <span class="comment">// 一个相对较大的结构体</span></span><br><span class="line">    <span class="comment">// ... 其他字段</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 值传递：拷贝整个 LargeStruct</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">processByValue</span><span class="params">(s LargeStruct)</span></span> &#123;</span><br><span class="line">    <span class="comment">// ... 处理 s</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 指针传递：只拷贝一个指针</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">processByPointer</span><span class="params">(s *LargeStruct)</span></span> &#123;</span><br><span class="line">    <span class="comment">// ... 处理 *s</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    myLargeStruct := LargeStruct&#123;&#125;</span><br><span class="line">    <span class="comment">// 传递值，会复制 1024 字节</span></span><br><span class="line">    processByValue(myLargeStruct)</span><br><span class="line">    <span class="comment">// 传递指针，只复制 8 字节 (64位系统)</span></span><br><span class="line">    processByPointer(&amp;myLargeStruct)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>表示可选参数或某个值不存在的情况：</strong></p>
+<ul>
+<li>在 Go 语言中，基本数据类型（如 <code>int</code>、<code>string</code>、<code>bool</code>）都有其零值（<code>0</code>、<code>&quot;&quot;</code>、<code>false</code>）。很多时候，我们无法区分一个零值是真实的业务值，还是因为变量未被赋值而得到的默认值。</li>
+<li>通过使用指针类型，我们可以表示一个值是存在（指针不为 <code>nil</code>）或不存在（指针为 <code>nil</code>）。</li>
+<li><strong>意义：</strong> 常见于 API 设计中，比如一个 JSON 请求体中的某些字段是可选的，或者数据库中某个字段允许为空。<code>*int</code>、<code>*string</code> 就可以用来表示这些可选字段。</li>
+</ul>
+<p><strong>示例：</strong></p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">printOptionalInt</span><span class="params">(val *<span class="type">int</span>)</span></span> &#123;</span><br><span class="line">    <span class="keyword">if</span> val != <span class="literal">nil</span> &#123;</span><br><span class="line">        fmt.Printf(<span class="string">&quot;Optional value is: %d\n&quot;</span>, *val)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        fmt.Println(<span class="string">&quot;Optional value is not provided.&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="keyword">var</span> x <span class="type">int</span> = <span class="number">100</span></span><br><span class="line">    printOptionalInt(&amp;x) <span class="comment">// 输出: Optional value is: 100</span></span><br><span class="line"></span><br><span class="line">    printOptionalInt(<span class="literal">nil</span>) <span class="comment">// 输出: Optional value is not provided.</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>实现某些特定的数据结构：</strong></p>
+<ul>
+<li>虽然 Go 语言的标准库很少直接暴露指针给开发者（如链表、树结构通常通过值类型和结构体内部的引用来封装），但在构建某些底层或自定义数据结构时，指针是必不可少的。例如，链表的 <code>Next</code> 字段就是一个指向下一个节点的指针。</li>
+<li><strong>意义：</strong> 允许开发者在需要时，灵活地构建复杂的数据结构。</li>
+</ul>
+</li>
+</ol>
+<h3 id="Go-语言中指针的特性-与-C-C-的异同"><a href="#Go-语言中指针的特性-与-C-C-的异同" class="headerlink" title="Go 语言中指针的特性 (与 C&#x2F;C++ 的异同)"></a>Go 语言中指针的特性 (与 C&#x2F;C++ 的异同)</h3><p>虽然 Go 有指针，但与 C&#x2F;C++ 等语言中的指针有显著不同，这些差异也体现了 Go 的设计哲学：<strong>安全和简化</strong>。</p>
+<ul>
+<li><strong>没有指针算术：</strong> Go 语言不允许对指针进行加减运算（即 <code>ptr + 1</code> 这样的操作），这极大地减少了内存访问越界和段错误的风险。</li>
+<li><strong>垃圾回收：</strong> Go 语言有运行时垃圾回收机制，开发者无需手动分配和释放内存（<code>malloc</code>&#x2F;<code>free</code>）。这大大降低了内存泄漏和野指针（dangling pointer）的风险。</li>
+<li><strong>结构体字段的自动解引用：</strong> 如果 <code>p</code> 是一个结构体指针，访问其字段可以使用 <code>p.Field</code>，而不是 <code>(*p).Field</code>。Go 编译器会自动为您进行解引用。</li>
+<li><strong>默认值：</strong> 指针的零值（默认值）是 <code>nil</code>，表示它不指向任何有效的内存地址。</li>
+</ul>
+<h3 id="何时使用指针？"><a href="#何时使用指针？" class="headerlink" title="何时使用指针？"></a>何时使用指针？</h3><ul>
+<li>当你需要<strong>修改</strong>函数外部的变量时。</li>
+<li>当你需要<strong>传递大型数据结构</strong>，以避免不必要的拷贝开销时。</li>
+<li>当你需要表示一个值是<strong>可选</strong>的，或者<strong>可能不存在</strong>时（例如，处理 JSON 或数据库中的可空字段）。</li>
+<li>当你为类型定义<strong>方法</strong>时，如果方法需要修改接收者，那么接收者就应该是一个指针类型 (<code>func (s *MyStruct) MyMethod()</code>)。</li>
+</ul>
+<h3 id="何时避免使用指针？"><a href="#何时避免使用指针？" class="headerlink" title="何时避免使用指针？"></a>何时避免使用指针？</h3><ul>
+<li>对于<strong>基本类型</strong>（<code>int</code>、<code>string</code>、<code>bool</code> 等）和<strong>小结构体</strong>，通常直接按值传递更安全、清晰，且性能开销可以忽略不计。</li>
+<li>对于 Go 内置的<strong>引用类型</strong>：<code>slice</code>（切片）、<code>map</code>（映射）、<code>chan</code>（通道）。这些类型本身就包含了指向底层数据的指针，因此它们在作为函数参数传递时，也表现出类似“传引用”的行为（函数内部修改会影响外部）。你通常<strong>不需要</strong>再传递它们的指针（例如 <code>*[]int</code> 是不必要的，直接 <code>[]int</code> 即可）。</li>
+</ul>
+<p><strong>核心思想：</strong> Go 鼓励使用值语义，只有在明确需要上述指针的“意义”时才使用它们。滥用指针会使代码变得复杂，并可能隐藏问题。理解 Go 的值传递哲学和指针的精确用途，是编写 idiomatic 和高性能 Go 代码的关键。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Go/" rel="tag"># Go</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E6%8C%87%E9%92%88%E6%8E%A5%E6%94%B6%E4%B8%8E%E5%80%BC%E6%8E%A5%E6%94%B6/" rel="prev" title="指针接收与值接收">
+      <i class="fa fa-chevron-left"></i> 指针接收与值接收
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E6%8C%87%E6%A0%87%E7%B1%BB%E5%9E%8B/" rel="next" title="指标类型">
+      指标类型 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8C%87%E9%92%88%E7%9A%84%E6%9C%AC%E8%B4%A8%EF%BC%9A%E5%86%85%E5%AD%98%E5%9C%B0%E5%9D%80%E7%9A%84%E5%BC%95%E7%94%A8"><span class="nav-number">1.</span> <span class="nav-text">指针的本质：内存地址的引用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Go-%E8%AF%AD%E8%A8%80%E4%B8%AD%E6%8C%87%E9%92%88%E7%9A%84%E6%84%8F%E4%B9%89-Why-Pointers-in-Go"><span class="nav-number">2.</span> <span class="nav-text">Go 语言中指针的意义 (Why Pointers in Go?)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Go-%E8%AF%AD%E8%A8%80%E4%B8%AD%E6%8C%87%E9%92%88%E7%9A%84%E7%89%B9%E6%80%A7-%E4%B8%8E-C-C-%E7%9A%84%E5%BC%82%E5%90%8C"><span class="nav-number">3.</span> <span class="nav-text">Go 语言中指针的特性 (与 C&#x2F;C++ 的异同)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%95%E6%97%B6%E4%BD%BF%E7%94%A8%E6%8C%87%E9%92%88%EF%BC%9F"><span class="nav-number">4.</span> <span class="nav-text">何时使用指针？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%95%E6%97%B6%E9%81%BF%E5%85%8D%E4%BD%BF%E7%94%A8%E6%8C%87%E9%92%88%EF%BC%9F"><span class="nav-number">5.</span> <span class="nav-text">何时避免使用指针？</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Linux 系统中 crontab Crontab 的工作原理crontab（cron table） 是 Linux&#x2F;Unix 系统用于设置周期性执行任务的工具。它的核心是 cron 服务（或称为 crond 守护进程），这个服务在系统启动时就会自动运行，并且会一直在后台持续运行，它的主要职责是：  读取定时任务配置： cron 服务会周期性地（通常是每分钟）扫描特定的配置文件，这些文件">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux 系统中 crontab">
+<meta property="og:url" content="http://example.com/2025/09/11/Linux%20%E7%B3%BB%E7%BB%9F%E4%B8%AD%20crontab/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="Linux 系统中 crontab Crontab 的工作原理crontab（cron table） 是 Linux&#x2F;Unix 系统用于设置周期性执行任务的工具。它的核心是 cron 服务（或称为 crond 守护进程），这个服务在系统启动时就会自动运行，并且会一直在后台持续运行，它的主要职责是：  读取定时任务配置： cron 服务会周期性地（通常是每分钟）扫描特定的配置文件，这些文件">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:47:30.500Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/Linux%20%E7%B3%BB%E7%BB%9F%E4%B8%AD%20crontab/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Linux 系统中 crontab | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Linux%20%E7%B3%BB%E7%BB%9F%E4%B8%AD%20crontab/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Linux 系统中 crontab
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:47:30" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/Command/" itemprop="url" rel="index"><span itemprop="name">Command</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="Linux-系统中-crontab"><a href="#Linux-系统中-crontab" class="headerlink" title="Linux 系统中 crontab"></a>Linux 系统中 crontab</h3><hr>
+<h3 id="Crontab-的工作原理"><a href="#Crontab-的工作原理" class="headerlink" title="Crontab 的工作原理"></a>Crontab 的工作原理</h3><p><code>crontab</code>（cron table） 是 Linux&#x2F;Unix 系统用于设置周期性执行任务的工具。它的核心是 <code>cron</code> 服务（或称为 <code>crond</code> 守护进程），这个服务在系统启动时就会自动运行，并且会一直在后台持续运行，它的主要职责是：</p>
+<ol>
+<li><p><strong>读取定时任务配置：</strong> <code>cron</code> 服务会周期性地（通常是每分钟）扫描特定的配置文件，这些文件包含了用户定义的定时任务列表。主要的配置文件位置包括：</p>
+<ul>
+<li><strong>系统级别的定时任务：</strong><ul>
+<li><code>/etc/crontab</code>：系统主 cron 表，通常用于定义系统级的任务。</li>
+<li><code>/etc/cron.d/</code>：该目录下的所有文件都会被 <code>cron</code> 服务读取，每个文件可以定义独立的定时任务。</li>
+<li><code>/etc/cron.hourly/</code>, <code>/etc/cron.daily/</code>, <code>/etc/cron.weekly/</code>, <code>/etc/cron.monthly/</code>：这些目录下的脚本会分别每小时、每天、每周、每月被 <code>cron</code> 服务执行一次。</li>
+</ul>
+</li>
+<li><strong>用户级别的定时任务：</strong><ul>
+<li><code>/var/spool/cron/</code>：每个用户的 <code>crontab -e</code> 命令编辑的任务会存储在这个目录下，以用户的账户名命名（例如：<code>/var/spool/cron/root</code> 或 <code>/var/spool/cron/your_user_name</code>）。普通用户只能编辑自己的 <code>crontab</code> 文件。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>解析任务配置：</strong> <code>cron</code> 服务会解析配置中的时间字段和命令。每个任务条目都是一行，由时间字段和要执行的命令组成。</p>
+</li>
+<li><p><strong>定时器调度：</strong> <code>cron</code> 服务内部维护一个定时器，当时间到达某个任务预设的执行时间点时，它就会执行对应的命令。</p>
+</li>
+<li><p><strong>执行任务：</strong> 当触发执行时，<code>cron</code> 服务会：</p>
+<ul>
+<li><strong>fork 一个子进程：</strong> 这个子进程会继承 <code>cron</code> 守护进程的环境变量，但用户的 <code>crontab</code> 任务通常会在一个新的 shell 环境（通常是 <code>/bin/sh</code>）中执行。</li>
+<li><strong>将输出发送给用户：</strong> 任何任务的标准输出（stdout）和标准错误输出（stderr）默认会被 <code>cron</code> 服务捕获，并通过邮件发送给任务的拥有者（或由 <code>MAILTO</code> 变量指定的邮箱），除非输出被重定向到文件或<code>/dev/null</code>。这是运维中需要特别注意的一点，以免因为大量邮件而塞满邮箱。</li>
+<li><strong>环境变量：</strong> <code>cron</code> 任务的执行环境与交互式 Shell 环境不同，它的 PATH 变量可能不包含你习惯的所有路径。因此，在 <code>crontab</code> 中执行命令时，<strong>最好使用命令的绝对路径</strong>，或者在 <code>crontab</code> 文件的顶部设置 <code>PATH</code> 变量。</li>
+</ul>
+</li>
+</ol>
+<p><strong>总结工作流程：</strong> <code>cron</code> 服务是一个忠实的“闹钟管家”，它不停地检查时间，发现到了某个任务的预设执行时间，就“唤醒”一个子进程去执行那个任务，然后将执行结果（如果有的话）通过邮件通知你。</p>
+<hr>
+<h3 id="每天凌晨-3-点执行备份脚本的-Crontab-配置例子"><a href="#每天凌晨-3-点执行备份脚本的-Crontab-配置例子" class="headerlink" title="每天凌晨 3 点执行备份脚本的 Crontab 配置例子"></a>每天凌晨 3 点执行备份脚本的 Crontab 配置例子</h3><p>假设你有一个备份脚本，名为 <code>backup.sh</code>，存放在 <code>/usr/local/bin/</code> 目录下。我们将配置 <code>root</code> 用户的 <code>crontab</code> 来执行这个任务。</p>
+<h4 id="1-准备备份脚本-usr-local-bin-backup-sh"><a href="#1-准备备份脚本-usr-local-bin-backup-sh" class="headerlink" title="1. 准备备份脚本 (/usr/local/bin/backup.sh)"></a>1. 准备备份脚本 (<code>/usr/local/bin/backup.sh</code>)</h4><p>首先，确保你的备份脚本是可执行的，并且包含你需要的备份逻辑。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/bash</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 备份目标目录</span></span><br><span class="line">BACKUP_DIR=<span class="string">&quot;/data/backup&quot;</span></span><br><span class="line"><span class="comment"># 要备份的源目录</span></span><br><span class="line">SOURCE_DIR=<span class="string">&quot;/var/www/html&quot;</span></span><br><span class="line"><span class="comment"># 备份文件名格式 (例如：site_backup_2023-10-27-03-00-00.tar.gz)</span></span><br><span class="line">TIMESTAMP=$(<span class="built_in">date</span> +%Y-%m-%d-%H-%M-%S)</span><br><span class="line">BACKUP_FILE=<span class="string">&quot;<span class="variable">$&#123;BACKUP_DIR&#125;</span>/site_backup_<span class="variable">$&#123;TIMESTAMP&#125;</span>.tar.gz&quot;</span></span><br><span class="line"><span class="comment"># 日志文件</span></span><br><span class="line">LOG_FILE=<span class="string">&quot;/var/log/backup.log&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 创建备份目录（如果不存在）</span></span><br><span class="line"><span class="built_in">mkdir</span> -p <span class="string">&quot;<span class="variable">$&#123;BACKUP_DIR&#125;</span>&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">echo</span> <span class="string">&quot;<span class="subst">$(date)</span>: Starting backup for <span class="variable">$&#123;SOURCE_DIR&#125;</span>...&quot;</span> &gt;&gt; <span class="string">&quot;<span class="variable">$&#123;LOG_FILE&#125;</span>&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 执行备份命令，这里以 tar 压缩为例</span></span><br><span class="line"><span class="comment"># -z: 使用 gzip 压缩</span></span><br><span class="line"><span class="comment"># -c: 创建归档文件</span></span><br><span class="line"><span class="comment"># -v: 显示详细过程</span></span><br><span class="line"><span class="comment"># -f: 指定归档文件名</span></span><br><span class="line"><span class="comment"># 如果备份文件很大，可以考虑加上 -P 避免路径前缀问题</span></span><br><span class="line">tar -czf <span class="string">&quot;<span class="variable">$&#123;BACKUP_FILE&#125;</span>&quot;</span> <span class="string">&quot;<span class="variable">$&#123;SOURCE_DIR&#125;</span>&quot;</span> 2&gt;&gt; <span class="string">&quot;<span class="variable">$&#123;LOG_FILE&#125;</span>&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 检查备份是否成功</span></span><br><span class="line"><span class="keyword">if</span> [ $? -eq 0 ]; <span class="keyword">then</span></span><br><span class="line">    <span class="built_in">echo</span> <span class="string">&quot;<span class="subst">$(date)</span>: Backup completed successfully: <span class="variable">$&#123;BACKUP_FILE&#125;</span>&quot;</span> &gt;&gt; <span class="string">&quot;<span class="variable">$&#123;LOG_FILE&#125;</span>&quot;</span></span><br><span class="line">    <span class="comment"># 可以添加删除旧备份的逻辑，例如保留最近7天的备份</span></span><br><span class="line">    find <span class="string">&quot;<span class="variable">$&#123;BACKUP_DIR&#125;</span>&quot;</span> -name <span class="string">&quot;site_backup_*.tar.gz&quot;</span> -mtime +7 -delete 2&gt;&gt; <span class="string">&quot;<span class="variable">$&#123;LOG_FILE&#125;</span>&quot;</span></span><br><span class="line">    <span class="built_in">echo</span> <span class="string">&quot;<span class="subst">$(date)</span>: Old backups cleaned up.&quot;</span> &gt;&gt; <span class="string">&quot;<span class="variable">$&#123;LOG_FILE&#125;</span>&quot;</span></span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">    <span class="built_in">echo</span> <span class="string">&quot;<span class="subst">$(date)</span>: Backup FAILED! Check logs for details.&quot;</span> &gt;&gt; <span class="string">&quot;<span class="variable">$&#123;LOG_FILE&#125;</span>&quot;</span></span><br><span class="line"><span class="keyword">fi</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">echo</span> <span class="string">&quot;<span class="subst">$(date)</span>: Backup script finished.&quot;</span> &gt;&gt; <span class="string">&quot;<span class="variable">$&#123;LOG_FILE&#125;</span>&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>重要步骤：</strong></p>
+<ul>
+<li><strong>赋予执行权限：</strong><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">chmod</span> +x /usr/local/bin/backup.sh</span><br></pre></td></tr></table></figure></li>
+<li><strong>测试脚本：</strong> 在设置 <code>crontab</code> 之前，务必手动运行一次脚本，确保它能正常工作，并且路径、权限等都没有问题。</li>
+</ul>
+<h4 id="2-配置-Crontab"><a href="#2-配置-Crontab" class="headerlink" title="2. 配置 Crontab"></a>2. 配置 Crontab</h4><p>使用 <code>crontab -e</code> 命令来编辑当前用户的 <code>crontab</code> 配置。对于系统级的备份任务，我通常建议使用 <code>root</code> 用户的 <code>crontab</code>，因为它拥有执行任何备份操作的权限。</p>
+<ol>
+<li><p><strong>打开 root 用户的 crontab 编辑器：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> crontab -e</span><br></pre></td></tr></table></figure>
+<p>（如果你已经在 root 账户下，直接 <code>crontab -e</code> 即可）</p>
+</li>
+<li><p><strong>添加一行配置：</strong><br>在打开的编辑器中（通常是 <code>vi</code> 或 <code>nano</code>），在文件的末尾添加以下一行：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">0 3 * * * /usr/local/bin/backup.sh &gt;&gt; /var/log/cron_backup.log 2&gt;&amp;1</span><br></pre></td></tr></table></figure>
+
+<p>保存并退出编辑器（在 <code>vi</code> 中是 <code>:wq</code>，在 <code>nano</code> 中是 <code>Ctrl+X</code>, <code>Y</code>, <code>Enter</code>）。</p>
+</li>
+</ol>
+<h4 id="Crontab-配置解释"><a href="#Crontab-配置解释" class="headerlink" title="Crontab 配置解释"></a>Crontab 配置解释</h4><p><code>crontab</code> 的时间格式有五个字段，后跟要执行的命令：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">分 时 日 月 周 命令</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong><code>分</code> (Minute):</strong> 0-59</li>
+<li><strong><code>时</code> (Hour):</strong> 0-23 (0 代表午夜)</li>
+<li><strong><code>日</code> (Day of Month):</strong> 1-31</li>
+<li><strong><code>月</code> (Month):</strong> 1-12 或 Jan-Dec</li>
+<li><strong><code>周</code> (Day of Week):</strong> 0-7 (0 或 7 代表星期天，1 代表星期一)</li>
+</ul>
+<p><strong>示例配置 <code>0 3 * * * /usr/local/bin/backup.sh &gt;&gt; /var/log/cron_backup.log 2&gt;&amp;1</code> 的含义：</strong></p>
+<ul>
+<li><strong><code>0</code> (分):</strong> 在每小时的第 0 分钟执行。</li>
+<li><strong><code>3</code> (时):</strong> 在每天的第 3 小时执行（即凌晨 3 点）。</li>
+<li><strong><code>*</code> (日):</strong> 每天都执行。</li>
+<li><strong><code>*</code> (月):</strong> 每月都执行。</li>
+<li><strong><code>*</code> (周):</strong> 每周的任何一天都执行。</li>
+<li><strong><code>/usr/local/bin/backup.sh</code>:</strong> 要执行的脚本的绝对路径。</li>
+<li><strong><code>&gt;&gt; /var/log/cron_backup.log 2&gt;&amp;1</code>:</strong> 这是重定向输出。<ul>
+<li><code>&gt;&gt; /var/log/cron_backup.log</code>: 将标准输出 (stdout) 追加到 <code>/var/log/cron_backup.log</code> 文件中。</li>
+<li><code>2&gt;&amp;1</code>: 将标准错误输出 (stderr) 重定向到与标准输出相同的位置。这样，无论脚本输出什么（包括错误信息），都会被记录到这个日志文件中，方便后续排查问题。</li>
+</ul>
+</li>
+</ul>
+<h4 id="3-验证-Crontab-配置"><a href="#3-验证-Crontab-配置" class="headerlink" title="3. 验证 Crontab 配置"></a>3. 验证 Crontab 配置</h4><ol>
+<li><p><strong>查看当前用户的 crontab 配置：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> crontab -l</span><br></pre></td></tr></table></figure>
+<p>你应该能看到你刚刚添加的那一行。</p>
+</li>
+<li><p><strong>检查 cron 服务状态：</strong><br>确保 <code>cron</code> 服务正在运行。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">systemctl status cron <span class="comment"># 对于 systemd 系统</span></span><br><span class="line"><span class="comment"># 或者</span></span><br><span class="line">service cron status   <span class="comment"># 对于旧的 init 系统</span></span><br></pre></td></tr></table></figure>
+<p>如果服务没有运行，请启动它：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">systemctl start cron</span><br></pre></td></tr></table></figure></li>
+</ol>
+<h4 id="运维最佳实践与注意事项"><a href="#运维最佳实践与注意事项" class="headerlink" title="运维最佳实践与注意事项"></a>运维最佳实践与注意事项</h4><ol>
+<li><strong>使用绝对路径：</strong> 在 <code>crontab</code> 中始终使用命令和脚本的绝对路径，环境变量可能与你的交互式 Shell 不同。</li>
+<li><strong>日志记录：</strong> 务必将脚本的输出重定向到日志文件。这对于后续的故障排查至关重要。否则，所有输出都可能通过邮件发送给你，造成邮箱“爆炸”。</li>
+<li><strong>错误处理：</strong> 脚本内部应包含错误检查和适当的日志记录，以便在任务失败时能够快速定位问题。</li>
+<li><strong>权限：</strong> 确保 <code>crontab</code> 运行的用户（通常是 <code>root</code>）有足够的权限来执行脚本和访问所有必要的文件、目录。</li>
+<li><strong>环境变量：</strong> 如果脚本依赖特定的环境变量，可以在 <code>crontab</code> 文件的开头进行设置，例如：<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin</span><br><span class="line">MAILTO=&quot;your_email@example.com&quot; # 指定邮件接收者，默认发送给当前用户</span><br><span class="line">0 3 * * * /usr/local/bin/backup.sh &gt;&gt; /var/log/cron_backup.log 2&gt;&amp;1</span><br></pre></td></tr></table></figure></li>
+<li><strong>并行任务：</strong> 如果任务需要很长时间才能完成，要注意避免任务重复执行造成冲突（例如，上一个备份还没完成，下一个备份又开始了）。可以在脚本开头添加锁机制来防止这种情况。</li>
+<li><strong>系统时间：</strong> 确保 Linux 系统的时区和时间设置正确，否则定时任务可能不会在预期的时间执行。</li>
+</ol>
+<p>通过以上步骤，您就能成功配置一个每天凌晨 3 点执行的备份任务。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Linux%20%E7%B3%BB%E7%BB%9F%E4%B8%AD%E7%9A%84%E5%86%85%E6%A0%B8%E6%A8%A1%E5%9D%97%E7%AE%A1%E7%90%86/" rel="prev" title="Linux 系统中的内核模块管理">
+      <i class="fa fa-chevron-left"></i> Linux 系统中的内核模块管理
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Linux%20%E7%B3%BB%E7%BB%9F%20lsof%20%E5%91%BD%E4%BB%A4/" rel="next" title="Linux 系统 lsof 命令">
+      Linux 系统 lsof 命令 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Linux-%E7%B3%BB%E7%BB%9F%E4%B8%AD-crontab"><span class="nav-number">1.</span> <span class="nav-text">Linux 系统中 crontab</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Crontab-%E7%9A%84%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86"><span class="nav-number">2.</span> <span class="nav-text">Crontab 的工作原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%AF%8F%E5%A4%A9%E5%87%8C%E6%99%A8-3-%E7%82%B9%E6%89%A7%E8%A1%8C%E5%A4%87%E4%BB%BD%E8%84%9A%E6%9C%AC%E7%9A%84-Crontab-%E9%85%8D%E7%BD%AE%E4%BE%8B%E5%AD%90"><span class="nav-number">3.</span> <span class="nav-text">每天凌晨 3 点执行备份脚本的 Crontab 配置例子</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E5%87%86%E5%A4%87%E5%A4%87%E4%BB%BD%E8%84%9A%E6%9C%AC-usr-local-bin-backup-sh"><span class="nav-number">3.1.</span> <span class="nav-text">1. 准备备份脚本 (&#x2F;usr&#x2F;local&#x2F;bin&#x2F;backup.sh)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E9%85%8D%E7%BD%AE-Crontab"><span class="nav-number">3.2.</span> <span class="nav-text">2. 配置 Crontab</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Crontab-%E9%85%8D%E7%BD%AE%E8%A7%A3%E9%87%8A"><span class="nav-number">3.3.</span> <span class="nav-text">Crontab 配置解释</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E9%AA%8C%E8%AF%81-Crontab-%E9%85%8D%E7%BD%AE"><span class="nav-number">3.4.</span> <span class="nav-text">3. 验证 Crontab 配置</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%BF%90%E7%BB%B4%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5%E4%B8%8E%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9"><span class="nav-number">3.5.</span> <span class="nav-text">运维最佳实践与注意事项</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

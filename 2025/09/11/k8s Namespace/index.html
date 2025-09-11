@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="请描述 Kubernetes 中的 Namespace 的作用，并解释其使用场景。 🤔 分析过程：此问题考察的是对Kubernetes基本组织单元——Namespace（命名空间）的理解。一个优秀的回答需要解释其核心功能，即逻辑隔离，并能从不同维度（名称、资源、权限）阐述这种隔离。更重要的是，要能结合实际工作场景，说明为什么以及如何使用命名空间来组织集群，这直接反映了面试者的集群治理和多租户管理">
+<meta property="og:type" content="article">
+<meta property="og:title" content="k8s Namespace">
+<meta property="og:url" content="http://example.com/2025/09/11/k8s%20Namespace/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="请描述 Kubernetes 中的 Namespace 的作用，并解释其使用场景。 🤔 分析过程：此问题考察的是对Kubernetes基本组织单元——Namespace（命名空间）的理解。一个优秀的回答需要解释其核心功能，即逻辑隔离，并能从不同维度（名称、资源、权限）阐述这种隔离。更重要的是，要能结合实际工作场景，说明为什么以及如何使用命名空间来组织集群，这直接反映了面试者的集群治理和多租户管理">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:43:39.697Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/k8s%20Namespace/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>k8s Namespace | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/k8s%20Namespace/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          k8s Namespace
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:43:39" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E9%9D%A2%E8%AF%95%E9%A2%98/" itemprop="url" rel="index"><span itemprop="name">面试题</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.6k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>2 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>请描述 Kubernetes 中的 Namespace 的作用，并解释其使用场景。</p>
+<h3 id="🤔-分析过程："><a href="#🤔-分析过程：" class="headerlink" title="🤔 分析过程："></a>🤔 分析过程：</h3><p>此问题考察的是对Kubernetes基本组织单元——<strong>Namespace</strong>（命名空间）的理解。一个优秀的回答需要解释其核心功能，即<strong>逻辑隔离</strong>，并能从不同维度（名称、资源、权限）阐述这种隔离。更重要的是，要能结合实际工作场景，说明为什么以及如何使用命名空间来组织集群，这直接反映了面试者的集群治理和多租户管理经验。</p>
+<h3 id="💡-答案生成："><a href="#💡-答案生成：" class="headerlink" title="💡 答案生成："></a>💡 答案生成：</h3><h4 id="1-概念或定义"><a href="#1-概念或定义" class="headerlink" title="1. 概念或定义"></a>1. 概念或定义</h4><p><strong>Namespace</strong>（命名空间）是Kubernetes中一种实现<strong>逻辑隔离</strong>的机制，它能将一个物理的Kubernetes集群划分为多个<strong>虚拟集群</strong>。每个命名空间都是一个独立的作用域，用于组织和隔离集群中的资源对象。</p>
+<p>需要强调的是，这种隔离是<strong>逻辑上的，而非物理上的</strong>。不同命名空间中的Pod可能会运行在同一个物理节点上，但它们在API层面、策略层面和名称层面是相互隔离的。</p>
+<h4 id="2-Namespace-的核心作用"><a href="#2-Namespace-的核心作用" class="headerlink" title="2. Namespace 的核心作用"></a>2. Namespace 的核心作用</h4><p>Namespace为一组资源提供了三个维度的隔离：</p>
+<ul>
+<li><p><strong>1. 名称范围隔离 (Scope for Names):</strong></p>
+<ul>
+<li><strong>作用：</strong> 这是最基本的作用。在同一个命名空间内，资源对象的名称（如Pod、Service、Deployment的名称）必须是唯一的。但是，在不同的命名空间中，你可以使用完全相同的资源名称。</li>
+<li><strong>示例：</strong> 你可以在<code>development</code>命名空间中有一个名为<code>my-app</code>的Deployment，同时在<code>production</code>命名空间中也有一个名为<code>my-app</code>的Deployment，它们是两个完全独立的对象，互不影响。</li>
+</ul>
+</li>
+<li><p><strong>2. 资源和策略隔离 (Scope for Resources and Policies):</strong></p>
+<ul>
+<li><strong>作用：</strong> Namespace是应用资源配额和网络策略的基本单位。</li>
+<li><strong>ResourceQuota:</strong> 你可以为一个命名空间设置资源配额（如CPU、内存、存储的总量），确保该命名空间下的所有资源消耗不会超出预设的“预算”。</li>
+<li><strong>LimitRange:</strong> 你可以为命名空间内的Pod设置默认的资源请求&#x2F;限制。</li>
+<li><strong>NetworkPolicy:</strong> 你可以定义网络策略来控制命名空间内部以及命名空间之间的网络流量，例如，默认禁止<code>dev</code>命名空间访问<code>prod</code>命名空间的数据库。</li>
+</ul>
+</li>
+<li><p><strong>3. 访问控制隔离 (Scope for Access Control):</strong></p>
+<ul>
+<li><strong>作用：</strong> Kubernetes的RBAC（基于角色的访问控制）是与命名空间紧密集成的。</li>
+<li><strong>Role 和 RoleBinding:</strong> 权限（<code>Role</code>）和权限绑定（<code>RoleBinding</code>）是命名空间级别的对象。你可以为用户A授予<code>development</code>命名空间的完全管理员权限，但对其在<code>production</code>命名空间中只有只读权限。这使得在多团队环境中进行精细化的权限管理成为可能。</li>
+</ul>
+</li>
+</ul>
+<h4 id="3-使用场景"><a href="#3-使用场景" class="headerlink" title="3. 使用场景"></a>3. 使用场景</h4><p>基于上述作用，Namespace在以下场景中至关重要：</p>
+<ul>
+<li><p><strong>多环境隔离 (Development, Staging, Production):</strong></p>
+<ul>
+<li>这是最经典的使用场景。你可以为开发、测试和生产环境创建不同的命名空间 (<code>dev</code>, <code>staging</code>, <code>prod</code>)。</li>
+<li><strong>优势:</strong><ul>
+<li>环境之间配置独立（使用不同的ConfigMap&#x2F;Secret）。</li>
+<li>权限分明（开发人员在<code>dev</code>中有高权限，在<code>prod</code>中只有只读权限）。</li>
+<li>资源独立（为<code>prod</code>分配更多的资源配额）。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>多团队&#x2F;多项目隔离 (Multi-tenancy):</strong></p>
+<ul>
+<li>当多个团队或项目共享同一个Kubernetes集群时，为每个团队或项目创建一个专属的命名空间（如<code>team-a</code>, <code>team-b</code>, <code>project-x</code>）。</li>
+<li><strong>优势:</strong><ul>
+<li>防止团队间的名称冲突。</li>
+<li>实现资源的公平分配和成本分摊。</li>
+<li>各团队可以独立管理自己的应用和权限，互不干扰。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>管理第三方应用或系统组件:</strong></p>
+<ul>
+<li>在集群中安装第三方应用（如Prometheus监控套件、Istio服务网格、Ingress控制器）时，最佳实践是将其安装在它们自己的命名空间中（如<code>monitoring</code>, <code>istio-system</code>, <code>ingress-nginx</code>）。</li>
+<li><strong>优势:</strong><ul>
+<li>将核心系统组件与普通应用隔离开，便于管理和维护。</li>
+<li>升级或卸载这些组件时，只需删除对应的命名空间即可，干净利落。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>蓝绿部署&#x2F;金丝雀发布:</strong></p>
+<ul>
+<li>在进行复杂的发布策略时，有时会使用不同的命名空间来部署新旧两个版本的应用，以便通过Ingress规则或服务网格精细地控制流量切换。</li>
+</ul>
+</li>
+</ul>
+<h4 id="4-默认存在的命名空间"><a href="#4-默认存在的命名空间" class="headerlink" title="4. 默认存在的命名空间"></a>4. 默认存在的命名空间</h4><p>一个新创建的Kubernetes集群通常包含以下几个命名空间：</p>
+<ul>
+<li><strong><code>default</code>:</strong> 如果你在创建资源对象时没有指定命名空间，它就会被放到这里。<strong>最佳实践是避免在生产环境中使用<code>default</code>命名空间来部署应用。</strong></li>
+<li><strong><code>kube-system</code>:</strong> Kubernetes系统组件（如etcd, kube-apiserver, kube-scheduler, kube-proxy, CoreDNS）所在的命名空间。<strong>绝对不要在此命名空间中部署你的应用。</strong></li>
+<li><strong><code>kube-public</code>:</strong> 一个特殊的命名空间，所有用户（包括未认证用户）都可以读取它。通常用于存放一些需要对整个集群公开的数据。</li>
+<li><strong><code>kube-node-lease</code>:</strong> 用于存放每个节点的租约对象，kubelet会定期更新它来表明节点是存活的。</li>
+</ul>
+<h4 id="5-扩展知识-最佳实践"><a href="#5-扩展知识-最佳实践" class="headerlink" title="5. 扩展知识&#x2F;最佳实践"></a>5. 扩展知识&#x2F;最佳实践</h4><ul>
+<li><strong>跨命名空间通信:</strong> 默认情况下，所有命名空间之间的网络是互通的。若要从一个命名空间中的Pod访问另一个命名空间中的Service，需要使用其完全限定域名（FQDN）：<code>&lt;service-name&gt;.&lt;namespace-name&gt;.svc.cluster.local</code>。例如：<code>database-svc.prod.svc.cluster.local</code>。</li>
+<li><strong>非命名空间资源:</strong> 不是所有的Kubernetes资源都属于命名空间。一些资源是<strong>集群级别</strong>的，例如<code>Node</code>, <code>PersistentVolume</code>, <code>StorageClass</code>, <code>ClusterRole</code>, <code>ClusterRoleBinding</code>。</li>
+<li><strong>组织原则:</strong> 以业务、团队或环境为单位来划分命名空间是良好的实践。避免创建过多不必要的命名空间，以免增加管理复杂性。</li>
+</ul>
+<p><strong>结论：</strong> Namespace是Kubernetes中实现逻辑隔离、资源治理和访问控制的基本单元。它通过划分虚拟集群，使得在单一物理集群上实现多环境、多团队的安全、高效和有序管理成为可能。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/ingress-nginx/" rel="prev" title="ingress-nginx">
+      <i class="fa fa-chevron-left"></i> ingress-nginx
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/jenkins-k8s/" rel="next" title="jenkins-k8s">
+      jenkins-k8s <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%F0%9F%A4%94-%E5%88%86%E6%9E%90%E8%BF%87%E7%A8%8B%EF%BC%9A"><span class="nav-number">1.</span> <span class="nav-text">🤔 分析过程：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%F0%9F%92%A1-%E7%AD%94%E6%A1%88%E7%94%9F%E6%88%90%EF%BC%9A"><span class="nav-number">2.</span> <span class="nav-text">💡 答案生成：</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E6%A6%82%E5%BF%B5%E6%88%96%E5%AE%9A%E4%B9%89"><span class="nav-number">2.1.</span> <span class="nav-text">1. 概念或定义</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-Namespace-%E7%9A%84%E6%A0%B8%E5%BF%83%E4%BD%9C%E7%94%A8"><span class="nav-number">2.2.</span> <span class="nav-text">2. Namespace 的核心作用</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">2.3.</span> <span class="nav-text">3. 使用场景</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-%E9%BB%98%E8%AE%A4%E5%AD%98%E5%9C%A8%E7%9A%84%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4"><span class="nav-number">2.4.</span> <span class="nav-text">4. 默认存在的命名空间</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-%E6%89%A9%E5%B1%95%E7%9F%A5%E8%AF%86-%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="nav-number">2.5.</span> <span class="nav-text">5. 扩展知识&#x2F;最佳实践</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

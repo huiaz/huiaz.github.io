@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Kubernetes Operator 快速入门教程在 Kubernetes 的监控方案中我们经常会使用到一个Promethues Operator的项目，该项目可以让我们更加方便的去使用 Prometheus，而不需要直接去使用最原始的一些资源对象，比如 Pod、Deployment，随着 Prometheus Operator 项目的成功，CoreOS 公司开源了一个比较厉害的工具：Opera">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kubernetes Operator 快速入门教程">
+<meta property="og:url" content="http://example.com/2025/09/11/Kubernetes%20Operator%20%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8%E6%95%99%E7%A8%8B/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="Kubernetes Operator 快速入门教程在 Kubernetes 的监控方案中我们经常会使用到一个Promethues Operator的项目，该项目可以让我们更加方便的去使用 Prometheus，而不需要直接去使用最原始的一些资源对象，比如 Pod、Deployment，随着 Prometheus Operator 项目的成功，CoreOS 公司开源了一个比较厉害的工具：Opera">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/crwp1o.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/fiq6j1.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/5f90yb.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/7l7d5q.png">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:46:26.628Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://mudutestmenu.mudu.tv/upload/crwp1o.png">
+
+<link rel="canonical" href="http://example.com/2025/09/11/Kubernetes%20Operator%20%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8%E6%95%99%E7%A8%8B/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Kubernetes Operator 快速入门教程 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Kubernetes%20Operator%20%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8%E6%95%99%E7%A8%8B/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Kubernetes Operator 快速入门教程
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:46:26" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/Devops/" itemprop="url" rel="index"><span itemprop="name">Devops</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>20k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>18 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Kubernetes-Operator-快速入门教程"><a href="#Kubernetes-Operator-快速入门教程" class="headerlink" title="Kubernetes Operator 快速入门教程"></a>Kubernetes Operator 快速入门教程</h1><p>在 Kubernetes 的监控方案中我们经常会使用到一个<a target="_blank" rel="noopener" href="https://www.qikqiak.com/tags/operator/">Promethues Operator</a>的项目，该项目可以让我们更加方便的去使用 Prometheus，而不需要直接去使用最原始的一些资源对象，比如 Pod、Deployment，随着 Prometheus Operator 项目的成功，CoreOS 公司开源了一个比较厉害的工具：<a target="_blank" rel="noopener" href="https://github.com/operator-framework">Operator Framework</a>，该工具可以让开发人员更加容易的开发 Operator 应用。</p>
+<p>在本篇文章中我们会为大家介绍一个简单示例来演示如何使用 Operator Framework 框架来开发一个 Operator 应用。</p>
+<h2 id="Kubernetes-Operator"><a href="#Kubernetes-Operator" class="headerlink" title="Kubernetes Operator"></a>Kubernetes Operator</h2><p>Operator 是由 CoreOS 开发的，用来扩展 Kubernetes API，特定的应用程序控制器，它用来创建、配置和管理复杂的有状态应用，如数据库、缓存和监控系统。Operator 基于 Kubernetes 的资源和控制器概念之上构建，但同时又包含了应用程序特定的领域知识。创建 Operator 的关键是 CRD（自定义资源）的设计。</p>
+<p>Kubernetes 1.7 版本以来就引入了<a target="_blank" rel="noopener" href="https://kubernetes.io/docs/concepts/api-extension/custom-resources/">自定义控制器</a>的概念，该功能可以让开发人员扩展添加新功能，更新现有的功能，并且可以自动执行一些管理任务，这些自定义的控制器就像 Kubernetes 原生的组件一样，Operator 直接使用 Kubernetes API 进行开发，也就是说他们可以根据这些控制器内部编写的自定义规则来监控集群、更改 Pods&#x2F;Services、对正在运行的应用进行扩缩容。</p>
+<h2 id="Operator-Framework"><a href="#Operator-Framework" class="headerlink" title="Operator Framework"></a>Operator Framework</h2><p>Operator Framework 同样也是 CoreOS 开源的一个用于快速开发 Operator 的工具包，该框架包含两个主要的部分：</p>
+<ul>
+<li>Operator SDK: 无需了解复杂的 Kubernetes API 特性，即可让你根据你自己的专业知识构建一个 Operator 应用。</li>
+<li>Operator Lifecycle Manager OLM: 帮助你安装、更新和管理跨集群的运行中的所有 Operator（以及他们的相关服务）</li>
+</ul>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/crwp1o.png" alt="operator sdk"></p>
+<h3 id="Workflow"><a href="#Workflow" class="headerlink" title="Workflow"></a>Workflow</h3><p>Operator SDK 提供以下工作流来开发一个新的 Operator：</p>
+<ul>
+<li><ol>
+<li>使用 SDK 创建一个新的 Operator 项目</li>
+</ol>
+</li>
+<li><ol>
+<li>通过添加自定义资源（CRD）定义新的资源 API</li>
+</ol>
+</li>
+<li><ol>
+<li>指定使用 SDK API 来 watch 的资源</li>
+</ol>
+</li>
+<li><ol>
+<li>定义 Operator 的协调（reconcile）逻辑</li>
+</ol>
+</li>
+<li><ol>
+<li>使用 Operator SDK 构建并生成 Operator 部署清单文件</li>
+</ol>
+</li>
+</ul>
+<h2 id="Demo"><a href="#Demo" class="headerlink" title="Demo"></a>Demo</h2><p>我们平时在部署一个简单的 Webserver 到 Kubernetes 集群中的时候，都需要先编写一个 Deployment 的控制器，然后创建一个 Service 对象，通过 Pod 的 label 标签进行关联，最后通过 Ingress 或者 type&#x3D;NodePort 类型的 Service 来暴露服务，每次都需要这样操作，是不是略显麻烦，我们就可以创建一个自定义的资源对象，通过我们的 CRD 来描述我们要部署的应用信息，比如镜像、服务端口、环境变量等等，然后创建我们的自定义类型的资源对象的时候，通过控制器去创建对应的 Deployment 和 Service，是不是就方便很多了，相当于我们用一个资源清单去描述了 Deployment 和 Service 要做的两件事情。</p>
+<p>这里我们将创建一个名为 AppService 的 CRD 资源对象，然后定义如下的资源清单进行应用部署：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">app.example.com/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">AppService</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nginx-app</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">size:</span> <span class="number">2</span></span><br><span class="line">  <span class="attr">image:</span> <span class="string">nginx:1.7.9</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">port:</span> <span class="number">80</span></span><br><span class="line">      <span class="attr">targetPort:</span> <span class="number">80</span></span><br><span class="line">      <span class="attr">nodePort:</span> <span class="number">30002</span></span><br></pre></td></tr></table></figure>
+
+<p>通过这里的自定义的 AppService 资源对象去创建副本数为 2 的 Pod，然后通过 nodePort&#x3D;30002 的端口去暴露服务，接下来我们就来一步一步的实现我们这里的这个简单的 Operator 应用。</p>
+<h3 id="开发环境"><a href="#开发环境" class="headerlink" title="开发环境"></a>开发环境</h3><h4 id="环境需求"><a href="#环境需求" class="headerlink" title="环境需求"></a>环境需求</h4><p>要开发 Operator 自然 Kubernetes 集群是少不了的，还需要 Golang 的环境，这里的安装就不多说了，然后还需要一个 Go 语言的依赖管理工具包：<a target="_blank" rel="noopener" href="https://github.com/golang/dep">dep</a>，由于 Operator SDK 是使用的 dep 该工具包，所以需要我们提前安装好，可以查看资料：<a target="_blank" rel="noopener" href="https://github.com/golang/dep%EF%BC%8C%E5%8F%A6%E5%A4%96%E4%B8%80%E4%B8%AA%E9%9C%80%E8%A6%81%E8%AF%B4%E6%98%8E%E7%9A%84%E6%98%AF%EF%BC%8C%E7%94%B1%E4%BA%8E">https://github.com/golang/dep，另外一个需要说明的是，由于</a> dep 去安装的时候需要去谷歌的网站拉取很多代码，所以正常情况下的话是会失败的，需要做什么工作大家应该清楚吧？要科学。</p>
+<h4 id="安装-operator-sdk"><a href="#安装-operator-sdk" class="headerlink" title="安装 operator-sdk"></a>安装 operator-sdk</h4><p>operator sdk 安装方法非常多，我们可以直接在 github 上面下载需要使用的版本，然后放置到 PATH 环境下面即可，当然也可以将源码 clone 到本地手动编译安装即可，如果你是 Mac，当然还可以使用常用的 brew 工具进行安装：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">brew install operator-sdk</span></span><br><span class="line">......</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">operator-sdk version</span></span><br><span class="line">operator-sdk version: v0.7.0</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">go version</span></span><br><span class="line">go version go1.11.4 darwin/amd64</span><br></pre></td></tr></table></figure>
+
+<p>我们这里使用的 sdk 版本是<code>v0.7.0</code>，其他安装方法可以参考文档：<a target="_blank" rel="noopener" href="https://github.com/operator-framework/operator-sdk/blob/master/doc/user/install-operator-sdk.md">https://github.com/operator-framework/operator-sdk/blob/master/doc/user/install-operator-sdk.md</a></p>
+<h3 id="演示"><a href="#演示" class="headerlink" title="演示"></a>演示</h3><h4 id="创建新项目"><a href="#创建新项目" class="headerlink" title="创建新项目"></a>创建新项目</h4><p>环境准备好了，接下来就可以使用 operator-sdk 直接创建一个新的项目了，命令格式为： <strong>operator-sdk new</strong></p>
+<p>按照上面我们预先定义的 CRD 资源清单，我们这里可以这样创建：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">创建项目目录</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">mkdir</span> -p operator-learning</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">设置项目目录为 GOPATH 路径</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">cd</span> operator-learning &amp;&amp; <span class="built_in">export</span> GOPATH=<span class="variable">$PWD</span></span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">mkdir</span> -p <span class="variable">$GOPATH</span>/src/github.com/cnych</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">cd</span> <span class="variable">$GOPATH</span>/src/github.com/cnych</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">使用 sdk 创建一个名为 opdemo 的 operator 项目</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">operator-sdk new opdemo</span></span><br><span class="line">......</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">该过程需要科学上网，需要花费很长时间，请耐心等待</span></span><br><span class="line">......</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"><span class="built_in">cd</span> opdemo &amp;&amp; tree -L 2</span></span><br><span class="line">.</span><br><span class="line">├── Gopkg.lock</span><br><span class="line">├── Gopkg.toml</span><br><span class="line">├── build</span><br><span class="line">│   ├── Dockerfile</span><br><span class="line">│   ├── _output</span><br><span class="line">│   └── bin</span><br><span class="line">├── cmd</span><br><span class="line">│   └── manager</span><br><span class="line">├── deploy</span><br><span class="line">│   ├── crds</span><br><span class="line">│   ├── operator.yaml</span><br><span class="line">│   ├── role.yaml</span><br><span class="line">│   ├── role_binding.yaml</span><br><span class="line">│   └── service_account.yaml</span><br><span class="line">├── pkg</span><br><span class="line">│   ├── apis</span><br><span class="line">│   └── controller</span><br><span class="line">├── vendor</span><br><span class="line">│   ├── cloud.google.com</span><br><span class="line">│   ├── contrib.go.opencensus.io</span><br><span class="line">│   ├── github.com</span><br><span class="line">│   ├── go.opencensus.io</span><br><span class="line">│   ├── go.uber.org</span><br><span class="line">│   ├── golang.org</span><br><span class="line">│   ├── google.golang.org</span><br><span class="line">│   ├── gopkg.in</span><br><span class="line">│   ├── k8s.io</span><br><span class="line">│   └── sigs.k8s.io</span><br><span class="line">└── version</span><br><span class="line">    └── version.go</span><br><span class="line"></span><br><span class="line">23 directories, 8 files</span><br></pre></td></tr></table></figure>
+
+<p>到这里一个全新的 Operator 项目就新建完成了。</p>
+<h4 id="项目结构"><a href="#项目结构" class="headerlink" title="项目结构"></a>项目结构</h4><p>使用<code>operator-sdk new</code>命令创建新的 Operator 项目后，项目目录就包含了很多生成的文件夹和文件。</p>
+<ul>
+<li><strong>Gopkg.toml Gopkg.lock</strong> — Go Dep 清单，用来描述当前 Operator 的依赖包。</li>
+<li><strong>cmd</strong> - 包含 main.go 文件，使用 operator-sdk API 初始化和启动当前 Operator 的入口。</li>
+<li><strong>deploy</strong> - 包含一组用于在 Kubernetes 集群上进行部署的通用的 Kubernetes 资源清单文件。</li>
+<li><strong>pkg&#x2F;apis</strong> - 包含定义的 API 和自定义资源（CRD）的目录树，这些文件允许 sdk 为 CRD 生成代码并注册对应的类型，以便正确解码自定义资源对象。</li>
+<li><strong>pkg&#x2F;controller</strong> - 用于编写所有的操作业务逻辑的地方</li>
+<li><strong>vendor</strong> - golang vendor 文件夹，其中包含满足当前项目的所有外部依赖包，通过 go dep 管理该目录。</li>
+</ul>
+<p>我们主要需要编写的是<strong>pkg</strong>目录下面的 api 定义以及对应的 controller 实现。</p>
+<h4 id="添加-API"><a href="#添加-API" class="headerlink" title="添加 API"></a>添加 API</h4><p>接下来为我们的自定义资源添加一个新的 API，按照上面我们预定义的资源清单文件，在 Operator 相关根目录下面执行如下命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">operator-sdk add api --api-version=app.example.com/v1 --kind=AppService</span></span><br></pre></td></tr></table></figure>
+
+<p>添加完成后，我们可以看到类似于下面的这样项目结构：<img data-src="https://mudutestmenu.mudu.tv/upload/fiq6j1.png" alt="operator project layout"></p>
+<h4 id="添加控制器"><a href="#添加控制器" class="headerlink" title="添加控制器"></a>添加控制器</h4><p>上面我们添加自定义的 API，接下来可以添加对应的自定义 API 的具体实现 Controller，同样在项目根目录下面执行如下命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">operator-sdk add controller --api-version=app.example.com/v1 --kind=AppService</span></span><br></pre></td></tr></table></figure>
+
+<p>这样整个 Operator 项目的脚手架就已经搭建完成了，接下来就是具体的实现了。</p>
+<h4 id="自定义-API"><a href="#自定义-API" class="headerlink" title="自定义 API"></a>自定义 API</h4><p>打开源文件<code>pkg/apis/app/v1/appservice_types.go</code>，需要我们根据我们的需求去自定义结构体 AppServiceSpec，我们最上面预定义的资源清单中就有 size、image、ports 这些属性，所有我们需要用到的属性都需要在这个结构体中进行定义：</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> AppServiceSpec <span class="keyword">struct</span> &#123;</span><br><span class="line">	<span class="comment">// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster</span></span><br><span class="line">	<span class="comment">// Important: Run &quot;operator-sdk generate k8s&quot; to regenerate code after modifying this file</span></span><br><span class="line">	<span class="comment">// Add custom validation using kubebuilder tags: https://book.kubebuilder.io/beyond_basics/generating_crd.html</span></span><br><span class="line">	Size  	  *<span class="type">int32</span>                      <span class="string">`json:&quot;size&quot;`</span></span><br><span class="line">	Image     <span class="type">string</span>                      <span class="string">`json:&quot;image&quot;`</span></span><br><span class="line">	Resources corev1.ResourceRequirements <span class="string">`json:&quot;resources,omitempty&quot;`</span></span><br><span class="line">	Envs      []corev1.EnvVar             <span class="string">`json:&quot;envs,omitempty&quot;`</span></span><br><span class="line">	Ports     []corev1.ServicePort        <span class="string">`json:&quot;ports,omitempty&quot;`</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>代码中会涉及到一些包名的导入，由于包名较多，所以我们会使用一些别名进行区分，主要的包含下面几个：</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    appsv1 <span class="string">&quot;k8s.io/api/apps/v1&quot;</span></span><br><span class="line">    corev1 <span class="string">&quot;k8s.io/api/core/v1&quot;</span></span><br><span class="line">    appv1 <span class="string">&quot;github.com/cnych/opdemo/pkg/apis/app/v1&quot;</span></span><br><span class="line">    metav1 <span class="string">&quot;k8s.io/apimachinery/pkg/apis/meta/v1&quot;</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>这里的 resources、envs、ports 的定义都是直接引用的<code>&quot;k8s.io/api/core/v1&quot;</code>中定义的结构体，而且需要注意的是我们这里使用的是<code>ServicePort</code>，而不是像传统的 Pod 中定义的 ContanerPort，这是因为我们的资源清单中不仅要描述容器的 Port，还要描述 Service 的 Port。</p>
+<p>然后一个比较重要的结构体<code>AppServiceStatus</code>用来描述资源的状态，当然我们可以根据需要去自定义状态的描述，我这里就偷懒直接使用 Deployment 的状态了：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">type AppServiceStatus struct &#123;</span><br><span class="line">	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster</span><br><span class="line">	// Important: Run &quot;operator-sdk generate k8s&quot; to regenerate code after modifying this file</span><br><span class="line">	// Add custom validation using kubebuilder tags: https://book.kubebuilder.io/beyond_basics/generating_crd.html</span><br><span class="line">	appsv1.DeploymentStatus `json:&quot;,inline&quot;`</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>定义完成后，在项目根目录下面执行如下命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">operator-sdk generate k8s</span></span><br></pre></td></tr></table></figure>
+
+<p>改命令是用来根据我们自定义的 API 描述来自动生成一些代码，目录<code>pkg/apis/app/v1/</code>下面以<code>zz_generated</code>开头的文件就是自动生成的代码，里面的内容并不需要我们去手动编写。</p>
+<p>这样我们就算完成了对自定义资源对象的 API 的声明。</p>
+<h4 id="实现业务逻辑"><a href="#实现业务逻辑" class="headerlink" title="实现业务逻辑"></a>实现业务逻辑</h4><p>上面 API 描述声明完成了，接下来就需要我们来进行具体的业务逻辑实现了，编写具体的 controller 实现，打开源文件<code>pkg/controller/appservice/appservice_controller.go</code>，需要我们去更改的地方也不是很多，核心的就是<code>Reconcile</code>方法，该方法就是去不断的 watch 资源的状态，然后根据状态的不同去实现各种操作逻辑，核心代码如下：</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(r *ReconcileAppService)</span></span> Reconcile(request reconcile.Request) (reconcile.Result, <span class="type">error</span>) &#123;</span><br><span class="line">	reqLogger := log.WithValues(<span class="string">&quot;Request.Namespace&quot;</span>, request.Namespace, <span class="string">&quot;Request.Name&quot;</span>, request.Name)</span><br><span class="line">	reqLogger.Info(<span class="string">&quot;Reconciling AppService&quot;</span>)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// Fetch the AppService instance</span></span><br><span class="line">	instance := &amp;appv1.AppService&#123;&#125;</span><br><span class="line">	err := r.client.Get(context.TODO(), request.NamespacedName, instance)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">if</span> errors.IsNotFound(err) &#123;</span><br><span class="line">			<span class="comment">// Request object not found, could have been deleted after reconcile request.</span></span><br><span class="line">			<span class="comment">// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.</span></span><br><span class="line">			<span class="comment">// Return and don&#x27;t requeue</span></span><br><span class="line">			<span class="keyword">return</span> reconcile.Result&#123;&#125;, <span class="literal">nil</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// Error reading the object - requeue the request.</span></span><br><span class="line">		<span class="keyword">return</span> reconcile.Result&#123;&#125;, err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> instance.DeletionTimestamp != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> reconcile.Result&#123;&#125;, err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 如果不存在，则创建关联资源</span></span><br><span class="line">	<span class="comment">// 如果存在，判断是否需要更新</span></span><br><span class="line">	<span class="comment">//   如果需要更新，则直接更新</span></span><br><span class="line">	<span class="comment">//   如果不需要更新，则正常返回</span></span><br><span class="line"></span><br><span class="line">	deploy := &amp;appsv1.Deployment&#123;&#125;</span><br><span class="line">	<span class="keyword">if</span> err := r.client.Get(context.TODO(), request.NamespacedName, deploy); err != <span class="literal">nil</span> &amp;&amp; errors.IsNotFound(err) &#123;</span><br><span class="line">		<span class="comment">// 创建关联资源</span></span><br><span class="line">		<span class="comment">// 1. 创建 Deploy</span></span><br><span class="line">		deploy := resources.NewDeploy(instance)</span><br><span class="line">		<span class="keyword">if</span> err := r.client.Create(context.TODO(), deploy); err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> reconcile.Result&#123;&#125;, err</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// 2. 创建 Service</span></span><br><span class="line">		service := resources.NewService(instance)</span><br><span class="line">		<span class="keyword">if</span> err := r.client.Create(context.TODO(), service); err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> reconcile.Result&#123;&#125;, err</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="comment">// 3. 关联 Annotations</span></span><br><span class="line">		data, _ := json.Marshal(instance.Spec)</span><br><span class="line">		<span class="keyword">if</span> instance.Annotations != <span class="literal">nil</span> &#123;</span><br><span class="line">			instance.Annotations[<span class="string">&quot;spec&quot;</span>] = <span class="type">string</span>(data)</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			instance.Annotations = <span class="keyword">map</span>[<span class="type">string</span>]<span class="type">string</span>&#123;<span class="string">&quot;spec&quot;</span>: <span class="type">string</span>(data)&#125;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> err := r.client.Update(context.TODO(), instance); err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> reconcile.Result&#123;&#125;, <span class="literal">nil</span></span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> reconcile.Result&#123;&#125;, <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	oldspec := appv1.AppServiceSpec&#123;&#125;</span><br><span class="line">	<span class="keyword">if</span> err := json.Unmarshal([]<span class="type">byte</span>(instance.Annotations[<span class="string">&quot;spec&quot;</span>]), oldspec); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> reconcile.Result&#123;&#125;, err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> !reflect.DeepEqual(instance.Spec, oldspec) &#123;</span><br><span class="line">		<span class="comment">// 更新关联资源</span></span><br><span class="line">		newDeploy := resources.NewDeploy(instance)</span><br><span class="line">		oldDeploy := &amp;appsv1.Deployment&#123;&#125;</span><br><span class="line">		<span class="keyword">if</span> err := r.client.Get(context.TODO(), request.NamespacedName, oldDeploy); err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> reconcile.Result&#123;&#125;, err</span><br><span class="line">		&#125;</span><br><span class="line">		oldDeploy.Spec = newDeploy.Spec</span><br><span class="line">		<span class="keyword">if</span> err := r.client.Update(context.TODO(), oldDeploy); err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> reconcile.Result&#123;&#125;, err</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		newService := resources.NewService(instance)</span><br><span class="line">		oldService := &amp;corev1.Service&#123;&#125;</span><br><span class="line">		<span class="keyword">if</span> err := r.client.Get(context.TODO(), request.NamespacedName, oldService); err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> reconcile.Result&#123;&#125;, err</span><br><span class="line">		&#125;</span><br><span class="line">		oldService.Spec = newService.Spec</span><br><span class="line">		<span class="keyword">if</span> err := r.client.Update(context.TODO(), oldService); err != <span class="literal">nil</span> &#123;</span><br><span class="line">			<span class="keyword">return</span> reconcile.Result&#123;&#125;, err</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> reconcile.Result&#123;&#125;, <span class="literal">nil</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> reconcile.Result&#123;&#125;, <span class="literal">nil</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面就是业务逻辑实现的核心代码，逻辑很简单，就是去判断资源是否存在，不存在，则直接创建新的资源，创建新的资源除了需要创建 Deployment 资源外，还需要创建 Service 资源对象，因为这就是我们的需求，当然你还可以自己去扩展，比如在创建一个 Ingress 对象。更新也是一样的，去对比新旧对象的声明是否一致，不一致则需要更新，同样的，两种资源都需要更新的。</p>
+<p>另外两个核心的方法就是上面的<code>resources.NewDeploy(instance)</code>和<code>resources.NewService(instance)</code>方法，这两个方法实现逻辑也很简单，就是根据 CRD 中的声明去填充 Deployment 和 Service 资源对象的 Spec 对象即可。</p>
+<p>NewDeploy 方法实现如下：</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewDeploy</span><span class="params">(app *appv1.AppService)</span></span> *appsv1.Deployment &#123;</span><br><span class="line">	labels := <span class="keyword">map</span>[<span class="type">string</span>]<span class="type">string</span>&#123;<span class="string">&quot;app&quot;</span>: app.Name&#125;</span><br><span class="line">	selector := &amp;metav1.LabelSelector&#123;MatchLabels: labels&#125;</span><br><span class="line">	<span class="keyword">return</span> &amp;appsv1.Deployment&#123;</span><br><span class="line">		TypeMeta: metav1.TypeMeta&#123;</span><br><span class="line">			APIVersion: <span class="string">&quot;apps/v1&quot;</span>,</span><br><span class="line">			Kind:       <span class="string">&quot;Deployment&quot;</span>,</span><br><span class="line">		&#125;,</span><br><span class="line">		ObjectMeta: metav1.ObjectMeta&#123;</span><br><span class="line">			Name:      app.Name,</span><br><span class="line">			Namespace: app.Namespace,</span><br><span class="line"></span><br><span class="line">			OwnerReferences: []metav1.OwnerReference&#123;</span><br><span class="line">				*metav1.NewControllerRef(app, schema.GroupVersionKind&#123;</span><br><span class="line">					Group: v1.SchemeGroupVersion.Group,</span><br><span class="line">					Version: v1.SchemeGroupVersion.Version,</span><br><span class="line">					Kind: <span class="string">&quot;AppService&quot;</span>,</span><br><span class="line">				&#125;),</span><br><span class="line">			&#125;,</span><br><span class="line">		&#125;,</span><br><span class="line">		Spec: appsv1.DeploymentSpec&#123;</span><br><span class="line">			Replicas: app.Spec.Size,</span><br><span class="line">			Template: corev1.PodTemplateSpec&#123;</span><br><span class="line">				ObjectMeta: metav1.ObjectMeta&#123;</span><br><span class="line">					Labels: labels,</span><br><span class="line">				&#125;,</span><br><span class="line">				Spec: corev1.PodSpec&#123;</span><br><span class="line">					Containers: newContainers(app),</span><br><span class="line">				&#125;,</span><br><span class="line">			&#125;,</span><br><span class="line">			Selector: selector,</span><br><span class="line">		&#125;,</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">newContainers</span><span class="params">(app *v1.AppService)</span></span> []corev1.Container &#123;</span><br><span class="line">	containerPorts := []corev1.ContainerPort&#123;&#125;</span><br><span class="line">	<span class="keyword">for</span> _, svcPort := <span class="keyword">range</span> app.Spec.Ports &#123;</span><br><span class="line">		cport := corev1.ContainerPort&#123;&#125;</span><br><span class="line">		cport.ContainerPort = svcPort.TargetPort.IntVal</span><br><span class="line">		containerPorts = <span class="built_in">append</span>(containerPorts, cport)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> []corev1.Container&#123;</span><br><span class="line">		&#123;</span><br><span class="line">			Name: app.Name,</span><br><span class="line">			Image: app.Spec.Image,</span><br><span class="line">			Resources: app.Spec.Resources,</span><br><span class="line">			Ports: containerPorts,</span><br><span class="line">			ImagePullPolicy: corev1.PullIfNotPresent,</span><br><span class="line">			Env: app.Spec.Envs,</span><br><span class="line">		&#125;,</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>newService 对应的方法实现如下：</p>
+<figure class="highlight golang"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewService</span><span class="params">(app *v1.AppService)</span></span> *corev1.Service &#123;</span><br><span class="line">	<span class="keyword">return</span> &amp;corev1.Service &#123;</span><br><span class="line">		TypeMeta: metav1.TypeMeta &#123;</span><br><span class="line">			Kind: <span class="string">&quot;Service&quot;</span>,</span><br><span class="line">			APIVersion: <span class="string">&quot;v1&quot;</span>,</span><br><span class="line">		&#125;,</span><br><span class="line">		ObjectMeta: metav1.ObjectMeta&#123;</span><br><span class="line">			Name: app.Name,</span><br><span class="line">			Namespace: app.Namespace,</span><br><span class="line">			OwnerReferences: []metav1.OwnerReference&#123;</span><br><span class="line">				*metav1.NewControllerRef(app, schema.GroupVersionKind&#123;</span><br><span class="line">					Group: v1.SchemeGroupVersion.Group,</span><br><span class="line">					Version: v1.SchemeGroupVersion.Version,</span><br><span class="line">					Kind: <span class="string">&quot;AppService&quot;</span>,</span><br><span class="line">				&#125;),</span><br><span class="line">			&#125;,</span><br><span class="line">		&#125;,</span><br><span class="line">		Spec: corev1.ServiceSpec&#123;</span><br><span class="line">			Type: corev1.ServiceTypeNodePort,</span><br><span class="line">			Ports: app.Spec.Ports,</span><br><span class="line">			Selector: <span class="keyword">map</span>[<span class="type">string</span>]<span class="type">string</span>&#123;</span><br><span class="line">				<span class="string">&quot;app&quot;</span>: app.Name,</span><br><span class="line">			&#125;,</span><br><span class="line">		&#125;,</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这样我们就实现了 AppService 这种资源对象的业务逻辑。</p>
+<h4 id="调试"><a href="#调试" class="headerlink" title="调试"></a>调试</h4><p>如果我们本地有一个可以访问的 Kubernetes 集群，我们也可以直接进行调试，在本地用户<code>~/.kube/config</code>文件中配置集群访问信息，下面的信息表明可以访问 Kubernetes 集群：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl cluster-info</span></span><br><span class="line">Kubernetes master is running at https://ydzs-master:6443</span><br><span class="line">KubeDNS is running at https://ydzs-master:6443/api/v1/namespaces/kube-system/services/kube-dns/proxy</span><br><span class="line"></span><br><span class="line">To further debug and diagnose cluster problems, use &#x27;kubectl cluster-info dump&#x27;.</span><br></pre></td></tr></table></figure>
+
+<p>首先，在集群中安装 CRD 对象：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl create -f deploy/crds/app_v1_appservice_crd.yaml</span></span><br><span class="line">customresourcedefinition &quot;appservices.app.example.com&quot; created</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get crd</span></span><br><span class="line">NAME                                   AGE</span><br><span class="line">appservices.app.example.com            &lt;invalid&gt;</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+
+<p>当我们通过<code>kubectl get crd</code>命令获取到我们定义的 CRD 资源对象，就证明我们定义的 CRD 安装成功了。其实现在只是 CRD 的这个声明安装成功了，但是我们这个 CRD 的具体业务逻辑实现方式还在我们本地，并没有部署到集群之中，我们可以通过下面的命令来在本地项目中启动 Operator 的调试：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">operator-sdk up <span class="built_in">local</span></span></span><br><span class="line">INFO[0000] Running the operator locally.</span><br><span class="line">INFO[0000] Using namespace default.</span><br><span class="line">&#123;&quot;level&quot;:&quot;info&quot;,&quot;ts&quot;:1559207203.964137,&quot;logger&quot;:&quot;cmd&quot;,&quot;msg&quot;:&quot;Go Version: go1.11.4&quot;&#125;</span><br><span class="line">&#123;&quot;level&quot;:&quot;info&quot;,&quot;ts&quot;:1559207203.964192,&quot;logger&quot;:&quot;cmd&quot;,&quot;msg&quot;:&quot;Go OS/Arch: darwin/amd64&quot;&#125;</span><br><span class="line">&#123;&quot;level&quot;:&quot;info&quot;,&quot;ts&quot;:1559207203.9641972,&quot;logger&quot;:&quot;cmd&quot;,&quot;msg&quot;:&quot;Version of operator-sdk: v0.7.0&quot;&#125;</span><br><span class="line">&#123;&quot;level&quot;:&quot;info&quot;,&quot;ts&quot;:1559207203.965905,&quot;logger&quot;:&quot;leader&quot;,&quot;msg&quot;:&quot;Trying to become the leader.&quot;&#125;</span><br><span class="line">&#123;&quot;level&quot;:&quot;info&quot;,&quot;ts&quot;:1559207203.965945,&quot;logger&quot;:&quot;leader&quot;,&quot;msg&quot;:&quot;Skipping leader election; not running in a cluster.&quot;&#125;</span><br><span class="line">&#123;&quot;level&quot;:&quot;info&quot;,&quot;ts&quot;:1559207206.928867,&quot;logger&quot;:&quot;cmd&quot;,&quot;msg&quot;:&quot;Registering Components.&quot;&#125;</span><br><span class="line">&#123;&quot;level&quot;:&quot;info&quot;,&quot;ts&quot;:1559207206.929077,&quot;logger&quot;:&quot;kubebuilder.controller&quot;,&quot;msg&quot;:&quot;Starting EventSource&quot;,&quot;controller&quot;:&quot;appservice-controller&quot;,&quot;source&quot;:&quot;kind source: /, Kind=&quot;&#125;</span><br><span class="line">&#123;&quot;level&quot;:&quot;info&quot;,&quot;ts&quot;:1559207206.9292521,&quot;logger&quot;:&quot;kubebuilder.controller&quot;,&quot;msg&quot;:&quot;Starting EventSource&quot;,&quot;controller&quot;:&quot;appservice-controller&quot;,&quot;source&quot;:&quot;kind source: /, Kind=&quot;&#125;</span><br><span class="line">&#123;&quot;level&quot;:&quot;info&quot;,&quot;ts&quot;:1559207209.622659,&quot;logger&quot;:&quot;cmd&quot;,&quot;msg&quot;:&quot;failed to initialize service object for metrics: OPERATOR_NAME must be set&quot;&#125;</span><br><span class="line">&#123;&quot;level&quot;:&quot;info&quot;,&quot;ts&quot;:1559207209.622693,&quot;logger&quot;:&quot;cmd&quot;,&quot;msg&quot;:&quot;Starting the Cmd.&quot;&#125;</span><br><span class="line">&#123;&quot;level&quot;:&quot;info&quot;,&quot;ts&quot;:1559207209.7236018,&quot;logger&quot;:&quot;kubebuilder.controller&quot;,&quot;msg&quot;:&quot;Starting Controller&quot;,&quot;controller&quot;:&quot;appservice-controller&quot;&#125;</span><br><span class="line">&#123;&quot;level&quot;:&quot;info&quot;,&quot;ts&quot;:1559207209.8284118,&quot;logger&quot;:&quot;kubebuilder.controller&quot;,&quot;msg&quot;:&quot;Starting workers&quot;,&quot;controller&quot;:&quot;appservice-controller&quot;,&quot;worker count&quot;:1&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面的命令会在本地运行 Operator 应用，通过<code>~/.kube/config</code>去关联集群信息，现在我们去添加一个 AppService 类型的资源然后观察本地 Operator 的变化情况，资源清单文件就是我们上面预定义的（deploy&#x2F;crds&#x2F;app_v1_appservice_cr.yaml）</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">app.example.com/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">AppService</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nginx-app</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">size:</span> <span class="number">2</span></span><br><span class="line">  <span class="attr">image:</span> <span class="string">nginx:1.7.9</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">port:</span> <span class="number">80</span></span><br><span class="line">      <span class="attr">targetPort:</span> <span class="number">80</span></span><br><span class="line">      <span class="attr">nodePort:</span> <span class="number">30002</span></span><br></pre></td></tr></table></figure>
+
+<p>直接创建这个资源对象：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl create -f deploy/crds/app_v1_appservice_cr.yaml</span></span><br><span class="line">appservice &quot;nginx-app&quot; created</span><br></pre></td></tr></table></figure>
+
+<p>我们可以看到我们的应用创建成功了，这个时候查看 Operator 的调试窗口会有如下的信息出现：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">......</span><br><span class="line">&#123;&quot;level&quot;:&quot;info&quot;,&quot;ts&quot;:1559207416.670523,&quot;logger&quot;:&quot;controller_appservice&quot;,&quot;msg&quot;:&quot;Reconciling AppService&quot;,&quot;Request.Namespace&quot;:&quot;default&quot;,&quot;Request.Name&quot;:&quot;nginx-app&quot;&#125;</span><br><span class="line">&#123;&quot;level&quot;:&quot;info&quot;,&quot;ts&quot;:1559207417.004226,&quot;logger&quot;:&quot;controller_appservice&quot;,&quot;msg&quot;:&quot;Reconciling AppService&quot;,&quot;Request.Namespace&quot;:&quot;default&quot;,&quot;Request.Name&quot;:&quot;nginx-app&quot;&#125;</span><br><span class="line">&#123;&quot;level&quot;:&quot;info&quot;,&quot;ts&quot;:1559207417.004331,&quot;logger&quot;:&quot;controller_appservice&quot;,&quot;msg&quot;:&quot;Reconciling AppService&quot;,&quot;Request.Namespace&quot;:&quot;default&quot;,&quot;Request.Name&quot;:&quot;nginx-app&quot;&#125;</span><br><span class="line">&#123;&quot;level&quot;:&quot;info&quot;,&quot;ts&quot;:1559207418.33779,&quot;logger&quot;:&quot;controller_appservice&quot;,&quot;msg&quot;:&quot;Reconciling AppService&quot;,&quot;Request.Namespace&quot;:&quot;default&quot;,&quot;Request.Name&quot;:&quot;nginx-app&quot;&#125;</span><br><span class="line">&#123;&quot;level&quot;:&quot;info&quot;,&quot;ts&quot;:1559207418.951193,&quot;logger&quot;:&quot;controller_appservice&quot;,&quot;msg&quot;:&quot;Reconciling AppService&quot;,&quot;Request.Namespace&quot;:&quot;default&quot;,&quot;Request.Name&quot;:&quot;nginx-app&quot;&#125;</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+
+<p>然后我们可以去查看集群中是否有符合我们预期的资源出现：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get AppService</span></span><br><span class="line">NAME        AGE</span><br><span class="line">nginx-app   &lt;invalid&gt;</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get deploy</span></span><br><span class="line">NAME                     DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE</span><br><span class="line">nginx-app                2         2         2            2           &lt;invalid&gt;</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get svc</span></span><br><span class="line">NAME         TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE</span><br><span class="line">kubernetes   ClusterIP   10.96.0.1      &lt;none&gt;        443/TCP        76d</span><br><span class="line">nginx-app    NodePort    10.108.227.5   &lt;none&gt;        80:30002/TCP   &lt;invalid&gt;</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get pods</span></span><br><span class="line">NAME                                      READY     STATUS    RESTARTS   AGE</span><br><span class="line">nginx-app-76b6449498-2j82j                1/1       Running   0          &lt;invalid&gt;</span><br><span class="line">nginx-app-76b6449498-m4h58                1/1       Running   0          &lt;invalid&gt;</span><br></pre></td></tr></table></figure>
+
+<p>看到了吧，我们定义了两个副本（size&#x3D;2），这里就出现了两个 Pod，还有一个 NodePort&#x3D;30002 的 Service 对象，我们可以通过该端口去访问下应用：<img data-src="https://mudutestmenu.mudu.tv/upload/5f90yb.png" alt="crd nginx app demo"></p>
+<p>如果应用在安装过程中出现了任何问题，我们都可以通过本地的 Operator 调试窗口找到有用的信息，然后调试修改即可。</p>
+<p>清理：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl delete -f deploy/crds/app_v1_appservice_crd.yaml</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl delete -f deploy/crds/app_v1_appservice_cr.yaml</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="部署"><a href="#部署" class="headerlink" title="部署"></a>部署</h4><p>自定义的资源对象现在测试通过了，但是如果我们将本地的<code>operator-sdk up local</code>命令终止掉，我们可以猜想到就没办法处理 AppService 资源对象的一些操作了，所以我们需要将我们的业务逻辑实现部署到集群中去。</p>
+<p>执行下面的命令构建 Operator 应用打包成 Docker 镜像：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">operator-sdk build cnych/opdemo</span></span><br><span class="line">INFO[0002] Building Docker image cnych/opdemo</span><br><span class="line">Sending build context to Docker daemon  400.7MB</span><br><span class="line">Step 1/7 : FROM registry.access.redhat.com/ubi7-dev-preview/ubi-minimal:7.6</span><br><span class="line">......</span><br><span class="line">Successfully built a8cde91be6ab</span><br><span class="line">Successfully tagged cnych/opdemo:latest</span><br><span class="line">INFO[0053] Operator build complete.</span><br></pre></td></tr></table></figure>
+
+<p>镜像构建成功后，推送到 docker hub：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">docker push cnych/opdemo</span></span><br></pre></td></tr></table></figure>
+
+<p>镜像推送成功后，使用上面的镜像地址更新 Operator 的资源清单：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">sed -i <span class="string">&#x27;s|REPLACE_IMAGE|cnych/opdemo|g&#x27;</span> deploy/operator.yaml</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">如果你使用的是 Mac 系统，使用下面的命令</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">sed -i <span class="string">&quot;&quot;</span> <span class="string">&#x27;s|REPLACE_IMAGE|cnych/opdemo|g&#x27;</span> deploy/operator.yaml</span></span><br></pre></td></tr></table></figure>
+
+<p>现在 Operator 的资源清单文件准备好了，然后创建对应的 RBAC 的对象：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Setup Service Account</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl create -f deploy/service_account.yaml</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Setup RBAC</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl create -f deploy/role.yaml</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl create -f deploy/role_binding.yaml</span></span><br></pre></td></tr></table></figure>
+
+<p>权限相关声明已经完成，接下来安装 CRD 和 Operator：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Setup the CRD</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl apply -f deploy/crds/app_v1_appservice_crd.yaml</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get crd</span></span><br><span class="line">NAME                                   CREATED AT</span><br><span class="line">appservices.app.example.com            2019-05-30T17:03:32Z</span><br><span class="line">......</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Deploy the Operator</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl create -f deploy/operator.yaml</span></span><br><span class="line">deployment.apps/opdemo created</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get pods</span></span><br><span class="line">NAME                                      READY   STATUS    RESTARTS   AGE</span><br><span class="line">opdemo-64db96d575-9vtq6                   1/1     Running   0          2m2s</span><br></pre></td></tr></table></figure>
+
+<p>到这里我们的 CRD 和 Operator 实现都已经安装成功了。</p>
+<p>现在我们再来部署我们的 AppService 资源清单文件，现在的业务逻辑就会在上面的<code>opdemo-64db96d575-9vtq6</code>的 Pod 中去处理了。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl create -f deploy/crds/app_v1_appservice_cr.yaml</span></span><br><span class="line">appservice.app.example.com/nginx-app created</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl get appservice</span></span><br><span class="line">NAME        AGE</span><br><span class="line">nginx-app   18s</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"> kubectl get deploy</span></span><br><span class="line">NAME                     READY   UP-TO-DATE   AVAILABLE   AGE</span><br><span class="line">nginx-app                2/2     2            2           24s</span><br><span class="line">opdemo                   1/1     1            1           5m51s</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"> kubectl get svc</span></span><br><span class="line">NAME         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)        AGE</span><br><span class="line">kubernetes   ClusterIP   10.96.0.1       &lt;none&gt;        443/TCP        76d</span><br><span class="line">nginx-app    NodePort    10.106.129.82   &lt;none&gt;        80:30002/TCP   29s</span><br><span class="line">opdemo       ClusterIP   10.100.233.51   &lt;none&gt;        8383/TCP       4m25s</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash"> kubectl get pods</span></span><br><span class="line">NAME                                      READY   STATUS    RESTARTS   AGE</span><br><span class="line">nginx-app-76b6449498-ffhgx                1/1     Running   0          32s</span><br><span class="line">nginx-app-76b6449498-wzjq2                1/1     Running   0          32s</span><br><span class="line">opdemo-64db96d575-9vtq6                   1/1     Running   0          5m59s</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl describe appservice nginx-app</span></span><br><span class="line">Name:         nginx-app</span><br><span class="line">Namespace:    default</span><br><span class="line">Labels:       &lt;none&gt;</span><br><span class="line">Annotations:  spec: &#123;&quot;size&quot;:2,&quot;image&quot;:&quot;nginx:1.7.9&quot;,&quot;resources&quot;:&#123;&#125;,&quot;ports&quot;:[&#123;&quot;protocol&quot;:&quot;TCP&quot;,&quot;port&quot;:80,&quot;targetPort&quot;:80,&quot;nodePort&quot;:30002&#125;]&#125;</span><br><span class="line">API Version:  app.example.com/v1</span><br><span class="line">Kind:         AppService</span><br><span class="line">Metadata:</span><br><span class="line">  Creation Timestamp:  2019-05-30T17:41:28Z</span><br><span class="line">  Generation:          2</span><br><span class="line">  Resource Version:    19666617</span><br><span class="line">  Self Link:           /apis/app.example.com/v1/namespaces/default/appservices/nginx-app</span><br><span class="line">  UID:                 2756f232-8302-11e9-80ca-525400cc3c00</span><br><span class="line">Spec:</span><br><span class="line">  Image:  nginx:1.7.9</span><br><span class="line">  Ports:</span><br><span class="line">    Node Port:    30002</span><br><span class="line">    Port:         80</span><br><span class="line">    Protocol:     TCP</span><br><span class="line">    Target Port:  80</span><br><span class="line">  Resources:</span><br><span class="line">  Size:  2</span><br><span class="line">Events:  &lt;none&gt;</span><br></pre></td></tr></table></figure>
+
+<p>然后同样的可以通过 30002 这个 NodePort 端口去访问应用，到这里应用就部署成功了。</p>
+<h4 id="清理"><a href="#清理" class="headerlink" title="清理"></a>清理</h4><p>有资源清单文件，直接删除即可：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl delete -f deploy/crds/app_v1_appservice_cr.yaml</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl delete -f deploy/operator.yaml</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl delete -f deploy/role.yaml</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl delete -f deploy/role_binding.yaml</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl delete -f deploy/service_account.yaml</span></span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl delete -f deploy/crds/app_v1_appservice_crd.yaml</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="开发"><a href="#开发" class="headerlink" title="开发"></a>开发</h4><p>Operator SDK 为我们创建了一个快速启动的代码和相关配置，如果我们要开始处理相关的逻辑，我们可以在项目中搜索<code>TODO(user)</code>这个注释来实现我们自己的逻辑，比如在我的 VSCode 环境中，看上去是这样的：<img data-src="https://mudutestmenu.mudu.tv/upload/7l7d5q.png" alt="operator code todo demo"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Kubernetes%20%E5%AE%89%E5%85%A8%E4%B8%8A%E4%B8%8B%E6%96%87%E8%AE%BE%E7%BD%AE%E3%80%81/" rel="prev" title="Kubernetes 安全上下文设置、">
+      <i class="fa fa-chevron-left"></i> Kubernetes 安全上下文设置、
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Karmada/" rel="next" title="Karmada">
+      Karmada <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Kubernetes-Operator-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8%E6%95%99%E7%A8%8B"><span class="nav-number">1.</span> <span class="nav-text">Kubernetes Operator 快速入门教程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Kubernetes-Operator"><span class="nav-number">1.1.</span> <span class="nav-text">Kubernetes Operator</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Operator-Framework"><span class="nav-number">1.2.</span> <span class="nav-text">Operator Framework</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Workflow"><span class="nav-number">1.2.1.</span> <span class="nav-text">Workflow</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Demo"><span class="nav-number">1.3.</span> <span class="nav-text">Demo</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83"><span class="nav-number">1.3.1.</span> <span class="nav-text">开发环境</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%8E%AF%E5%A2%83%E9%9C%80%E6%B1%82"><span class="nav-number">1.3.1.1.</span> <span class="nav-text">环境需求</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%89%E8%A3%85-operator-sdk"><span class="nav-number">1.3.1.2.</span> <span class="nav-text">安装 operator-sdk</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%BC%94%E7%A4%BA"><span class="nav-number">1.3.2.</span> <span class="nav-text">演示</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E6%96%B0%E9%A1%B9%E7%9B%AE"><span class="nav-number">1.3.2.1.</span> <span class="nav-text">创建新项目</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%A1%B9%E7%9B%AE%E7%BB%93%E6%9E%84"><span class="nav-number">1.3.2.2.</span> <span class="nav-text">项目结构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B7%BB%E5%8A%A0-API"><span class="nav-number">1.3.2.3.</span> <span class="nav-text">添加 API</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B7%BB%E5%8A%A0%E6%8E%A7%E5%88%B6%E5%99%A8"><span class="nav-number">1.3.2.4.</span> <span class="nav-text">添加控制器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89-API"><span class="nav-number">1.3.2.5.</span> <span class="nav-text">自定义 API</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0%E4%B8%9A%E5%8A%A1%E9%80%BB%E8%BE%91"><span class="nav-number">1.3.2.6.</span> <span class="nav-text">实现业务逻辑</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%B0%83%E8%AF%95"><span class="nav-number">1.3.2.7.</span> <span class="nav-text">调试</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%83%A8%E7%BD%B2"><span class="nav-number">1.3.2.8.</span> <span class="nav-text">部署</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B8%85%E7%90%86"><span class="nav-number">1.3.2.9.</span> <span class="nav-text">清理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%BC%80%E5%8F%91"><span class="nav-number">1.3.2.10.</span> <span class="nav-text">开发</span></a></li></ol></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

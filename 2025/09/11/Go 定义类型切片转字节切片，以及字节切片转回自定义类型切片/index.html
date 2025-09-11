@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Go 语言中，如何自定义类型切片转字节切片，以及字节切片转回自定义类型切片？ 这是一个非常贴近后端实际应用的工程问题，涉及到性能、安全性和数据可移植性等多个方面。将自定义类型切片与字节切片进行相互转换，通常有两种截然不同的路径：  不安全但极高性能的方式：通过 unsafe 包直接进行内存层面的指针转换。 安全且通用的方式：通过序列化库（如 encoding&#x2F;gob、encoding&#x2F;json）进">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go 定义类型切片转字节切片，以及字节切片转回自定义类型切片">
+<meta property="og:url" content="http://example.com/2025/09/11/Go%20%E5%AE%9A%E4%B9%89%E7%B1%BB%E5%9E%8B%E5%88%87%E7%89%87%E8%BD%AC%E5%AD%97%E8%8A%82%E5%88%87%E7%89%87%EF%BC%8C%E4%BB%A5%E5%8F%8A%E5%AD%97%E8%8A%82%E5%88%87%E7%89%87%E8%BD%AC%E5%9B%9E%E8%87%AA%E5%AE%9A%E4%B9%89%E7%B1%BB%E5%9E%8B%E5%88%87%E7%89%87/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="Go 语言中，如何自定义类型切片转字节切片，以及字节切片转回自定义类型切片？ 这是一个非常贴近后端实际应用的工程问题，涉及到性能、安全性和数据可移植性等多个方面。将自定义类型切片与字节切片进行相互转换，通常有两种截然不同的路径：  不安全但极高性能的方式：通过 unsafe 包直接进行内存层面的指针转换。 安全且通用的方式：通过序列化库（如 encoding&#x2F;gob、encoding&#x2F;json）进">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:32:22.778Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Go">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/Go%20%E5%AE%9A%E4%B9%89%E7%B1%BB%E5%9E%8B%E5%88%87%E7%89%87%E8%BD%AC%E5%AD%97%E8%8A%82%E5%88%87%E7%89%87%EF%BC%8C%E4%BB%A5%E5%8F%8A%E5%AD%97%E8%8A%82%E5%88%87%E7%89%87%E8%BD%AC%E5%9B%9E%E8%87%AA%E5%AE%9A%E4%B9%89%E7%B1%BB%E5%9E%8B%E5%88%87%E7%89%87/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Go 定义类型切片转字节切片，以及字节切片转回自定义类型切片 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Go%20%E5%AE%9A%E4%B9%89%E7%B1%BB%E5%9E%8B%E5%88%87%E7%89%87%E8%BD%AC%E5%AD%97%E8%8A%82%E5%88%87%E7%89%87%EF%BC%8C%E4%BB%A5%E5%8F%8A%E5%AD%97%E8%8A%82%E5%88%87%E7%89%87%E8%BD%AC%E5%9B%9E%E8%87%AA%E5%AE%9A%E4%B9%89%E7%B1%BB%E5%9E%8B%E5%88%87%E7%89%87/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Go 定义类型切片转字节切片，以及字节切片转回自定义类型切片
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:32:22" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/go/" itemprop="url" rel="index"><span itemprop="name">go</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.9k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Go 语言中，如何自定义类型切片转字节切片，以及字节切片转回自定义类型切片？</p>
+<p>这是一个非常贴近后端实际应用的工程问题，涉及到性能、安全性和数据可移植性等多个方面。将自定义类型切片与字节切片进行相互转换，通常有两种截然不同的路径：</p>
+<ol>
+<li><strong>不安全但极高性能的方式</strong>：通过 <code>unsafe</code> 包直接进行内存层面的指针转换。</li>
+<li><strong>安全且通用的方式</strong>：通过序列化库（如 <code>encoding/gob</code>、<code>encoding/json</code>）进行编码和解码。</li>
+</ol>
+<p>作为专家，我将为您详细解析这两种方法，并给出明确的适用场景和建议。</p>
+<hr>
+<h3 id="场景设定"><a href="#场景设定" class="headerlink" title="场景设定"></a>场景设定</h3><p>我们先定义一个自定义类型 <code>Point</code>，并以此为例。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;bytes&quot;</span></span><br><span class="line">	<span class="string">&quot;encoding/gob&quot;</span></span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">	<span class="string">&quot;reflect&quot;</span></span><br><span class="line">	<span class="string">&quot;unsafe&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment">// 自定义类型，注意：为了让 unsafe 方法能够工作，</span></span><br><span class="line"><span class="comment">// 结构体内部不能包含任何引用类型（如 string, slice, map, pointer）。</span></span><br><span class="line"><span class="keyword">type</span> Point <span class="keyword">struct</span> &#123;</span><br><span class="line">	X <span class="type">int64</span></span><br><span class="line">	Y <span class="type">int64</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="方法一：unsafe-指针转换-高性能，但危险"><a href="#方法一：unsafe-指针转换-高性能，但危险" class="headerlink" title="方法一：unsafe 指针转换 (高性能，但危险)"></a>方法一：<code>unsafe</code> 指针转换 (高性能，但危险)</h3><p>这种方法的核心思想是：在内存中，一个 <code>[]Point</code> 切片本身就是一块连续的内存空间。我们绕过 Go 的类型系统，直接告诉编译器：“请把这块内存当作 <code>[]byte</code> 来对待”。</p>
+<p>这要求你的自定义类型必须是<strong>固定大小的</strong>，不包含任何指针、<code>string</code>、<code>slice</code> 或 <code>map</code> 等引用类型。因为 <code>string</code> 或 <code>slice</code> 自身只是一个包含指针的头结构，它们的实际数据存储在别处。</p>
+<h4 id="1-Point-byte"><a href="#1-Point-byte" class="headerlink" title="1. []Point -&gt; []byte"></a>1. <code>[]Point</code> -&gt; <code>[]byte</code></h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// CustomSliceToByteSlice 将自定义类型的切片转换为字节切片（不安全）</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">CustomSliceToByteSlice</span><span class="params">(slice <span class="keyword">interface</span>&#123;&#125;)</span></span> []<span class="type">byte</span> &#123;</span><br><span class="line">	<span class="comment">// 使用反射获取 SliceHeader</span></span><br><span class="line">	sv := reflect.ValueOf(slice)</span><br><span class="line">	<span class="keyword">if</span> sv.Kind() != reflect.Slice &#123;</span><br><span class="line">		<span class="built_in">panic</span>(<span class="string">&quot;CustomSliceToByteSlice() given a non-slice type&quot;</span>)</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 获取 SliceHeader</span></span><br><span class="line">	header := (*reflect.SliceHeader)(unsafe.Pointer(sv.Pointer()))</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 计算总字节数</span></span><br><span class="line">	<span class="comment">// 长度 * 单个元素的大小</span></span><br><span class="line">	length := header.Len * <span class="type">int</span>(sv.Type().Elem().Size())</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 创建一个新的 SliceHeader，指向同一块内存，但类型是 []byte</span></span><br><span class="line">	byteHeader := &amp;reflect.SliceHeader&#123;</span><br><span class="line">		Data: header.Data,</span><br><span class="line">		Len:  length,</span><br><span class="line">		Cap:  length, <span class="comment">// 为了安全，让 Len 和 Cap 相等</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 将新的 SliceHeader 转换回 []byte</span></span><br><span class="line">	<span class="keyword">return</span> *(*[]<span class="type">byte</span>)(unsafe.Pointer(byteHeader))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="2-byte-Point"><a href="#2-byte-Point" class="headerlink" title="2. []byte -&gt; []Point"></a>2. <code>[]byte</code> -&gt; <code>[]Point</code></h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ByteSliceToCustomSlice 将字节切片转换回自定义类型切片（不安全）</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">ByteSliceToCustomSlice</span><span class="params">(b []<span class="type">byte</span>)</span></span> []Point &#123;</span><br><span class="line">    <span class="comment">// 首先，确保字节切片的长度是 Point 大小的整数倍</span></span><br><span class="line">    pointSize := <span class="type">int</span>(unsafe.Sizeof(Point&#123;&#125;))</span><br><span class="line">    <span class="keyword">if</span> <span class="built_in">len</span>(b)%pointSize != <span class="number">0</span> &#123;</span><br><span class="line">        <span class="built_in">panic</span>(<span class="string">&quot;byte slice length is not a multiple of Point size&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 获取 []byte 的 SliceHeader</span></span><br><span class="line">	byteHeader := (*reflect.SliceHeader)(unsafe.Pointer(&amp;b))</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 计算可以容纳多少个 Point 结构体</span></span><br><span class="line">	length := byteHeader.Len / pointSize</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 创建一个新的 SliceHeader，指向同一块内存，但类型是 []Point</span></span><br><span class="line">	pointHeader := &amp;reflect.SliceHeader&#123;</span><br><span class="line">		Data: byteHeader.Data,</span><br><span class="line">		Len:  length,</span><br><span class="line">		Cap:  length,</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 将新的 SliceHeader 转换回 []Point</span></span><br><span class="line">	<span class="keyword">return</span> *(*[]Point)(unsafe.Pointer(pointHeader))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="优点与致命缺点"><a href="#优点与致命缺点" class="headerlink" title="优点与致命缺点"></a>优点与致命缺点</h4><ul>
+<li><strong>优点</strong>：<ul>
+<li><strong>极致性能</strong>：几乎是零成本的操作，因为它不涉及任何数据复制，只是修改了切片的头信息。</li>
+</ul>
+</li>
+<li><strong>缺点与危险</strong>：<ul>
+<li><strong>极度不安全</strong>：<code>unsafe</code> 包绕过了 Go 的所有类型和内存安全检查。</li>
+<li><strong>数据结构限制</strong>：只能用于“纯数据”结构体 (POD - Plain Old Data)。一旦结构体包含 <code>string</code> 或 <code>slice</code>，此方法将导致内存访问错误和数据损坏。</li>
+<li><strong>不可移植</strong>：结果受CPU架构的<strong>字节序 (Endianness)</strong> 影响。在小端机器上生成的 <code>[]byte</code> 在大端机器上无法被正确解析。</li>
+<li><strong>内存对齐</strong>：可能受结构体字段内存对齐的影响，虽然 <code>unsafe.Sizeof</code> 通常能处理好，但这依然是个潜在的风险点。</li>
+</ul>
+</li>
+</ul>
+<p><strong>专家建议：仅在性能压榨到极致、完全控制软硬件环境（如嵌入式开发、高性能计算）且已通过 Profiling 证明这里是瓶颈时，才可考虑此方法。对于绝大多数后端应用，请避免使用。</strong></p>
+<hr>
+<h3 id="方法二：序列化-安全、通用、推荐"><a href="#方法二：序列化-安全、通用、推荐" class="headerlink" title="方法二：序列化 (安全、通用、推荐)"></a>方法二：序列化 (安全、通用、推荐)</h3><p>这是生产环境中处理此类问题的标准做法。其原理是将 Go 的数据结构<strong>编码</strong>成一种通用的字节流格式，在需要时再从字节流<strong>解码</strong>回原来的数据结构。<code>encoding/gob</code> 是 Go 标准库提供的、专门用于 Go 数据类型序列化的利器。</p>
+<h4 id="1-Point-byte-1"><a href="#1-Point-byte-1" class="headerlink" title="1. []Point -&gt; []byte"></a>1. <code>[]Point</code> -&gt; <code>[]byte</code></h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// CustomSliceToByteSliceGob 使用 gob 编码实现转换</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">CustomSliceToByteSliceGob</span><span class="params">(slice []Point)</span></span> ([]<span class="type">byte</span>, <span class="type">error</span>) &#123;</span><br><span class="line">	<span class="keyword">var</span> buffer bytes.Buffer</span><br><span class="line">	</span><br><span class="line">	<span class="comment">// 创建一个编码器，将数据写入 buffer</span></span><br><span class="line">	encoder := gob.NewEncoder(&amp;buffer)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 执行编码</span></span><br><span class="line">	<span class="keyword">if</span> err := encoder.Encode(slice); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> buffer.Bytes(), <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="2-byte-Point-1"><a href="#2-byte-Point-1" class="headerlink" title="2. []byte -&gt; []Point"></a>2. <code>[]byte</code> -&gt; <code>[]Point</code></h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ByteSliceToCustomSliceGob 使用 gob 解码实现转换</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">ByteSliceToCustomSliceGob</span><span class="params">(b []<span class="type">byte</span>)</span></span> ([]Point, <span class="type">error</span>) &#123;</span><br><span class="line">	<span class="keyword">var</span> decodedSlice []Point</span><br><span class="line">	</span><br><span class="line">	<span class="comment">// 创建一个 reader 读取字节数据</span></span><br><span class="line">	reader := bytes.NewReader(b)</span><br><span class="line">	</span><br><span class="line">	<span class="comment">// 创建一个解码器</span></span><br><span class="line">	decoder := gob.NewDecoder(reader)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 执行解码</span></span><br><span class="line">	<span class="keyword">if</span> err := decoder.Decode(&amp;decodedSlice); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> decodedSlice, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="优点与缺点"><a href="#优点与缺点" class="headerlink" title="优点与缺点"></a>优点与缺点</h4><ul>
+<li><strong>优点</strong>：<ul>
+<li><strong>绝对安全</strong>：由标准库保证类型安全和内存安全。</li>
+<li><strong>支持复杂类型</strong>：可以轻松处理包含 <code>string</code>, <code>slice</code>, <code>map</code> 甚至嵌套指针的复杂结构体。</li>
+<li><strong>平台无关</strong>：<code>gob</code> 格式是自描述的，不受字节序等底层硬件差异的影响，可移植性好。</li>
+<li><strong>代码清晰可维护</strong>：逻辑简单，意图明确。</li>
+</ul>
+</li>
+<li><strong>缺点</strong>:<ul>
+<li><strong>性能开销</strong>：涉及数据编码、解码和内存分配，性能远低于 <code>unsafe</code> 方法。</li>
+<li><strong>Go 语言特定</strong>：<code>gob</code> 格式主要用于 Go 程序之间的通信。如果需要与其他语言交互，应选择 <code>JSON</code>、<code>Protocol Buffers</code> 等。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="对比总结与最终建议"><a href="#对比总结与最终建议" class="headerlink" title="对比总结与最终建议"></a>对比总结与最终建议</h3><table>
+<thead>
+<tr>
+<th align="left">特性&#x2F;方面</th>
+<th align="left"><code>unsafe</code> 指针转换</th>
+<th align="left">序列化 (<code>encoding/gob</code>)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>性能</strong></td>
+<td align="left"><strong>极高</strong> (几乎无开销)</td>
+<td align="left"><strong>中等</strong> (有编码&#x2F;解码开销)</td>
+</tr>
+<tr>
+<td align="left"><strong>安全性</strong></td>
+<td align="left"><strong>极低</strong> (不安全，易出错)</td>
+<td align="left"><strong>高</strong> (完全类型和内存安全)</td>
+</tr>
+<tr>
+<td align="left"><strong>数据类型</strong></td>
+<td align="left"><strong>严格受限</strong> (仅限固定大小的纯数据)</td>
+<td align="left"><strong>强大</strong> (支持所有可导出字段的复杂类型)</td>
+</tr>
+<tr>
+<td align="left"><strong>可移植性</strong></td>
+<td align="left"><strong>差</strong> (受字节序影响)</td>
+<td align="left"><strong>好</strong> (平台无关)</td>
+</tr>
+<tr>
+<td align="left"><strong>推荐度</strong></td>
+<td align="left"><strong>不推荐用于通用后端开发</strong></td>
+<td align="left"><strong>强烈推荐用于绝大多数应用场景</strong></td>
+</tr>
+</tbody></table>
+<h3 id="主函数示例"><a href="#主函数示例" class="headerlink" title="主函数示例"></a>主函数示例</h3><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	points := []Point&#123;&#123;<span class="number">1</span>, <span class="number">2</span>&#125;, &#123;<span class="number">10</span>, <span class="number">20</span>&#125;, &#123;<span class="number">100</span>, <span class="number">200</span>&#125;&#125;</span><br><span class="line"></span><br><span class="line">	fmt.Println(<span class="string">&quot;======= Unsafe Pointer Method =======&quot;</span>)</span><br><span class="line">	<span class="comment">// 注意：这里需要传入 points，而不是 &amp;points</span></span><br><span class="line">	byteSliceUnsafe := CustomSliceToByteSlice(points)</span><br><span class="line">	fmt.Printf(<span class="string">&quot;Unsafe - 转换后字节数: %d\n&quot;</span>, <span class="built_in">len</span>(byteSliceUnsafe))</span><br><span class="line">	restoredSliceUnsafe := ByteSliceToCustomSlice(byteSliceUnsafe)</span><br><span class="line">	fmt.Printf(<span class="string">&quot;Unsafe - 恢复后切片: %+v\n&quot;</span>, restoredSliceUnsafe)</span><br><span class="line">    <span class="comment">// 证明修改是相互影响的（因为共享内存）</span></span><br><span class="line">    restoredSliceUnsafe[<span class="number">0</span>].X = <span class="number">999</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;Unsafe - 修改后，原切片也变了: %+v\n&quot;</span>, points)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	fmt.Println(<span class="string">&quot;\n======= Serialization (Gob) Method =======&quot;</span>)</span><br><span class="line">    points2 := []Point&#123;&#123;<span class="number">1</span>, <span class="number">2</span>&#125;, &#123;<span class="number">10</span>, <span class="number">20</span>&#125;, &#123;<span class="number">100</span>, <span class="number">200</span>&#125;&#125; <span class="comment">// 使用新的切片以防被unsafe方法影响</span></span><br><span class="line">	byteSliceGob, err := CustomSliceToByteSliceGob(points2)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="built_in">panic</span>(err)</span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;Gob - 转换后字节数: %d\n&quot;</span>, <span class="built_in">len</span>(byteSliceGob)) <span class="comment">// gob 有元数据，通常更大</span></span><br><span class="line">	restoredSliceGob, err := ByteSliceToCustomSliceGob(byteSliceGob)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="built_in">panic</span>(err)</span><br><span class="line">	&#125;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;Gob - 恢复后切片: %+v\n&quot;</span>, restoredSliceGob)</span><br><span class="line">    <span class="comment">// 证明修改不相互影响（因为是深拷贝）</span></span><br><span class="line">    restoredSliceGob[<span class="number">0</span>].X = <span class="number">999</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;Gob - 修改后，原切片未变: %+v\n&quot;</span>, points2)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>最终结论</strong>：作为后端开发专家，我强烈建议您**始终优先使用序列化方法 (<code>encoding/gob</code> 或其他如 <code>json</code>, <code>protobuf</code>)**。它所提供的安全性、可维护性和通用性，远远比 <code>unsafe</code> 方法带来的性能提升更有价值。只有在你的应用中，通过性能分析工具（pprof）明确证明了这部分转换是核心瓶颈，并且你的数据结构满足所有苛刻条件时，才有理由去触碰 <code>unsafe</code> 这个“潘多拉魔盒”。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Go/" rel="tag"># Go</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Go%20%E6%96%B9%E6%B3%95%E6%8E%A5%E6%94%B6/" rel="prev" title="Go 方法接收">
+      <i class="fa fa-chevron-left"></i> Go 方法接收
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Go%20struct%20%E5%8F%AF%E4%BB%A5%E6%AF%94%E8%BE%83%E5%90%97/" rel="next" title="Go struct 可以比较吗">
+      Go struct 可以比较吗 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9C%BA%E6%99%AF%E8%AE%BE%E5%AE%9A"><span class="nav-number">1.</span> <span class="nav-text">场景设定</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%B3%95%E4%B8%80%EF%BC%9Aunsafe-%E6%8C%87%E9%92%88%E8%BD%AC%E6%8D%A2-%E9%AB%98%E6%80%A7%E8%83%BD%EF%BC%8C%E4%BD%86%E5%8D%B1%E9%99%A9"><span class="nav-number">2.</span> <span class="nav-text">方法一：unsafe 指针转换 (高性能，但危险)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-Point-byte"><span class="nav-number">2.1.</span> <span class="nav-text">1. []Point -&gt; []byte</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-byte-Point"><span class="nav-number">2.2.</span> <span class="nav-text">2. []byte -&gt; []Point</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BC%98%E7%82%B9%E4%B8%8E%E8%87%B4%E5%91%BD%E7%BC%BA%E7%82%B9"><span class="nav-number">2.3.</span> <span class="nav-text">优点与致命缺点</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%B3%95%E4%BA%8C%EF%BC%9A%E5%BA%8F%E5%88%97%E5%8C%96-%E5%AE%89%E5%85%A8%E3%80%81%E9%80%9A%E7%94%A8%E3%80%81%E6%8E%A8%E8%8D%90"><span class="nav-number">3.</span> <span class="nav-text">方法二：序列化 (安全、通用、推荐)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-Point-byte-1"><span class="nav-number">3.1.</span> <span class="nav-text">1. []Point -&gt; []byte</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-byte-Point-1"><span class="nav-number">3.2.</span> <span class="nav-text">2. []byte -&gt; []Point</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BC%98%E7%82%B9%E4%B8%8E%E7%BC%BA%E7%82%B9"><span class="nav-number">3.3.</span> <span class="nav-text">优点与缺点</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AF%B9%E6%AF%94%E6%80%BB%E7%BB%93%E4%B8%8E%E6%9C%80%E7%BB%88%E5%BB%BA%E8%AE%AE"><span class="nav-number">4.</span> <span class="nav-text">对比总结与最终建议</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BB%E5%87%BD%E6%95%B0%E7%A4%BA%E4%BE%8B"><span class="nav-number">5.</span> <span class="nav-text">主函数示例</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

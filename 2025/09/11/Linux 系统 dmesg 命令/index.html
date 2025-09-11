@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="dmesg 是在 Linux 系统中排查各种底层问题（尤其是与硬件、驱动、系统启动、内存、I&#x2F;O 错误等相关的）时常用的诊断工具。它允许查看内核环形缓冲区（kernel ring buffer）中的消息，这些消息是内核在运行过程中记录的重要事件和错误信息，对于理解系统内部工作状态和定位故障至关重要。  一、dmesg 简介 全称： diagnostic message 功能： 显示内核的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux 系统 dmesg 命令">
+<meta property="og:url" content="http://example.com/2025/09/11/Linux%20%E7%B3%BB%E7%BB%9F%20dmesg%20%E5%91%BD%E4%BB%A4/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="dmesg 是在 Linux 系统中排查各种底层问题（尤其是与硬件、驱动、系统启动、内存、I&#x2F;O 错误等相关的）时常用的诊断工具。它允许查看内核环形缓冲区（kernel ring buffer）中的消息，这些消息是内核在运行过程中记录的重要事件和错误信息，对于理解系统内部工作状态和定位故障至关重要。  一、dmesg 简介 全称： diagnostic message 功能： 显示内核的">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:47:16.406Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/Linux%20%E7%B3%BB%E7%BB%9F%20dmesg%20%E5%91%BD%E4%BB%A4/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Linux 系统 dmesg 命令 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Linux%20%E7%B3%BB%E7%BB%9F%20dmesg%20%E5%91%BD%E4%BB%A4/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Linux 系统 dmesg 命令
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:47:16" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/Command/" itemprop="url" rel="index"><span itemprop="name">Command</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><code>dmesg</code> 是在 Linux 系统中排查各种底层问题（尤其是与硬件、驱动、系统启动、内存、I&#x2F;O 错误等相关的）时常用的诊断工具。它允许查看内核环形缓冲区（kernel ring buffer）中的消息，这些消息是内核在运行过程中记录的重要事件和错误信息，对于理解系统内部工作状态和定位故障至关重要。</p>
+<hr>
+<h3 id="一、dmesg-简介"><a href="#一、dmesg-简介" class="headerlink" title="一、dmesg 简介"></a>一、<code>dmesg</code> 简介</h3><ul>
+<li><strong>全称：</strong> diagnostic message</li>
+<li><strong>功能：</strong> 显示内核的启动信息以及运行时内核模块和硬件设备的日志信息。这些信息存储在内核的环形缓冲区中。</li>
+<li><strong>特性：</strong><ul>
+<li><strong>持久性：</strong> 即使系统崩溃，只要重新启动，<code>dmesg</code> 中的最近日志通常还在（取决于是否被新日志覆盖）。</li>
+<li><strong>实时性：</strong> 持续记录内核事件，包括硬件初始化、设备驱动加载、系统错误、USB 设备插拔、网络事件、OOM (Out Of Memory) 杀手活动等。</li>
+<li><strong>独立性：</strong> 不依赖于用户空间的日志服务（如 <code>syslogd</code> 或 <code>rsyslogd</code>），因此在这些服务未启动或有问题时也能查看内核日志。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="二、dmesg-的基本使用方法"><a href="#二、dmesg-的基本使用方法" class="headerlink" title="二、dmesg 的基本使用方法"></a>二、<code>dmesg</code> 的基本使用方法</h3><p>直接运行 <code>dmesg</code> 命令，默认会打印出内核环形缓冲区中的所有消息到标准输出。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dmesg</span><br></pre></td></tr></table></figure>
+<p>由于输出可能非常多，通常会结合管道 (<code>|</code>) 和分页器 (<code>less</code>, <code>more</code>) 或筛选器 (<code>grep</code>) 来查看。</p>
+<p><strong>示例：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">dmesg | less   <span class="comment"># 逐页查看内核日志</span></span><br><span class="line">dmesg | more   <span class="comment"># 逐页查看内核日志（功能较少）</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="三、dmesg-的常用选项和实用技巧"><a href="#三、dmesg-的常用选项和实用技巧" class="headerlink" title="三、dmesg 的常用选项和实用技巧"></a>三、<code>dmesg</code> 的常用选项和实用技巧</h3><h4 id="1-清除缓冲区-c"><a href="#1-清除缓冲区-c" class="headerlink" title="1. 清除缓冲区 (-c)"></a>1. 清除缓冲区 (<code>-c</code>)</h4><p>这个选项会打印出当前缓冲区的内容，然后<strong>清除</strong>缓冲区。在复现某个问题（例如插拔 USB 设备并观察内核输出）时非常有用。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> dmesg -c</span><br></pre></td></tr></table></figure>
+<p><strong>注意：</strong> 清除缓冲区需要 <code>root</code> 权限。清除后，旧的日志将无法再次通过 <code>dmesg</code> 查看。</p>
+<h4 id="2-显示可读时间戳-T"><a href="#2-显示可读时间戳-T" class="headerlink" title="2. 显示可读时间戳 (-T)"></a>2. 显示可读时间戳 (<code>-T</code>)</h4><p>默认的时间戳是自系统启动以来的秒数，不方便人类阅读。<code>-T</code> 选项会将其转换为更易读的日期和时间格式。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dmesg -T | less</span><br></pre></td></tr></table></figure>
+<p>输出示例：<br><code>[Tue Dec 12 10:30:00 2023] usb 1-1: new high-speed USB device number 2 using ehci-pci</code></p>
+<h4 id="3-显示时间戳（原始格式）-t"><a href="#3-显示时间戳（原始格式）-t" class="headerlink" title="3. 显示时间戳（原始格式） (-t)"></a>3. 显示时间戳（原始格式） (<code>-t</code>)</h4><p>仅显示自系统启动以来的秒数，不进行格式化。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dmesg -t | less</span><br></pre></td></tr></table></figure>
+
+<h4 id="4-指定日志级别-l"><a href="#4-指定日志级别-l" class="headerlink" title="4. 指定日志级别 (-l)"></a>4. 指定日志级别 (<code>-l</code>)</h4><p>通过指定日志级别来过滤输出，只显示特定严重程度的消息。<br>常见的日志级别（从高到低）：</p>
+<ul>
+<li><code>emerg</code> (0) : 系统不可用</li>
+<li><code>alert</code> (1) : 必须立即采取行动</li>
+<li><code>crit</code> (2) : 严重错误，如硬件错误</li>
+<li><code>err</code> (3) : 错误</li>
+<li><code>warn</code> (4) : 警告</li>
+<li><code>notice</code> (5) : 一般但显著的条件</li>
+<li><code>info</code> (6) : 信息性消息</li>
+<li><code>debug</code> (7) : 调试级别消息</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">dmesg -l err,warn   <span class="comment"># 只显示错误和警告级别的消息</span></span><br><span class="line">dmesg -l crit       <span class="comment"># 只显示严重错误</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="5-显示设备类型-k"><a href="#5-显示设备类型-k" class="headerlink" title="5. 显示设备类型 (-k)"></a>5. 显示设备类型 (<code>-k</code>)</h4><p>显示与内核设备相关的消息。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dmesg -k</span><br></pre></td></tr></table></figure>
+
+<h4 id="6-显示与用户事件相关的消息-u"><a href="#6-显示与用户事件相关的消息-u" class="headerlink" title="6. 显示与用户事件相关的消息 (-u)"></a>6. 显示与用户事件相关的消息 (<code>-u</code>)</h4><p>显示与用户空间进程相关的消息。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dmesg -u</span><br></pre></td></tr></table></figure>
+
+<h4 id="7-显示原始消息-r"><a href="#7-显示原始消息-r" class="headerlink" title="7. 显示原始消息 (-r)"></a>7. 显示原始消息 (<code>-r</code>)</h4><p>不进行颜色或其他格式化，显示原始缓冲区的消息。这对于后处理或将其传递给其他工具可能很有用。</p>
+<h4 id="8-持续输出新消息-w-或-follow"><a href="#8-持续输出新消息-w-或-follow" class="headerlink" title="8. 持续输出新消息 (-w 或 --follow)"></a>8. 持续输出新消息 (<code>-w</code> 或 <code>--follow</code>)</h4><p>类似于 <code>tail -f</code>，持续监听并打印新的内核消息。这在观察系统动态变化时非常有用，例如插入U盘、启动服务、模拟内存不足等。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> dmesg -w</span><br></pre></td></tr></table></figure>
+<p><strong>注意：</strong> <code>-w</code> 选项通常需要 <code>root</code> 权限，因为权限限制了对 <code>/dev/kmsg</code> 的直接读取。</p>
+<hr>
+<h3 id="四、dmesg-在故障排查中的应用"><a href="#四、dmesg-在故障排查中的应用" class="headerlink" title="四、dmesg 在故障排查中的应用"></a>四、<code>dmesg</code> 在故障排查中的应用</h3><p><code>dmesg</code> 是排查以下类型问题的重要工具：</p>
+<h4 id="1-硬件故障-识别问题"><a href="#1-硬件故障-识别问题" class="headerlink" title="1. 硬件故障&#x2F;识别问题"></a>1. 硬件故障&#x2F;识别问题</h4><ul>
+<li><strong>硬盘&#x2F;SSD 故障：</strong> 报错信息常包含 <code>ata</code>, <code>scsi</code>, <code>sd</code> 等关键词。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dmesg | grep -i <span class="string">&quot;disk\|ata\|scsi\|error&quot;</span></span><br></pre></td></tr></table></figure>
+示例：<code>ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen</code></li>
+<li><strong>内存问题：</strong> 常见错误如 <code>bad page</code>, <code>Memory error</code>, <code>parity error</code>。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dmesg | grep -i <span class="string">&quot;memory\|ram\|ecc\|page&quot;</span></span><br></pre></td></tr></table></figure></li>
+<li><strong>CPU 问题：</strong> <code>CPU</code> 核心离线，或一些特定的 CPU 错误。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dmesg | grep -i <span class="string">&quot;cpu\|processor&quot;</span></span><br></pre></td></tr></table></figure></li>
+<li><strong>USB 设备问题：</strong> 插拔 USB 设备后，<code>dmesg</code> 会详细记录设备的识别过程。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">dmesg | <span class="built_in">tail</span> <span class="comment"># 查看最近的日志</span></span><br><span class="line">dmesg | grep -i usb</span><br></pre></td></tr></table></figure></li>
+<li><strong>PCIe 设备问题：</strong> 图形卡、网卡等 PCIe 设备的问题。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dmesg | grep -i <span class="string">&quot;pcie\|pci device&quot;</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<h4 id="2-驱动加载问题"><a href="#2-驱动加载问题" class="headerlink" title="2. 驱动加载问题"></a>2. 驱动加载问题</h4><p>当某个硬件设备无法驱动或驱动加载失败时，<code>dmesg</code> 会记录相关错误。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dmesg | grep -i <span class="string">&quot;firmware\|driver\|fail\|error&quot;</span></span><br></pre></td></tr></table></figure>
+<p>示例：<code>iwlwifi 0000:01:00.0: Direct firmware load for iwlwifi-9000-pu-b0-jf-b0-34.ucode failed</code> (无线网卡固件加载失败)</p>
+<h4 id="3-网络接口问题"><a href="#3-网络接口问题" class="headerlink" title="3. 网络接口问题"></a>3. 网络接口问题</h4><p>网卡初始化、Link up&#x2F;down、速度协商等问题。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dmesg | grep -i <span class="string">&quot;eth\|enp\|link\|duplex&quot;</span></span><br></pre></td></tr></table></figure>
+<p>示例：<code>e1000e 0000:00:1f.6 eth0: NIC Link is Up 1000 Mbps Full Duplex, Flow Control: Rx/Tx</code></p>
+<h4 id="4-文件系统和-I-O-错误"><a href="#4-文件系统和-I-O-错误" class="headerlink" title="4. 文件系统和 I&#x2F;O 错误"></a>4. 文件系统和 I&#x2F;O 错误</h4><p>当文件系统出现异常（例如超级块损坏、I&#x2F;O 错误等）时，内核会记录。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dmesg | grep -i <span class="string">&quot;fs error\|io error\|ext4\|xfs\|superblock&quot;</span></span><br></pre></td></tr></table></figure>
+<p>示例：<code>EXT4-fs (sda1): Remounting filesystem read-only</code> (文件系统出错，被内核强制挂载为只读)</p>
+<h4 id="5-OOM-Out-Of-Memory-Killer"><a href="#5-OOM-Out-Of-Memory-Killer" class="headerlink" title="5. OOM (Out Of Memory) Killer"></a>5. OOM (Out Of Memory) Killer</h4><p>当系统内存耗尽时，内核的 OOM Killer 会选择性地杀死占用大量内存的进程，以防止系统崩溃。<code>dmesg</code> 是查看 OOM Killer 活动的唯一可靠来源。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dmesg | grep -i <span class="string">&quot;out of memory\|oom-killer&quot;</span></span><br></pre></td></tr></table></figure>
+<p>如果你看到 OOM 相关日志，意味着你的系统内存不足，需要扩容或优化程序内存使用。</p>
+<h4 id="6-内核恐慌-Kernel-Panic"><a href="#6-内核恐慌-Kernel-Panic" class="headerlink" title="6. 内核恐慌 (Kernel Panic)"></a>6. 内核恐慌 (Kernel Panic)</h4><p>内核恐慌是一种严重的错误，导致内核无法继续运行并导致系统崩溃。虽然系统可能无法重启到正常状态，但有时在重启前最后的一些 <code>dmesg</code> 信息可能会被保存在日志中，或者可以通过串行控制台捕获。<code>dmesg</code> 可能会包含一些关于崩溃的堆栈信息，尽管通常需要更专业的工具（如 <code>crash</code>）或分析 <code>vmcore</code> 来深入诊断。</p>
+<hr>
+<h3 id="五、与其他日志工具的配合使用"><a href="#五、与其他日志工具的配合使用" class="headerlink" title="五、与其他日志工具的配合使用"></a>五、与其他日志工具的配合使用</h3><p><code>dmesg</code> 专注于内核的输出，而用户空间的日志服务（如 <code>systemd-journald</code>, <code>rsyslogd</code>, <code>syslogd</code>）则收集来自各种应用程序和服务进程的日志。</p>
+<ul>
+<li><p><strong><code>journalctl</code> (Systemd 系统):</strong><br>在 Systemd 系统中，<code>journalctl</code> 是查看统一日志的工具，它也包含了 <code>dmesg</code> 能看到的内核消息。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">journalctl -b          <span class="comment"># 查看本次启动以来的所有日志 (包括内核日志)</span></span><br><span class="line">journalctl -k          <span class="comment"># 只查看内核日志 (等同于 dmesg 的功能)</span></span><br><span class="line">journalctl -b -k -p err,warn  <span class="comment"># 查看本次启动以来的内核错误和警告</span></span><br></pre></td></tr></table></figure>
+<p><code>journalctl</code> 的优势在于它会将日志持久化，即使系统重启，以往的日志也能查看（除非配置为非持久化）。</p>
+</li>
+<li><p><strong><code>/var/log/dmesg</code> (Syslog&#x2F;Rsyslog 系统):</strong><br>在一些旧系统或配置为将 <code>dmesg</code> 输出保存到文件的系统中，你可能在 <code>/var/log/dmesg</code> 中找到最近一次启动的 <code>dmesg</code> 输出。然而，这并不是实时的，每次启动都会被覆盖。</p>
+</li>
+</ul>
+<p><strong>总结：</strong></p>
+<p><code>dmesg</code> 是一个轻量级且强大的工具，用于快速诊断 Linux 系统底层问题。理解其输出，并结合各种选项和过滤技巧，是每位运维工程师必备的技能。在处理与硬件、驱动、文件系统或突发系统崩溃相关的疑难杂症时，<code>dmesg</code> 往往能提供第一手的关键信息。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Linux%20%E7%B3%BB%E7%BB%9F%20lsof%20%E5%91%BD%E4%BB%A4/" rel="prev" title="Linux 系统 lsof 命令">
+      <i class="fa fa-chevron-left"></i> Linux 系统 lsof 命令
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Linux%20%E6%96%87%E4%BB%B6%E6%9D%83%E9%99%90/" rel="next" title="Linux 文件权限">
+      Linux 文件权限 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E3%80%81dmesg-%E7%AE%80%E4%BB%8B"><span class="nav-number">1.</span> <span class="nav-text">一、dmesg 简介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E3%80%81dmesg-%E7%9A%84%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8%E6%96%B9%E6%B3%95"><span class="nav-number">2.</span> <span class="nav-text">二、dmesg 的基本使用方法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E3%80%81dmesg-%E7%9A%84%E5%B8%B8%E7%94%A8%E9%80%89%E9%A1%B9%E5%92%8C%E5%AE%9E%E7%94%A8%E6%8A%80%E5%B7%A7"><span class="nav-number">3.</span> <span class="nav-text">三、dmesg 的常用选项和实用技巧</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E6%B8%85%E9%99%A4%E7%BC%93%E5%86%B2%E5%8C%BA-c"><span class="nav-number">3.1.</span> <span class="nav-text">1. 清除缓冲区 (-c)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E6%98%BE%E7%A4%BA%E5%8F%AF%E8%AF%BB%E6%97%B6%E9%97%B4%E6%88%B3-T"><span class="nav-number">3.2.</span> <span class="nav-text">2. 显示可读时间戳 (-T)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E6%98%BE%E7%A4%BA%E6%97%B6%E9%97%B4%E6%88%B3%EF%BC%88%E5%8E%9F%E5%A7%8B%E6%A0%BC%E5%BC%8F%EF%BC%89-t"><span class="nav-number">3.3.</span> <span class="nav-text">3. 显示时间戳（原始格式） (-t)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-%E6%8C%87%E5%AE%9A%E6%97%A5%E5%BF%97%E7%BA%A7%E5%88%AB-l"><span class="nav-number">3.4.</span> <span class="nav-text">4. 指定日志级别 (-l)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-%E6%98%BE%E7%A4%BA%E8%AE%BE%E5%A4%87%E7%B1%BB%E5%9E%8B-k"><span class="nav-number">3.5.</span> <span class="nav-text">5. 显示设备类型 (-k)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#6-%E6%98%BE%E7%A4%BA%E4%B8%8E%E7%94%A8%E6%88%B7%E4%BA%8B%E4%BB%B6%E7%9B%B8%E5%85%B3%E7%9A%84%E6%B6%88%E6%81%AF-u"><span class="nav-number">3.6.</span> <span class="nav-text">6. 显示与用户事件相关的消息 (-u)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#7-%E6%98%BE%E7%A4%BA%E5%8E%9F%E5%A7%8B%E6%B6%88%E6%81%AF-r"><span class="nav-number">3.7.</span> <span class="nav-text">7. 显示原始消息 (-r)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#8-%E6%8C%81%E7%BB%AD%E8%BE%93%E5%87%BA%E6%96%B0%E6%B6%88%E6%81%AF-w-%E6%88%96-follow"><span class="nav-number">3.8.</span> <span class="nav-text">8. 持续输出新消息 (-w 或 --follow)</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%9B%E3%80%81dmesg-%E5%9C%A8%E6%95%85%E9%9A%9C%E6%8E%92%E6%9F%A5%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8"><span class="nav-number">4.</span> <span class="nav-text">四、dmesg 在故障排查中的应用</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E7%A1%AC%E4%BB%B6%E6%95%85%E9%9A%9C-%E8%AF%86%E5%88%AB%E9%97%AE%E9%A2%98"><span class="nav-number">4.1.</span> <span class="nav-text">1. 硬件故障&#x2F;识别问题</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E9%A9%B1%E5%8A%A8%E5%8A%A0%E8%BD%BD%E9%97%AE%E9%A2%98"><span class="nav-number">4.2.</span> <span class="nav-text">2. 驱动加载问题</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E7%BD%91%E7%BB%9C%E6%8E%A5%E5%8F%A3%E9%97%AE%E9%A2%98"><span class="nav-number">4.3.</span> <span class="nav-text">3. 网络接口问题</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%92%8C-I-O-%E9%94%99%E8%AF%AF"><span class="nav-number">4.4.</span> <span class="nav-text">4. 文件系统和 I&#x2F;O 错误</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-OOM-Out-Of-Memory-Killer"><span class="nav-number">4.5.</span> <span class="nav-text">5. OOM (Out Of Memory) Killer</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#6-%E5%86%85%E6%A0%B8%E6%81%90%E6%85%8C-Kernel-Panic"><span class="nav-number">4.6.</span> <span class="nav-text">6. 内核恐慌 (Kernel Panic)</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%94%E3%80%81%E4%B8%8E%E5%85%B6%E4%BB%96%E6%97%A5%E5%BF%97%E5%B7%A5%E5%85%B7%E7%9A%84%E9%85%8D%E5%90%88%E4%BD%BF%E7%94%A8"><span class="nav-number">5.</span> <span class="nav-text">五、与其他日志工具的配合使用</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

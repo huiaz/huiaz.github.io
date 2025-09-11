@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="容器监控说到容器监控我们自然会想到 cAdvisor，我们前面也说过 cAdvisor 已经内置在了 kubelet 组件之中，所以我们不需要单独去安装，cAdvisor 的数据路径为 &#x2F;api&#x2F;v1&#x2F;nodes&#x2F;&lt;node&gt;&#x2F;proxy&#x2F;metrics，但是我们不推荐使用这种方式，因为这种方式是通过 APIServer 去代理访问的，对于大规模的集群会对 APIServer 造成很大">
+<meta property="og:type" content="article">
+<meta property="og:title" content="容器监控">
+<meta property="og:url" content="http://example.com/2025/09/11/%E5%AE%B9%E5%99%A8%E7%9B%91%E6%8E%A7/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="容器监控说到容器监控我们自然会想到 cAdvisor，我们前面也说过 cAdvisor 已经内置在了 kubelet 组件之中，所以我们不需要单独去安装，cAdvisor 的数据路径为 &#x2F;api&#x2F;v1&#x2F;nodes&#x2F;&lt;node&gt;&#x2F;proxy&#x2F;metrics，但是我们不推荐使用这种方式，因为这种方式是通过 APIServer 去代理访问的，对于大规模的集群会对 APIServer 造成很大">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/kke3a3.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/39v28n.png">
+<meta property="og:image" content="https://picdn.youdianzhishi.com/images/20211222144547.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/wwca5z.png">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:15:42.578Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta property="article:tag" content="Prometheus">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://mudutestmenu.mudu.tv/upload/kke3a3.png">
+
+<link rel="canonical" href="http://example.com/2025/09/11/%E5%AE%B9%E5%99%A8%E7%9B%91%E6%8E%A7/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>容器监控 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/%E5%AE%B9%E5%99%A8%E7%9B%91%E6%8E%A7/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          容器监控
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:15:42" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/" itemprop="url" rel="index"><span itemprop="name">k8s-monitor</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/Prometheus/" itemprop="url" rel="index"><span itemprop="name">Prometheus</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/Prometheus/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.8k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="容器监控"><a href="#容器监控" class="headerlink" title="容器监控"></a>容器监控</h1><p>说到容器监控我们自然会想到 <code>cAdvisor</code>，我们前面也说过 cAdvisor 已经内置在了 kubelet 组件之中，所以我们不需要单独去安装，<code>cAdvisor</code> 的数据路径为 <code>/api/v1/nodes/&lt;node&gt;/proxy/metrics</code>，但是我们不推荐使用这种方式，因为这种方式是通过 APIServer 去代理访问的，对于大规模的集群会对 APIServer 造成很大的压力，所以我们可以直接通过访问 kubelet 的 <code>/metrics/cadvisor</code> 这个端点来获取 cAdvisor 的数据。</p>
+<h2 id="cAdvisor"><a href="#cAdvisor" class="headerlink" title="cAdvisor"></a>cAdvisor</h2><p>我们这里使用 node 的服务发现模式，因为每一个节点下面都有 kubelet，自然都有 <code>cAdvisor</code> 采集到的数据指标，配置如下：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">job_name:</span> <span class="string">&#x27;cadvisor&#x27;</span></span><br><span class="line">  <span class="attr">kubernetes_sd_configs:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">role:</span> <span class="string">node</span></span><br><span class="line">  <span class="attr">scheme:</span> <span class="string">https</span></span><br><span class="line">  <span class="attr">tls_config:</span></span><br><span class="line">    <span class="attr">ca_file:</span> <span class="string">/var/run/secrets/kubernetes.io/serviceaccount/ca.crt</span></span><br><span class="line">    <span class="attr">insecure_skip_verify:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">bearer_token_file:</span> <span class="string">/var/run/secrets/kubernetes.io/serviceaccount/token</span></span><br><span class="line">  <span class="attr">relabel_configs:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">action:</span> <span class="string">labelmap</span></span><br><span class="line">      <span class="attr">regex:</span> <span class="string">__meta_kubernetes_node_label_(.+)</span></span><br><span class="line">      <span class="attr">replacement:</span> <span class="string">$1</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">replacement:</span> <span class="string">/metrics/cadvisor</span> <span class="comment"># &lt;nodeip&gt;/metrics -&gt; &lt;nodeip&gt;/metrics/cadvisor</span></span><br><span class="line">      <span class="attr">target_label:</span> <span class="string">__metrics_path__</span></span><br><span class="line">  <span class="comment"># 下面的方式不推荐使用</span></span><br><span class="line">  <span class="comment"># - target_label: __address__</span></span><br><span class="line">  <span class="comment">#   replacement: kubernetes.default.svc:443</span></span><br><span class="line">  <span class="comment"># - target_label: __metrics_path__</span></span><br><span class="line">  <span class="comment">#   replacement: /api/v1/nodes/$&#123;1&#125;/proxy/metrics/cadvisor</span></span><br></pre></td></tr></table></figure>
+
+<p>上面的配置和我们之前配置 <code>node-exporter</code> 的时候几乎是一样的，区别是我们这里使用了 https 的协议，另外需要注意的是配置了 ca.cart 和 token 这两个文件，这两个文件是 Prometheus 的 Pod 启动后自动注入进来的，然后加上 <code>__metrics_path__</code> 的访问路径 <code>/metrics/cadvisor</code>，现在同样更新下配置，然后查看 Targets 路径：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/kke3a3.png" alt="prometheus webui cadvisor"></p>
+<h2 id="指标查询"><a href="#指标查询" class="headerlink" title="指标查询"></a>指标查询</h2><p>我们可以切换到 Graph 路径下面查询容器相关数据，比如我们这里来查询集群中所有 Pod 的 CPU 使用情况，kubelet 中的 cAdvisor 采集的指标和含义，可以查看 <a target="_blank" rel="noopener" href="https://github.com/google/cadvisor/blob/master/docs/storage/prometheus.md">Monitoring cAdvisor with Prometheus</a> 说明，比如其中有一项：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">container_cpu_usage_seconds_total   Counter     Cumulative cpu time consumed    seconds</span><br></pre></td></tr></table></figure>
+
+<p><code>container_cpu_usage_seconds_total</code> 是容器累计使用的 CPU 时间，用它除以 CPU 的总时间，就可以得到容器的 CPU 使用率了。</p>
+<p>首先计算容器的 CPU 占用时间，由于节点上的 CPU 有多个，所以需要将容器在每个 CPU 上占用的时间累加起来，Pod 在 1m 内累积使用的 CPU 时间为：(根据 pod 和 namespace 进行分组查询)</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sum(rate(container_cpu_usage_seconds_total&#123;image!=&quot;&quot;,pod!=&quot;&quot;&#125;[1m])) by (namespace, pod)</span><br></pre></td></tr></table></figure>
+
+<p>然后计算 CPU 的总时间，这里的 CPU 数量是容器分配到的 CPU 数量，<code>container_spec_cpu_quota</code> 这个指标就是容器的 CPU 配额，它的值是容器指定的 <code>CPU 个数 * 100000</code>，所以 Pod 在 1s 内 CPU 的总时间为：Pod 的 CPU 核数 <code>*</code> 1s：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sum(container_spec_cpu_quota&#123;image!=&quot;&quot;, pod!=&quot;&quot;&#125;) by(namespace, pod) / 100000</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>由于 <code>container_spec_cpu_quota</code> 是容器的 CPU 配额，所以只有配置了 <code>resource-limit</code> CPU 的 Pod 才可以获得该指标数据。</p>
+</blockquote>
+<p>将上面这两个语句的结果相除，就得到了容器的 CPU 使用率：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">(sum(rate(container_cpu_usage_seconds_total&#123;image!=&quot;&quot;,pod!=&quot;&quot;&#125;[1m])) by (namespace, pod))</span><br><span class="line">/</span><br><span class="line">(sum(container_spec_cpu_quota&#123;image!=&quot;&quot;, pod!=&quot;&quot;&#125;) by(namespace, pod) / 100000) * 100</span><br></pre></td></tr></table></figure>
+
+<p>在 promethues 里面执行上面的 promQL 语句可以得到下面的结果：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/39v28n.png" alt="prometheus cadvisor cpu rate"></p>
+<p>Pod 内存使用率的计算就简单多了，不过我们也要想了解几个和 Pod 内存使用率相关的指标：</p>
+<p><img data-src="https://picdn.youdianzhishi.com/images/20211222144547.png" alt="Pod内存相关指标"></p>
+<p>整体来说 <code>container_memory_max_usage_bytes &gt; container_memory_usage_bytes &gt;= container_memory_working_set_bytes &gt; container_memory_rss</code>，从上面的指标描述来看似乎 <code>container_memory_usage_bytes</code> 指标可以更容易用来跟踪内存使用率，但是该指标还包括在内存压力下可能被驱逐的缓存（比如文件系统缓存），更好的指标是使用 <code>container_memory_working_set_bytes</code>，因为 kubelet 也是根据该指标来判断是否 OOM 的，所以用 working set 指标来评估内存使用率更加科学，对应的 PromQL 语句如下所示：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sum(container_memory_working_set_bytes&#123;image!=&quot;&quot;&#125;) by(namespace, pod) / sum(container_spec_memory_limit_bytes&#123;image!=&quot;&quot;&#125;) by(namespace, pod) * 100 != +inf</span><br></pre></td></tr></table></figure>
+
+<p>在 Promethues 里面执行上面的 promQL 语句可以得到下面的结果：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/wwca5z.png" alt="prometheus cadvisor memory rate"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+              <a href="/tags/Prometheus/" rel="tag"># Prometheus</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E5%B1%80%E9%83%A8%E5%8F%98%E9%87%8F/" rel="prev" title="局部变量">
+      <i class="fa fa-chevron-left"></i> 局部变量
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E5%AE%89%E8%A3%85%20prometheus/" rel="next" title="安装 prometheus">
+      安装 prometheus <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%B9%E5%99%A8%E7%9B%91%E6%8E%A7"><span class="nav-number">1.</span> <span class="nav-text">容器监控</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#cAdvisor"><span class="nav-number">1.1.</span> <span class="nav-text">cAdvisor</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8C%87%E6%A0%87%E6%9F%A5%E8%AF%A2"><span class="nav-number">1.2.</span> <span class="nav-text">指标查询</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

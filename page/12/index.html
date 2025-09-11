@@ -1,0 +1,2166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta property="og:type" content="website">
+<meta property="og:title" content="Hui&#39;s Blog">
+<meta property="og:url" content="http://example.com/page/12/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:author" content="六一">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/page/12/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : true,
+    isPost : false,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content index posts-expand">
+            
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/PromQL%20%E4%BB%8B%E7%BB%8D/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/PromQL%20%E4%BB%8B%E7%BB%8D/" class="post-title-link" itemprop="url">PromQL 介绍</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:53:13" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/" itemprop="url" rel="index"><span itemprop="name">k8s-monitor</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/Prometheus/" itemprop="url" rel="index"><span itemprop="name">Prometheus</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>1.8k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>2 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="PromQL-介绍"><a href="#PromQL-介绍" class="headerlink" title="PromQL 介绍"></a>PromQL 介绍</h1><p><strong>PromQL</strong> 是 Prometheus 监控系统内置的一种查询语言，PromQL 允许你以灵活的方式选择、聚合等其他方式转换和计算时间序列数据，该语言仅用于读取数据。可以说 PromQL 是我们学习 Prometheus 最困难也是最重要的部分，本章节我们将介绍 PromQL 的基础知识、理论基础，然后会深入了解更加高级的查询模式。</p>
+<h2 id="目标"><a href="#目标" class="headerlink" title="目标"></a>目标</h2><p>通过对本章节 PromQL 的学习你将能够有效地构建、分享和理解 PromQL 查询，可以帮助我们从容应对报警规则、仪表盘可视化等需求，还能够避免一些在使用 PromQL 表达式的时候遇到的一些陷进。</p>
+<h2 id="执行"><a href="#执行" class="headerlink" title="执行"></a>执行</h2><p>前面基础章节我们介绍了 Prometheus 整体的架构：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/o82n2o.png" alt="Prometheus 架构中的 PromQL"></p>
+<p>当 Prometheus 从系统和服务收集指标数据时，它会把数据存储在内置的时序数据库（TSDB）中，要对收集到的数据进行任何处理，我们都可以使用 PromQL 从 TSDB 中读取数据，同时可以对所选的数据执行过滤、聚合以及其他转换操作。</p>
+<p>PromQL 的执行可以通过两种方式来触发：</p>
+<ul>
+<li>在 Prometheus 服务器中，记录规则和警报规则会定期运行，并执行查询操作来计算规则结果（例如触发报警）。该执行在 Prometheus 服务内部进行，并在配置规则时自动发生。</li>
+<li>外部用户和 UI 界面可以使用 Prometheus 服务提供的 <a target="_blank" rel="noopener" href="https://prometheus.io/docs/prometheus/latest/querying/api/">HTTP API</a> 来执行 PromQL 查询。这就是仪表盘软件（例如 <a target="_blank" rel="noopener" href="https://grafana.com/grafana/">Grafana</a>、<a target="_blank" rel="noopener" href="https://promlens.com/">PromLens</a> 以及 Prometheus 内置 Web UI）访问 PromQL 的方式。</li>
+</ul>
+<h2 id="场景"><a href="#场景" class="headerlink" title="场景"></a>场景</h2><p>PromQL 可以用于许多监控场景，下面简单介绍几个相关案例。</p>
+<p><strong>临时查询</strong></p>
+<p>我们可以用 PromQL 来对收集的数据进行实时查询，这有助于我们去调试和诊断遇到的一些问题，我们一般也是直接使用内置的表达式查询界面来执行这类查询：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/7ipw3s.png" alt="PromQL 查询"></p>
+<p><strong>仪表盘</strong></p>
+<p>同样我们也可以基于 PromQL 查询来创建可视化的图形、表格等面板，当然一般我们都会使用 Grafana：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/1n3jsa.png" alt="grafana dashboard"></p>
+<p>Grafana 原生支持 Prometheus 作为数据源，并内置支持了 PromQL 表达式的查询。</p>
+<p><strong>报警</strong></p>
+<p>Prometheus 可以直接使用基于 PromQL 对收集的数据进行的查询结果来生成报警，一个完整的报警规则如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">groups:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">demo-service-alerts</span></span><br><span class="line">    <span class="attr">rules:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">alert:</span> <span class="string">Many5xxErrors</span></span><br><span class="line">        <span class="attr">expr:</span> <span class="string">|</span></span><br><span class="line"><span class="string">          (</span></span><br><span class="line"><span class="string">            sum by(path, instance, job) (</span></span><br><span class="line"><span class="string">              rate(demo_api_request_duration_seconds_count&#123;status=~&quot;5..&quot;,job=&quot;demo&quot;&#125;[1m])</span></span><br><span class="line"><span class="string">            )</span></span><br><span class="line"><span class="string">          /</span></span><br><span class="line"><span class="string">            sum by(path, instance, job) (</span></span><br><span class="line"><span class="string">              rate(demo_api_request_duration_seconds_count&#123;job=&quot;demo&quot;&#125;[1m])</span></span><br><span class="line"><span class="string">            ) * 100 &gt; 0.5</span></span><br><span class="line"><span class="string">          )</span></span><br><span class="line"><span class="string"></span>        <span class="attr">for:</span> <span class="string">30s</span></span><br><span class="line">        <span class="attr">labels:</span></span><br><span class="line">          <span class="attr">severity:</span> <span class="string">critical</span></span><br><span class="line">        <span class="attr">annotations:</span></span><br><span class="line">          <span class="attr">title:</span> <span class="string">&#x27;<span class="template-variable">&#123;&#123;$labels.instance&#125;&#125;</span> high 5xx rate on <span class="template-variable">&#123;&#123;$labels.path&#125;&#125;</span>&#x27;</span></span><br><span class="line">          <span class="attr">description:</span> <span class="string">&#x27;The 5xx error rate for path <span class="template-variable">&#123;&#123;$labels.path&#125;&#125;</span> on <span class="template-variable">&#123;&#123;$labels.instance&#125;&#125;</span> is <span class="template-variable">&#123;&#123;$value&#125;&#125;</span>%.&#x27;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>除了构成报警规则核心的 PromQL 表达式（上面 YAML 文件中的 <code>expr</code> 属性），报警规则还包含其他的一些元数据字段，后面在具体讲解报警的章节中会详细和大家讲解。</p>
+<p>然后，Prometheus 可以通过一个名为 <code>Alertmanager</code> 的组件来发送报警通知，可以配置一些接收器来接收这些报警，比如用钉钉来接收报警：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/g7tn04.png" alt="钉钉"></p>
+<p><strong>自动化</strong></p>
+<p>此外我们还可以构建自动化流程，针对 PromQL 执行的查询结果来做出决策，比如 Kubernetes 中基于自定义指标的 HPA。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/PromQL%20%E5%9F%BA%E7%A1%80/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/PromQL%20%E5%9F%BA%E7%A1%80/" class="post-title-link" itemprop="url">PromQL 基础</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:53:00" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/" itemprop="url" rel="index"><span itemprop="name">k8s-monitor</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/Prometheus/" itemprop="url" rel="index"><span itemprop="name">Prometheus</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/Prometheus/Query-PromQL/" itemprop="url" rel="index"><span itemprop="name">Query PromQL</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.7k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="PromQL-基础"><a href="#PromQL-基础" class="headerlink" title="PromQL 基础"></a>PromQL 基础</h1><p>在继续深入学习 PromQL 查询细节之前，我们先来看看 PromQL 查询的一些理论基础。</p>
+<h2 id="嵌套结构"><a href="#嵌套结构" class="headerlink" title="嵌套结构"></a>嵌套结构</h2><p>与 SQL 查询语言（SELECT * FROM …）不同，PromQL 是一种嵌套的函数式语言，就是我们要把需要查找的数据描述成一组嵌套的表达式，每个表达式都会评估为一个中间值，每个中间值都会被用作它上层表达式中的参数，而查询的最外层表达式表示你可以在表格、图形中看到的最终返回值。比如下面的查询语句：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">histogram_quantile(  # 查询的根，最终结果表示一个近似分位数。</span><br><span class="line">  <span class="number">0.9</span>,  # histogram_quantile() 的第一个参数，分位数的目标值</span><br><span class="line">  # histogram_quantile() 的第二个参数，聚合的直方图</span><br><span class="line">  sum <span class="keyword">by</span>(le, <span class="keyword">method</span>, path) (</span><br><span class="line">    # <span class="built_in">sum</span>() 的参数，直方图过去<span class="number">5</span>分钟每秒增量。</span><br><span class="line">    rate(</span><br><span class="line">      # rate() 的参数，过去<span class="number">5</span>分钟的原始直方图序列</span><br><span class="line">      demo_api_request_duration_seconds_bucket&#123;job<span class="operator">=</span>&quot;demo&quot;&#125;[<span class="number">5</span>m]</span><br><span class="line">    )</span><br><span class="line">  )</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+
+
+<p>PromQL 表达式不仅仅是整个查询，而是查询的任何嵌套部分（比如上面的<code>rate(...)</code>部分），你可以把它作为一个查询本身来运行。在上面的例子中，每行注释代表一个表达式。</p>
+<h2 id="结果类型"><a href="#结果类型" class="headerlink" title="结果类型"></a>结果类型</h2><p>在查询 Prometheus 时，有两个 <code>类型</code> 的概念经常出现，区分它们很重要。</p>
+<ul>
+<li>抓取目标报告的<strong>指标类型</strong>：counter、gauge、histogram、summary。</li>
+<li>PromQL 表达式的<strong>结果数据类型</strong>：字符串、标量、瞬时向量或区间向量。</li>
+</ul>
+<p>PromQL 实际上没有直接的指标类型的概念，只关注表达式的结果类型。每个 PromQL 表达式都有一个类型，每个函数、运算符或其他类型的操作都要求其参数是某种表达式类型。例如，<code>rate()</code> 函数要求它的参数是一个区间向量，但是 <code>rate()</code> 本身评估为一个瞬时向量输出，所以 <code>rate()</code> 的结果只能用在期望是瞬时向量的地方。</p>
+<p>PromQL 中可能的表达式类型包括：</p>
+<ul>
+<li><p><code>string(字符串)</code>：字符串只会作为某些函数（如 <code>label_join()</code> 和 <code>label_replace()</code>）的参数出现。</p>
+</li>
+<li><p><code>scalar(标量)</code>：一个单一的数字值，如 1.234，这些数字可以作为某些函数的参数，如 <code>histogram_quantile(0.9, ...)</code> 或 <code>topk(3, ...)</code>，也会出现在算术运算中。</p>
+</li>
+<li><p><code>instant vector(瞬时向量)</code>：一组标记的时间序列，每个序列有一个样本，都在同一个时间戳，瞬时向量可以由 TSDB 时间序列选择器直接产生，如<code>node_cpu_seconds_total</code>，也可以由任何函数或其他转换来获取。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">node_cpu_seconds_total&#123;cpu=&quot;0&quot;, mode=&quot;idle&quot;&#125;   → 19165078.75 @ timestamp_1</span><br><span class="line">node_cpu_seconds_total&#123;cpu=&quot;0&quot;, mode=&quot;system&quot;&#125; →   381598.72 @ timestamp_1</span><br><span class="line">node_cpu_seconds_total&#123;cpu=&quot;0&quot;, mode=&quot;user&quot;&#125;   → 23211630.97 @ timestamp_1</span><br></pre></td></tr></table></figure>
+
+
+</li>
+<li><p><code>range vector(区间向量)</code>：一组标记的时间序列，每个序列都有一个随时间变化的样本范围。在 PromQL 中只有两种方法可以生成区间向量：在查询中使用字面区间向量选择器（如 <code>node_cpu_seconds_total[5m]</code>），或使用子查询表达式（如 <code>&lt;expression&gt;[5m:10s]</code>），当想要在指定的时间窗口内聚合一个序列的行为时，区间向量非常有用，就像 <code>rate(node_cpu_seconds_total[5m])</code> 计算每秒增加率一样，在 <code>node_cpu_seconds_total</code> 指标的最后 5 分钟内求平均值。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">node_cpu_seconds_total&#123;cpu=&quot;0&quot;, mode=&quot;idle&quot;&#125;   → 19165078.75 @ timestamp_1,  19165136.3 @ timestamp_2, 19165167.72 @ timestamp_3</span><br><span class="line">node_cpu_seconds_total&#123;cpu=&quot;0&quot;, mode=&quot;system&quot;&#125; → 381598.72   @ timestamp_1,   381599.98 @ timestamp_2,   381600.58 @ timestamp_3</span><br><span class="line">node_cpu_seconds_total&#123;cpu=&quot;0&quot;, mode=&quot;user&quot;&#125;   → 23211630.97 @ timestamp_1, 23211711.34 @ timestamp_2, 23211748.64 @ timestamp_3</span><br></pre></td></tr></table></figure></li>
+</ul>
+<p>注意</p>
+<p>但是指标类型呢？如果你已经使用过 PromQL，你可能知道某些函数仅适用于特定类型的指标！例如，<code>histogram_quantile()</code> 函数仅适用于直方图指标， <code>rate()</code> 仅适用于计数器指标，<code>deriv()</code> 仅适用于 <code>Gauge</code>。但是 PromQL 实际上并没有检查你是否传入了正确类型的指标——这些函数通常会运行并为错误类型的输入指标返回一些无意义的数据，这取决于用户是否传入了遵守某些假设的时间序列（比如在直方图的情况下有一个有意义的 <code>le</code> 标签，或者在计数器的情况下单调递增）。</p>
+<h2 id="查询类型和评估时间"><a href="#查询类型和评估时间" class="headerlink" title="查询类型和评估时间"></a>查询类型和评估时间</h2><p>PromQL 查询中对时间的引用只有相对引用，比如 <code>[5m]</code>，表示过去 5 分钟，那么如何指定一个绝对的时间范围，或在一个表格中显示查询结果的时间戳？在 PromQL 中，这样的时间参数是与表达式分开发送到 Prometheus 查询 API 的，确切的时间参数取决于你发送的查询类型，Prometheus 有两种类型的 PromQL 查询：瞬时查询和区间查询。</p>
+<h3 id="瞬时查询"><a href="#瞬时查询" class="headerlink" title="瞬时查询"></a>瞬时查询</h3><p>瞬时查询用于类似表格的视图，你想在一个时间点上显示 PromQL 查询的结果。一个瞬时查询有以下参数：</p>
+<ul>
+<li>PromQL 表达式</li>
+<li>一个评估的时间戳</li>
+</ul>
+<p>在查询的时候可以选择查询过去的数据，比如 <code>foo[1h]</code> 表示查询 foo 序列最近 1 个小时的数据，访问过去的数据，对于计算一段时间内的比率或平均数等聚合会非常有用。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/q93ty0.png" alt="瞬时查询"></p>
+<p>在 Prometheus 的 WebUI 界面中表格视图中的查询就是瞬时查询，API 接口 <code>/api/v1/query?query=xxxx&amp;time=xxxx</code> 中的 <code>query</code> 参数就是 PromQL 表达式，<code>time</code> 参数就是评估的时间戳。瞬时查询可以返回任何有效的 PromQL 表达式类型（字符串、标量、即时和范围向量）。</p>
+<p>下面来看一个瞬时查询的示例，看看它是如何进行评估工作的。比如 <code>http_requests_total</code> 在指定的时间戳来评估表达式，<code>http_requests_total</code> 是一个瞬时向量选择器，它可以选择该时间序列的最新样本，<code>最新</code>意味着查询最近 5 分钟的样本数据。</p>
+<p>如果我们在一个有最近样本的时间戳上运行此查询，结果将包含两个序列，每个序列都有一个样本：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/s1cvn5.png" alt="即时"></p>
+<p>注意每个返回的样本输出时间戳不再是原始样本被采集的时间戳，而会被设置为评估的时间戳。</p>
+<p>如果在时间戳之前有一个 <code>&gt;5m</code> 的间隙，这个时候如果我们执行相同的查询：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/e0vjy5.png" alt="空数据"></p>
+<p>这个情况下查询的结果将返回为空，因为很显然在最近 5 分钟内没有能够匹配的样本。</p>
+<h3 id="区间查询"><a href="#区间查询" class="headerlink" title="区间查询"></a>区间查询</h3><p>区间查询主要用于图形，想在一个指定的时间范围内显示一个 PromQL 表达式，范围查询的工作方式与即时查询完全相同，这些查询在指定时间范围的评估步长中进行评估。当然，这在后台是高度优化的，在这种情况下，Prometheus 实际上并没有运行许多独立的即时查询。</p>
+<p>区间查询包括以下一些参数：</p>
+<ul>
+<li>PromQL 表达式</li>
+<li>开始时间</li>
+<li>结束时间</li>
+<li>评估步长</li>
+</ul>
+<p>在开始时间和结束时间之间的每个评估步长上评估表达式后，单独评估的时间片被拼接到一个单一的区间向量中。区间查询允许传入瞬时向量类型或标量类型的表达式，但始终返回一个范围向量（标量或瞬时向量在一个时间范围内被评估的结果）。</p>
+<p>在 Prometheus 的 WebUI 界面中图形视图中的查询就是区间查询，API 接口 <code>/api/v1/query_range?query=xxx&amp;start=xxxxxx&amp;end=xxxx&amp;step=14</code> 中的 <code>query</code> 参数就是 PromQL 表达式，<code>start</code> 为开始时间，<code>end</code> 为结束时间，<code>step</code> 为评估的步长。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/ka9bmx.png" alt="区间查询"></p>
+<p>比如把上面的 <code>http_requests_total</code> 表达式作为一个范围查询来进行评估，它的评估结果如下所示：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/pk6v5v.png" alt="区间查询"></p>
+<p>注意每个评估步骤的行为与独立的瞬时查询完全一样，而且每个独立的瞬时查询都没有查询的总体范围的概念，在我们这个示例中最终的结果将是一个区间向量，其中包含两个选定序列在一定时间范围内的样本，但也将包含某些时间步长的序列数据的间隙。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Prometheus%20%E7%9B%91%E6%8E%A7%20Kubernetes%20Job%20%E8%B5%84%E6%BA%90%E8%AF%AF%E6%8A%A5%E7%9A%84%E5%9D%91/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/Prometheus%20%E7%9B%91%E6%8E%A7%20Kubernetes%20Job%20%E8%B5%84%E6%BA%90%E8%AF%AF%E6%8A%A5%E7%9A%84%E5%9D%91/" class="post-title-link" itemprop="url">Prometheus 监控 Kubernetes Job 资源误报的坑</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:52:44" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E9%9D%A2%E8%AF%95%E9%A2%98/" itemprop="url" rel="index"><span itemprop="name">面试题</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>5.6k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>昨天在 Prometheus 课程辅导群里面有同学提到一个问题，是关于 Prometheus 监控 Job 任务误报的问题，大概的意思就 CronJob 控制的 Job，前面执行失败了，监控会触发报警，解决后后面生成的新的 Job 可以正常执行了，但是还是会收到前面的报警：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/6c1zbz.png" alt="问题描述"></p>
+<p>这是因为一般在执行 Job 任务的时候我们会保留一些历史记录方便排查问题，所以如果之前有失败的 Job 了，即便稍后会变成成功的，那么之前的 Job 也会继续存在，而大部分直接使用 kube-prometheus 安装部署的话使用的默认报警规则是<code>kube_job_status_failed &gt; 0</code>，这显然是不准确的，只有我们去手动删除之前这个失败的 Job 任务才可以消除误报，当然这种方式是可以解决问题的，但是不够自动化，一开始没有想得很深入，想去自动化删除失败的 Job 来解决，但是这也会给运维人员带来问题，就是不方便回头去排查问题。下面我们来重新整理下思路解决下这个问题。</p>
+<p><code>CronJob</code> 会在计划的每个执行时间创建一个 Job 对象，可以通过 <code>.spec.successfulJobsHistoryLimit</code> 和 <code>.spec.failedJobsHistoryLimit</code> 属性来保留多少已完成和失败的 Job，默认分别为 3 和 1，比如下面声明一个 <code>CronJob</code> 的资源对象：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">batch/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">CronJob</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">hello</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">schedule:</span> <span class="string">&quot;*/1 * * * *&quot;</span></span><br><span class="line">  <span class="attr">successfulJobsHistoryLimit:</span> <span class="number">1</span></span><br><span class="line">  <span class="attr">failedJobsHistoryLimit:</span> <span class="number">1</span></span><br><span class="line">  <span class="attr">jobTemplate:</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">template:</span></span><br><span class="line">        <span class="attr">spec:</span></span><br><span class="line">          <span class="attr">containers:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">hello</span></span><br><span class="line">              <span class="attr">image:</span> <span class="string">busybox</span></span><br><span class="line">              <span class="attr">imagePullPolicy:</span> <span class="string">IfNotPresent</span></span><br><span class="line">              <span class="attr">command:</span></span><br><span class="line">                <span class="bullet">-</span> <span class="string">/bin/sh</span></span><br><span class="line">                <span class="bullet">-</span> <span class="string">-c</span></span><br><span class="line">                <span class="bullet">-</span> <span class="string">date;</span></span><br><span class="line">          <span class="attr">restartPolicy:</span> <span class="string">OnFailure</span></span><br></pre></td></tr></table></figure>
+
+<p>根据上面的资源对象规范，Kubernetes 将只保留一个失败的 Job 和一个成功的 Job：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">NAME               COMPLETIONS   DURATION   AGE</span><br><span class="line">hello-4111706356   0/1           2m         10d</span><br><span class="line">hello-4111706356   1/1           5s         5s</span><br></pre></td></tr></table></figure>
+
+<p>要解决上面的误报问题，同样还是需要使用到 <code>kube-state-metrics</code> 这个服务，它通过监听 Kubernetes APIServer 并生成有关对象状态的指标，它并不关注单个 Kubernetes 组件的健康状况，而是关注内部各种对象的健康状况，例如 Deployment、Node、Job、Pod 等资源对象的状态。这里我们将要使用到以下几个指标：</p>
+<ul>
+<li><code>kube_job_owner</code>：用来查找 Job 和触发它的 CronJob 之间的关系</li>
+<li><code>kube_job_status_start_time</code>：获取 Job 被触发的时间</li>
+<li><code>kube_job_status_failed</code>：获取执行失败的任务</li>
+<li><code>kube_cronjob_spec_suspend</code>：过滤掉挂起的作业</li>
+</ul>
+<p>下面是一个指标示例，其中包含 CronJob 触发运行的<code>hello</code> 任务生成的标签：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">kube_job_owner&#123;job_name=&quot;hello-1604875860&quot;, namespace=&quot;myNamespace&quot;, owner_is_controller=&quot;true&quot;, owner_kind=&quot;CronJob&quot;, owner_name=&quot;hello&quot;&#125; 1</span><br><span class="line">kube_job_status_start_time&#123;job_name=&quot;hello-1604875860&quot;, namespace=&quot;myNamespace&quot;&#125; 1604875874</span><br><span class="line">kube_job_status_failed&#123;job_name=&quot;hello-1604875860&quot;, namespace=&quot;myNamespace&quot;, reason=&quot;BackoffLimitExceeded&quot;&#125; 1</span><br><span class="line">kube_cronjob_spec_suspend&#123;cronjob=&quot;hello&quot;,job=&quot;kube-state-metrics&quot;, namespace=&quot;myNamespace&quot;&#125; 0</span><br></pre></td></tr></table></figure>
+
+<p>要想做到监控报警准确，其实我们只需要去<strong>获取同一个 CronJob 触发的一组 Job 的最后一次任务，只有该 Job 在执行失败的时候才触发报警</strong>即可。</p>
+<p>由于 <code>kube_job_status_failed</code> 和 <code>kube_job_status_start_time</code> 指标中并不包含所属 CronJob 的标签，所以第一步需要加入这个标签，而 <code>kube_job_owner</code> 指标中的 <code>owner_name</code> 就是我们需要的，可以用下面的 promql 语句来进行合并：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">max(</span><br><span class="line">  kube_job_status_start_time</span><br><span class="line">  * ON(job_name, namespace) GROUP_RIGHT()</span><br><span class="line">  kube_job_owner&#123;owner_name != &quot;&quot;&#125;</span><br><span class="line">  )</span><br><span class="line">BY (job_name, owner_name, namespace)</span><br></pre></td></tr></table></figure>
+
+<p>这里我们使用 <code>max</code> 函数是因为我们可能会因为 HA 运行多个 kube-state-metrics，所以用 max 函数来返回每个 Job 任务的一个结果即可。假设我们的 Job 历史记录包含 2 个任务（一个失败，另一个成功），结果将如下所示：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&#123;job_name=&quot;hello-1623578940&quot;, namespace=&quot;myNamespace&quot;, owner_name=&quot;hello&quot;&#125; 1623578959</span><br><span class="line">&#123;job_name=&quot;hello-1617667200&quot;, namespace=&quot;myNamespace&quot;, owner_name=&quot;hello&quot;&#125; 1617667204</span><br></pre></td></tr></table></figure>
+
+<p>现在我们知道每个 Job 的所有者了，接着我们需要找出最后执行的任务，我们可以通过按 <code>owner_name</code> 标签聚合结果来实现这一点：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">max(</span><br><span class="line">  kube_job_status_start_time</span><br><span class="line">  * ON(job_name,namespace) GROUP_RIGHT()</span><br><span class="line">  kube_job_owner&#123;owner_name!=&quot;&quot;&#125;</span><br><span class="line">)</span><br><span class="line">BY (owner_name)</span><br></pre></td></tr></table></figure>
+
+<p>上面这条语句会找到每个 owner（也就是 CronJob）最新的任务开始时间，然后再和上面的语句进行合并，保留开始时间相同的记录即为最新执行的 Job 任务了：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">max(</span><br><span class="line"> kube_job_status_start_time</span><br><span class="line"> * ON(job_name,namespace) GROUP_RIGHT()</span><br><span class="line"> kube_job_owner&#123;owner_name!=&quot;&quot;&#125;</span><br><span class="line">)</span><br><span class="line">BY (job_name, owner_name, namespace)</span><br><span class="line">== ON(owner_name) GROUP_LEFT()</span><br><span class="line">max(</span><br><span class="line"> kube_job_status_start_time</span><br><span class="line"> * ON(job_name,namespace) GROUP_RIGHT()</span><br><span class="line"> kube_job_owner&#123;owner_name!=&quot;&quot;&#125;</span><br><span class="line">)</span><br><span class="line">BY (owner_name)</span><br></pre></td></tr></table></figure>
+
+<p>结果将显示每个 CronJob 最后执行的作业，并且仅显示最后一个：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;job_name=&quot;hello-1623578940&quot;, namespace=&quot;myNamespace&quot;, owner_name=&quot;hello&quot;&#125; 1623578959</span><br></pre></td></tr></table></figure>
+
+<p>为了增加可读性我们还可以将 job_name、owner_name 标签替换为 job 和 cronjob，这样更容易看明白：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">label_replace(</span><br><span class="line">  label_replace(</span><br><span class="line">    max(</span><br><span class="line">      kube_job_status_start_time</span><br><span class="line">      * ON(job_name,namespace) GROUP_RIGHT()</span><br><span class="line">      kube_job_owner&#123;owner_name!=&quot;&quot;&#125;</span><br><span class="line">    )</span><br><span class="line">    BY (job_name, owner_name, namespace)</span><br><span class="line">    == ON(owner_name) GROUP_LEFT()</span><br><span class="line">    max(</span><br><span class="line">      kube_job_status_start_time</span><br><span class="line">      * ON(job_name,namespace) GROUP_RIGHT()</span><br><span class="line">      kube_job_owner&#123;owner_name!=&quot;&quot;&#125;</span><br><span class="line">    )</span><br><span class="line">    BY (owner_name),</span><br><span class="line">  &quot;job&quot;, &quot;$1&quot;, &quot;job_name&quot;, &quot;(.+)&quot;),</span><br><span class="line">&quot;cronjob&quot;, &quot;$1&quot;, &quot;owner_name&quot;, &quot;(.+)&quot;)</span><br></pre></td></tr></table></figure>
+
+<p>现在将会看到类似于下面的结果：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;job=&quot;hello-1623578940&quot;, cronjob=&quot;hello&quot;, job_name=&quot;hello-1623578940&quot;, namespace=&quot;myNamespace&quot;, owner_name=&quot;hello&quot;&#125; 1623578959</span><br></pre></td></tr></table></figure>
+
+<p>由于上面的查询语句比较复杂，如果每次报警评估的时候都去进行一次实时计算会对 Prometheus 产生非常大的压力，这里我们可以借助记录规则来实现类离线计算的方式，大大提高效率，创建如下所示的记录规则，用来表示获取每个 CronJob 最后执行的作业记录：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">record:</span> <span class="string">job:kube_job_status_start_time:max</span></span><br><span class="line">  <span class="attr">expr:</span> <span class="string">|</span></span><br><span class="line"><span class="string">    label_replace(</span></span><br><span class="line"><span class="string">      label_replace(</span></span><br><span class="line"><span class="string">        max(</span></span><br><span class="line"><span class="string">          kube_job_status_start_time</span></span><br><span class="line"><span class="string">          * ON(job_name,namespace) GROUP_RIGHT()</span></span><br><span class="line"><span class="string">          kube_job_owner&#123;owner_name!=&quot;&quot;&#125;</span></span><br><span class="line"><span class="string">        )</span></span><br><span class="line"><span class="string">        BY (job_name, owner_name, namespace)</span></span><br><span class="line"><span class="string">        == ON(owner_name) GROUP_LEFT()</span></span><br><span class="line"><span class="string">        max(</span></span><br><span class="line"><span class="string">          kube_job_status_start_time</span></span><br><span class="line"><span class="string">          * ON(job_name,namespace) GROUP_RIGHT()</span></span><br><span class="line"><span class="string">          kube_job_owner&#123;owner_name!=&quot;&quot;&#125;</span></span><br><span class="line"><span class="string">        )</span></span><br><span class="line"><span class="string">        BY (owner_name),</span></span><br><span class="line"><span class="string">      &quot;job&quot;, &quot;$1&quot;, &quot;job_name&quot;, &quot;(.+)&quot;),</span></span><br><span class="line"><span class="string">    &quot;cronjob&quot;, &quot;$1&quot;, &quot;owner_name&quot;, &quot;(.+)&quot;)    </span></span><br></pre></td></tr></table></figure>
+
+<p>现在我们知道了 CronJob 最近开始执行的 Job 了，那么想要过滤出失败的，则再使用 <code>kube_job_status_failed</code> 指标就可以了：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">record:</span> <span class="string">job:kube_job_status_failed:sum</span></span><br><span class="line">  <span class="attr">expr:</span> <span class="string">|</span></span><br><span class="line"><span class="string">    clamp_max(job:kube_job_status_start_time:max, 1)</span></span><br><span class="line"><span class="string">      * ON(job) GROUP_LEFT()</span></span><br><span class="line"><span class="string">      label_replace(</span></span><br><span class="line"><span class="string">        (kube_job_status_failed &gt; 0),</span></span><br><span class="line"><span class="string">        &quot;job&quot;, &quot;$1&quot;, &quot;job_name&quot;, &quot;(.+)&quot;</span></span><br><span class="line"><span class="string">      )    </span></span><br></pre></td></tr></table></figure>
+
+<p>这里使用 <code>clamp_max</code> 函数将 <code>job:kube_job_status_start_time:max</code> 的结果转换为一组上限为 1 的时间序列，使用它来通过乘法过滤失败的作业，得到包含一组最近失败的 Job 任务，这里我们也添加到名为 <code>kube_job_status_failed:sum</code> 的记录规则中。</p>
+<p>最后一步就是直接为失败的 Job 任务添加报警规则，如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">alert:</span> <span class="string">CronJobStatusFailed</span></span><br><span class="line">  <span class="attr">expr:</span> <span class="string">|</span></span><br><span class="line"><span class="string">    job:kube_job_status_failed:sum</span></span><br><span class="line"><span class="string">    * ON(cronjob, namespace) GROUP_LEFT()</span></span><br><span class="line"><span class="string">    (kube_cronjob_spec_suspend == 0)    </span></span><br></pre></td></tr></table></figure>
+
+<p>为避免误报，我们已将挂起的任务排除在外了。到这里我们就解决了 Prometheus 监控 CronJob 的任务误报的问题，虽然 kube-prometheus 为我们内置了大量的监控报警规则，但是也不能完全迷信，有时候并不一定适合实际的需求。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/RBAC/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/RBAC/" class="post-title-link" itemprop="url">RBAC</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:53:32" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E9%85%8D%E7%BD%AE%E7%AE%A1%E7%90%86/" itemprop="url" rel="index"><span itemprop="name">配置管理</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>14k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>13 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="RBAC-权限控制"><a href="#RBAC-权限控制" class="headerlink" title="RBAC 权限控制"></a>RBAC 权限控制</h1><p>前面我们已经学习一些常用的资源对象的使用，我们知道对于资源对象的操作都是通过 APIServer 进行的，那么集群是怎样知道我们的请求就是合法的请求呢？这个就需要了解 Kubernetes 中另外一个非常重要的知识点了：<code>RBAC</code>（基于角色的权限控制）。</p>
+<p>管理员可以通过 Kubernetes API 动态配置策略来启用<code>RBAC</code>，需要在 kube-apiserver 中添加参数<code>--authorization-mode=RBAC</code>，如果使用的 kubeadm 安装的集群那么是默认开启了 <code>RBAC</code> 的，可以通过查看 Master 节点上 apiserver 的静态 Pod 定义文件：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ cat /etc/kubernetes/manifests/kube-apiserver.yaml</span><br><span class="line">...</span><br><span class="line">    - --authorization-mode=Node,RBAC</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+
+
+<p>如果是二进制的方式搭建的集群，添加这个参数过后，记得要重启 kube-apiserver 服务。</p>
+<h2 id="API-对象"><a href="#API-对象" class="headerlink" title="API 对象"></a>API 对象</h2><p>在学习 <code>RBAC</code> 之前，我们还需要再去理解下 Kubernetes 集群中的对象，我们知道，在 Kubernetes 集群中，Kubernetes 对象是我们持久化的实体，就是最终存入 etcd 中的数据，集群中通过这些实体来表示整个集群的状态。前面我们都直接编写的 YAML 文件，通过 kubectl 来提交的资源清单文件，然后创建的对应的资源对象，那么它究竟是如何将我们的 YAML 文件转换成集群中的一个 API 对象的呢？</p>
+<p>这个就需要去了解下<strong>声明式 API</strong>的设计，Kubernetes API 是一个以 JSON 为主要序列化方式的 HTTP 服务，除此之外也支持 Protocol Buffers 序列化方式，主要用于集群内部组件间的通信。为了可扩展性，Kubernetes 在不同的 API 路径（比如<code>/api/v1</code> 或者 <code>/apis/batch</code>）下面支持了多个 API 版本，不同的 API 版本意味着不同级别的稳定性和支持：</p>
+<ul>
+<li>Alpha 级别，例如 <code>v1alpha1</code> 默认情况下是被禁用的，可以随时删除对功能的支持，所以要慎用</li>
+<li>Beta 级别，例如 <code>v2beta1</code> 默认情况下是启用的，表示代码已经经过了很好的测试，但是对象的语义可能会在随后的版本中以不兼容的方式更改</li>
+<li>稳定级别，比如 <code>v1</code> 表示已经是稳定版本了，也会出现在后续的很多版本中。</li>
+</ul>
+<p>在 Kubernetes 集群中，一个 API 对象在 Etcd 里的完整资源路径，是由：<code>Group（API 组）</code>、<code>Version（API 版本）</code>和 <code>Resource（API 资源类型）</code>三个部分组成的。通过这样的结构，整个 Kubernetes 里的所有 API 对象，实际上就可以用如下的树形结构表示出来：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/165tzh.jpg" alt="apiserver tree"></p>
+<p>从上图中我们也可以看出 Kubernetes 的 API 对象的组织方式，在顶层，我们可以看到有一个核心组（由于历史原因，是 <code>/api/v1</code> 下的所有内容而不是在 <code>/apis/core/v1</code> 下面）和命名组（路径 <code>/apis/$NAME/$VERSION</code>）和系统范围内的实体，比如 <code>/metrics</code>。我们也可以用下面的命令来查看集群中的 API 组织形式：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl get --raw /</span><br><span class="line">&#123;</span><br><span class="line">  &quot;paths&quot;: [</span><br><span class="line">    &quot;/api&quot;,</span><br><span class="line">    &quot;/api/v1&quot;,</span><br><span class="line">    &quot;/apis&quot;,</span><br><span class="line">    &quot;/apis/&quot;,</span><br><span class="line">    ......</span><br><span class="line">    &quot;/version&quot;</span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>比如我们来查看批处理这个操作，在我们当前这个版本中存在 1 个版本的操作：<code>/apis/batch/v1</code>，暴露了可以查询和操作的不同实体集合，同样我们还是可以通过 kubectl 来查询对应对象下面的数据：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl get --raw /apis/batch/v1 | python -m json.tool</span><br><span class="line">&#123;</span><br><span class="line">    &quot;apiVersion&quot;: &quot;v1&quot;,</span><br><span class="line">    &quot;groupVersion&quot;: &quot;batch/v1&quot;,</span><br><span class="line">    &quot;kind&quot;: &quot;APIResourceList&quot;,</span><br><span class="line">    &quot;resources&quot;: [</span><br><span class="line">        &#123;</span><br><span class="line">            &quot;categories&quot;: [</span><br><span class="line">                &quot;all&quot;</span><br><span class="line">            ],</span><br><span class="line">            &quot;kind&quot;: &quot;CronJob&quot;,</span><br><span class="line">            &quot;name&quot;: &quot;cronjobs&quot;,</span><br><span class="line">            &quot;namespaced&quot;: true,</span><br><span class="line">            &quot;shortNames&quot;: [</span><br><span class="line">                &quot;cj&quot;</span><br><span class="line">            ],</span><br><span class="line">            &quot;singularName&quot;: &quot;&quot;,</span><br><span class="line">            &quot;storageVersionHash&quot;: &quot;sd5LIXh4Fjs=&quot;,</span><br><span class="line">            &quot;verbs&quot;: [</span><br><span class="line">                &quot;create&quot;,</span><br><span class="line">                &quot;delete&quot;,</span><br><span class="line">                &quot;deletecollection&quot;,</span><br><span class="line">                &quot;get&quot;,</span><br><span class="line">                &quot;list&quot;,</span><br><span class="line">                &quot;patch&quot;,</span><br><span class="line">                &quot;update&quot;,</span><br><span class="line">                &quot;watch&quot;</span><br><span class="line">            ]</span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">            &quot;kind&quot;: &quot;CronJob&quot;,</span><br><span class="line">            &quot;name&quot;: &quot;cronjobs/status&quot;,</span><br><span class="line">            &quot;namespaced&quot;: true,</span><br><span class="line">            &quot;singularName&quot;: &quot;&quot;,</span><br><span class="line">            &quot;verbs&quot;: [</span><br><span class="line">                &quot;get&quot;,</span><br><span class="line">                &quot;patch&quot;,</span><br><span class="line">                &quot;update&quot;</span><br><span class="line">            ]</span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">            &quot;categories&quot;: [</span><br><span class="line">                &quot;all&quot;</span><br><span class="line">            ],</span><br><span class="line">            &quot;kind&quot;: &quot;Job&quot;,</span><br><span class="line">            &quot;name&quot;: &quot;jobs&quot;,</span><br><span class="line">            &quot;namespaced&quot;: true,</span><br><span class="line">            &quot;singularName&quot;: &quot;&quot;,</span><br><span class="line">            &quot;storageVersionHash&quot;: &quot;mudhfqk/qZY=&quot;,</span><br><span class="line">            &quot;verbs&quot;: [</span><br><span class="line">                &quot;create&quot;,</span><br><span class="line">                &quot;delete&quot;,</span><br><span class="line">                &quot;deletecollection&quot;,</span><br><span class="line">                &quot;get&quot;,</span><br><span class="line">                &quot;list&quot;,</span><br><span class="line">                &quot;patch&quot;,</span><br><span class="line">                &quot;update&quot;,</span><br><span class="line">                &quot;watch&quot;</span><br><span class="line">            ]</span><br><span class="line">        &#125;,</span><br><span class="line">        &#123;</span><br><span class="line">            &quot;kind&quot;: &quot;Job&quot;,</span><br><span class="line">            &quot;name&quot;: &quot;jobs/status&quot;,</span><br><span class="line">            &quot;namespaced&quot;: true,</span><br><span class="line">            &quot;singularName&quot;: &quot;&quot;,</span><br><span class="line">            &quot;verbs&quot;: [</span><br><span class="line">                &quot;get&quot;,</span><br><span class="line">                &quot;patch&quot;,</span><br><span class="line">                &quot;update&quot;</span><br><span class="line">            ]</span><br><span class="line">        &#125;</span><br><span class="line">    ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>但是这个操作和我们平时操作 HTTP 服务的方式不太一样，这里我们可以通过 <code>kubectl proxy</code> 命令来开启对 apiserver 的访问：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl proxy</span><br><span class="line">Starting to serve on 127.0.0.1:8001</span><br></pre></td></tr></table></figure>
+
+
+
+<p>然后重新开启一个新的终端，我们可以通过如下方式来访问批处理的 API 服务：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ curl http://127.0.0.1:8001/apis/batch/v1</span><br><span class="line">&#123;</span><br><span class="line">  &quot;kind&quot;: &quot;APIResourceList&quot;,</span><br><span class="line">  &quot;apiVersion&quot;: &quot;v1&quot;,</span><br><span class="line">  &quot;groupVersion&quot;: &quot;batch/v1&quot;,</span><br><span class="line">  &quot;resources&quot;: [</span><br><span class="line">    &#123;</span><br><span class="line">      &quot;name&quot;: &quot;jobs&quot;,</span><br><span class="line">      &quot;singularName&quot;: &quot;&quot;,</span><br><span class="line">      &quot;namespaced&quot;: true,</span><br><span class="line">      &quot;kind&quot;: &quot;Job&quot;,</span><br><span class="line">      &quot;verbs&quot;: [</span><br><span class="line">        &quot;create&quot;,</span><br><span class="line">        &quot;delete&quot;,</span><br><span class="line">        &quot;deletecollection&quot;,</span><br><span class="line">        &quot;get&quot;,</span><br><span class="line">        &quot;list&quot;,</span><br><span class="line">        &quot;patch&quot;,</span><br><span class="line">        &quot;update&quot;,</span><br><span class="line">        &quot;watch&quot;</span><br><span class="line">      ],</span><br><span class="line">      &quot;categories&quot;: [</span><br><span class="line">        &quot;all&quot;</span><br><span class="line">      ],</span><br><span class="line">      &quot;storageVersionHash&quot;: &quot;mudhfqk/qZY=&quot;</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">      &quot;name&quot;: &quot;jobs/status&quot;,</span><br><span class="line">      &quot;singularName&quot;: &quot;&quot;,</span><br><span class="line">      &quot;namespaced&quot;: true,</span><br><span class="line">      &quot;kind&quot;: &quot;Job&quot;,</span><br><span class="line">      &quot;verbs&quot;: [</span><br><span class="line">        &quot;get&quot;,</span><br><span class="line">        &quot;patch&quot;,</span><br><span class="line">        &quot;update&quot;</span><br><span class="line">      ]</span><br><span class="line">    &#125;</span><br><span class="line">  ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>通常，Kubernetes API 支持通过标准 HTTP <code>POST</code>、<code>PUT</code>、<code>DELETE</code> 和 <code>GET</code> 在指定 PATH 路径上创建、更新、删除和检索操作，并使用 JSON 作为默认的数据交互格式。</p>
+<p>比如现在我们要创建一个 Deployment 对象，那么我们的 YAML 文件的声明就需要怎么写：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>其中 <code>Deployment</code> 就是这个 API 对象的资源类型（Resource），<code>apps</code> 就是它的组（Group），<code>v1</code> 就是它的版本（Version）。API Group、Version 和 资源就唯一定义了一个 HTTP 路径，然后在 kube-apiserver 端对这个 url 进行了监听，然后把对应的请求传递给了对应的控制器进行处理而已，当然在 Kuberentes 中的实现过程是非常复杂的。</p>
+<h2 id="RBAC"><a href="#RBAC" class="headerlink" title="RBAC"></a>RBAC</h2><p>上面我们介绍了 Kubernetes 所有资源对象都是模型化的 API 对象，允许执行 <code>CRUD(Create、Read、Update、Delete)</code> 操作(也就是我们常说的增、删、改、查操作)，比如下面的这些资源：</p>
+<ul>
+<li>Pods</li>
+<li>ConfigMaps</li>
+<li>Deployments</li>
+<li>Nodes</li>
+<li>Secrets</li>
+<li>Namespaces</li>
+<li>……</li>
+</ul>
+<p>对于上面这些资源对象的可能存在的操作有：</p>
+<ul>
+<li>create</li>
+<li>get</li>
+<li>delete</li>
+<li>list</li>
+<li>update</li>
+<li>edit</li>
+<li>watch</li>
+<li>exec</li>
+<li>patch</li>
+</ul>
+<p>在更上层，这些资源和 API Group 进行关联，比如 Pods 属于 Core API Group，而 Deployements 属于 apps API Group，现在我们要在 Kubernetes 中通过 RBAC 来对资源进行权限管理，除了上面的这些资源和操作以外，我们还需要了解另外几个概念：</p>
+<ul>
+<li><code>Rule</code>：规则，规则是一组属于不同 API Group 资源上的一组操作的集合</li>
+<li><code>Role</code> 和 <code>ClusterRole</code>：角色和集群角色，这两个对象都包含上面的 Rules 元素，二者的区别在于，在 Role 中，定义的规则只适用于单个命名空间，也就是和 namespace 关联的，而 ClusterRole 是集群范围内的，因此定义的规则不受命名空间的约束。另外 Role 和 ClusterRole 在 Kubernetes 中都被定义为集群内部的 API 资源，和我们前面学习过的 Pod、Deployment 这些对象类似，都是我们集群的资源对象，所以同样的可以使用 YAML 文件来描述，用 kubectl 工具来管理</li>
+<li><code>Subject</code>：主题，对应集群中尝试操作的对象，集群中定义了 3 种类型的主题资源：<ul>
+<li><code>User Account</code>：用户，这是有外部独立服务进行管理的，管理员进行私钥的分配，用户可以使用 KeyStone 或者 Goolge 帐号，甚至一个用户名和密码的文件列表也可以。对于用户的管理集群内部没有一个关联的资源对象，所以用户不能通过集群内部的 API 来进行管理</li>
+<li><code>Group</code>：组，这是用来关联多个账户的，集群中有一些默认创建的组，比如 cluster-admin</li>
+<li><code>Service Account</code>：服务帐号，通过 Kubernetes API 来管理的一些用户帐号，和 namespace 进行关联的，适用于集群内部运行的应用程序，需要通过 API 来完成权限认证，所以在集群内部进行权限操作，我们都需要使用到 ServiceAccount，这也是我们这节课的重点</li>
+</ul>
+</li>
+<li><code>RoleBinding</code> 和 <code>ClusterRoleBinding</code>：角色绑定和集群角色绑定，简单来说就是把声明的 Subject 和我们的 Role 进行绑定的过程（给某个用户绑定上操作的权限），二者的区别也是作用范围的区别：RoleBinding 只会影响到当前 namespace 下面的资源操作权限，而 ClusterRoleBinding 会影响到所有的 namespace。</li>
+</ul>
+<p>接下来我们来通过几个简单的示例，来学习下在 Kubernetes 集群中如何使用 <code>RBAC</code>。</p>
+<h3 id="只能访问某个-namespace-的普通用户"><a href="#只能访问某个-namespace-的普通用户" class="headerlink" title="只能访问某个 namespace 的普通用户"></a>只能访问某个 namespace 的普通用户</h3><p>我们想要创建一个 User Account，只能访问 kube-system 这个命名空间，对应的用户信息如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">username:</span> <span class="string">cnych</span></span><br><span class="line"><span class="attr">group:</span> <span class="string">youdianzhishi</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="创建用户凭证"><a href="#创建用户凭证" class="headerlink" title="创建用户凭证"></a>创建用户凭证</h4><p>我们前面已经提到过，Kubernetes 没有 User Account 的 API 对象，不过要创建一个用户帐号的话也是挺简单的，利用管理员分配给你的一个私钥就可以创建了，这个我们可以参考官方文档中的方法，这里我们来使用 <code>OpenSSL</code> 证书来创建一个 User，当然我们也可以使用更简单的 <code>cfssl</code>工具来创建：</p>
+<p>给用户 cnych 创建一个私钥，命名成 <code>cnych.key</code>：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ openssl genrsa -out cnych.key 2048</span><br><span class="line">Generating RSA private key, 2048 bit long modulus</span><br><span class="line">..............................................................................+++</span><br><span class="line">..............................................................................................................................................+++</span><br><span class="line">e is 65537 (0x10001)</span><br></pre></td></tr></table></figure>
+
+
+
+<p>使用我们刚刚创建的私钥创建一个证书签名请求文件：<code>cnych.csr</code>，要注意需要确保在 <code>-subj</code> 参数中指定用户名和组(<code>CN</code>表示用户名，<code>O</code>表示组)：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ openssl req -new -key cnych.key -out cnych.csr -subj &quot;/CN=cnych/O=youdianzhishi&quot;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>然后找到我们的 Kubernetes 集群的 <code>CA</code> 证书，我们使用的是 kubeadm 安装的集群，CA 相关证书位于 <code>/etc/kubernetes/pki/</code> 目录下面，如果你是二进制方式搭建的，你应该在最开始搭建集群的时候就已经指定好了 CA 的目录，我们会利用该目录下面的 <code>ca.crt</code> 和 <code>ca.key</code>两个文件来批准上面的证书请求。生成最终的证书文件，我们这里设置证书的有效期为 500 天：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ openssl x509 -req -in cnych.csr -CA /etc/kubernetes/pki/ca.crt -CAkey /etc/kubernetes/pki/ca.key -CAcreateserial -out cnych.crt -days 500</span><br><span class="line">Signature ok</span><br><span class="line">subject=/CN=cnych/O=youdianzhishi</span><br><span class="line">Getting CA Private Key</span><br></pre></td></tr></table></figure>
+
+
+
+<p>现在查看我们当前文件夹下面是否生成了一个证书文件：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ ls</span><br><span class="line">cnych.crt  cnych.csr  cnych.key</span><br></pre></td></tr></table></figure>
+
+
+
+<p>现在我们可以使用刚刚创建的证书文件和私钥文件在集群中创建新的凭证和上下文(Context):</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl config set-credentials cnych --client-certificate=cnych.crt --client-key=cnych.key</span><br><span class="line">User &quot;cnych&quot; set.</span><br></pre></td></tr></table></figure>
+
+
+
+<p>我们可以看到一个用户 <code>cnych</code> 创建了，然后为这个用户设置新的 Context，我们这里指定特定的一个 namespace：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl config set-context cnych-context --cluster=kubernetes --namespace=kube-system --user=cnych</span><br><span class="line">Context &quot;cnych-context&quot; created.</span><br></pre></td></tr></table></figure>
+
+
+
+<p>到这里，我们的用户 <code>cnych</code> 就已经创建成功了，现在我们使用当前的这个配置文件来操作 kubectl 命令的时候，应该会出现错误，因为我们还没有为该用户定义任何操作的权限呢：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl get pods --context=cnych-context</span><br><span class="line">Error from server (Forbidden): pods is forbidden: User &quot;cnych&quot; cannot list resource &quot;pods&quot; in API group &quot;&quot; in the namespace &quot;kube-system&quot;</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="创建角色"><a href="#创建角色" class="headerlink" title="创建角色"></a>创建角色</h4><p>用户创建完成后，接下来就需要给该用户添加操作权限，我们来定义一个 YAML 文件，创建一个允许用户操作 Deployment、Pod、ReplicaSets 的角色，如下定义：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># cnych-role.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">rbac.authorization.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Role</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">cnych-role</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-system</span></span><br><span class="line"><span class="attr">rules:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">apiGroups:</span> [<span class="string">&#x27;&#x27;</span>, <span class="string">&#x27;apps&#x27;</span>]</span><br><span class="line">    <span class="attr">resources:</span> [<span class="string">&#x27;deployments&#x27;</span>, <span class="string">&#x27;replicasets&#x27;</span>, <span class="string">&#x27;pods&#x27;</span>]</span><br><span class="line">    <span class="attr">verbs:</span> [<span class="string">&#x27;get&#x27;</span>, <span class="string">&#x27;list&#x27;</span>, <span class="string">&#x27;watch&#x27;</span>, <span class="string">&#x27;create&#x27;</span>, <span class="string">&#x27;update&#x27;</span>, <span class="string">&#x27;patch&#x27;</span>, <span class="string">&#x27;delete&#x27;</span>] <span class="comment"># 也可以使用[&#x27;*&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>其中 Pod 属于 <code>core</code> 这个 API Group，在 YAML 中用空字符就可以，而 Deployment 和 ReplicaSet 现在都属于 <code>apps</code> 这个 API Group（如果不知道则可以用 <code>kubectl explain</code> 命令查看），所以 <code>rules</code> 下面的 <code>apiGroups</code> 就综合了这几个资源的 API Group：[“”, “apps”]，其中 <code>verbs</code> 就是我们上面提到的可以对这些资源对象执行的操作，我们这里需要所有的操作方法，所以我们也可以使用<code>[&#39;*&#39;]</code>来代替，然后直接创建这个 Role：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl create -f cnych-role.yaml</span><br><span class="line">role.rbac.authorization.k8s.io/cnych-role created</span><br></pre></td></tr></table></figure>
+
+<p>注意这里我们没有使用上面的 <code>cnych-context</code> 这个上下文，因为暂时还木有权限。</p>
+<h4 id="创建角色权限绑定"><a href="#创建角色权限绑定" class="headerlink" title="创建角色权限绑定"></a>创建角色权限绑定</h4><p>Role 创建完成了，但是很明显现在我们这个 <code>Role</code> 和我们的用户 <code>cnych</code> 还没有任何关系，对吧？这里就需要创建一个 <code>RoleBinding</code> 对象，在 kube-system 这个命名空间下面将上面的 <code>cnych-role</code> 角色和用户 <code>cnych</code> 进行绑定：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># cnych-rolebinding.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">rbac.authorization.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">RoleBinding</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">cnych-rolebinding</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-system</span></span><br><span class="line"><span class="attr">subjects:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">kind:</span> <span class="string">User</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">cnych</span></span><br><span class="line">    <span class="attr">apiGroup:</span> <span class="string">&#x27;&#x27;</span></span><br><span class="line"><span class="attr">roleRef:</span></span><br><span class="line">  <span class="attr">kind:</span> <span class="string">Role</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">cnych-role</span></span><br><span class="line">  <span class="attr">apiGroup:</span> <span class="string">rbac.authorization.k8s.io</span> <span class="comment"># 留空字符串也可以，则使用当前的apiGroup</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>上面的 YAML 文件中我们看到了 <code>subjects</code> 字段，这里就是我们上面提到的用来尝试操作集群的对象，这里对应上面的 <code>User</code> 帐号 <code>cnych</code>，使用 kubectl 创建上面的资源对象：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl create -f cnych-rolebinding.yaml</span><br><span class="line">rolebinding.rbac.authorization.k8s.io/cnych-rolebinding created</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h4><p>现在我们应该可以上面的 <code>cnych-context</code> 上下文来操作集群了：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl get pods --context=cnych-context</span><br><span class="line">NAME                              READY   STATUS    RESTARTS        AGE</span><br><span class="line">coredns-7568f67dbd-7std5          1/1     Running   25 (3h5m ago)   29d</span><br><span class="line">coredns-7568f67dbd-wpjpf          1/1     Running   25 (3h5m ago)   29d</span><br><span class="line">etcd-master1                      1/1     Running   31 (3h5m ago)   30d</span><br><span class="line">kube-apiserver-master1            1/1     Running   27 (3h5m ago)   30d</span><br><span class="line">kube-controller-manager-master1   1/1     Running   27 (3h5m ago)   30d</span><br><span class="line">......</span><br><span class="line">➜  ~ kubectl --context=cnych-context get rs,deploy</span><br><span class="line">NAME                                        DESIRED   CURRENT   READY   AGE</span><br><span class="line">replicaset.apps/coredns-7568f67dbd          2         2         2       30d</span><br><span class="line">replicaset.apps/metrics-server-6f667d74b6   0         0         0       9d</span><br><span class="line">replicaset.apps/metrics-server-85499dc4f5   1         1         1       9d</span><br><span class="line"></span><br><span class="line">NAME                             READY   UP-TO-DATE   AVAILABLE   AGE</span><br><span class="line">deployment.apps/coredns          2/2     2            2           30d</span><br><span class="line">deployment.apps/metrics-server   1/1     1            1           9d</span><br></pre></td></tr></table></figure>
+
+
+
+<p>我们可以看到我们使用 kubectl 的使用并没有指定 namespace，这是因为我们我们上面创建这个 Context 的时候就绑定在了 kube-system 这个命名空间下面，如果我们在后面加上一个<code>-n default</code>试看看呢？</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl --context=cnych-context get pods --namespace=default</span><br><span class="line">Error from server (Forbidden): pods is forbidden: User &quot;cnych&quot; cannot list resource &quot;pods&quot; in API group &quot;&quot; in the namespace &quot;default&quot;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>如果去获取其他的资源对象呢：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl --context=cnych-context get svc</span><br><span class="line">Error from server (Forbidden): services is forbidden: User &quot;cnych&quot; cannot list resource &quot;services&quot; in API group &quot;&quot; in the namespace &quot;kube-system&quot;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>我们可以看到没有权限获取，因为我们并没有为当前操作用户指定其他对象资源的访问权限，是符合我们的预期的。这样我们就创建了一个只有单个命名空间访问权限的普通 User 。</p>
+<h3 id="只能访问某个-namespace-的-ServiceAccount"><a href="#只能访问某个-namespace-的-ServiceAccount" class="headerlink" title="只能访问某个 namespace 的 ServiceAccount"></a>只能访问某个 namespace 的 ServiceAccount</h3><p>上面我们创建了一个只能访问某个命名空间下面的<strong>普通用户</strong>，我们前面也提到过 <code>subjects</code> 下面还有一种类型的主题资源：<code>ServiceAccount</code>，现在我们来创建一个集群内部的用户只能操作 kube-system 这个命名空间下面的 pods 和 deployments，首先来创建一个 <code>ServiceAccount</code> 对象：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl create sa cnych-sa -n kube-system</span><br></pre></td></tr></table></figure>
+
+
+
+<p>当然我们也可以定义成 YAML 文件的形式来创建：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ServiceAccount</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">cnych-sa</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-system</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>然后新建一个 Role 对象：(cnych-sa-role.yaml)</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">rbac.authorization.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Role</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">cnych-sa-role</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-system</span></span><br><span class="line"><span class="attr">rules:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">apiGroups:</span> [<span class="string">&#x27;&#x27;</span>]</span><br><span class="line">    <span class="attr">resources:</span> [<span class="string">&#x27;pods&#x27;</span>]</span><br><span class="line">    <span class="attr">verbs:</span> [<span class="string">&#x27;get&#x27;</span>, <span class="string">&#x27;watch&#x27;</span>, <span class="string">&#x27;list&#x27;</span>]</span><br><span class="line">  <span class="bullet">-</span> <span class="attr">apiGroups:</span> [<span class="string">&#x27;apps&#x27;</span>]</span><br><span class="line">    <span class="attr">resources:</span> [<span class="string">&#x27;deployments&#x27;</span>]</span><br><span class="line">    <span class="attr">verbs:</span> [<span class="string">&#x27;get&#x27;</span>, <span class="string">&#x27;list&#x27;</span>, <span class="string">&#x27;watch&#x27;</span>, <span class="string">&#x27;create&#x27;</span>, <span class="string">&#x27;update&#x27;</span>, <span class="string">&#x27;patch&#x27;</span>, <span class="string">&#x27;delete&#x27;</span>]</span><br></pre></td></tr></table></figure>
+
+
+
+<p>可以看到我们这里定义的角色没有<code>创建、删除、更新</code> Pod 的权限，待会我们可以重点测试一下，创建该 Role 对象：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl apply -f cnych-sa-role.yaml</span><br></pre></td></tr></table></figure>
+
+
+
+<p>然后创建一个 <code>RoleBinding</code> 对象，将上面的 <code>cnych-sa</code> 和角色 haimaxy-sa-role 进行绑定：(haimaxy-sa-rolebinding.yaml)</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">kind:</span> <span class="string">RoleBinding</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">rbac.authorization.k8s.io/v1</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">cnych-sa-rolebinding</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-system</span></span><br><span class="line"><span class="attr">subjects:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">kind:</span> <span class="string">ServiceAccount</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">cnych-sa</span></span><br><span class="line">    <span class="attr">namespace:</span> <span class="string">kube-system</span></span><br><span class="line"><span class="attr">roleRef:</span></span><br><span class="line">  <span class="attr">kind:</span> <span class="string">Role</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">cnych-sa-role</span></span><br><span class="line">  <span class="attr">apiGroup:</span> <span class="string">rbac.authorization.k8s.io</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>添加这个资源对象：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl create -f cnych-sa-rolebinding.yaml</span><br></pre></td></tr></table></figure>
+
+
+
+<p>然后我们怎么去验证这个 ServiceAccount 呢？我们前面的课程中是不是提到过一个 ServiceAccount 会生成一个 Secret 对象和它进行映射，这个 Secret 里面包含一个 token，我们可以利用这个 token 去登录 Dashboard，然后我们就可以在 Dashboard 中来验证我们的功能是否符合预期了：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl get secret -n kube-system |grep cnych-sa</span><br><span class="line">cnych-sa-token-nxgqx                  kubernetes.io/service-account-token   3         47m</span><br><span class="line">➜  ~ kubectl get secret cnych-sa-token-nxgqx -o jsonpath=&#123;.data.token&#125; -n kube-system |base64 -d</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">会生成一串很长的<span class="built_in">base64</span>后的字符串</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>使用这里的 token 去 Dashboard 页面进行登录：</p>
+<p><img data-src="https://picdn.youdianzhishi.com/images/1662431180888.jpg" alt="kubernetes dashboard permission"></p>
+<p>我们可以看到上面的提示信息说我们现在使用的这个 ServiceAccount 没有权限获取当前命名空间下面的资源对象，这是因为我们登录进来后默认跳转到 default 命名空间，我们切换到 kube-system 命名空间下面就可以了：</p>
+<p><img data-src="https://picdn.youdianzhishi.com/images/1662431202744.jpg" alt="kubernetes dashboard"></p>
+<p>我们可以看到可以访问 pod 列表了，但是也会有一些其他额外的提示：<code>events is forbidden: User “system:serviceaccount:kube-system:cnych-sa” cannot list events in the namespace “kube-system”</code>，这是因为当前登录用只被授权了访问 pod 和 deployment 的权限，同样的，访问下 deployment 看看可以了吗？</p>
+<p>同样的，你可以根据自己的需求来对访问用户的权限进行限制，可以自己通过 Role 定义更加细粒度的权限，也可以使用系统内置的一些权限……</p>
+<h3 id="可以全局访问的-ServiceAccount"><a href="#可以全局访问的-ServiceAccount" class="headerlink" title="可以全局访问的 ServiceAccount"></a>可以全局访问的 ServiceAccount</h3><p>刚刚我们创建的 cnych-sa 这个 <code>ServiceAccount</code> 和一个 <code>Role</code> 角色进行绑定的，如果我们现在创建一个新的 ServiceAccount，需要他操作的权限作用于所有的 namespace，这个时候我们就需要使用到 <code>ClusterRole</code> 和 <code>ClusterRoleBinding</code> 这两种资源对象了。同样，首先新建一个 ServiceAcount 对象：(cnych-sa2.yaml)</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ServiceAccount</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">cnych-sa2</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-system</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>创建：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl create -f cnych-sa2.yaml</span><br></pre></td></tr></table></figure>
+
+
+
+<p>然后创建一个 ClusterRoleBinding 对象（cnych-clusterolebinding.yaml）:</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">kind:</span> <span class="string">ClusterRoleBinding</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">rbac.authorization.k8s.io/v1beta1</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">cnych-sa2-clusterrolebinding</span></span><br><span class="line"><span class="attr">subjects:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">kind:</span> <span class="string">ServiceAccount</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">cnych-sa2</span></span><br><span class="line">    <span class="attr">namespace:</span> <span class="string">kube-system</span></span><br><span class="line"><span class="attr">roleRef:</span></span><br><span class="line">  <span class="attr">kind:</span> <span class="string">ClusterRole</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">cluster-admin</span></span><br><span class="line">  <span class="attr">apiGroup:</span> <span class="string">rbac.authorization.k8s.io</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>从上面我们可以看到我们没有为这个资源对象声明 namespace，因为这是一个 ClusterRoleBinding 资源对象，是作用于整个集群的，我们也没有单独新建一个 ClusterRole 对象，而是使用的 <code>cluster-admin</code> 这个对象，这是 Kubernetes 集群内置的 ClusterRole 对象，我们可以使用 <code>kubectl get clusterrole</code> 和 <code>kubectl get clusterrolebinding</code> 查看系统内置的一些集群角色和集群角色绑定，这里我们使用的 <code>cluster-admin</code> 这个集群角色是拥有最高权限的集群角色，所以一般需要谨慎使用该集群角色。</p>
+<p>创建上面集群角色绑定资源对象，创建完成后同样使用 ServiceAccount 对应的 token 去登录 Dashboard 验证下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl create -f cnych-clusterolebinding.yaml</span><br><span class="line">➜  ~ kubectl get secret -n kube-system |grep cnych-sa2</span><br><span class="line">cnych-sa2-token-nxgqx                  kubernetes.io/service-account-token   3         47m</span><br><span class="line">➜  ~ kubectl get secret cnych-sa2-token-nxgqx -o jsonpath=&#123;.data.token&#125; -n kube-system |base64 -d</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">会生成一串很长的<span class="built_in">base64</span>后的字符串</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p><img data-src="https://picdn.youdianzhishi.com/images/1662431215780.jpg" alt="kubernetes dashboard"></p>
+<p>我们在最开始接触到 RBAC 认证的时候，可能不太熟悉，特别是不知道应该怎么去编写 rules 规则，大家可以去分析系统自带的 <code>clusterrole</code>、<code>clusterrolebinding</code> 这些资源对象的编写方法，怎么分析？还是利用 kubectl 的 get、describe、 <code>-o yaml</code> 这些操作，所以 kubectl 最基本的操作用户一定要掌握好。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/RIP%20(Routing%20Information%20Protocol)%20%E5%8D%8F%E8%AE%AE/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/RIP%20(Routing%20Information%20Protocol)%20%E5%8D%8F%E8%AE%AE/" class="post-title-link" itemprop="url">RIP (Routing Information Protocol) 协议</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:54:00" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/" itemprop="url" rel="index"><span itemprop="name">WEB</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/Http/" itemprop="url" rel="index"><span itemprop="name">Http</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.6k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>2 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="RIP-Routing-Information-Protocol-协议的工作原理及特点"><a href="#RIP-Routing-Information-Protocol-协议的工作原理及特点" class="headerlink" title="RIP (Routing Information Protocol) 协议的工作原理及特点"></a>RIP (Routing Information Protocol) 协议的工作原理及特点</h3><p>RIP (Routing Information Protocol) 是一种经典的**距离向量路由协议 (Distance-Vector Routing Protocol)**，用于在内部网关 (Interior Gateway Protocol, IGP) 环境中交换路由信息。它历史悠久，简单易用，但存在一些固有的局限性。</p>
+<hr>
+<h4 id="RIP-的工作原理："><a href="#RIP-的工作原理：" class="headerlink" title="RIP 的工作原理："></a>RIP 的工作原理：</h4><p>RIP 的工作原理基于 <strong>Bellman-Ford 算法</strong>的变体，其核心思想是每个路由器维护一个到所有已知目的地的距离向量，并定期与邻居交换此信息。</p>
+<ol>
+<li><p><strong>里程 (Metric) - 跳数 (Hop Count)：</strong></p>
+<ul>
+<li>RIP 使用<strong>跳数 (Hop Count)</strong> 作为唯一的路由度量（metric）。</li>
+<li>每经过一个路由器，跳数就增加 1。</li>
+<li><strong>最大跳数限制：</strong> RIP 的最大跳数限制为 <strong>15 跳</strong>。这意味着任何超过 15 跳的目的地都被认为是不可达的（即距离为无穷大）。这是 RIP 最大的局限性之一，使其不适合大型网络。</li>
+</ul>
+</li>
+<li><p><strong>距离向量的维护：</strong></p>
+<ul>
+<li>每个 RIP 路由器维护一个**路由表 (Routing Table)**，其中包含以下信息：<ul>
+<li><strong>目的地网络：</strong> 该路由器所知道的所有可达网络。</li>
+<li><strong>跳数 (Metric)：</strong> 到达该目的地的最低跳数。</li>
+<li><strong>下一跳 (Next-Hop)：</strong> 到达该目的地的下一个路由器（通过哪个接口发送到哪个邻居）。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>路由通告 (Route Advertisement)：</strong></p>
+<ul>
+<li>RIP 路由器会定期（默认每 <strong>30 秒</strong>）将其完整的路由表作为<strong>路由更新报文</strong>（RIP Update Message）发送给所有<strong>直连的邻居</strong>。</li>
+<li>当一个路由器收到邻居的路由更新报文时：<ul>
+<li>它会将报文中的所有路由条目的跳数<strong>加 1</strong> (因为这些路由是通过邻居转发的，多了一跳)。</li>
+<li>然后，它会将这些更新后的路由与自己当前的路由表进行比较。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>路由表的更新规则：</strong></p>
+<ul>
+<li><strong>发现新路由：</strong> 如果收到的路由是它当前路由表中没有的新路由，则将其添加到路由表中。</li>
+<li><strong>路径更优：</strong> 如果收到的路由指向已知的目的地，但其新的跳数更小（即路径更短），则更新路由表，采用这条更优的路径。</li>
+<li><strong>通过同一邻居发现相同路由：</strong> 如果收到的路由与现有路由相同，并且是通过同一邻居学到的，则更新其定时器（防止路由失效）。</li>
+<li><strong>路径劣化：</strong> 如果收到的路由指向已知目的地，但跳数更大，通常不会立即更新，除非当前路由失效。</li>
+</ul>
+</li>
+<li><p><strong>路由撤销与聚合：</strong></p>
+<ul>
+<li><strong>路由失效定时器 (Invalid Timer&#x2F;Route Timeout):</strong> 如果一个路由器在 <strong>180 秒</strong>（默认）内没有收到某个路由的更新，它会认为该路由已失效，并将其跳数设置为 16 (无穷大)，标记为不可达。</li>
+<li><strong>保持计时器 (Holddown Timer):</strong> 为了防止在路由失效时出现路由环路，RIP 通常会采用“保持计时器”。在路由被标记为不可达后的一段时间内（默认 <strong>180 秒</strong>），路由器不会接受来自任何邻居的关于该目的地的更优路由（除非是来自原先通告该路由的邻居，且该邻居通告该路由已恢复）。</li>
+<li><strong>垃圾收集定时器 (Garbage-Collection Timer):</strong> 在路由被标记为不可达（跳数 16）后，它仍会在路由表中保留一段垃圾收集时间（默认 <strong>240 秒</strong>），在此期间它会继续通告这条“不可达”的路由，以确保全网都知道它已失效。这段时间结束后才从路由表中删除。</li>
+<li><strong>路由聚合 (Route Summarization):</strong> RIPv2 支持路由聚合，将多个连续的子网聚合成一个更大的网络，减少路由表的规模和路由更新的数量。</li>
+</ul>
+</li>
+<li><p><strong>防止路由环路 (Loop Prevention) 机制：</strong></p>
+<ul>
+<li><strong>水平分割 (Split Horizon):</strong> 从某个接口学到的路由，不会再从这个接口发送回去。这能有效防止两跳路由环路。</li>
+<li><strong>路由中毒 (Route Poisoning) 和毒性反转 (Poison Reverse):</strong> 当一个路由失效时，路由器会立即将其跳数设置为 16 (无穷大)，并通过更新报文通告出去。毒性反转是，如果路由器从一个接口学到某个路由，当该路由失效时，它会向该接口回发一个跳数为 16 的更新，以确保该接口的邻居知道此路由已失效。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h4 id="RIP-的特点："><a href="#RIP-的特点：" class="headerlink" title="RIP 的特点："></a>RIP 的特点：</h4><p><strong>优点：</strong></p>
+<ul>
+<li><strong>简单易配置：</strong> RIP 配置相对简单，是小型网络的理想选择。</li>
+<li><strong>资源占用低：</strong> 对路由器 CPU、内存和带宽的需求较低。</li>
+<li><strong>普遍支持：</strong> 几乎所有路由器都支持 RIP。</li>
+</ul>
+<p><strong>缺点&#x2F;局限性：</strong></p>
+<ol>
+<li><strong>最大跳数限制 (15 跳)：</strong> 这是 RIP 最主要的限制，使得它不适用于大型或中型网络，因为超过 15 跳的目的地将无法到达。</li>
+<li><strong>收敛速度慢：</strong><ul>
+<li>定期更新（30 秒一次）导致网络变化（如链路故障）传播到全网的时间较长。</li>
+<li>依赖定时器和防止环路机制（如保持计时器），进一步延长了收敛时间。</li>
+<li>在网络拓扑变化时，可能出现**路由环路 (Routing Loops)**，导致数据包无限循环（虽然有机制缓解，但无法完全消除）。</li>
+<li><strong>“计数到无穷大”问题 (Count-to-Infinity Problem):</strong> 当一条链路失效时，如果处理不当，可能导致路由器之间互相通告错误的更优路径，从而导致跳数逐渐增加到 16（无穷大），才能发现真正不可达，整个过程耗时较长。</li>
+</ul>
+</li>
+<li><strong>仅支持跳数度量：</strong> 不考虑链路带宽、延迟、负载等更真实的因素，可能导致选择次优路径（例如，一条经过光纤的 5 跳路径可能比一条经过卫星的 3 跳路径更快，但 RIP 会选择 3 跳路径）。</li>
+<li><strong>占用带宽：</strong> 每 30 秒广播或多播其完整的路由表（即使没有变化），对大型网络而言，这会消耗不必要的带宽。</li>
+<li><strong>不支持 VLSM&#x2F;CIDR (RIPv1)：</strong><ul>
+<li><strong>RIPv1 (RIP Version 1):</strong> 是一个<strong>有类别 (Classful)</strong> 路由协议，它不携带子网掩码信息，不支持可变长子网掩码 (VLSM) 和无类别域间路由 (CIDR)。这意味着所有在相同主网络下的子网必须使用相同的子网掩码。</li>
+<li><strong>RIPv2 (RIP Version 2):</strong> 是一个<strong>无类别 (Classless)</strong> 路由协议，它在路由更新报文中包含子网掩码信息，支持 VLSM 和 CIDR，并支持路由聚合和身份验证（MD5）。RIPv2 比 RIPv1 更常用更优越。</li>
+</ul>
+</li>
+<li><strong>安全问题：</strong> RIPv1 缺乏身份验证，RIPv2 支持简单的 MD5 身份验证，但相对其他协议仍较弱。</li>
+<li><strong>扩展性差：</strong> 由于上述限制，RIP 很难扩展到大型复杂的网络环境中，通常只适用于小型、平面化的网络。</li>
+</ol>
+<p><strong>总结：</strong></p>
+<p>RIP 协议因其简单性而在小型网络中仍有一定应用，尤其是在传统或资源有限的环境中。然而，由于其跳数限制、慢收敛速度和对网络复杂性缺乏支持，它在大中型企业网络或互联网骨干网中已被 OSPF、EIGRP 和 BGP 等更先进的路由协议所取代。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/RIR%20%E5%8D%8F%E8%AE%AE/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/RIR%20%E5%8D%8F%E8%AE%AE/" class="post-title-link" itemprop="url">RIR 协议</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:54:15" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/" itemprop="url" rel="index"><span itemprop="name">WEB</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/Http/" itemprop="url" rel="index"><span itemprop="name">Http</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.6k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>2 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="RIP-Routing-Information-Protocol-协议的工作原理及特点"><a href="#RIP-Routing-Information-Protocol-协议的工作原理及特点" class="headerlink" title="RIP (Routing Information Protocol) 协议的工作原理及特点"></a>RIP (Routing Information Protocol) 协议的工作原理及特点</h3><p>RIP (Routing Information Protocol) 是一种经典的**距离向量路由协议 (Distance-Vector Routing Protocol)**，用于在内部网关 (Interior Gateway Protocol, IGP) 环境中交换路由信息。它历史悠久，简单易用，但存在一些固有的局限性。</p>
+<hr>
+<h4 id="RIP-的工作原理："><a href="#RIP-的工作原理：" class="headerlink" title="RIP 的工作原理："></a>RIP 的工作原理：</h4><p>RIP 的工作原理基于 <strong>Bellman-Ford 算法</strong>的变体，其核心思想是每个路由器维护一个到所有已知目的地的距离向量，并定期与邻居交换此信息。</p>
+<ol>
+<li><p><strong>里程 (Metric) - 跳数 (Hop Count)：</strong></p>
+<ul>
+<li>RIP 使用<strong>跳数 (Hop Count)</strong> 作为唯一的路由度量（metric）。</li>
+<li>每经过一个路由器，跳数就增加 1。</li>
+<li><strong>最大跳数限制：</strong> RIP 的最大跳数限制为 <strong>15 跳</strong>。这意味着任何超过 15 跳的目的地都被认为是不可达的（即距离为无穷大）。这是 RIP 最大的局限性之一，使其不适合大型网络。</li>
+</ul>
+</li>
+<li><p><strong>距离向量的维护：</strong></p>
+<ul>
+<li>每个 RIP 路由器维护一个**路由表 (Routing Table)**，其中包含以下信息：<ul>
+<li><strong>目的地网络：</strong> 该路由器所知道的所有可达网络。</li>
+<li><strong>跳数 (Metric)：</strong> 到达该目的地的最低跳数。</li>
+<li><strong>下一跳 (Next-Hop)：</strong> 到达该目的地的下一个路由器（通过哪个接口发送到哪个邻居）。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>路由通告 (Route Advertisement)：</strong></p>
+<ul>
+<li>RIP 路由器会定期（默认每 <strong>30 秒</strong>）将其完整的路由表作为<strong>路由更新报文</strong>（RIP Update Message）发送给所有<strong>直连的邻居</strong>。</li>
+<li>当一个路由器收到邻居的路由更新报文时：<ul>
+<li>它会将报文中的所有路由条目的跳数<strong>加 1</strong> (因为这些路由是通过邻居转发的，多了一跳)。</li>
+<li>然后，它会将这些更新后的路由与自己当前的路由表进行比较。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>路由表的更新规则：</strong></p>
+<ul>
+<li><strong>发现新路由：</strong> 如果收到的路由是它当前路由表中没有的新路由，则将其添加到路由表中。</li>
+<li><strong>路径更优：</strong> 如果收到的路由指向已知的目的地，但其新的跳数更小（即路径更短），则更新路由表，采用这条更优的路径。</li>
+<li><strong>通过同一邻居发现相同路由：</strong> 如果收到的路由与现有路由相同，并且是通过同一邻居学到的，则更新其定时器（防止路由失效）。</li>
+<li><strong>路径劣化：</strong> 如果收到的路由指向已知目的地，但跳数更大，通常不会立即更新，除非当前路由失效。</li>
+</ul>
+</li>
+<li><p><strong>路由撤销与聚合：</strong></p>
+<ul>
+<li><strong>路由失效定时器 (Invalid Timer&#x2F;Route Timeout):</strong> 如果一个路由器在 <strong>180 秒</strong>（默认）内没有收到某个路由的更新，它会认为该路由已失效，并将其跳数设置为 16 (无穷大)，标记为不可达。</li>
+<li><strong>保持计时器 (Holddown Timer):</strong> 为了防止在路由失效时出现路由环路，RIP 通常会采用“保持计时器”。在路由被标记为不可达后的一段时间内（默认 <strong>180 秒</strong>），路由器不会接受来自任何邻居的关于该目的地的更优路由（除非是来自原先通告该路由的邻居，且该邻居通告该路由已恢复）。</li>
+<li><strong>垃圾收集定时器 (Garbage-Collection Timer):</strong> 在路由被标记为不可达（跳数 16）后，它仍会在路由表中保留一段垃圾收集时间（默认 <strong>240 秒</strong>），在此期间它会继续通告这条“不可达”的路由，以确保全网都知道它已失效。这段时间结束后才从路由表中删除。</li>
+<li><strong>路由聚合 (Route Summarization):</strong> RIPv2 支持路由聚合，将多个连续的子网聚合成一个更大的网络，减少路由表的规模和路由更新的数量。</li>
+</ul>
+</li>
+<li><p><strong>防止路由环路 (Loop Prevention) 机制：</strong></p>
+<ul>
+<li><strong>水平分割 (Split Horizon):</strong> 从某个接口学到的路由，不会再从这个接口发送回去。这能有效防止两跳路由环路。</li>
+<li><strong>路由中毒 (Route Poisoning) 和毒性反转 (Poison Reverse):</strong> 当一个路由失效时，路由器会立即将其跳数设置为 16 (无穷大)，并通过更新报文通告出去。毒性反转是，如果路由器从一个接口学到某个路由，当该路由失效时，它会向该接口回发一个跳数为 16 的更新，以确保该接口的邻居知道此路由已失效。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h4 id="RIP-的特点："><a href="#RIP-的特点：" class="headerlink" title="RIP 的特点："></a>RIP 的特点：</h4><p><strong>优点：</strong></p>
+<ul>
+<li><strong>简单易配置：</strong> RIP 配置相对简单，是小型网络的理想选择。</li>
+<li><strong>资源占用低：</strong> 对路由器 CPU、内存和带宽的需求较低。</li>
+<li><strong>普遍支持：</strong> 几乎所有路由器都支持 RIP。</li>
+</ul>
+<p><strong>缺点&#x2F;局限性：</strong></p>
+<ol>
+<li><strong>最大跳数限制 (15 跳)：</strong> 这是 RIP 最主要的限制，使得它不适用于大型或中型网络，因为超过 15 跳的目的地将无法到达。</li>
+<li><strong>收敛速度慢：</strong><ul>
+<li>定期更新（30 秒一次）导致网络变化（如链路故障）传播到全网的时间较长。</li>
+<li>依赖定时器和防止环路机制（如保持计时器），进一步延长了收敛时间。</li>
+<li>在网络拓扑变化时，可能出现**路由环路 (Routing Loops)**，导致数据包无限循环（虽然有机制缓解，但无法完全消除）。</li>
+<li><strong>“计数到无穷大”问题 (Count-to-Infinity Problem):</strong> 当一条链路失效时，如果处理不当，可能导致路由器之间互相通告错误的更优路径，从而导致跳数逐渐增加到 16（无穷大），才能发现真正不可达，整个过程耗时较长。</li>
+</ul>
+</li>
+<li><strong>仅支持跳数度量：</strong> 不考虑链路带宽、延迟、负载等更真实的因素，可能导致选择次优路径（例如，一条经过光纤的 5 跳路径可能比一条经过卫星的 3 跳路径更快，但 RIP 会选择 3 跳路径）。</li>
+<li><strong>占用带宽：</strong> 每 30 秒广播或多播其完整的路由表（即使没有变化），对大型网络而言，这会消耗不必要的带宽。</li>
+<li><strong>不支持 VLSM&#x2F;CIDR (RIPv1)：</strong><ul>
+<li><strong>RIPv1 (RIP Version 1):</strong> 是一个<strong>有类别 (Classful)</strong> 路由协议，它不携带子网掩码信息，不支持可变长子网掩码 (VLSM) 和无类别域间路由 (CIDR)。这意味着所有在相同主网络下的子网必须使用相同的子网掩码。</li>
+<li><strong>RIPv2 (RIP Version 2):</strong> 是一个<strong>无类别 (Classless)</strong> 路由协议，它在路由更新报文中包含子网掩码信息，支持 VLSM 和 CIDR，并支持路由聚合和身份验证（MD5）。RIPv2 比 RIPv1 更常用更优越。</li>
+</ul>
+</li>
+<li><strong>安全问题：</strong> RIPv1 缺乏身份验证，RIPv2 支持简单的 MD5 身份验证，但相对其他协议仍较弱。</li>
+<li><strong>扩展性差：</strong> 由于上述限制，RIP 很难扩展到大型复杂的网络环境中，通常只适用于小型、平面化的网络。</li>
+</ol>
+<p><strong>总结：</strong></p>
+<p>RIP 协议因其简单性而在小型网络中仍有一定应用，尤其是在传统或资源有限的环境中。然而，由于其跳数限制、慢收敛速度和对网络复杂性缺乏支持，它在大中型企业网络或互联网骨干网中已被 OSPF、EIGRP 和 BGP 等更先进的路由协议所取代。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Relabe/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/Relabe/" class="post-title-link" itemprop="url">Relabe</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:53:45" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/" itemprop="url" rel="index"><span itemprop="name">k8s-monitor</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/Prometheus/" itemprop="url" rel="index"><span itemprop="name">Prometheus</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/Prometheus/%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0/" itemprop="url" rel="index"><span itemprop="name">服务发现</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>7k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>6 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="Relabeling-重新标记"><a href="#Relabeling-重新标记" class="headerlink" title="Relabeling 重新标记"></a>Relabeling 重新标记</h1><p>Relabeling 重新标记用于配置 Prometheus 元信息的方式，它是转换和过滤 Prometheus 中 label 标签对象的核心，本章节我们将了解 Relabeling 规则的工作原理，并能够将它们应用于不同的场景中。</p>
+<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>Prometheus 发现、抓取和处理不同类型的 label 标签对象，根据标签值操作或过滤这些对象非常有用，比如：</p>
+<ul>
+<li>只监视具有特定服务发现注解的某些目标，通常在服务发现中使用</li>
+<li>向目标抓取请求添加 HTTP 查询参数</li>
+<li>仅存储从指定目标中提取样本的子集</li>
+<li>将抓取序列的两个标签值合并为一个标签</li>
+</ul>
+<p>Relabeling 是作为一系列转换步骤实现的，我们可以在 Prometheus 的配置文件中应用这些步骤来过滤或修改标记对象，我们可以对一下类型的标记对象应用 Relabeling 操作：</p>
+<ul>
+<li>发现的抓取目标（<code>relabel_configs</code>）</li>
+<li>抓取的单个样本（<code>metric_relabel_configs</code>）</li>
+<li>发送给 Alertmanager 的报警（<code>alert_relabel_configs</code>）</li>
+<li>写到远程存储的样本（<code>write_relabel_configs</code>）</li>
+</ul>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/9244dg.png" alt="relabel configs"></p>
+<blockquote>
+<p>平时在配置监控目标的时候我们更多的会使用 <code>relabel_configs</code> 与 <code>metric_relabel_configs</code> 两个配置，采集数据之前，通过 <code>relabel_configs</code>，采集数据之后，写入存储之前，通过 <code>metric_relabel_configs</code> 进行配置。</p>
+</blockquote>
+<p>所有这些 relabeling 配置块都是相同类型的 <code>relabel_config</code>，每个配置块都由一个规则列表组成，这些规则依次应用与每个标记的对象。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/aupaw0.png" alt="relabeling rules"></p>
+<p>例如，一个 relabeling 规则可以根据正则表达式的匹配来保留或丢弃一个对象，可以修改其标签，也可以将一整组标签映射到另一组。一旦一个 relabeling 步骤决定放弃一个有标签的对象，就不会对这个对象执行进一步的 relabeling 步骤，它将从输出列表中删除。</p>
+<h2 id="隐藏的标签与元数据"><a href="#隐藏的标签与元数据" class="headerlink" title="隐藏的标签与元数据"></a>隐藏的标签与元数据</h2><p>以双下划线<code>__</code>开头的标签属于特殊的标签，它们在重新标记后会被删除。标记对象的来源最初可以附加这些<strong>隐藏</strong>的标签，以提供关于标记对象的额外元数据，这些特殊的标签可以在 relabeling 阶段被用来对对象的标签进行修改。</p>
+<p>对于抓取指标，其中就包含一些隐藏的标签，可以用来控制目标应该如何被抓取。</p>
+<ul>
+<li><code>__address__</code>：包含应该被抓取目标的地址，它最初默认为服务发现机制提供的 <code>&lt;host&gt;:&lt;port&gt;</code>，如果在此之前没有明确地将实例标签 instance 设置为其他值，那么在 relabeling 之后，Prometheus 会将 instance 标签设置为 <code>__address__</code> 的值。</li>
+<li><code>__scheme__</code>：抓取目标的请求模式，包括 http 与 https，默认为 http。</li>
+<li><code>__metrics_path__</code>：表示用于采集指标的 HTTP 路径，默认为 <code>/metrics</code>。</li>
+<li><code>__param_&lt;name&gt;</code>: 包含 HTTP 查询参数名称和它们的值。</li>
+</ul>
+<p>上面的这些标签都可以使用 relabeling 规则来设置或覆盖，这样就可以为抓取目标进行自定义抓取行为。</p>
+<p>此外，服务发现机制也可以提供一组以 <code>__meta_</code> 开头的标签，包含关于目标的特定发现元数据。例如，当发现 Kubernetes 集群中的 pod 时，Kubernetes 服务发现引擎将为每个 pod 目标提供一个 <code>__meta_kubernetes_pod_name</code> 的标签，包含被发现的 pod 的名字，以及一个 <code>__meta_kubernetes_pod_ready</code> 标签，表明 pod 是否处于就绪状态，关于服务发现生成的元标签可以查看官方文档 <a target="_blank" rel="noopener" href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config">https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config</a> 了解更多。</p>
+<p>如果一个 relabeling 步骤需要将一个值保存到一个临时标签中（以便在随后的步骤中处理），那么我们可以使用 <code>__tmp</code> 标签名称前缀进行标记，以 <code>__tmp</code> 开通的标签是不会被 Prometheus 本身使用的。</p>
+<h2 id="规则"><a href="#规则" class="headerlink" title="规则"></a>规则</h2><p>Relabeling 规则主要由以下的一些配置属性组成，但对于每种类型的操作，只使用这些字段的一个子集。</p>
+<ul>
+<li><code>action</code>：执行的 relabeling 动作，可选值包括 <code>replace</code>、<code>keep</code>、<code>drop</code>、<code>hashmod</code>、<code>labelmap</code>、<code>labeldrop</code> 或者 <code>labelkeep</code>，默认值为 <code>replace</code>。</li>
+<li><code>separator</code>：分隔符，一个字符串，用于在连接源标签 <code>source_labels</code> 时分隔它们，默认为<code>;</code>。</li>
+<li><code>source_labels</code>：源标签，使用配置的分隔符串联的标签名称列表，并与提供的正则表达式进行匹配。</li>
+<li><code>target_label</code>：目标标签，当使用 replace 或者 hashmod 动作时，应该被覆盖的标签名。</li>
+<li><code>regex</code>：正则表达式，用于匹配串联的源标签，默认为 <code>(.*)</code>，匹配任何源标签。</li>
+<li><code>modulus</code>：模数，串联的源标签哈希值的模，主要用于 Prometheus 水平分片。</li>
+<li><code>replacement</code>：replacement 字符串，写在目标标签上，用于替换 relabeling 动作，它可以参考由 regex 捕获的正则表达式捕获组。</li>
+</ul>
+<h3 id="设置或替换标签值"><a href="#设置或替换标签值" class="headerlink" title="设置或替换标签值"></a>设置或替换标签值</h3><p>Relabeling 的一个常见操作就是设置或者覆盖一个标签的值，我们可以通过 <code>replace</code> 这个操作来完成，如果没有指定 <code>action</code> 字段，则默认就是 <code>replace</code>。</p>
+<p>一个 <code>replace</code> 动作的规则配置方式如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">action:</span> <span class="string">replace</span></span><br><span class="line"><span class="attr">source_labels:</span> [<span class="string">&lt;source</span> <span class="string">label</span> <span class="string">name</span> <span class="string">list&gt;</span>]</span><br><span class="line"><span class="attr">separator:</span> <span class="string">&lt;source</span> <span class="string">labels</span> <span class="string">separator&gt;</span> <span class="comment"># 默认为 &#x27;;&#x27;</span></span><br><span class="line"><span class="attr">regex:</span> <span class="string">&lt;regular</span> <span class="string">expression&gt;</span> <span class="comment"># 默认为 &#x27;(.*)&#x27; (匹配任何值))</span></span><br><span class="line"><span class="attr">replacement:</span> <span class="string">&lt;replacement</span> <span class="string">string&gt;</span> <span class="comment"># 默认为 &#x27;$1&#x27; (使用第一个捕获组作为 replacement)</span></span><br><span class="line"><span class="attr">target_label:</span> <span class="string">&lt;target</span> <span class="string">label&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>该操作按顺序执行以下步骤：</p>
+<ul>
+<li>使用提供的 separator 分隔符将 source_labels 中的标签列表值连接起来</li>
+<li>测试 regex 中的正则表达式是否与上一步连接的字符串匹配，如果不匹配，就跳到下一个 relabeling 规则，不替换任何东西</li>
+<li>如果正则匹配，就提取正则表达式捕获组中的值，并将 replacement 字符串中对这些组的引用($1, $2, …)用它们的值替换</li>
+<li>把经过正则表达式替换的 replacement 字符串作为 target_label 标签的新值存储起来</li>
+</ul>
+<p>下面我们来简单看一看 <code>replace</code> 操作的示例。</p>
+<p><strong>设置一个固定的标签值</strong></p>
+<p>最简单的 replace 例子就是将一个标签设置为一个固定的值，比如你可以把 <code>env</code> 标签设置为 <code>production</code>：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">action:</span> <span class="string">replace</span></span><br><span class="line"><span class="attr">replacement:</span> <span class="string">production</span></span><br><span class="line"><span class="attr">target_label:</span> <span class="string">env</span></span><br></pre></td></tr></table></figure>
+
+<p>这里我们并没有设置规则的大部分属性，这是因为大部分的默认值已经可以满足这里的需求了，这里会将替换的字符串 <code>production</code> 作为 target_label 标签 <code>env</code> 的新值存储起来，也就是将 <code>env</code> 标签的值设置为 <code>production</code>。</p>
+<p><strong>替换抓取任务端口</strong></p>
+<p>另一个稍微复杂的示例是重写一个被抓取任务实例的端口，我们可以用一个固定的 80 端口来替换 <code>__address__</code> 标签的端口：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">action:</span> <span class="string">replace</span></span><br><span class="line"><span class="attr">source_labels:</span> [<span class="string">__address__</span>]</span><br><span class="line"><span class="attr">regex:</span> <span class="string">([^:]+)(?::\d+)?</span> <span class="comment"># 第一个捕获组匹配的是 host，第二个匹配的是 port 端口。</span></span><br><span class="line"><span class="attr">replacement:</span> <span class="string">&#x27;$1:80&#x27;</span></span><br><span class="line"><span class="attr">target_label:</span> <span class="string">__address__</span></span><br></pre></td></tr></table></figure>
+
+<p>这里我们替换的源标签为 <code>__address__</code>，然后通过正则表达式 <code>([^:]+)(?::\d+)?</code> 进行匹配，这里有两个捕获组，第一个匹配的是 host($1)，第二个匹配的是端口($2)，所以在 <code>replacement</code> 字符串中我们保留第一个捕获组 $1，然后将端口更改为 80，这样就可以将 <code>__address__</code> 的实例端口更改为 80 端口，然后重新写会 <code>__address__</code> 这个目标标签。</p>
+<h3 id="保留或丢弃对象"><a href="#保留或丢弃对象" class="headerlink" title="保留或丢弃对象"></a>保留或丢弃对象</h3><p>Relabeling 另一个常见的用例就是过滤有标签的对象，<code>keep</code> 或 <code>drop</code> 这两个动作可以来完成，使用这两个操作，可以帮助我们完成如下的一些操作：</p>
+<ul>
+<li>来自服务发现的哪些目标应该被抓取</li>
+<li>从目标中抓取哪些指定的序列样本，或将其发送到远程存储</li>
+<li>哪些报警要发送到 Alertmanager</li>
+</ul>
+<p>一个 <code>keep</code> 动作的配置规则如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">action:</span> <span class="string">keep</span></span><br><span class="line"><span class="attr">source_labels:</span> [<span class="string">&lt;source</span> <span class="string">label</span> <span class="string">name</span> <span class="string">list&gt;</span>]</span><br><span class="line"><span class="attr">separator:</span> <span class="string">&lt;source</span> <span class="string">labels</span> <span class="string">separator&gt;</span> <span class="comment"># 默认为 &#x27;;&#x27;</span></span><br><span class="line"><span class="attr">regex:</span> <span class="string">&lt;regular</span> <span class="string">expression&gt;</span> <span class="comment"># 默认为 &#x27;(.*)&#x27; (匹配任何值)</span></span><br></pre></td></tr></table></figure>
+
+<p><code>keep</code> 操作同样按顺序执行如下步骤：</p>
+<ul>
+<li>使用 separator 分隔符将 source_labels 中列出的标签值连接起来</li>
+<li>测试 regex 中的正则表达式是否与上一步的连接字符串匹配</li>
+<li>如果不匹配，该对象将从最终输出列表中删除</li>
+<li>如果匹配，则保留该对象</li>
+</ul>
+<p><code>drop</code> 动作和 <code>keep</code> 类似，只是它是删除一个对象而不是保留。</p>
+<p>同样接下来看一看 <code>keep</code> 和 <code>drop</code> 的示例。</p>
+<p><strong>只抓取具有注解的目标</strong></p>
+<p>在服务发现的时候，我们可能只想抓取那些具有特定元数据标签的目标，例如，下面的配置让我们只抓取 Kubernetes 中具有 <code>example.io/should_be_scraped=true</code> 这个 annotation 的目标。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">action:</span> <span class="string">keep</span></span><br><span class="line"><span class="attr">source_labels:</span></span><br><span class="line">  [<span class="string">__meta_kubernetes_service_annotation_example_io_should_be_scraped</span>]</span><br><span class="line"><span class="attr">regex:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p>Kubernetes 服务发现机制下面会将 labels 标签与 annotation 作为元信息输出到 Prometheus，这些元信息都包含 <code>__meta_</code> 前缀，这里我们的配置就是保留具有 <code>example.io/should_be_scraped</code> 这个 annotation 标签，且值为 <code>true</code> 的目标。</p>
+<p><strong>只存储特定的指标</strong></p>
+<p>当使用 <code>metric_relabel_configs</code> 来控制目标的抓取方式时，我们可以使用下面的规则来只存储指标名称以 <code>api_</code> 或 <code>http_</code> 开头的指标。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">action:</span> <span class="string">keep</span></span><br><span class="line"><span class="attr">source_labels:</span> [<span class="string">__name__</span>]</span><br><span class="line"><span class="attr">regex:</span> <span class="string">&#x27;(api_|http_).*&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="标签集映射"><a href="#标签集映射" class="headerlink" title="标签集映射"></a>标签集映射</h3><p>有时我们可能想把源标签的值映射到一组新的标签中去，这个时候就可以使用 <code>labelmap</code> 这个动作了。<code>labelmap</code> 最常用的使用场景就是从服务发现中获取一组隐藏的或临时的元数据标签，并将它们映射到新的目标标签中。</p>
+<p><code>labelmap</code> 动作的配置规则如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">action:</span> <span class="string">labelmap</span></span><br><span class="line"><span class="attr">regex:</span> <span class="string">&lt;regular</span> <span class="string">expression&gt;</span> <span class="comment"># 默认为 &#x27;(.*)&#x27;</span></span><br><span class="line"><span class="attr">replacement:</span> <span class="string">&lt;replacement</span> <span class="string">string&gt;</span> <span class="comment"># 默认为 &#x27;$1&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>和前面的一些 action 不同，<code>labelmap</code> 是对标签名而不是标签值进行重新匹配和操作。<code>labelmap</code> 按顺序执行以下步骤：</p>
+<ul>
+<li>将 regex 中的正则表达式与所有标签名进行匹配</li>
+<li>将匹配的标签名的任何匹配值复制到由 <code>replacement</code> 字符串决定的新的标签名中</li>
+</ul>
+<p>下面我们看一个使用 <code>labelmap</code> 映射 Kubernetes Service 标签的示例。当使用基于 Kubernetes 的服务发现来发现 pod 端点时，我们可能希望每个端点的最终目标标签也包含 Kubernetes Service 标签，这样可以更好的区分端点数据。Kubernetes 服务发现机制会将这些标签添加到 Prometheus 中去，标签名称格式为 <code>__meta_kubernetes_service_label_&lt;labelname&gt;</code>，我们可以提取这些元数据标签中的 <code>&lt;labelname&gt;</code> 部分，并将相应的标签值映射到一组以 <code>k8s_</code> 为前缀的新标签名称上，如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">action:</span> <span class="string">labelmap</span></span><br><span class="line"><span class="attr">regex:</span> <span class="string">__meta_kubernetes_service_label_(.+)</span></span><br><span class="line"><span class="attr">replacement:</span> <span class="string">&#x27;k8s_$1&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>通过上面的 <code>labelmap</code> 操作，regex 正则表达式中匹配标签名，然后将标签名对应的值复制到 <code>k8s_$1</code> 的新标签中，<code>$1</code> 就是匹配的标签名这个捕获组。</p>
+<h3 id="保留或删除标签"><a href="#保留或删除标签" class="headerlink" title="保留或删除标签"></a>保留或删除标签</h3><p>有的时候我们也有保留或删除一些标签的需求，比如有的目标在时间序列上提供了许多额外的标签，这些标签用途不大，这个时候我们就可以使用 <code>labelkeep</code> 和 <code>labeldrop</code> 这两个操作，使用这两个操作可以有选择地保留或删除一些标签。</p>
+<p><code>labelkeep</code> 的配置规则如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">action:</span> <span class="string">labelkeep</span></span><br><span class="line"><span class="attr">regex:</span> <span class="string">&lt;regular</span> <span class="string">expression&gt;</span> <span class="comment"># 默认为&#x27;(.*)&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>一样 <code>labelkeep</code> 按顺序执行下面的步骤：</p>
+<ul>
+<li>首先将 regex 中的正则表达式与所有标签名称进行匹配</li>
+<li>它只保留那些匹配的标签</li>
+</ul>
+<p><code>labeldrop</code> 与 <code>labelkeep</code> 类似，只是它是删除那些匹配正则表达式的标签而不是保留。</p>
+<p>下面我们看一看 <code>labelkeep/labeldrop</code> 操作的简单示例。</p>
+<p><strong>从报警中删除高可用副本标签</strong></p>
+<p>当运行两个相同的 Prometheus 作高可用的时候，通常两个服务器都被配置为有一个外部标签（通过全局配置选项 <code>external_labels</code>），表明它们代表哪个副本，例如：<code>replica: A</code> 和 <code>replica: B</code>，在从两个副本向同一个 Alertmanager 实例发送报警之前，Prometheus 需要删除这个副本标签，这样 Alertmanager 就不会把收到的报警看成不同的报警了，否则可能我们会收到两个同样的报警通知。这个时候我们就可以使用 <code>labeldrop</code> 来实现这个操作。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">action:</span> <span class="string">labeldrop</span></span><br><span class="line"><span class="attr">regex:</span> <span class="string">replica</span></span><br></pre></td></tr></table></figure>
+
+<p>这条配置规则很简单的，就是匹配 <code>replica</code> 这个标签，然后执行 <code>labeldrop</code> 删除标签动作即可。</p>
+<p><strong>删除指标中不需要的标签</strong></p>
+<p>有的时候我们抓取的指标在每个时间序列上都附加了一些额外的标签，这些标签对于我们来说用处不大，还会增加 Prometheus 的存储压力，所以我们可以想办法删除不需要的额外标签。</p>
+<p>比如现在我们想要删除一 <code>info_</code> 开头的标签，我们可以使用下面的配置规则来完成。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">action:</span> <span class="string">labeldrop</span></span><br><span class="line"><span class="attr">regex:</span> <span class="string">info_.*</span></span><br></pre></td></tr></table></figure>
+
+<p>同样也只是配置一个要删除的目标标签的正则表达式即可，只要匹配了的标签都会执行 <code>labeldrop</code> 操作将该标签进行删除。</p>
+<h3 id="标签值哈希和分片"><a href="#标签值哈希和分片" class="headerlink" title="标签值哈希和分片"></a>标签值哈希和分片</h3><p>在一些场景下我们可能需要运行多个几乎相同的 Prometheus 副本来横向扩展，每个副本只抓取部分目标，这样可以降低 Prometheus 的压力，在这种情况下 <code>hashmod</code> 操作有助于我们对目标进行分片操作。</p>
+<p><code>hashmod</code> 的配置规则如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">action:</span> <span class="string">hashmod</span></span><br><span class="line"><span class="attr">source_labels:</span> [<span class="string">&lt;source</span> <span class="string">label</span> <span class="string">name</span> <span class="string">list&gt;</span>]</span><br><span class="line"><span class="attr">modulus:</span> <span class="string">&lt;modulus</span> <span class="string">value&gt;</span></span><br><span class="line"><span class="attr">target_label:</span> <span class="string">&lt;target</span> <span class="string">label&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>该操作按顺序执行下面的步骤：</p>
+<ul>
+<li>首先使用分隔符将源标签集 source_labels 的值连接起来</li>
+<li>计算连接后的字符串的哈希值</li>
+<li>将 <code>modulus</code> 中提供的模数应用于哈希值，以将哈希值限制在 0 和<code>modulus-1</code>之间</li>
+<li>将上一步的模数值存储在 target_label 目标标签中</li>
+</ul>
+<p>使用 <code>hashmod</code> 的主要场景是将一个服务的整体目标进行分片，用于水平扩展 Prometheus，通过首先根据每个目标的一个或多个标签计算基于哈希的模数来实现的，然后只保留具有特定输出模数值的目标。比如为了根据 <code>instance</code> 标签对目标进行分片，只保留分片 2 的实例，我们可以把 <code>hashmod</code> 和 <code>keep</code> 结合起来操作。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">action:</span> <span class="string">hashmod</span></span><br><span class="line">  <span class="attr">source_labels:</span> [<span class="string">instance</span>]</span><br><span class="line">  <span class="attr">modulus:</span> <span class="number">10</span></span><br><span class="line">  <span class="attr">target_label:</span> <span class="string">__tmp_hashmod</span></span><br><span class="line"><span class="bullet">-</span> <span class="attr">action:</span> <span class="string">keep</span></span><br><span class="line">  <span class="attr">source_labels:</span> [<span class="string">__tmp_hashmod</span>]</span><br><span class="line">  <span class="attr">regex:</span> <span class="number">2</span></span><br></pre></td></tr></table></figure>
+
+<p>首先通过 <code>hashmod</code> 操作对 <code>instance</code> 标签进去哈希操作，将取模后的值存储在临时标签 <code>__tmp_hashmod</code> 中，然后通过第二个 <code>keep</code> 操作，只保留分片数为 2 的指标，这样就达到了分片的目的。</p>
+<p>到这里我们基本上就了解了 relabeling 的使用，接下来我们可以来了解下服务发现在 Prometheus 中的使用。、</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/ReplicaSet/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/ReplicaSet/" class="post-title-link" itemprop="url">ReplicaSet</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:53:53" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E6%8E%A7%E5%88%B6%E5%99%A8/" itemprop="url" rel="index"><span itemprop="name">控制器</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>7.2k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>7 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="ReplicaSet-控制器"><a href="#ReplicaSet-控制器" class="headerlink" title="ReplicaSet 控制器"></a>ReplicaSet 控制器</h1><p>前面我们一起学习了 Pod 的原理和一些基本使用，但是在实际使用的时候并不会直接使用 Pod，而是会使用各种控制器来满足我们的需求，Kubernetes 中运行了一系列控制器来确保集群的当前状态与期望状态保持一致，它们就是 Kubernetes 的大脑。例如，ReplicaSet 控制器负责维护集群中运行的 Pod 数量；Node 控制器负责监控节点的状态，并在节点出现故障时及时做出响应。总而言之，在 Kubernetes 中，每个控制器只负责某种类型的特定资源。</p>
+<h2 id="控制器"><a href="#控制器" class="headerlink" title="控制器"></a>控制器</h2><p>Kubernetes 控制器会监听资源的 <code>创建/更新/删除</code> 事件，并触发 <code>Reconcile</code> 调谐函数作为响应，整个调整过程被称作 <code>“Reconcile Loop”（调谐循环）</code> 或者 <code>“Sync Loop”（同步循环）</code>。Reconcile 是一个使用资源对象的命名空间和资源对象名称来调用的函数，使得资源对象的实际状态与 资源清单中定义的状态保持一致。调用完成后，Reconcile 会将资源对象的状态更新为当前实际状态。我们可以用下面的一段伪代码来表示这个过程：</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> &#123;</span><br><span class="line">  desired := getDesiredState()  <span class="comment">// 期望的状态</span></span><br><span class="line">  current := getCurrentState()  <span class="comment">// 当前实际状态</span></span><br><span class="line">  <span class="keyword">if</span> current == desired &#123;  <span class="comment">// 如果状态一致则什么都不做</span></span><br><span class="line">    <span class="comment">// nothing to do</span></span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;  <span class="comment">// 如果状态不一致则调整编排，到一致为止</span></span><br><span class="line">    <span class="comment">// change current to desired status</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个编排模型就是 Kubernetes 项目中的一个通用编排模式，即：<code>控制循环（control loop）</code>。</p>
+<h2 id="ReplicaSet"><a href="#ReplicaSet" class="headerlink" title="ReplicaSet"></a>ReplicaSet</h2><p>假如我们现在有一个 Pod 正在提供线上的服务，我们来想想一下我们可能会遇到的一些场景：</p>
+<ul>
+<li>某次运营活动非常成功，网站访问量突然暴增</li>
+<li>运行当前 Pod 的节点发生故障了，Pod 不能正常提供服务了</li>
+</ul>
+<p>第一种情况，可能比较好应对，活动之前我们可以大概计算下会有多大的访问量，提前多启动几个 Pod 副本，活动结束后再把多余的 Pod 杀掉，虽然有点麻烦，但是还是能够应对这种情况的。</p>
+<p>第二种情况，可能某天夜里收到大量报警说服务挂了，然后起来打开电脑在另外的节点上重新启动一个新的 Pod，问题可以解决。</p>
+<p>但是如果我们都人工的去解决遇到的这些问题，似乎又回到了以前刀耕火种的时代了是吧？如果有一种工具能够来帮助我们自动管理 Pod 就好了，Pod 挂了自动帮我在合适的节点上重新启动一个 Pod，这样是不是遇到上面的问题我们都不需要手动去解决了。</p>
+<p>而 ReplicaSet 这种资源对象就可以来帮助我们实现这个功能，<code>ReplicaSet（RS）</code> 的主要作用就是维持一组 Pod 副本的运行，保证一定数量的 Pod 在集群中正常运行，ReplicaSet 控制器会持续监听它说控制的这些 Pod 的运行状态，在 Pod 发送故障数量减少或者增加时会触发调谐过程，始终保持副本数量一定。</p>
+<p>和 Pod 一样我们仍然还是通过 YAML 文件来描述我们的 ReplicaSet 资源对象，如下 YAML 文件是一个常见的 ReplicaSet 定义：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># nginx-rs.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ReplicaSet</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nginx-rs</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">default</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">3</span> <span class="comment"># 期望的 Pod 副本数量，默认值为1</span></span><br><span class="line">  <span class="attr">selector:</span> <span class="comment"># Label Selector，必须匹配 Pod 模板中的标签</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">nginx</span></span><br><span class="line">  <span class="attr">template:</span> <span class="comment"># Pod 模板</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">nginx</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">nginx</span></span><br><span class="line">          <span class="attr">image:</span> <span class="string">nginx</span></span><br><span class="line">          <span class="attr">ports:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">80</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>上面的 YAML 文件结构和我们之前定义的 Pod 看上去没太大两样，有常见的 apiVersion、kind、metadata，在 spec 下面描述 ReplicaSet 的基本信息，其中包含 3 个重要内容：</p>
+<ul>
+<li>replias：表示期望的 Pod 的副本数量</li>
+<li>selector：Label Selector，用来匹配要控制的 Pod 标签，需要和下面的 Pod 模板中的标签一致</li>
+<li>template：Pod 模板，实际上就是以前我们定义的 Pod 内容，相当于把一个 Pod 的描述以模板的形式嵌入到了 ReplicaSet 中来。</li>
+</ul>
+<p><strong>Pod 模板</strong></p>
+<p>Pod 模板这个概念非常重要，因为后面我们讲解到的大多数控制器，都会使用 Pod 模板来统一定义它所要管理的 Pod。更有意思的是，我们还会看到其他类型的对象模板，比如 Volume 的模板等。</p>
+<p>上面就是我们定义的一个普通的 ReplicaSet 资源清单文件，ReplicaSet 控制器会通过定义的 Label Selector 标签去查找集群中的 Pod 对象：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/8t5n0k.jpg" alt="replicaset top"></p>
+<p>我们直接来创建上面的资源对象：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl apply -f nginx-rs.yaml</span><br><span class="line">replicaset.apps/nginx-rs created</span><br><span class="line">➜  ~ kubectl get rs nginx-rs</span><br><span class="line">NAME       DESIRED   CURRENT   READY   AGE</span><br><span class="line">nginx-rs   3         3         3       17m</span><br></pre></td></tr></table></figure>
+
+
+
+<p>通过查看 RS 可以看到当前资源对象的描述信息，包括<code>DESIRED</code>、<code>CURRENT</code>、<code>READY</code>的状态值，创建完成后，可以利用如下命令查看下 Pod 列表：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl get pods -l app=nginx</span><br><span class="line">NAME             READY   STATUS              RESTARTS   AGE</span><br><span class="line">nginx-rs-nxklf   1/1     Running   0          52s</span><br><span class="line">nginx-rs-t46qc   1/1     Running   0          52s</span><br><span class="line">nginx-rs-xfqrn   1/1     Running   0          52s</span><br></pre></td></tr></table></figure>
+
+
+
+<p>可以看到现在有 3 个 Pod，这 3 个 Pod 就是我们在 RS 中声明的 3 个副本，比如我们删除其中一个 Pod：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl delete pod nginx-rs-xfqrn</span><br><span class="line">pod &quot;nginx-rs-xfqrn&quot; deleted</span><br></pre></td></tr></table></figure>
+
+
+
+<p>然后再查看 Pod 列表：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl get pods -l app=nginx</span><br><span class="line">NAME             READY   STATUS    RESTARTS   AGE</span><br><span class="line">nginx-rs-nxklf   1/1     Running   0          3m19s</span><br><span class="line">nginx-rs-t46qc   1/1     Running   0          3m19s</span><br><span class="line">nginx-rs-xsb59   1/1     Running   0          10s</span><br></pre></td></tr></table></figure>
+
+
+
+<p>可以看到又重新出现了一个 Pod，这个就是上面我们所说的 ReplicaSet 控制器为我们做的工作，我们在 YAML 文件中声明了 3 个副本，然后现在我们删除了一个副本，就变成了两个，这个时候 ReplicaSet 控制器监控到控制的 Pod 数量和期望的 3 不一致，所以就需要启动一个新的 Pod 来保持 3 个副本，这个过程上面我们说了就是<code>调谐</code>的过程。同样可以查看 RS 的描述信息来查看到相关的事件信息：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl describe rs nginx-rs</span><br><span class="line">Name:         nginx-rs</span><br><span class="line">Namespace:    default</span><br><span class="line">Selector:     app=nginx</span><br><span class="line">Labels:       &lt;none&gt;</span><br><span class="line">Annotations:  kubectl.kubernetes.io/last-applied-configuration:</span><br><span class="line">                &#123;&quot;apiVersion&quot;:&quot;apps/v1&quot;,&quot;kind&quot;:&quot;ReplicaSet&quot;,&quot;metadata&quot;:&#123;&quot;annotations&quot;:&#123;&#125;,&quot;name&quot;:&quot;nginx-rs&quot;,&quot;namespace&quot;:&quot;default&quot;&#125;,&quot;spec&quot;:&#123;&quot;replicas&quot;:3,&quot;se...</span><br><span class="line">Replicas:     3 current / 3 desired</span><br><span class="line">Pods Status:  3 Running / 0 Waiting / 0 Succeeded / 0 Failed</span><br><span class="line">Pod Template:</span><br><span class="line">  Labels:  app=nginx</span><br><span class="line">  Containers:</span><br><span class="line">   nginx:</span><br><span class="line">    Image:        nginx</span><br><span class="line">    Port:         80/TCP</span><br><span class="line">    Host Port:    0/TCP</span><br><span class="line">    Environment:  &lt;none&gt;</span><br><span class="line">    Mounts:       &lt;none&gt;</span><br><span class="line">  Volumes:        &lt;none&gt;</span><br><span class="line">Events:</span><br><span class="line">  Type    Reason            Age   From                   Message</span><br><span class="line">  ----    ------            ----  ----                   -------</span><br><span class="line">  Normal  SuccessfulCreate  17m   replicaset-controller  Created pod: nginx-rs-xfqrn</span><br><span class="line">  Normal  SuccessfulCreate  17m   replicaset-controller  Created pod: nginx-rs-nxklf</span><br><span class="line">  Normal  SuccessfulCreate  17m   replicaset-controller  Created pod: nginx-rs-t46qc</span><br><span class="line">  Normal  SuccessfulCreate  14m   replicaset-controller  Created pod: nginx-rs-xsb59</span><br></pre></td></tr></table></figure>
+
+
+
+<p>可以发现最开始通过 ReplicaSet 控制器创建了 3 个 Pod，后面我们删除了 Pod 后， ReplicaSet 控制器又为我们创建了一个 Pod，和上面我们的描述是一致的。如果这个时候我们把 RS 资源对象的 Pod 副本更改为 2 <code>spec.replicas=2</code>，这个时候我们来更新下资源对象：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl apply -f rs.yaml</span><br><span class="line">replicaset.apps/nginx-rs configured</span><br><span class="line">➜  ~ kubectl get rs nginx-rs</span><br><span class="line">NAME       DESIRED   CURRENT   READY   AGE</span><br><span class="line">nginx-rs   2         2         2       27m</span><br><span class="line"><span class="meta prompt_">$ </span><span class="language-bash">kubectl describe rs nginx-rs</span></span><br><span class="line">Name:         nginx-rs</span><br><span class="line">Namespace:    default</span><br><span class="line">Selector:     app=nginx</span><br><span class="line">Labels:       &lt;none&gt;</span><br><span class="line">Annotations:  kubectl.kubernetes.io/last-applied-configuration:</span><br><span class="line">                &#123;&quot;apiVersion&quot;:&quot;apps/v1&quot;,&quot;kind&quot;:&quot;ReplicaSet&quot;,&quot;metadata&quot;:&#123;&quot;annotations&quot;:&#123;&#125;,&quot;name&quot;:&quot;nginx-rs&quot;,&quot;namespace&quot;:&quot;default&quot;&#125;,&quot;spec&quot;:&#123;&quot;replicas&quot;:2,&quot;se...</span><br><span class="line">Replicas:     2 current / 2 desired</span><br><span class="line">Pods Status:  2 Running / 1 Waiting / 0 Succeeded / 0 Failed</span><br><span class="line">Pod Template:</span><br><span class="line">  Labels:  app=nginx</span><br><span class="line">  Containers:</span><br><span class="line">   nginx:</span><br><span class="line">    Image:        nginx</span><br><span class="line">    Port:         80/TCP</span><br><span class="line">    Host Port:    0/TCP</span><br><span class="line">    Environment:  &lt;none&gt;</span><br><span class="line">    Mounts:       &lt;none&gt;</span><br><span class="line">  Volumes:        &lt;none&gt;</span><br><span class="line">Events:</span><br><span class="line">  Type    Reason            Age   From                   Message</span><br><span class="line">  ----    ------            ----  ----                   -------</span><br><span class="line">  Normal  SuccessfulCreate  27m   replicaset-controller  Created pod: nginx-rs-xfqrn</span><br><span class="line">  Normal  SuccessfulCreate  27m   replicaset-controller  Created pod: nginx-rs-nxklf</span><br><span class="line">  Normal  SuccessfulCreate  27m   replicaset-controller  Created pod: nginx-rs-t46qc</span><br><span class="line">  Normal  SuccessfulCreate  24m   replicaset-controller  Created pod: nginx-rs-xsb59</span><br><span class="line">  Normal  SuccessfulDelete  7s    replicaset-controller  Deleted pod: nginx-rs-xsb59</span><br></pre></td></tr></table></figure>
+
+<p>可以看到 Replicaset 控制器在发现我们的资源声明中副本数变更为 2 后，就主动去删除了一个 Pod，这样副本数就和期望的始终保持一致了：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl get pods -l app=nginx</span><br><span class="line">NAME             READY   STATUS    RESTARTS   AGE</span><br><span class="line">nginx-rs-nxklf   1/1     Running   0          30m</span><br><span class="line">nginx-rs-t46qc   1/1     Running   0          30m</span><br></pre></td></tr></table></figure>
+
+<p>我们可以随便查看一个 Pod 的描述信息可以看到这个 Pod 的所属控制器信息：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl describe pod nginx-rs-xsb59</span><br><span class="line">Name:               nginx-rs-xsb59</span><br><span class="line">Namespace:          default</span><br><span class="line">Priority:           0</span><br><span class="line">PriorityClassName:  &lt;none&gt;</span><br><span class="line">Node:               ydzs-node1/10.151.30.22</span><br><span class="line">Start Time:         Fri, 15 Nov 2019 14:18:10 +0800</span><br><span class="line">Labels:             app=nginx</span><br><span class="line">Annotations:        &lt;none&gt;</span><br><span class="line">Status:             Running</span><br><span class="line">IP:                 10.244.1.148</span><br><span class="line">Controlled By:      ReplicaSet/nginx-rs</span><br><span class="line">.......</span><br></pre></td></tr></table></figure>
+
+<p>另外被 ReplicaSet 持有的 Pod 有一个 <code>metadata.ownerReferences</code> 指针指向当前的 ReplicaSet，表示当前 Pod 的所有者，这个引用主要会被集群中的<strong>垃圾收集器</strong>使用以清理失去所有者的 Pod 对象。这个 <code>ownerReferences</code> 和数据库中的<code>外键</code>是不是非常类似。可以通过将 Pod 资源描述信息导出查看：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl get pod nginx-rs-xsb59 -o yaml</span><br><span class="line">apiVersion: v1</span><br><span class="line">kind: Pod</span><br><span class="line">metadata:</span><br><span class="line">  creationTimestamp: &quot;2021-11-03T06:18:10Z&quot;</span><br><span class="line">  generateName: nginx-rs-</span><br><span class="line">  labels:</span><br><span class="line">    app: nginx</span><br><span class="line">  name: nginx-rs-xsb59</span><br><span class="line">  namespace: default</span><br><span class="line">  ownerReferences:</span><br><span class="line">  - apiVersion: apps/v1</span><br><span class="line">    blockOwnerDeletion: true</span><br><span class="line">    controller: true</span><br><span class="line">    kind: ReplicaSet</span><br><span class="line">    name: nginx-rs</span><br><span class="line">    uid: 4a3121fa-b5ae-4def-b2d2-bf17bc06b7b7</span><br><span class="line">  resourceVersion: &quot;1781596&quot;</span><br><span class="line">  selfLink: /api/v1/namespaces/default/pods/nginx-rs-xsb59</span><br><span class="line">  uid: 0a4cae9a-105b-4024-ae96-ee516bfb2d23</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+
+<p>我们可以看到 Pod 中有一个 <code>metadata.ownerReferences</code> 的字段指向了 ReplicaSet 资源对象。如果要彻底删除 Pod，我们就只能删除 RS 对象：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl delete rs nginx-rs</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">或者执行 kubectl delete -f nginx-rs.yaml</span></span><br></pre></td></tr></table></figure>
+
+<p>这就是 ReplicaSet 对象的基本使用。</p>
+<h2 id="Replication-Controller（可忽略）"><a href="#Replication-Controller（可忽略）" class="headerlink" title="Replication Controller（可忽略）"></a>Replication Controller（可忽略）</h2><p>Replication Controller 简称 RC，实际上 RC 和 RS 的功能几乎一致，RS 算是对 RC 的改进，目前唯一的一个区别就是 RC 只支持基于等式的 selector（env&#x3D;dev 或 environment!&#x3D;qa），但 RS 还支持基于集合的 selector（version in (v1.0, v2.0)），这对复杂的运维管理就非常方便了。</p>
+<p>比如上面资源对象如果我们要使用 RC 的话，对应的 selector 是这样的：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">selector:</span></span><br><span class="line">  <span class="attr">app:</span> <span class="string">nginx</span></span><br></pre></td></tr></table></figure>
+
+<p>RC 只支持单个 Label 的等式，而 RS 中的 Label Selector 支持 <code>matchLabels</code> 和 <code>matchExpressions</code> 两种形式：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">selector:</span></span><br><span class="line">  <span class="attr">matchLabels:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">nginx</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">selector:</span></span><br><span class="line">  <span class="attr">matchExpressions:</span> <span class="comment"># 该选择器要求 Pod 包含名为 app 的标签</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">key:</span> <span class="string">app</span></span><br><span class="line">      <span class="attr">operator:</span> <span class="string">In</span></span><br><span class="line">      <span class="attr">values:</span> <span class="comment"># 并且标签的值必须是 nginx</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">nginx</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>总的来说 RS 是新一代的 RC，所以以后我们不使用 RC，直接使用 RS 即可，他们的功能都是一致的，但是实际上在实际使用中我们也不会直接使用 RS，而是使用更上层的类似于 Deployment 这样的资源对象。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/RocketMQ%20%E4%B8%AD%E5%85%B3%E4%BA%8E%E4%BA%8B%E5%8A%A1%E6%B6%88%E6%81%AF%E7%9A%84%E5%AE%9E%E7%8E%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/RocketMQ%20%E4%B8%AD%E5%85%B3%E4%BA%8E%E4%BA%8B%E5%8A%A1%E6%B6%88%E6%81%AF%E7%9A%84%E5%AE%9E%E7%8E%B0/" class="post-title-link" itemprop="url">RocketMQ 中关于事务消息的实现</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:54:29" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MQ/" itemprop="url" rel="index"><span itemprop="name">MQ</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MQ/RocketMQ/" itemprop="url" rel="index"><span itemprop="name">RocketMQ</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <p>您好！分布式事务是后端系统中非常关键的环节，而 RocketMQ 在这方面提供了强大的<strong>事务消息（Transaction Message）</strong>机制，旨在解决分布式系统中的数据最终一致性问题。它的实现基于经典的<strong>两阶段提交（Two-Phase Commit, 2PC）</strong>思想，但对其进行了优化，使其更适合异步消息场景。</p>
+<p>我将从以下几个方面专业且逻辑清晰地阐述 RocketMQ 事务消息的实现：</p>
+<hr>
+<h3 id="一、-核心思想：两阶段提交（2PC）的优化与异步化"><a href="#一、-核心思想：两阶段提交（2PC）的优化与异步化" class="headerlink" title="一、 核心思想：两阶段提交（2PC）的优化与异步化"></a>一、 核心思想：两阶段提交（2PC）的优化与异步化</h3><p>RocketMQ 的事务消息旨在确保生产者发送消息和执行本地事务的原子性。它将传统的同步两阶段提交分解为异步的“半消息”和“消息确认&#x2F;回滚”两个阶段，并通过<strong>事务消息回查</strong>机制来处理异常情况。</p>
+<p>其核心流程可以概括为：</p>
+<ol>
+<li><strong>第一阶段（准备阶段）：发送半消息 (Half Message)</strong><br>生产者将消息发送到 Broker，但此时消息是“半态”或“预处理”状态，对消费者是不可见的。</li>
+<li><strong>第二阶段（执行&#x2F;提交阶段）：执行本地事务并确认</strong><br>生产者执行自己的本地事务。根据本地事务的执行结果（成功或失败），向 Broker 发送 Commit（提交）或 Rollback（回滚）指令。</li>
+<li><strong>补偿阶段（事务回查）：处理异常</strong><br>如果生产者在发送完半消息后，但在发送 Commit&#x2F;Rollback 指令前宕机，或者长时间未发送指令，Broker 会主动向生产者发起回查，查询本地事务的真实状态，然后根据回查结果决定消息的最终状态。</li>
+</ol>
+<hr>
+<h3 id="二、-事务消息的实现流程详解"><a href="#二、-事务消息的实现流程详解" class="headerlink" title="二、 事务消息的实现流程详解"></a>二、 事务消息的实现流程详解</h3><p>我们通过一个经典的<strong>订单创建与库存扣减</strong>场景来详细说明流程：</p>
+<h4 id="参与者："><a href="#参与者：" class="headerlink" title="参与者："></a>参与者：</h4><ul>
+<li><strong>Producer（生产者）：</strong> 业务应用，例如订单服务。</li>
+<li><strong>Broker（消息代理）：</strong> RocketMQ 服务器，负责消息存储和传递。</li>
+<li><strong>Consumer（消费者）：</strong> 业务应用，例如库存服务。</li>
+</ul>
+<h4 id="内部使用的特殊-Topic-对开发者透明-："><a href="#内部使用的特殊-Topic-对开发者透明-：" class="headerlink" title="内部使用的特殊 Topic (对开发者透明)："></a>内部使用的特殊 Topic (对开发者透明)：</h4><ul>
+<li><code>RMQ_SYS_TRANS_HALF_TOPIC</code>：用于存储处于“半消息”状态的消息。消费者无法订阅此 Topic。</li>
+<li><code>RMQ_SYS_TRANS_OP_TOPIC</code>：用于记录事务操作日志（Commit&#x2F;Rollback等），辅助事务消息的最终状态维护和恢复。</li>
+</ul>
+<h4 id="具体步骤："><a href="#具体步骤：" class="headerlink" title="具体步骤："></a>具体步骤：</h4><ol>
+<li><p><strong>生产者发送事务预处理消息（Half Message）</strong></p>
+<ul>
+<li><strong>操作：</strong> 生产者调用 <code>sendMessageInTransaction</code> API，将一个“半消息”发送到 Broker。</li>
+<li><strong>Broker 行为：</strong><ul>
+<li>Broker 收到半消息后，不立即将其投递到实际的 Topic，而是存储在内部的 <code>RMQ_SYS_TRANS_HALF_TOPIC</code>。</li>
+<li>Broker 会给消息打上 <code>Prepared</code>（预处理）状态，并记录消息的生产者地址和事务 ID。</li>
+<li>Broker 成功接收后，会返回 <code>SEND_OK</code> 给生产者。</li>
+</ul>
+</li>
+<li><strong>状态：</strong> 此时，消息对消费者是不可见的。</li>
+</ul>
+</li>
+<li><p><strong>生产者执行本地事务</strong></p>
+<ul>
+<li><strong>操作：</strong> 生产者接收到 Broker 的 <code>SEND_OK</code> 响应后，执行与该业务消息相关的本地事务。例如：订单服务将订单数据写入数据库。</li>
+<li><strong>核心：</strong> 生产者需要实现一个 <code>TransactionListener</code> 接口（旧版本是 <code>LocalTransactionExecutor</code>），其中包含 <code>executeLocalTransaction</code> 方法。在这个方法中执行本地事务逻辑。</li>
+</ul>
+</li>
+<li><p><strong>生产者根据本地事务结果发送二次确认&#x2F;回滚指令</strong></p>
+<ul>
+<li><strong>操作：</strong><ul>
+<li>如果本地事务执行成功，生产者返回 <code>LocalTransactionState.COMMIT_MESSAGE</code>。</li>
+<li>如果本地事务执行失败，生产者返回 <code>LocalTransactionState.ROLLBACK_MESSAGE</code>。</li>
+<li>如果本地事务状态不明确（例如：数据库连接断开），生产者返回 <code>LocalTransactionState.UNKNOW</code>。</li>
+</ul>
+</li>
+<li><strong>Broker 行为（根据生产者指令）：</strong><ul>
+<li><strong>COMMIT_MESSAGE：</strong> Broker 将 <code>RMQ_SYS_TRANS_HALF_TOPIC</code> 中的半消息，真正投递到目标 Topic（例如 <code>OrderTopic</code>），并标记为 <code>Commit</code> 状态。此时，消息对消费者可见。</li>
+<li><strong>ROLLBACK_MESSAGE：</strong> Broker 将 <code>RMQ_SYS_TRANS_HALF_TOPIC</code> 中的半消息删除或标记为无效，永远不会投递到目标 Topic。</li>
+<li><strong>UNKNOWN：</strong> Broker 不做任何处理，等待后续的回查。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>Broker 端的事务回查机制（Transaction Checker）</strong><br>这是 RocketMQ 事务消息能够处理异常、保证最终一致性的关键所在。</p>
+<ul>
+<li><strong>触发条件：</strong><ul>
+<li>生产者在发送半消息后未能及时发送第二次 OPeration（Commit&#x2F;Rollback）消息给 Broker（例如生产者宕机）。</li>
+<li>生产者发送的第二次 Operation 消息是 <code>UNKNOWN</code> 状态。</li>
+</ul>
+</li>
+<li><strong>Broker 行为：</strong><ul>
+<li>Broker 会定期（例如，每隔 1 分钟）扫描 <code>RMQ_SYS_TRANS_HALF_TOPIC</code>，查找长时间处于 <code>Prepared</code> 状态（例如超过 6 秒，默认值可配置）的半消息。</li>
+<li>对于这些“悬而未决”的半消息，Broker 会根据消息中记录的生产者地址，向原始生产者发送<strong>事务回查请求</strong>。</li>
+</ul>
+</li>
+<li><strong>生产者行为（事务回查）：</strong><ul>
+<li>生产者需要实现 <code>TransactionListener</code> 接口中的 <code>checkLocalTransaction</code> 方法。</li>
+<li>在这个方法中，生产者会查询其本地数据库中对应事务的真实状态（例如，根据订单 ID 查询订单是否已创建成功）。</li>
+<li>根据查询结果，生产者再次返回 <code>LocalTransactionState.COMMIT_MESSAGE</code>、<code>ROLLBACK_MESSAGE</code> 或 <code>UNKNOWN</code> 给 Broker。</li>
+</ul>
+</li>
+<li><strong>Broker 后续处理：</strong> Broker 根据生产者回查的结果，执行 Commit 或 Rollback 操作。</li>
+<li><strong>重试与死信：</strong> 如果多次回查（默认 3 次）仍然返回 <code>UNKNOWN</code>，或者生产者始终不在线无法响应回查，Broker会根据配置的策略处理。通常，经过多次重试仍无法确定的消息会被丢弃（Rollback），或者进入死信队列进行人工干预。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3 id="三、-RocketMQ-事务消息的优势与注意事项"><a href="#三、-RocketMQ-事务消息的优势与注意事项" class="headerlink" title="三、 RocketMQ 事务消息的优势与注意事项"></a>三、 RocketMQ 事务消息的优势与注意事项</h3><h4 id="优势："><a href="#优势：" class="headerlink" title="优势："></a>优势：</h4><ol>
+<li><strong>实现最终一致性：</strong> 确保了生产者本地事务与消息发送的原子性，从而保证了分布式环境下数据的一致性。</li>
+<li><strong>高性能：</strong> 相较于 XA 类型的分布式事务，RocketMQ 的事务消息是异步的，不锁定资源，对性能影响小。</li>
+<li><strong>高可用：</strong> 即使生产者在某个阶段宕机，Broker 的回查机制也能确保事务的最终完成或回滚。</li>
+<li><strong>低耦合：</strong> 生产者和消费者之间通过消息队列解耦，系统扩展性更好。</li>
+</ol>
+<h4 id="注意事项："><a href="#注意事项：" class="headerlink" title="注意事项："></a>注意事项：</h4><ol>
+<li><strong>生产者 <code>checkLocalTransaction</code> 的正确性：</strong> 这是整个机制的核心和难点。生产者必须能够准确地查询到本地事务的真实状态，并且这个查询操作本身是幂等的和可靠的。通常，这意味着本地事务的关键步骤需要记录到持久化存储（如数据库）中。</li>
+<li><strong>消费者幂等性：</strong> 即使使用了事务消息，消费者仍然应该实现幂等性。因为消息 Commit 成功后，仍然可能由于网络抖动或其他因素，导致消费者收到重复消息。</li>
+<li><strong>事务超时处理：</strong> 合理设置事务回查的超时时间非常重要。如果太短可能会导致频繁回查，太长则可能延长事务不确定的时间。</li>
+<li><strong><code>UNKNOWN</code> 状态的处理：</strong> 生产者在 <code>checkLocalTransaction</code> 中返回 <code>UNKNOWN</code> 时，Broker 会继续进行回查。如果多次回查仍是 <code>UNKNOWN</code>，最终结果可能根据配置决定（通常是回滚），因此应尽量避免 <code>UNKNOWN</code> 状态的长期存在。</li>
+</ol>
+<hr>
+<p>通过上述机制，RocketMQ 的事务消息提供了一种强大且相对轻量级的解决方案，用于在分布式系统中可靠地管理和协调数据的一致性。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/SNMP/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2025/09/11/SNMP/" class="post-title-link" itemprop="url">SNMP</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:05:59" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/" itemprop="url" rel="index"><span itemprop="name">WEB</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/Http/" itemprop="url" rel="index"><span itemprop="name">Http</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.4k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>2 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h3 id="什么是-SNMP？"><a href="#什么是-SNMP？" class="headerlink" title="什么是 SNMP？"></a>什么是 SNMP？</h3><p><strong>SNMP</strong> (Simple Network Management Protocol)，即<strong>简单网络管理协议</strong>，是用于<strong>网络管理</strong>的<strong>标准协议</strong>。它允许网络管理员在 IP 网络上远程<strong>收集、组织和修改信息</strong>，以监控网络设备（如路由器、交换机、服务器、打印机、防火墙等）的运行状态、性能数据以及配置信息。</p>
+<p>本质上，SNMP 提供了一种通用的语言和框架，让不同的网络设备能够向管理系统报告自己的状态，并接收管理系统的指令。</p>
+<h3 id="SNMP-的核心组件："><a href="#SNMP-的核心组件：" class="headerlink" title="SNMP 的核心组件："></a>SNMP 的核心组件：</h3><p>SNMP 模型由三个主要组件组成：</p>
+<ol>
+<li><p><strong>SNMP 管理站 (NMS - Network Management System)：</strong></p>
+<ul>
+<li>通常是一个运行着特定网络管理软件的计算机。</li>
+<li>它是网络管理员与 SNMP 协议交互的界面。</li>
+<li>负责向代理发送请求、接收代理的响应、处理陷阱 (Traps) 和通知 (Informs)，并以图形或文本形式展示网络设备的健康状况和性能数据。</li>
+<li>例如：Nagios, Zabbix, PRTG, SolarWinds 等监控软件都可以作为 NMS。</li>
+</ul>
+</li>
+<li><p><strong>SNMP 代理 (SNMP Agent)：</strong></p>
+<ul>
+<li>运行在被管理网络设备（如路由器、交换机、服务器、打印机）上的软件模块。</li>
+<li>它负责收集设备本地的管理信息，并将其转化为 SNMP 兼容的格式。</li>
+<li>接收来自 NMS 的请求，执行相应操作，并将结果返回给 NMS。</li>
+<li>当设备发生预定义的重要事件时，代理可以主动向 NMS 发送通知。</li>
+</ul>
+</li>
+<li><p><strong>管理信息库 (MIB - Management Information Base)：</strong></p>
+<ul>
+<li>一个结构化的“数据库”，或者更准确地说，是一个层次化的、树形的命名空间，定义了网络设备上所有可被管理的对象及其属性。</li>
+<li>MIB 中的每个可管理对象都有一个唯一的标识符，称为 **OID (Object Identifier)**，它是一个由数字组成的长串，例如 <code>1.3.6.1.2.1.1.5.0</code> 表示设备的名称。</li>
+<li>NMS 通过 OID 请求特定信息，SNMP 代理根据 OID 找到对应的数据并返回。</li>
+<li>MIB 提供了 SNMP 代理和 NMS 之间共享的“词汇表”，确保双方能够理解彼此请求和响应的数据内容。</li>
+</ul>
+</li>
+</ol>
+<h3 id="SNMP-的工作原理："><a href="#SNMP-的工作原理：" class="headerlink" title="SNMP 的工作原理："></a>SNMP 的工作原理：</h3><p>SNMP 使用 UDP 协议（通常是端口 161 用于请求&#x2F;响应，端口 162 用于陷阱）进行通信。其工作原理主要围绕以下消息类型：</p>
+<ol>
+<li><p><strong>GetRequest (获取请求)：</strong></p>
+<ul>
+<li><strong>作用：</strong> NMS 向代理请求一个或多个 MIB 对象的值。</li>
+<li><strong>过程：</strong> NMS 发送 <code>GetRequest</code> 消息，指定要获取的 OID。代理接收请求后，查找对应的本地数据，并将数据封装在 <code>GetResponse</code> 消息中返回给 NMS。</li>
+</ul>
+</li>
+<li><p><strong>GetNextRequest (获取下一个请求)：</strong></p>
+<ul>
+<li><strong>作用：</strong> NMS 请求 MIB 树形结构中某个 OID 的下一个逻辑对象的值。这常用于遍历 MIB 表或发现代理支持的所有对象。</li>
+<li><strong>过程：</strong> NMS 发送 <code>GetNextRequest</code>，代理返回列表中下一个 OID 及其对应的值。</li>
+</ul>
+</li>
+<li><p><strong>GetBulkRequest (批量获取请求 - SNMPv2c&#x2F;v3)：</strong></p>
+<ul>
+<li><strong>作用：</strong> 允许 NMS  ഒറ്റ (一次性) 地从代理获取一个很大的 MIB 表或一系列相关对象的值，减少了多次 <code>GetNextRequest</code> 的往返开销。</li>
+<li><strong>过程：</strong> NMS 发送 <code>GetBulkRequest</code>，指定多个 OID 和要获取的“非重复”及“重复”变量的数量。代理批量返回数据。</li>
+</ul>
+</li>
+<li><p><strong>SetRequest (设置请求)：</strong></p>
+<ul>
+<li><strong>作用：</strong> NMS 向代理发送命令，用于修改设备上的配置参数或执行某些操作（例如，重启接口，更改社区字符串等）。</li>
+<li><strong>过程：</strong> NMS 发送 <code>SetRequest</code>，指定 OID 和要设置的新值。代理验证请求后，尝试修改配置，并返回 <code>GetResponse</code> 确认成功或失败。</li>
+<li><strong>注意：</strong> 通常对 <code>SetRequest</code> 的权限控制更严格，以防止未授权的配置更改。</li>
+</ul>
+</li>
+<li><p><strong>Trap (陷阱)：</strong></p>
+<ul>
+<li><strong>作用：</strong> 当网络设备上发生预定义的、异步的重要事件时，代理主动（未经 NMS 请求）向 NMS 发送的通知。</li>
+<li><strong>过程：</strong> 例如，接口状态改变（Up&#x2F;Down）、设备温度过高、认证失败等。代理检测到这些事件后，立即生成 <code>Trap</code> 消息并发送给配置好的 NMS。</li>
+<li><strong>特点：</strong> Trap 是不可靠的（UDP 协议），发送后不保证 NMS 收到。</li>
+</ul>
+</li>
+<li><p><strong>InformRequest (通知请求 - SNMPv2c&#x2F;v3)：</strong></p>
+<ul>
+<li><strong>作用：</strong> 类似于 Trap，也是代理主动发送的事件通知，但它需要 NMS 返回确认，因此是<strong>可靠的</strong>。</li>
+<li><strong>过程：</strong> 代理发送 <code>InformRequest</code> 到 NMS，NMS 收到后必须返回 <code>InformResponse</code> 进行确认。如果 NMS 没有返回确认，代理会重发。</li>
+<li><strong>特点：</strong> 由于其可靠性，Inform 比 Trap 更适合用于重要的警告。</li>
+</ul>
+</li>
+</ol>
+<h3 id="SNMP-的版本："><a href="#SNMP-的版本：" class="headerlink" title="SNMP 的版本："></a>SNMP 的版本：</h3><p>SNMP 协议存在几个版本，每个版本都在安全性、功能和性能上有所改进：</p>
+<ul>
+<li><strong>SNMPv1：</strong> 最早的版本，安全性非常差，仅通过**社区字符串 (Community String)**（类似于明文密码）进行认证。</li>
+<li><strong>SNMPv2c：</strong> 改进了协议操作，增加了 <code>GetBulk</code> 和 <code>Inform</code> 类型，但安全模型与 SNMPv1 相同，仍使用社区字符串。</li>
+<li><strong>SNMPv3：</strong> 最新的版本，引入了<strong>强大的安全功能</strong>，包括：<ul>
+<li><strong>认证 (Authentication)：</strong> 能够验证消息的来源，防止未经授权的访问。</li>
+<li><strong>加密 (Encryption)：</strong> 保护数据在传输过程中的机密性，防止数据被窃听。</li>
+<li><strong>消息完整性 (Message Integrity)：</strong> 确保消息在传输过程中没有被篡改。</li>
+<li>支持用户管理，可以为不同的用户设置不同的权限和加密&#x2F;认证算法。</li>
+</ul>
+</li>
+</ul>
+<h3 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h3><p>SNMP 是网络管理中不可或缺的工具，它提供了一种标准化的方式来：</p>
+<ul>
+<li><strong>监控网络性能：</strong> 收集带宽利用率、CPU 和内存使用率、错误率等数据。</li>
+<li><strong>检测故障：</strong> 通过 Trap 和 Inform 快速发现设备故障或异常事件。</li>
+<li><strong>管理配置：</strong> 远程查看和修改设备配置。</li>
+<li><strong>资源规划：</strong> 根据收集的数据进行容量规划和网络优化。</li>
+</ul>
+<p>通过 SNMP，网络管理员能够对整个网络的健康状况拥有全面、实时的视野，从而更有效地进行故障排查、性能优化和安全管理。</p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+
+  
+  <nav class="pagination">
+    <a class="extend prev" rel="prev" href="/page/11/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/11/">11</a><span class="page-number current">12</span><a class="page-number" href="/page/13/">13</a><span class="space">&hellip;</span><a class="page-number" href="/page/28/">28</a><a class="extend next" rel="next" href="/page/13/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+  </nav>
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

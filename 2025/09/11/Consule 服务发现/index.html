@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="基于 Consul 的服务发现Consul 是由 HashiCorp 开发的一个支持多数据中心的分布式服务发现和键值对存储服务的开源软件，是一个通用的服务发现和注册中心工具，被大量应用于基于微服务的软件架构当中。 接下来我们就来尝试使用 Prometheus 基于 Consul 的服务发现来监控前面的 3 个 demo 服务： 123192.168.31.46:10000192.168.31.46">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Consule 服务发现">
+<meta property="og:url" content="http://example.com/2025/09/11/Consule%20%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="基于 Consul 的服务发现Consul 是由 HashiCorp 开发的一个支持多数据中心的分布式服务发现和键值对存储服务的开源软件，是一个通用的服务发现和注册中心工具，被大量应用于基于微服务的软件架构当中。 接下来我们就来尝试使用 Prometheus 基于 Consul 的服务发现来监控前面的 3 个 demo 服务： 123192.168.31.46:10000192.168.31.46">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/yivzoi.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/x2sdnk.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/wazumn.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/v6yw8t.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/olw50h.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/uzar5d.png">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:25:36.048Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta property="article:tag" content="Prometheus">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://mudutestmenu.mudu.tv/upload/yivzoi.png">
+
+<link rel="canonical" href="http://example.com/2025/09/11/Consule%20%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Consule 服务发现 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Consule%20%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Consule 服务发现
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:25:36" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/" itemprop="url" rel="index"><span itemprop="name">k8s-monitor</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/Prometheus/" itemprop="url" rel="index"><span itemprop="name">Prometheus</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/Prometheus/%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0/" itemprop="url" rel="index"><span itemprop="name">服务发现</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>6.3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>6 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="基于-Consul-的服务发现"><a href="#基于-Consul-的服务发现" class="headerlink" title="基于 Consul 的服务发现"></a>基于 Consul 的服务发现</h1><p><a target="_blank" rel="noopener" href="https://www.consul.io/">Consul</a> 是由 <a target="_blank" rel="noopener" href="https://www.hashicorp.com/">HashiCorp</a> 开发的一个支持多数据中心的分布式服务发现和键值对存储服务的开源软件，是一个通用的服务发现和注册中心工具，被大量应用于基于微服务的软件架构当中。</p>
+<p>接下来我们就来尝试使用 Prometheus 基于 Consul 的服务发现来监控前面的 3 个 demo 服务：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">192.168.31.46:10000</span><br><span class="line">192.168.31.46:10001</span><br><span class="line">192.168.31.46:10002</span><br></pre></td></tr></table></figure>
+
+<p>我们将 demo 服务注册到 Consul，然后配置 Prometheus 从 Consul 中发现演示服务实例，并使用 Relabeling 操作来过滤调整目标标签。关于 Consul 本身的使用可以查看官方文档 <a target="_blank" rel="noopener" href="https://learn.hashicorp.com/consul">https://learn.hashicorp.com/consul</a> 了解更多。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/yivzoi.png" alt="consul"></p>
+<h2 id="安装配置-Consul"><a href="#安装配置-Consul" class="headerlink" title="安装配置 Consul"></a>安装配置 Consul</h2><p>在页面 <a target="_blank" rel="noopener" href="https://www.consul.io/downloads">https://www.consul.io/downloads</a> 下载符合自己系统的安装文件，比如我们这里是 Linux 系统，使用下面命令下载安装即可：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">☸ ➜ wget https://releases.hashicorp.com/consul/1.10.2/consul_1.10.2_linux_amd64.zip</span><br><span class="line">☸ ➜ unzip consul_1.10.2_linux_amd64.zip</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">将 consul 二进制移动到 PATH 路径下去</span></span><br><span class="line">☸ ➜ mv consul /usr/local/bin</span><br><span class="line">☸ ➜ consul version</span><br><span class="line">Consul v1.10.2</span><br><span class="line">Revision 3cb6eeedb</span><br><span class="line">Protocol 2 spoken by default, understands 2 to 3 (agent will automatically use protocol &gt;2 when speaking to compatible agents)</span><br></pre></td></tr></table></figure>
+
+<p>当执行 <code>consul</code> 命令后正常有命令提示，证明已经安装完成。接着创建一个用于注册 demo 服务的 Consul 配置文件 <code>demo-service.json</code>：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;services&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">    <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;id&quot;</span><span class="punctuation">:</span> <span class="string">&quot;demo1&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;demo&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;address&quot;</span><span class="punctuation">:</span> <span class="string">&quot;192.168.31.46&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;port&quot;</span><span class="punctuation">:</span> <span class="number">10000</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;meta&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;env&quot;</span><span class="punctuation">:</span> <span class="string">&quot;production&quot;</span></span><br><span class="line">      <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;checks&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">        <span class="punctuation">&#123;</span></span><br><span class="line">          <span class="attr">&quot;http&quot;</span><span class="punctuation">:</span> <span class="string">&quot;http://192.168.31.46:10000/api/foo&quot;</span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;interval&quot;</span><span class="punctuation">:</span> <span class="string">&quot;1s&quot;</span></span><br><span class="line">        <span class="punctuation">&#125;</span></span><br><span class="line">      <span class="punctuation">]</span></span><br><span class="line">    <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;id&quot;</span><span class="punctuation">:</span> <span class="string">&quot;demo2&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;demo&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;address&quot;</span><span class="punctuation">:</span> <span class="string">&quot;192.168.31.46&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;port&quot;</span><span class="punctuation">:</span> <span class="number">10001</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;meta&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;env&quot;</span><span class="punctuation">:</span> <span class="string">&quot;production&quot;</span></span><br><span class="line">      <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;checks&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">        <span class="punctuation">&#123;</span></span><br><span class="line">          <span class="attr">&quot;http&quot;</span><span class="punctuation">:</span> <span class="string">&quot;http://192.168.31.46:10001/api/foo&quot;</span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;interval&quot;</span><span class="punctuation">:</span> <span class="string">&quot;1s&quot;</span></span><br><span class="line">        <span class="punctuation">&#125;</span></span><br><span class="line">      <span class="punctuation">]</span></span><br><span class="line">    <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;id&quot;</span><span class="punctuation">:</span> <span class="string">&quot;demo3&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;demo&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;address&quot;</span><span class="punctuation">:</span> <span class="string">&quot;192.168.31.46&quot;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;port&quot;</span><span class="punctuation">:</span> <span class="number">10002</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;meta&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;env&quot;</span><span class="punctuation">:</span> <span class="string">&quot;staging&quot;</span></span><br><span class="line">      <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">      <span class="attr">&quot;checks&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span></span><br><span class="line">        <span class="punctuation">&#123;</span></span><br><span class="line">          <span class="attr">&quot;http&quot;</span><span class="punctuation">:</span> <span class="string">&quot;http://192.168.31.46:10002/api/foo&quot;</span><span class="punctuation">,</span></span><br><span class="line">          <span class="attr">&quot;interval&quot;</span><span class="punctuation">:</span> <span class="string">&quot;1s&quot;</span></span><br><span class="line">        <span class="punctuation">&#125;</span></span><br><span class="line">      <span class="punctuation">]</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">]</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>当然一般情况下我们也是在 Consul 中进行动态注册服务，但是这里我们只是简单演示 Prometheus 基于 Consul 的服务发现，这里只使用 Consul 配置文件静态注册服务即可。Consul 允许使用 JSON 中的 <code>meta</code>属性将 key-value 元数据与每个注册的服务实例相关联，比如这里我们配置的 <code>env</code> 属性和部署环境 production 或 staging 进行关联，后面我们可以通过使用 Prometheus 里面的 Relabeling 操作提取该字段并将其映射到每个抓取实例的标签中去。</p>
+<p>为了查看更多的日志信息，我们可以在 dev 模式下运行 Consul，如下所示：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">☸ ➜ consul agent -dev -config-file=demo-service.json -client 0.0.0.0</span><br><span class="line">==&gt; Starting Consul agent...</span><br><span class="line">           Version: &#x27;1.10.2&#x27;</span><br><span class="line">           Node ID: &#x27;a4a9418c-7f7d-a2da-c81e-94d3d37601aa&#x27;</span><br><span class="line">         Node name: &#x27;node2&#x27;</span><br><span class="line">        Datacenter: &#x27;dc1&#x27; (Segment: &#x27;&lt;all&gt;&#x27;)</span><br><span class="line">            Server: true (Bootstrap: false)</span><br><span class="line">       Client Addr: [0.0.0.0] (HTTP: 8500, HTTPS: -1, gRPC: 8502, DNS: 8600)</span><br><span class="line">      Cluster Addr: 127.0.0.1 (LAN: 8301, WAN: 8302)</span><br><span class="line">           Encrypt: Gossip: false, TLS-Outgoing: false, TLS-Incoming: false, Auto-Encrypt-TLS: false</span><br><span class="line"></span><br><span class="line">==&gt; Log data will now stream in as it occurs:</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+
+<p>这里我们在启动命令后面使用 <code>-client</code> 参数指定了客户端绑定的 IP 地址，默认为 <code>127.0.0.1</code>。除了我们注册的 3 个 demo 服务之外，Consul agent 还会将自己注册为一个名为 <code>consul</code> 的服务，我们可以在浏览器中访问 <code>http://&lt;nodeip&gt;:8500</code> 查看注册的服务。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/x2sdnk.png" alt="consul ui"></p>
+<p>在 Consul UI 页面中可以看到有 <code>consul</code> 和 <code>demo</code> 两个 Service 服务。</p>
+<h2 id="配置-Consul-自动发现"><a href="#配置-Consul-自动发现" class="headerlink" title="配置 Consul 自动发现"></a>配置 Consul 自动发现</h2><p>上面我们通过 Consul 注册了 3 个 demo 服务，接下来我们将配置 Prometheus 通过 Consul 来自动发现 demo 服务。</p>
+<p>在 Prometheus 的配置文件 <code>prometheus.yml</code> 文件中的 <code>scrape_configs</code> 部分添加如下所示的抓取配置：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">scrape_configs:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">job_name:</span> <span class="string">&#x27;consul-sd-demo&#x27;</span></span><br><span class="line">    <span class="attr">consul_sd_configs:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">server:</span> <span class="string">&#x27;localhost:8500&#x27;</span></span><br><span class="line">    <span class="attr">relabel_configs:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">action:</span> <span class="string">keep</span></span><br><span class="line">        <span class="attr">source_labels:</span> [<span class="string">__meta_consul_service</span>, <span class="string">__meta_consul_health</span>]</span><br><span class="line">        <span class="attr">regex:</span> <span class="string">demo;passing</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">action:</span> <span class="string">labelmap</span></span><br><span class="line">        <span class="attr">regex:</span> <span class="string">__meta_consul_service_metadata_(.*)</span></span><br><span class="line">        <span class="attr">replacement:</span> <span class="string">consul_$1</span></span><br></pre></td></tr></table></figure>
+
+<p>这里我们添加了一个名为 <code>consul-sd-demo</code> 的抓取任务，通过 <code>consul_sd_configs</code> 配置用于自动发现的 Consul 服务地址，然后使用 <code>relabel_configs</code> 进行了重新标记配置，首先只保留服务名称为 <code>demo</code>，且健康状态为 <code>passing</code> 的，否则也会抓取 Consul Agent 本身，而它自身是不提供 metrics 接口数据的，另外还使用 <code>labelmap</code> 进行了标签映射，将所有 Consul 元标签映射到 Prometheus 中以 <code>consul_</code> 为前缀的标签中。</p>
+<p>配置完成后重新启动 Prometheus，然后重新查看 Prometheus 页面上的 <code>targets</code> 页面，验证上面的配置是否存在：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/wazumn.png" alt="targets"></p>
+<p>正常情况下是可以看到会有一个 <code>consul-sd-demo</code> 的任务，下面有 3 个自动发现的抓取目标。</p>
+<p>我们将鼠标悬停在 Labels 标签区域就可以看到目标任务在重新标记 Relabeling 之前的原始标签。比如我们将查看第一个 demo 实例在 Relabel 之前包含如下所示的这些原始标签：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/v6yw8t.png" alt="raw labels"></p>
+<p>通过查看网络请求接口 <code>http://&lt;promtheus addr&gt;/api/v1/targets?state=active</code> 也可以获取对应的原始标签数据：</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;discoveredLabels&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;__address__&quot;</span><span class="punctuation">:</span> <span class="string">&quot;192.168.31.46:10000&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;__meta_consul_address&quot;</span><span class="punctuation">:</span> <span class="string">&quot;127.0.0.1&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;__meta_consul_dc&quot;</span><span class="punctuation">:</span> <span class="string">&quot;dc1&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;__meta_consul_health&quot;</span><span class="punctuation">:</span> <span class="string">&quot;passing&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;__meta_consul_node&quot;</span><span class="punctuation">:</span> <span class="string">&quot;node2&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;__meta_consul_service&quot;</span><span class="punctuation">:</span> <span class="string">&quot;demo&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;__meta_consul_service_address&quot;</span><span class="punctuation">:</span> <span class="string">&quot;192.168.31.46&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;__meta_consul_service_id&quot;</span><span class="punctuation">:</span> <span class="string">&quot;demo1&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;__meta_consul_service_metadata_env&quot;</span><span class="punctuation">:</span> <span class="string">&quot;production&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;__meta_consul_service_port&quot;</span><span class="punctuation">:</span> <span class="string">&quot;10000&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;__meta_consul_tagged_address_lan&quot;</span><span class="punctuation">:</span> <span class="string">&quot;127.0.0.1&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;__meta_consul_tagged_address_lan_ipv4&quot;</span><span class="punctuation">:</span> <span class="string">&quot;127.0.0.1&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;__meta_consul_tagged_address_wan&quot;</span><span class="punctuation">:</span> <span class="string">&quot;127.0.0.1&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;__meta_consul_tagged_address_wan_ipv4&quot;</span><span class="punctuation">:</span> <span class="string">&quot;127.0.0.1&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;__meta_consul_tags&quot;</span><span class="punctuation">:</span> <span class="string">&quot;,,&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;__metrics_path__&quot;</span><span class="punctuation">:</span> <span class="string">&quot;/metrics&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;__scheme__&quot;</span><span class="punctuation">:</span> <span class="string">&quot;http&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;job&quot;</span><span class="punctuation">:</span> <span class="string">&quot;consul-sd-demo&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;labels&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;consul_env&quot;</span><span class="punctuation">:</span> <span class="string">&quot;production&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;instance&quot;</span><span class="punctuation">:</span> <span class="string">&quot;192.168.31.46:10000&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;job&quot;</span><span class="punctuation">:</span> <span class="string">&quot;consul-sd-demo&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;scrapePool&quot;</span><span class="punctuation">:</span> <span class="string">&quot;consul-sd-demo&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;scrapeUrl&quot;</span><span class="punctuation">:</span> <span class="string">&quot;http://192.168.31.46:10000/metrics&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;globalUrl&quot;</span><span class="punctuation">:</span> <span class="string">&quot;http://192.168.31.46:10000/metrics&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;lastError&quot;</span><span class="punctuation">:</span> <span class="string">&quot;&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;lastScrape&quot;</span><span class="punctuation">:</span> <span class="string">&quot;2021-09-28T11:56:01.919216851+08:00&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;lastScrapeDuration&quot;</span><span class="punctuation">:</span> <span class="number">0.013357276</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;health&quot;</span><span class="punctuation">:</span> <span class="string">&quot;up&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>我们在 <code>relabel_configs</code> 中首先配置了一个 <code>keep</code> 操作，只保留原始标签 <code>__meta_consul_service</code> 值为 <code>demo</code>，且 <code>__meta_consul_health</code> 为 <code>passing</code> 状态的抓取任务。然后使用 <code>labelmap</code> 进行标签映射，这里我们将匹配 <code>__meta_consul_service_metadata_(.*)</code> 所有标签，这里只有 <code>__meta_consul_service_metadata_env</code> 这个原始标签符合正则表达式，其中的 <code>env</code> 就是匹配的捕获组，在 <code>replacement</code> 中用 <code>$1</code> 代替，替换成标签 <code>consul_$1</code>，也就是 <code>consul_env</code> 这个标签了，所以 Relabeling 过后就只剩下下面的几个目标标签了：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">instance:</span> <span class="string">&#x27;192.168.31.46:10000&#x27;</span></span><br><span class="line"><span class="attr">job:</span> <span class="string">&#x27;consul-sd-demo&#x27;</span></span><br><span class="line"><span class="attr">consul_env:</span> <span class="string">&#x27;production&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>其中的 <code>instance</code> 标签是在重新标记之后，自动从 <code>__address__</code> 转变而来的。由于没有重新修改 <code>__metrics_path__</code> 和 <code>__scheme__</code> 标签，所以默认的抓取目标就是通过 HTTP 端点 <code>/metrics</code> 进行抓取。</p>
+<p>现在如果我们将 <code>demo1</code> 这个服务杀掉，则在 Consul 中注册的服务就会出现一个不健康的实例：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/olw50h.png" alt="unhealth"></p>
+<p>当然此时 Prometheus 中就只剩下两个正常 demo 服务的实例了：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/uzar5d.png" alt="targets"></p>
+<p>当服务正常后就又可以自动发现对应的服务了。这样我们就完成了 Prometheus 基于 Consul 的一个简单的自动发现配置。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+              <a href="/tags/Prometheus/" rel="tag"># Prometheus</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Containerd%20%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%B7%A5%E5%85%B7%20nerdctl/" rel="prev" title="Containerd 命令行工具 nerdctl">
+      <i class="fa fa-chevron-left"></i> Containerd 命令行工具 nerdctl
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Cache/" rel="next" title="Nginx Cache">
+      Nginx Cache <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%9F%BA%E4%BA%8E-Consul-%E7%9A%84%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0"><span class="nav-number">1.</span> <span class="nav-text">基于 Consul 的服务发现</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E9%85%8D%E7%BD%AE-Consul"><span class="nav-number">1.1.</span> <span class="nav-text">安装配置 Consul</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE-Consul-%E8%87%AA%E5%8A%A8%E5%8F%91%E7%8E%B0"><span class="nav-number">1.2.</span> <span class="nav-text">配置 Consul 自动发现</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Gateway APIGateway API（之前叫 Service API）是由 SIG-NETWORK 社区管理的开源项目，项目地址：https:&#x2F;&#x2F;gateway-api.sigs.k8s.io&#x2F;。主要原因是 Ingress 资源对象不能很好的满足网络需求，很多场景下 Ingress 控制器都需要通过定义 annotations 或者 crd 来进行功能扩展，这对于使用标准和支持是非常不利的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Gateway API">
+<meta property="og:url" content="http://example.com/2025/09/11/Gateway%20API/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="Gateway APIGateway API（之前叫 Service API）是由 SIG-NETWORK 社区管理的开源项目，项目地址：https:&#x2F;&#x2F;gateway-api.sigs.k8s.io&#x2F;。主要原因是 Ingress 资源对象不能很好的满足网络需求，很多场景下 Ingress 控制器都需要通过定义 annotations 或者 crd 来进行功能扩展，这对于使用标准和支持是非常不利的">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/c4654k.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/vvkrja.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/isheoz.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/uadnkk.png">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:31:52.044Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://mudutestmenu.mudu.tv/upload/c4654k.png">
+
+<link rel="canonical" href="http://example.com/2025/09/11/Gateway%20API/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Gateway API | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Gateway%20API/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Gateway API
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:31:52" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E7%BD%91%E7%BB%9C/" itemprop="url" rel="index"><span itemprop="name">网络</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>8.7k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>8 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Gateway-API"><a href="#Gateway-API" class="headerlink" title="Gateway API"></a>Gateway API</h1><p><code>Gateway API</code>（之前叫 Service API）是由 <a target="_blank" rel="noopener" href="https://github.com/kubernetes/community/tree/master/sig-network">SIG-NETWORK 社区</a>管理的开源项目，项目地址：<a target="_blank" rel="noopener" href="https://gateway-api.sigs.k8s.io/%E3%80%82%E4%B8%BB%E8%A6%81%E5%8E%9F%E5%9B%A0%E6%98%AF">https://gateway-api.sigs.k8s.io/。主要原因是</a> Ingress 资源对象不能很好的满足网络需求，很多场景下 Ingress 控制器都需要通过定义 annotations 或者 crd 来进行功能扩展，这对于使用标准和支持是非常不利的，新推出的 Gateway API 旨在通过可扩展的面向角色的接口来增强服务网络。</p>
+<p>Gateway API 是 Kubernetes 中的一个 API 资源集合，包括 GatewayClass、Gateway、HTTPRoute、TCPRoute、Service 等，这些资源共同为各种网络用例构建模型。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/c4654k.png" alt="Gateway API"></p>
+<p>Gateway API 的改进比当前的 Ingress 资源对象有很多更好的设计：</p>
+<ul>
+<li>面向角色 - Gateway 由各种 API 资源组成，这些资源根据使用和配置 Kubernetes 服务网络的角色进行建模。</li>
+<li>通用性 - 和 Ingress 一样是一个具有众多实现的通用规范，Gateway API 是一个被设计成由许多实现支持的规范标准。</li>
+<li>更具表现力 - Gateway API 资源支持基于 Header 头的匹配、流量权重等核心功能，这些功能在 Ingress 中只能通过自定义注解才能实现。</li>
+<li>可扩展性 - Gateway API 允许自定义资源链接到 API 的各个层，这就允许在 API 结构的适当位置进行更精细的定制。</li>
+</ul>
+<p>还有一些其他值得关注的功能：</p>
+<ul>
+<li>GatewayClasses - <code>GatewayClasses</code> 将负载均衡实现的类型形式化，这些类使用户可以很容易了解到通过 Kubernetes 资源可以获得什么样的能力。</li>
+<li>共享网关和跨命名空间支持 - 它们允许共享负载均衡器和 VIP，允许独立的路由资源绑定到同一个网关，这使得团队可以安全地共享（包括跨命名空间）基础设施，而不需要直接协调。</li>
+<li>规范化路由和后端 - Gateway API 支持类型化的路由资源和不同类型的后端，这使得 API 可以灵活地支持各种协议（如 HTTP 和 gRPC）和各种后端服务（如 Kubernetes Service、存储桶或函数）。</li>
+</ul>
+<h2 id="面向角色设计"><a href="#面向角色设计" class="headerlink" title="面向角色设计"></a>面向角色设计</h2><p>无论是道路、电力、数据中心还是 Kubernetes 集群，基础设施都是为了共享而建的，然而共享基础设施提供了一个共同的挑战，那就是如何为基础设施用户提供灵活性的同时还能被所有者控制。</p>
+<p>Gateway API 通过对 Kubernetes 服务网络进行面向角色的设计来实现这一目标，平衡了灵活性和集中控制。它允许共享的网络基础设施（硬件负载均衡器、云网络、集群托管的代理等）被许多不同的团队使用，所有这些都受到集群运维设置的各种策略和约束。下面的例子显示了是如何在实践中运行的。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/vvkrja.png" alt="gateway api demo"></p>
+<p>一个集群运维人员创建了一个基于 GatewayClass 的 Gateway 资源，这个 Gateway 部署或配置了它所代表的基础网络资源，集群运维和特定的团队必须沟通什么可以附加到这个 Gateway 上来暴露他们的应用。 集中的策略，如 TLS，可以由集群运维在 Gateway 上强制执行，同时，Store 和 Site 应用在他们自己的命名空间中运行，但将他们的路由附加到相同的共享网关上，允许他们独立控制他们的路由逻辑。</p>
+<p>这种关注点分离的设计可以使不同的团队能够管理他们自己的流量，同时将集中的策略和控制留给集群运维。</p>
+<h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><p>在整个 Gateway API 中涉及到 3 个角色：基础设施提供商、集群管理员、应用开发人员，在某些场景下可能还会涉及到应用管理员等角色。Gateway API 中定义了 3 种主要的资源模型：<code>GatewayClass</code>、<code>Gateway</code>、<code>Route</code>。</p>
+<h3 id="GatewayClass"><a href="#GatewayClass" class="headerlink" title="GatewayClass"></a>GatewayClass</h3><p><code>GatewayClass</code> 定义了一组共享相同配置和动作的网关。每个<code>GatewayClass</code> 由一个控制器处理，是一个集群范围的资源，必须至少有一个 <code>GatewayClass</code> 被定义。</p>
+<p>这与 Ingress 的 IngressClass 类似，在 Ingress v1beta1 版本中，与 GatewayClass 类似的是 <code>ingress-class</code> 注解，而在 Ingress V1 版本中，最接近的就是 <code>IngressClass</code> 资源对象。</p>
+<h3 id="Gateway"><a href="#Gateway" class="headerlink" title="Gateway"></a>Gateway</h3><p>Gateway 网关描述了如何将流量转化为集群内的服务，也就是说，它定义了一个请求，要求将流量从不了解 Kubernetes 的地方转换到集群内的服务。例如，由云端负载均衡器、集群内代理或外部硬件负载均衡器发送到 Kubernetes 服务的流量。</p>
+<p>它定义了对特定负载均衡器配置的请求，该配置实现了 GatewayClass 的配置和行为规范，该资源可以由管理员直接创建，也可以由处理 <code>GatewayClass</code> 的控制器创建。</p>
+<p>Gateway 可以附加到一个或多个路由引用上，这些路由引用的作用是将流量的一个子集导向特定的服务。</p>
+<h3 id="Route-资源"><a href="#Route-资源" class="headerlink" title="Route 资源"></a>Route 资源</h3><p>路由资源定义了特定的规则，用于将请求从网关映射到 Kubernetes 服务。</p>
+<p>从 <code>v1alpha2</code> 版本开始，API 中包含四种 Route 路由资源类型，对于其他未定义的协议，鼓励采用特定实现的自定义路由类型，当然未来也可能会添加新的路由类型。</p>
+<p><strong>HTTPRoute</strong></p>
+<p><code>HTTPRoute</code> 是用于 HTTP 或 HTTPS 连接，适用于我们想要检查 HTTP 请求并使用 HTTP 请求进行路由或修改的场景，比如使用 HTTP Headers 头进行路由，或在请求过程中对它们进行修改。</p>
+<p><strong>TLSRoute</strong></p>
+<p>TLSRoute 用于 TLS 连接，通过 SNI 进行区分，它适用于希望使用 SNI 作为主要路由方法的地方，并且对 HTTP 等更高级别协议的属性不感兴趣，连接的字节流不经任何检查就被代理到后端。</p>
+<p><strong>TCPRoute 和 UDPRoute</strong></p>
+<p>TCPRoute（和 UDPRoute）旨在用于将一个或多个端口映射到单个后端。在这种情况下，没有可以用来选择同一端口的不同后端的判别器，所以每个 TCPRoute 在监听器上需要一个不同的端口。你可以使用 TLS，在这种情况下，未加密的字节流会被传递到后端，当然也可以不使用 TLS，这样加密的字节流将传递到后端。</p>
+<h3 id="组合"><a href="#组合" class="headerlink" title="组合"></a>组合</h3><p><code>GatewayClass</code>、<code>Gateway</code>、<code>xRoute</code> 和 <code>Service</code> 的组合定义了一个可实施的负载均衡器。下图说明了不同资源之间的关系:</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/isheoz.png" alt="组合关系"></p>
+<p>使用反向代理实现的网关的典型客户端&#x2F;网关 API 请求流程如下所示：</p>
+<ul>
+<li><ol>
+<li>客户端向 <code>http://foo.example.com</code> 发出请求</li>
+</ol>
+</li>
+<li><ol>
+<li>DNS 将域名解析为 <code>Gateway</code> 网关地址</li>
+</ol>
+</li>
+<li><ol>
+<li>反向代理在监听器上接收请求，并使用 Host Header 来匹配 HTTPRoute</li>
+</ol>
+</li>
+<li><ol>
+<li>(可选)反向代理可以根据 HTTPRoute 的匹配规则进行路由</li>
+</ol>
+</li>
+<li><ol>
+<li>(可选)反向代理可以根据 HTTPRoute 的过滤规则修改请求，即添加或删除 headers</li>
+</ol>
+</li>
+<li><ol>
+<li>最后，反向代理根据 HTTPRoute 的 <code>forwardTo</code> 规则，将请求转发给集群中的一个或多个对象，即服务。</li>
+</ol>
+</li>
+</ul>
+<h2 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h2><p>目前已经有很多 Gateway API 的控制器实现方案了，比如 Contour、Google Kubernetes Engine、Istio、Traefik 等等。接下来我们以 Traefik 为例来进行测试。不过需要注意的是 Traefik 目前是基于 <code>v1alpha1</code> 规范实现的，可能和上面提到的一些概念略有不同。</p>
+<p>要在 Traefik 中使用 Gateway API，首先我们需要先手动安装 Gateway API 的 CRDs，使用如下命令即可安装，这将安装包括 GatewayClass、Gateway、HTTPRoute、TCPRoute 等 CRDs：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl kustomize &quot;github.com/kubernetes-sigs/gateway-api/config/crd?ref=v0.3.0&quot; \</span><br><span class="line">| kubectl apply -f -</span><br></pre></td></tr></table></figure>
+
+
+
+<p>然后我们需要在 Traefik 中开启 <code>kubernetesgateway</code> 这个 Provider，同样基于前面 Traefik 章节中的 Helm Chart 包进行定义，设置 <code>experimental.kubernetesGateway.enabled=true</code>，完整的 Values 文件如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ci/deployment-prod.yaml</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># Enable experimental features</span></span><br><span class="line"><span class="attr">experimental:</span></span><br><span class="line">  <span class="attr">kubernetesGateway:</span> <span class="comment"># 开启 gateway api 支持</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line"><span class="attr">providers:</span></span><br><span class="line">  <span class="attr">kubernetesCRD:</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">allowCrossNamespace:</span> <span class="literal">true</span> <span class="comment"># 是否允许跨命名空间</span></span><br><span class="line">    <span class="attr">allowExternalNameServices:</span> <span class="literal">true</span> <span class="comment"># 是否允许使用 ExternalName 的服务</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">kubernetesIngress:</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">allowExternalNameServices:</span> <span class="literal">true</span></span><br><span class="line"><span class="comment"># ......</span></span><br><span class="line"><span class="comment"># 其他忽略</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>然后使用下面的命令更新 Traefik 即可：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">➜ helm upgrade --install traefik ./traefik -f ./traefik/ci/deployment-prod.yaml --namespace kube-system</span><br></pre></td></tr></table></figure>
+
+
+
+<p>更新完成后可以前往 Traefik 的 Dashboard 查看是否已经启用 <code>KubernetesGateway</code> 这个 Provider：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/uadnkk.png" alt="KubernetesGateway Provider"></p>
+<p>正常情况下启用成功后 Traefik 也会创建一个默认的 <code>GatewayClass</code> 资源对象和 <code>Gateway</code> 实例：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl get gatewayclass</span><br><span class="line">NAME      CONTROLLER                      AGE</span><br><span class="line">traefik   traefik.io/gateway-controller   4m13s</span><br><span class="line">➜ kubectl get gatewayclass traefik -o yaml</span><br><span class="line">apiVersion: networking.x-k8s.io/v1alpha1</span><br><span class="line">kind: GatewayClass</span><br><span class="line">metadata:</span><br><span class="line">  name: traefik</span><br><span class="line">spec:</span><br><span class="line">  controller: traefik.io/gateway-controller</span><br><span class="line">......</span><br><span class="line">➜ kubectl get gateway -n kube-system</span><br><span class="line">NAME              CLASS     AGE</span><br><span class="line">traefik-gateway   traefik   5m55s</span><br><span class="line">➜ kubectl get gateway -n kube-system traefik-gateway -o yaml</span><br><span class="line">apiVersion: networking.x-k8s.io/v1alpha1</span><br><span class="line">kind: Gateway</span><br><span class="line">metadata:</span><br><span class="line">  name: traefik-gateway</span><br><span class="line">  namespace: kube-system</span><br><span class="line">spec:</span><br><span class="line">  gatewayClassName: traefik</span><br><span class="line">  listeners:</span><br><span class="line">  - port: 8000</span><br><span class="line">    protocol: HTTP</span><br><span class="line">    routes:</span><br><span class="line">      group: networking.x-k8s.io</span><br><span class="line">      kind: HTTPRoute</span><br><span class="line">      namespaces:</span><br><span class="line">        from: Same</span><br><span class="line">      selector:</span><br><span class="line">        matchLabels:</span><br><span class="line">          app: traefik</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+
+
+
+<p>可以看到默认创建的 <code>Gateway</code> 实例引用了 <code>traefik</code> 这个 <code>GatewayClass</code>，其中 <code>listeners</code> 部分定义了该网关关联的监听器入口，监听器定义逻辑端点绑定在该网关地址上，至少需要指定一个监听器，下面的 <code>HTTPRoute</code> 定义了路由规则，<code>namespaces</code> 表示应该在哪些命名空间中为该网关选择路由，默认情况下，这被限制在该网关的命名空间中，<code>Selector</code> 则指定一组路由标签，如果定义了这个 Selector，则只路由匹配选择器与网关相关联的对象，一个空的选择器匹配所有对象，这里会去匹配具有 <code>app: traefik</code> 标签的对象。</p>
+<blockquote>
+<p>为了能够处理其他命名空间中的路由规则，我们可以将这里的 <code>namespaces.from</code> 修改为 <code>All</code>，但是经测试未生效？</p>
+</blockquote>
+<p>下面我们安装一个简单的 <code>whoami</code> 服务来进行测试，直接使用下面的资源清单部署对应的服务即可：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 01-whoami.yaml</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">whoami</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-system</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">2</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">whoami</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">whoami</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">whoami</span></span><br><span class="line">          <span class="attr">image:</span> <span class="string">containous/whoami</span></span><br><span class="line">          <span class="attr">ports:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">80</span></span><br><span class="line">              <span class="attr">name:</span> <span class="string">http</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">whoami</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-system</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">protocol:</span> <span class="string">TCP</span></span><br><span class="line">      <span class="attr">port:</span> <span class="number">80</span></span><br><span class="line">      <span class="attr">targetPort:</span> <span class="string">http</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">whoami</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>测试服务部署完成后，我们就可以使用 Gateway API 的方式来进行流量配置了。</p>
+<h3 id="部署一个简单的-Host-主机"><a href="#部署一个简单的-Host-主机" class="headerlink" title="部署一个简单的 Host 主机"></a>部署一个简单的 Host 主机</h3><p>在以前的方式中我们会创建一个 Ingress 或 IngressRoute 资源对象，这里我们将部署一个简单的 <code>HTTPRoute</code> 对象。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 02-whoami-httproute.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.x-k8s.io/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">HTTPRoute</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">http-app-1</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-system</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">traefik</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">hostnames:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&#x27;whoami&#x27;</span></span><br><span class="line">  <span class="attr">rules:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">matches:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">path:</span></span><br><span class="line">            <span class="attr">type:</span> <span class="string">Exact</span></span><br><span class="line">            <span class="attr">value:</span> <span class="string">/</span></span><br><span class="line">      <span class="attr">forwardTo:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">serviceName:</span> <span class="string">whoami</span></span><br><span class="line">          <span class="attr">port:</span> <span class="number">80</span></span><br><span class="line">          <span class="attr">weight:</span> <span class="number">1</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>上面的 HTTPRoute 资源会捕捉到向 whoami 主机名发出的请求，并将其转发到上面部署的 whoami 服务，如果你现在对这个主机名进行请求，你会看到典型的 whoami 输出：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl apply -f 02-whoami-httproute.yaml</span><br><span class="line">➜ kubectl get httproute -n kube-system</span><br><span class="line">NAME         HOSTNAMES    AGE</span><br><span class="line">http-app-1   [&quot;whoami&quot;]   25s</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">使用 <span class="built_in">whoami</span> 这个主机名进行访问测试</span></span><br><span class="line">➜ curl -H &quot;Host: whoami&quot; http://192.168.31.108</span><br><span class="line">Hostname: whoami-6b465b89d6-lcg4k</span><br><span class="line">IP: 127.0.0.1</span><br><span class="line">IP: ::1</span><br><span class="line">IP: 10.244.1.87</span><br><span class="line">IP: fe80::cccc:6aff:fef8:eca9</span><br><span class="line">RemoteAddr: 10.244.1.85:60384</span><br><span class="line">GET / HTTP/1.1</span><br><span class="line">Host: whoami</span><br><span class="line">User-Agent: curl/7.64.1</span><br><span class="line">Accept: */*</span><br><span class="line">Accept-Encoding: gzip</span><br><span class="line">X-Forwarded-For: 192.168.31.9</span><br><span class="line">X-Forwarded-Host: whoami</span><br><span class="line">X-Forwarded-Port: 80</span><br><span class="line">X-Forwarded-Proto: http</span><br><span class="line">X-Forwarded-Server: traefik-84d4cccf9c-2pl5r</span><br><span class="line">X-Real-Ip: 192.168.31.9</span><br></pre></td></tr></table></figure>
+
+
+
+<p>另外需要注意上面 HTTPRoute 对象中需要定义 <code>app：traefik</code> 标签，否则创建的 <code>Gateway</code> 实例不能关联上。</p>
+<h3 id="带路径的-Host-主机"><a href="#带路径的-Host-主机" class="headerlink" title="带路径的 Host 主机"></a>带路径的 Host 主机</h3><p>上面的例子可以很容易地限制流量只在一个给定的子路径上进行路由。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 03-whoami-httproute-paths.yaml</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.x-k8s.io/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">HTTPRoute</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">http-app-1</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-system</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">traefik</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">hostnames:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">whoami</span></span><br><span class="line">  <span class="attr">rules:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">forwardTo:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">port:</span> <span class="number">80</span></span><br><span class="line">          <span class="attr">serviceName:</span> <span class="string">whoami</span></span><br><span class="line">          <span class="attr">weight:</span> <span class="number">1</span></span><br><span class="line">      <span class="attr">matches:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">path:</span></span><br><span class="line">            <span class="attr">type:</span> <span class="string">Exact</span> <span class="comment"># 匹配 /foo 的路径</span></span><br><span class="line">            <span class="attr">value:</span> <span class="string">/foo</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>创建上面修改后的 HTTPRoute，你会发现之前的请求现在返回 404 错误，而请求 &#x2F;foo 路径后缀则返回成功。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">➜ curl -H &quot;Host: whoami&quot; http://192.168.31.108</span><br><span class="line">404 page not found</span><br><span class="line">➜ curl -H &quot;Host: whoami&quot; http://192.168.31.108/foo</span><br><span class="line">Hostname: whoami-6b465b89d6-p5vwz</span><br><span class="line">IP: 127.0.0.1</span><br><span class="line">IP: ::1</span><br><span class="line">IP: 10.244.2.154</span><br><span class="line">IP: fe80::7045:53ff:fef9:fadc</span><br><span class="line">RemoteAddr: 10.244.1.85:51686</span><br><span class="line">GET /foo HTTP/1.1</span><br><span class="line">Host: whoami</span><br><span class="line">User-Agent: curl/7.64.1</span><br><span class="line">Accept: */*</span><br><span class="line">Accept-Encoding: gzip</span><br><span class="line">X-Forwarded-For: 192.168.31.9</span><br><span class="line">X-Forwarded-Host: whoami</span><br><span class="line">X-Forwarded-Port: 80</span><br><span class="line">X-Forwarded-Proto: http</span><br><span class="line">X-Forwarded-Server: traefik-84d4cccf9c-2pl5r</span><br><span class="line">X-Real-Ip: 192.168.31.9</span><br></pre></td></tr></table></figure>
+
+
+
+<p>关于请求的哪些部分可以被匹配的更多信息可以在官方 Gateway APIs 文档（<a target="_blank" rel="noopener" href="https://gateway-api.sigs.k8s.io/v1alpha1/api-types/httproute/#rules%EF%BC%89%E4%B8%AD%E6%89%BE%E5%88%B0%E3%80%82">https://gateway-api.sigs.k8s.io/v1alpha1/api-types/httproute/#rules）中找到。</a></p>
+<h3 id="金丝雀发布"><a href="#金丝雀发布" class="headerlink" title="金丝雀发布"></a>金丝雀发布</h3><p>Gateway APIs 规范可以支持的另一个功能是金丝雀发布，假设你想在一个端点上运行两个不同的服务（或同一服务的两个版本），并将一部分请求路由到每个端点，则可以通过修改你的 HTTPRoute 来实现。</p>
+<p>首先，我们需要运行第二个服务，这里我们快速生成一个 Nginx 的实例来进行测试。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 03-nginx.yaml</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nginx</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-system</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">replicas:</span> <span class="number">2</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">nginx</span></span><br><span class="line">  <span class="attr">template:</span></span><br><span class="line">    <span class="attr">metadata:</span></span><br><span class="line">      <span class="attr">labels:</span></span><br><span class="line">        <span class="attr">app:</span> <span class="string">nginx</span></span><br><span class="line">    <span class="attr">spec:</span></span><br><span class="line">      <span class="attr">containers:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">nginx</span></span><br><span class="line">          <span class="attr">image:</span> <span class="string">nginx</span></span><br><span class="line">          <span class="attr">ports:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">containerPort:</span> <span class="number">80</span></span><br><span class="line">              <span class="attr">name:</span> <span class="string">http</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Service</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">nginx</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-system</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">protocol:</span> <span class="string">TCP</span></span><br><span class="line">      <span class="attr">port:</span> <span class="number">80</span></span><br><span class="line">      <span class="attr">targetPort:</span> <span class="string">http</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">nginx</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>接着我们修改前面的 HTTPRoute 资源对象，其中有一个 weight 选项，可以为两个服务分别分配不同的权重，如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 04-whoami-nginx-canary.yaml</span></span><br><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">networking.x-k8s.io/v1alpha1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">HTTPRoute</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">labels:</span></span><br><span class="line">    <span class="attr">app:</span> <span class="string">traefik</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">http-app-1</span></span><br><span class="line">  <span class="attr">namespace:</span> <span class="string">kube-system</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">hostnames:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">whoami</span></span><br><span class="line">  <span class="attr">rules:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">forwardTo:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">port:</span> <span class="number">80</span></span><br><span class="line">          <span class="attr">serviceName:</span> <span class="string">whoami</span></span><br><span class="line">          <span class="attr">weight:</span> <span class="number">3</span> <span class="comment"># 3/4 的请求到whoami</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">port:</span> <span class="number">80</span></span><br><span class="line">          <span class="attr">serviceName:</span> <span class="string">nginx</span></span><br><span class="line">          <span class="attr">weight:</span> <span class="number">1</span> <span class="comment"># 1/4 的请求到whoami</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>创建上面的 HTTPRoute 后，现在我们可以再次访问 whoami 服务，正常我们可以看到有大约 25%的请求会看到 Nginx 的响应，而不是 whoami 的响应。</p>
+<p>到这里我们就使用 Traefik 来测试了 Kubernetes Gateway APIs 的使用。目前，Traefik 对 Gateway APIs 的实现是基于 <code>v1alpha1</code> 版本的规范，目前最新的规范是 <code>v1alpha2</code>，所以和最新的规范可能有一些出入的地方。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Gitlab%20CI%20%E5%9C%A8%20Kubernetes%20%E4%B8%AD%E7%9A%84%20Docker%20%E7%BC%93%E5%AD%98/" rel="prev" title="Gitlab CI 在 Kubernetes 中的 Docker 缓存">
+      <i class="fa fa-chevron-left"></i> Gitlab CI 在 Kubernetes 中的 Docker 缓存
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/GPUStack/" rel="next" title="GPUStack">
+      GPUStack <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Gateway-API"><span class="nav-number">1.</span> <span class="nav-text">Gateway API</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9D%A2%E5%90%91%E8%A7%92%E8%89%B2%E8%AE%BE%E8%AE%A1"><span class="nav-number">1.1.</span> <span class="nav-text">面向角色设计</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E5%BF%B5"><span class="nav-number">1.2.</span> <span class="nav-text">概念</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#GatewayClass"><span class="nav-number">1.2.1.</span> <span class="nav-text">GatewayClass</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Gateway"><span class="nav-number">1.2.2.</span> <span class="nav-text">Gateway</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Route-%E8%B5%84%E6%BA%90"><span class="nav-number">1.2.3.</span> <span class="nav-text">Route 资源</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%84%E5%90%88"><span class="nav-number">1.2.4.</span> <span class="nav-text">组合</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.3.</span> <span class="nav-text">实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%83%A8%E7%BD%B2%E4%B8%80%E4%B8%AA%E7%AE%80%E5%8D%95%E7%9A%84-Host-%E4%B8%BB%E6%9C%BA"><span class="nav-number">1.3.1.</span> <span class="nav-text">部署一个简单的 Host 主机</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B8%A6%E8%B7%AF%E5%BE%84%E7%9A%84-Host-%E4%B8%BB%E6%9C%BA"><span class="nav-number">1.3.2.</span> <span class="nav-text">带路径的 Host 主机</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%87%91%E4%B8%9D%E9%9B%80%E5%8F%91%E5%B8%83"><span class="nav-number">1.3.3.</span> <span class="nav-text">金丝雀发布</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

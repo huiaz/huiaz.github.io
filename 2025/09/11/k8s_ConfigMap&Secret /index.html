@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="请解释 Kubernetes 中的 ConfigMap 和 Secret 的作用及其使用场景。	 🤔 分析过程：此问题旨在考察对Kubernetes中两种核心配置资源——ConfigMap和Secret的理解。一个全面的回答需要清晰地界定两者的用途、异同点，并能说明如何在Pod中使用它们。关键在于强调一个核心区别：**ConfigMap用于非敏感配置，Secret用于敏感配置**。展示具体的使用">
+<meta property="og:type" content="article">
+<meta property="og:title" content="k8s_ConfigMap&amp;Secret">
+<meta property="og:url" content="http://example.com/2025/09/11/k8s_ConfigMap&Secret%20/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="请解释 Kubernetes 中的 ConfigMap 和 Secret 的作用及其使用场景。	 🤔 分析过程：此问题旨在考察对Kubernetes中两种核心配置资源——ConfigMap和Secret的理解。一个全面的回答需要清晰地界定两者的用途、异同点，并能说明如何在Pod中使用它们。关键在于强调一个核心区别：**ConfigMap用于非敏感配置，Secret用于敏感配置**。展示具体的使用">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:44:27.859Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/k8s_ConfigMap&Secret%20/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>k8s_ConfigMap&Secret | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/k8s_ConfigMap&Secret%20/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          k8s_ConfigMap&Secret
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:44:27" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E9%9D%A2%E8%AF%95%E9%A2%98/" itemprop="url" rel="index"><span itemprop="name">面试题</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.2k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>请解释 Kubernetes 中的 ConfigMap 和 Secret 的作用及其使用场景。	</p>
+<h3 id="🤔-分析过程："><a href="#🤔-分析过程：" class="headerlink" title="🤔 分析过程："></a>🤔 分析过程：</h3><p>此问题旨在考察对Kubernetes中两种核心配置资源——<code>ConfigMap</code>和<code>Secret</code>的理解。一个全面的回答需要清晰地界定两者的用途、异同点，并能说明如何在Pod中使用它们。关键在于强调一个核心区别：**<code>ConfigMap</code>用于非敏感配置，<code>Secret</code>用于敏感配置**。展示具体的使用方法（如注入环境变量、挂载为卷）能体现出实际操作经验。</p>
+<h3 id="💡-答案生成："><a href="#💡-答案生成：" class="headerlink" title="💡 答案生成："></a>💡 答案生成：</h3><h4 id="1-概念或定义"><a href="#1-概念或定义" class="headerlink" title="1. 概念或定义"></a>1. 概念或定义</h4><p><strong>ConfigMap</strong> 和 <strong>Secret</strong> 都是Kubernetes中的API对象，它们的核心作用是将<strong>配置数据</strong>从应用程序的容器镜像中<strong>解耦</strong>出来。这使得应用程序更具可移植性，因为你可以在不同的环境中（如开发、测试、生产）部署同一个容器镜像，只需为其提供不同的ConfigMap或Secret即可，而无需重新构建镜像。</p>
+<ul>
+<li><strong>ConfigMap:</strong> 用于存储<strong>非敏感的</strong>、纯文本的配置数据，以键值对的形式存在。例如，应用的URL、功能开关、环境标识等。</li>
+<li><strong>Secret:</strong> 专门用于存储<strong>敏感数据</strong>，如密码、API密钥、TLS证书、OAuth令牌等。数据以Base64编码格式存储，但其设计初衷是为了提供更严格的访问控制和管理机制。</li>
+</ul>
+<h4 id="2-作用与区别"><a href="#2-作用与区别" class="headerlink" title="2. 作用与区别"></a>2. 作用与区别</h4><p>虽然它们在功能上相似（都是键值存储并能注入到Pod中），但其设计意图和安全级别完全不同。</p>
+<table>
+<thead>
+<tr>
+<th align="left">特性 (Feature)</th>
+<th align="left">ConfigMap</th>
+<th align="left">Secret</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>核心用途</strong></td>
+<td align="left">存储<strong>非敏感</strong>的配置数据</td>
+<td align="left">存储<strong>敏感</strong>的凭证和密钥</td>
+</tr>
+<tr>
+<td align="left"><strong>数据编码</strong></td>
+<td align="left">明文 (Plain Text)</td>
+<td align="left">Base64编码 (为了传输，<strong>非加密</strong>！)</td>
+</tr>
+<tr>
+<td align="left"><strong>安全性</strong></td>
+<td align="left">默认情况下，任何有权限访问Pod的用户都可能看到数据</td>
+<td align="left">1. etcd中可配置加密存储。<br>2. 默认不挂载到Pod。<br>3. 受更严格的RBAC策略控制。</td>
+</tr>
+<tr>
+<td align="left"><strong>典型使用场景</strong></td>
+<td align="left">配置文件 (<code>nginx.conf</code>)、应用功能开关、环境变量</td>
+<td align="left">数据库密码、API密钥、TLS证书 (<code>tls.crt</code>, <code>tls.key</code>)、Docker仓库凭证</td>
+</tr>
+<tr>
+<td align="left"><strong>Kubernetes集成</strong></td>
+<td align="left">无特殊集成</td>
+<td align="left">与<code>ServiceAccount</code>、<code>Ingress</code>等有特殊集成（如自动挂载token、TLS证书）</td>
+</tr>
+</tbody></table>
+<p><strong>⚡️ 关键警告：</strong> Base64编码<strong>不是加密</strong>！它只是一种数据传输编码，可以被任何人轻易解码。<code>Secret</code>的安全性主要来源于Kubernetes的访问控制（RBAC）、etcd加密以及限制其在集群中的暴露。</p>
+<h4 id="3-如何在Pod中使用它们"><a href="#3-如何在Pod中使用它们" class="headerlink" title="3. 如何在Pod中使用它们"></a>3. 如何在Pod中使用它们</h4><p>ConfigMap和Secret可以通过两种主要方式被Pod消费：</p>
+<p><strong>1. 作为环境变量注入 (Inject as Environment Variables)</strong><br>   这是将单个键值对注入容器的最直接方式。</p>
+   <figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># pod-with-env.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">my-pod</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">my-container</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">busybox</span></span><br><span class="line">    <span class="attr">command:</span> [ <span class="string">&quot;/bin/sh&quot;</span>, <span class="string">&quot;-c&quot;</span>, <span class="string">&quot;env&quot;</span> ]</span><br><span class="line">    <span class="attr">env:</span></span><br><span class="line">      <span class="comment"># 从ConfigMap中注入一个环境变量</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">APP_COLOR</span></span><br><span class="line">        <span class="attr">valueFrom:</span></span><br><span class="line">          <span class="attr">configMapKeyRef:</span></span><br><span class="line">            <span class="attr">name:</span> <span class="string">my-app-config</span> <span class="comment"># ConfigMap的名称</span></span><br><span class="line">            <span class="attr">key:</span> <span class="string">app.color</span>     <span class="comment"># ConfigMap中的键</span></span><br><span class="line">      <span class="comment"># 从Secret中注入一个环境变量</span></span><br><span class="line">      <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">DB_PASSWORD</span></span><br><span class="line">        <span class="attr">valueFrom:</span></span><br><span class="line">          <span class="attr">secretKeyRef:</span></span><br><span class="line">            <span class="attr">name:</span> <span class="string">my-db-secret</span> <span class="comment"># Secret的名称</span></span><br><span class="line">            <span class="attr">key:</span> <span class="string">password</span>     <span class="comment"># Secret中的键</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>2. 作为数据卷挂载 (Mount as a Volume)</strong><br>   这种方式可以将整个ConfigMap或Secret挂载为容器内的一个目录，其中的每个键值对都会成为一个文件（文件名是键，文件内容是值）。这对于传统的、需要读取配置文件的应用非常有用。</p>
+   <figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># pod-with-volume.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">Pod</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">my-pod-volume</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">containers:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">my-container</span></span><br><span class="line">    <span class="attr">image:</span> <span class="string">nginx</span></span><br><span class="line">    <span class="attr">volumeMounts:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">config-volume</span>      <span class="comment"># 卷挂载的名称</span></span><br><span class="line">      <span class="attr">mountPath:</span> <span class="string">/etc/config</span>  <span class="comment"># 挂载到容器内的路径</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">secret-volume</span></span><br><span class="line">      <span class="attr">mountPath:</span> <span class="string">/etc/secrets</span></span><br><span class="line">  <span class="attr">volumes:</span></span><br><span class="line">    <span class="comment"># 定义一个卷，其内容来自ConfigMap</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">config-volume</span></span><br><span class="line">      <span class="attr">configMap:</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">my-app-config</span>     <span class="comment"># ConfigMap的名称</span></span><br><span class="line">    <span class="comment"># 定义一个卷，其内容来自Secret</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">secret-volume</span></span><br><span class="line">      <span class="attr">secret:</span></span><br><span class="line">        <span class="attr">secretName:</span> <span class="string">my-db-secret</span>  <span class="comment"># Secret的名称</span></span><br></pre></td></tr></table></figure>
+<p>   当这个Pod运行时，你可以在<code>/etc/config</code>目录下找到以ConfigMap的键命名的文件，在<code>/etc/secrets</code>目录下找到以Secret的键命名的文件。</p>
+<h4 id="4-创建与管理"><a href="#4-创建与管理" class="headerlink" title="4. 创建与管理"></a>4. 创建与管理</h4><p>可以使用<code>kubectl create</code>命令来创建它们，或通过YAML文件进行声明式管理。</p>
+<ul>
+<li><p><strong>创建ConfigMap:</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 从字面值创建</span></span><br><span class="line">kubectl create configmap my-app-config --from-literal=app.color=blue --from-literal=app.environment=dev</span><br><span class="line"><span class="comment"># 从文件创建</span></span><br><span class="line">kubectl create configmap nginx-config --from-file=nginx.conf</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><strong>创建Secret:</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建通用Secret (用于API密钥、密码等)</span></span><br><span class="line">kubectl create secret generic my-db-secret --from-literal=username=admin --from-literal=password=<span class="string">&#x27;S3cr3tP@ssw0rd&#x27;</span></span><br><span class="line"><span class="comment"># 创建TLS Secret (用于Ingress)</span></span><br><span class="line">kubectl create secret tls my-tls-secret --cert=path/to/tls.crt --key=path/to/tls.key</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h4 id="5-扩展知识-最佳实践"><a href="#5-扩展知识-最佳实践" class="headerlink" title="5. 扩展知识&#x2F;最佳实践"></a>5. 扩展知识&#x2F;最佳实践</h4><ul>
+<li><strong>最小权限原则:</strong> 使用RBAC严格限制谁可以读取<code>Secret</code>对象。</li>
+<li><strong>外部Secret管理:</strong> 在安全性要求极高的生产环境中，推荐使用外部Secret管理工具，如 <strong>HashiCorp Vault</strong> 或云厂商提供的服务（如AWS Secrets Manager, Azure Key Vault），并通过 <strong>Secrets Store CSI Driver</strong> 等工具将其安全地同步到Kubernetes中。这可以避免将敏感信息明文存储在Git仓库的YAML中。</li>
+<li><strong>不可变性 (Immutability):</strong> 可以将ConfigMap和Secret设置为不可变，以防止意外更改导致应用出现问题。</li>
+<li><strong>热更新:</strong> 更新ConfigMap或Secret后，默认情况下已经运行的Pod<strong>不会</strong>自动获取新的配置。需要触发Pod的滚动更新（例如，通过重新部署Deployment）来加载新配置。一些工具如<code>stakater/Reloader</code>可以自动监视配置变更并触发滚动更新。</li>
+</ul>
+<p><strong>结论：</strong>  <code>ConfigMap</code> 和 <code>Secret</code> 是Kubernetes中实现配置与应用解耦的关键资源。<code>ConfigMap</code>用于存储非敏感配置，而<code>Secret</code>则专为敏感数据设计，并提供了更高级别的安全保障。在实践中，应根据数据的敏感性选择正确的对象，并遵循安全最佳实践。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/k8s%20service/" rel="prev" title="k8s service">
+      <i class="fa fa-chevron-left"></i> k8s service
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/k8s_12/" rel="next" title="k8s_12">
+      k8s_12 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%F0%9F%A4%94-%E5%88%86%E6%9E%90%E8%BF%87%E7%A8%8B%EF%BC%9A"><span class="nav-number">1.</span> <span class="nav-text">🤔 分析过程：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%F0%9F%92%A1-%E7%AD%94%E6%A1%88%E7%94%9F%E6%88%90%EF%BC%9A"><span class="nav-number">2.</span> <span class="nav-text">💡 答案生成：</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E6%A6%82%E5%BF%B5%E6%88%96%E5%AE%9A%E4%B9%89"><span class="nav-number">2.1.</span> <span class="nav-text">1. 概念或定义</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E4%BD%9C%E7%94%A8%E4%B8%8E%E5%8C%BA%E5%88%AB"><span class="nav-number">2.2.</span> <span class="nav-text">2. 作用与区别</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E5%A6%82%E4%BD%95%E5%9C%A8Pod%E4%B8%AD%E4%BD%BF%E7%94%A8%E5%AE%83%E4%BB%AC"><span class="nav-number">2.3.</span> <span class="nav-text">3. 如何在Pod中使用它们</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-%E5%88%9B%E5%BB%BA%E4%B8%8E%E7%AE%A1%E7%90%86"><span class="nav-number">2.4.</span> <span class="nav-text">4. 创建与管理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-%E6%89%A9%E5%B1%95%E7%9F%A5%E8%AF%86-%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="nav-number">2.5.</span> <span class="nav-text">5. 扩展知识&#x2F;最佳实践</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

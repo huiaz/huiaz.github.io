@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="好的，作为一名运维工程师，我来详细描述在 Nginx 中如何配置访问控制，并提供具体的配置示例。 访问控制是保障 Web 应用安全的重要一环，Nginx 提供了多种灵活的方式来实现对资源的访问限制，包括基于 IP 地址的访问控制、基于用户认证的访问控制以及结合两者使用。 Nginx 访问控制的类型Nginx 主要通过以下两种方式进行访问控制：  基于 IP 地址的访问控制 (Allow&#x2F;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="访问控制">
+<meta property="og:url" content="http://example.com/2025/09/11/%E8%AE%BF%E9%97%AE%E6%8E%A7%E5%88%B6/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="好的，作为一名运维工程师，我来详细描述在 Nginx 中如何配置访问控制，并提供具体的配置示例。 访问控制是保障 Web 应用安全的重要一环，Nginx 提供了多种灵活的方式来实现对资源的访问限制，包括基于 IP 地址的访问控制、基于用户认证的访问控制以及结合两者使用。 Nginx 访问控制的类型Nginx 主要通过以下两种方式进行访问控制：  基于 IP 地址的访问控制 (Allow&#x2F;">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:12:19.494Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/%E8%AE%BF%E9%97%AE%E6%8E%A7%E5%88%B6/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>访问控制 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/%E8%AE%BF%E9%97%AE%E6%8E%A7%E5%88%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          访问控制
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:12:19" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/" itemprop="url" rel="index"><span itemprop="name">WEB</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/Nginx/" itemprop="url" rel="index"><span itemprop="name">Nginx</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.5k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>好的，作为一名运维工程师，我来详细描述在 Nginx 中如何配置访问控制，并提供具体的配置示例。</p>
+<p>访问控制是保障 Web 应用安全的重要一环，Nginx 提供了多种灵活的方式来实现对资源的访问限制，包括基于 IP 地址的访问控制、基于用户认证的访问控制以及结合两者使用。</p>
+<h3 id="Nginx-访问控制的类型"><a href="#Nginx-访问控制的类型" class="headerlink" title="Nginx 访问控制的类型"></a>Nginx 访问控制的类型</h3><p>Nginx 主要通过以下两种方式进行访问控制：</p>
+<ol>
+<li><strong>基于 IP 地址的访问控制 (Allow&#x2F;Deny)：</strong> 根据客户端的 IP 地址判断是否允许访问。</li>
+<li><strong>基于用户认证的访问控制 (HTTP Basic Authentication)：</strong> 要求用户输入用户名和密码才能访问受保护的资源。</li>
+</ol>
+<p>还有一些高级的访问控制，例如基于 JWT 验证（需要 Lua 模块或其他定制开发），或者与第三方认证服务集成，但最常用和基础的就是上述两种。</p>
+<hr>
+<h3 id="1-基于-IP-地址的访问控制-Allow-Deny"><a href="#1-基于-IP-地址的访问控制-Allow-Deny" class="headerlink" title="1. 基于 IP 地址的访问控制 (Allow&#x2F;Deny)"></a>1. 基于 IP 地址的访问控制 (Allow&#x2F;Deny)</h3><p>这是最直接的访问控制方式，适用于限制特定 IP 地址或 IP 段的访问。</p>
+<p><strong>指令：</strong></p>
+<ul>
+<li><code>allow address | CIDR | all;</code>：允许指定的 IP 地址、IP 段或所有 IP 访问。</li>
+<li><code>deny address | CIDR | all;</code>：拒绝指定的 IP 地址、IP 段或所有 IP 访问。</li>
+</ul>
+<p><strong>规则顺序：</strong><br>Nginx 的 <code>allow</code> 和 <code>deny</code> 规则是按顺序处理的。当一个连接到达时，Nginx 会从上到下查找第一个匹配的规则：</p>
+<ul>
+<li>如果匹配到 <code>deny</code> 规则，则拒绝访问。</li>
+<li>如果匹配到 <code>allow</code> 规则，则允许访问。</li>
+<li>如果没有匹配到任何规则：<ul>
+<li>如果存在至少一个 <code>allow</code> 规则，则默认拒绝（即只允许明确 <code>allow</code> 的）。</li>
+<li>如果存在至少一个 <code>deny</code> 规则，则默认允许（即除了明确 <code>deny</code> 的，都允许）。</li>
+<li><strong>最佳实践：</strong> 为了安全起见，通常会以 <code>deny all;</code> 结尾，或者使用 <code>allow all;</code> 结尾来明确默认行为。</li>
+</ul>
+</li>
+</ul>
+<p><strong>配置位置：</strong> <code>http</code>、<code>server</code>、<code>location</code> 块。</p>
+<hr>
+<h4 id="示例-1-仅允许特定-IP-访问-白名单"><a href="#示例-1-仅允许特定-IP-访问-白名单" class="headerlink" title="示例 1: 仅允许特定 IP 访问 (白名单)"></a>示例 1: 仅允许特定 IP 访问 (白名单)</h4><p>假设你有一个管理后台 <code>/admin</code>，只允许公司内网 IP (例如 <code>192.168.1.0/24</code>) 和你的家庭 IP (<code>203.0.113.42</code>) 访问。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> your_domain.com;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> /admin/ &#123;</span><br><span class="line">        <span class="attribute">allow</span> <span class="number">192.168.1.0</span>/<span class="number">24</span>; <span class="comment"># 允许 192.168.1.0 到 192.168.1.255 的所有 IP</span></span><br><span class="line">        <span class="attribute">allow</span> <span class="number">203.0.113.42</span>;   <span class="comment"># 允许你的家庭 IP</span></span><br><span class="line">        <span class="attribute">deny</span> all;             <span class="comment"># 拒绝所有其他 IP 访问</span></span><br><span class="line">      </span><br><span class="line">        <span class="comment"># ... 其他 /admin 相关的配置，例如代理到后端应用</span></span><br><span class="line">        <span class="attribute">proxy_pass</span> http://backend_admin; </span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> / &#123;</span><br><span class="line">        <span class="comment"># 其他公共资源，默认允许所有访问</span></span><br><span class="line">        <span class="comment"># deny all; # 如果这里也写 deny all，则整个网站都拒绝，不符合预期</span></span><br><span class="line">        <span class="attribute">proxy_pass</span> http://backend_app;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>解释：</strong></p>
+<ul>
+<li>当请求 <code>/admin/</code> 路径时，Nginx 首先检查客户端 IP 是否在 <code>192.168.1.0/24</code> 或 <code>203.0.113.42</code> 范围内。</li>
+<li>如果是，则允许访问。</li>
+<li>如果不是，由于有 <code>deny all;</code>，请求会被拒绝，客户端会收到 <code>403 Forbidden</code> 错误。</li>
+</ul>
+<hr>
+<h4 id="示例-2-拒绝特定-IP-访问-黑名单"><a href="#示例-2-拒绝特定-IP-访问-黑名单" class="headerlink" title="示例 2: 拒绝特定 IP 访问 (黑名单)"></a>示例 2: 拒绝特定 IP 访问 (黑名单)</h4><p>假设你发现有恶意 IP (例如 <code>10.0.0.1</code> 和一个 IP 段 <code>172.16.0.0/16</code>) 正在爬取你的网站，你想禁止它们。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> your_domain.com;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> / &#123;</span><br><span class="line">        <span class="attribute">deny</span> <span class="number">10.0.0.1</span>;           <span class="comment"># 拒绝单个 IP</span></span><br><span class="line">        <span class="attribute">deny</span> <span class="number">172.16.0.0</span>/<span class="number">16</span>;       <span class="comment"># 拒绝一个 IP 段</span></span><br><span class="line">        <span class="attribute">allow</span> all;              <span class="comment"># 允许所有其他 IP 访问</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># ... 其他网站的配置</span></span><br><span class="line">        <span class="attribute">root</span> /var/www/html;</span><br><span class="line">        <span class="attribute">index</span> index.html;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>解释：</strong></p>
+<ul>
+<li>请求到来时，Nginx 会先检查是否是 <code>10.0.0.1</code> 或 <code>172.16.0.0/16</code> 中的 IP。</li>
+<li>如果是，则拒绝访问并返回 <code>403 Forbidden</code>。</li>
+<li>如果不是，由于有 <code>allow all;</code>，则允许访问。</li>
+</ul>
+<hr>
+<p><strong>重要提示：</strong></p>
+<ul>
+<li><p>Nginx 默认是判断客户端的原始 IP 地址 ( <code>$remote_addr</code> )。</p>
+</li>
+<li><p>如果 Nginx 前面还有一层或多层反向代理服务器（如 CDN、负载均衡器等），那么 <code>$remote_addr</code> 可能会是代理服务器的 IP 地址。在这种情况下，你需要配置 Nginx 信任代理服务器，并从 <code>X-Forwarded-For</code> 或 <code>X-Real-IP</code> 等 HTTP 请求头中获取真实的客户端 IP。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 在 http 块或 server 块配置</span></span><br><span class="line"><span class="attribute">set_real_ip_from</span> <span class="number">192.168.1.0</span>/<span class="number">24</span>; <span class="comment"># 你的上游代理服务器 IP 段</span></span><br><span class="line"><span class="attribute">set_real_ip_from</span> <span class="number">10.0.0.0</span>/<span class="number">8</span>;    <span class="comment"># 另一个代理服务器 IP 段</span></span><br><span class="line"><span class="attribute">real_ip_header</span> X-Forwarded-For; <span class="comment"># 或 X-Real-IP</span></span><br><span class="line"><span class="attribute">real_ip_recursive</span> <span class="literal">on</span>; <span class="comment"># 递归获取最原始的客户端IP</span></span><br></pre></td></tr></table></figure>
+<p>配置了这些指令后，<code>$remote_addr</code> 变量就会被替换为真实的客户端 IP，<code>allow/deny</code> 规则也能正确工作。</p>
+</li>
+</ul>
+<hr>
+<h3 id="2-基于用户认证的访问控制-HTTP-Basic-Authentication"><a href="#2-基于用户认证的访问控制-HTTP-Basic-Authentication" class="headerlink" title="2. 基于用户认证的访问控制 (HTTP Basic Authentication)"></a>2. 基于用户认证的访问控制 (HTTP Basic Authentication)</h3><p>这种方式要求用户提供有效的用户名和密码才能访问受保护的资源。</p>
+<p><strong>指令：</strong></p>
+<ul>
+<li><code>auth_basic &quot;Your Authentication Realm&quot;;</code>：启用 HTTP Basic Authentication，并设置认证领域名称（显示给用户的提示信息）。</li>
+<li><code>auth_basic_user_file /path/to/.htpasswd_file;</code>：指定存储用户名和密码的文件路径。</li>
+</ul>
+<p><strong>生成<code>.htpasswd</code>文件：</strong><br>你需要使用 <code>htpasswd</code> 工具来生成加密的用户名和密码文件。这个工具通常随 Apache HTTP Server 或作为独立包提供 (<code>apt install apache2-utils</code> 或 <code>yum install httpd-tools</code>)。</p>
+<ol>
+<li><strong>创建第一个用户：</strong><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> htpasswd -c /etc/nginx/.htpasswd admin</span><br><span class="line"><span class="comment"># 输入密码两次后，会创建 /etc/nginx/.htpasswd 文件并添加用户 admin</span></span><br></pre></td></tr></table></figure></li>
+<li><strong>添加更多用户 (不要使用 <code>-c</code> 选项，否则会覆盖现有文件)：</strong><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> htpasswd /etc/nginx/.htpasswd user1</span><br><span class="line"><span class="comment"># 输入密码两次后，会向 /etc/nginx/.htpasswd 文件中添加用户 user1</span></span><br></pre></td></tr></table></figure></li>
+<li><strong>注意：</strong> <code>.htpasswd</code> 文件应该存放在 Nginx 用户（通常是 <code>nginx</code> 或 <code>www-data</code>）有读取权限但不能被 Web 访问到的安全位置（例如 <code>/etc/nginx/</code> 目录下）。</li>
+</ol>
+<p><strong>配置位置：</strong> <code>http</code>、<code>server</code>、<code>location</code> 块。</p>
+<hr>
+<h4 id="示例-3-对-private-目录进行密码保护"><a href="#示例-3-对-private-目录进行密码保护" class="headerlink" title="示例 3: 对 /private 目录进行密码保护"></a>示例 3: 对 <code>/private</code> 目录进行密码保护</h4><figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> your_domain.com;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> /private/ &#123;</span><br><span class="line">        <span class="attribute">auth_basic</span> <span class="string">&quot;Restricted Access&quot;</span>; <span class="comment"># 认证领域名称，会显示给用户</span></span><br><span class="line">        <span class="attribute">auth_basic_user_file</span> /etc/nginx/.htpasswd; <span class="comment"># 指向密码文件</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># ... 其他 /private 相关的配置</span></span><br><span class="line">        <span class="attribute">root</span> /var/www/html; <span class="comment"># 假设 /private/ 指向 /var/www/html/private/ 目录</span></span><br><span class="line">        <span class="attribute">index</span> index.html;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> / &#123;</span><br><span class="line">        <span class="comment"># 其他公共资源</span></span><br><span class="line">        <span class="attribute">root</span> /var/www/html;</span><br><span class="line">        <span class="attribute">index</span> index.html;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>解释：</strong></p>
+<ul>
+<li>当用户尝试访问 <code>http://your_domain.com/private/</code> 时，浏览器会弹出一个对话框，要求输入用户名和密码。</li>
+<li>如果输入的用户名和密码与 <code>/etc/nginx/.htpasswd</code> 文件中的记录匹配，Nginx 就允许访问。</li>
+<li>如果认证失败，Nginx 会返回 <code>401 Unauthorized</code> 错误。</li>
+</ul>
+<hr>
+<h4 id="示例-4-结合-IP-地址和用户认证"><a href="#示例-4-结合-IP-地址和用户认证" class="headerlink" title="示例 4: 结合 IP 地址和用户认证"></a>示例 4: 结合 IP 地址和用户认证</h4><p>你可以将两种访问控制方式结合起来，实现更严格的策略。例如，只有来自特定 IP 段的用户才会被要求输入密码，其他 IP 直接拒绝。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> your_domain.com;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> /secure_area/ &#123;</span><br><span class="line">        <span class="comment"># 1. IP 白名单</span></span><br><span class="line">        <span class="attribute">allow</span> <span class="number">192.168.1.0</span>/<span class="number">24</span>; <span class="comment"># 只允许内网 IP 访问</span></span><br><span class="line">        <span class="attribute">deny</span> all;             <span class="comment"># 其他 IP 直接拒绝</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># 2. 对允许的 IP 进行密码认证</span></span><br><span class="line">        <span class="attribute">auth_basic</span> <span class="string">&quot;Secure Area Login&quot;</span>;</span><br><span class="line">        <span class="attribute">auth_basic_user_file</span> /etc/nginx/.htpasswd_secure_area;</span><br><span class="line"></span><br><span class="line">        <span class="comment"># ... /secure_area 相关的配置</span></span><br><span class="line">        <span class="attribute">proxy_pass</span> http://backend_secure_app;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> / &#123;</span><br><span class="line">        <span class="comment"># 其他公共资源</span></span><br><span class="line">        <span class="attribute">root</span> /var/www/html;</span><br><span class="line">        <span class="attribute">index</span> index.html;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>解释：</strong></p>
+<ul>
+<li>请求到达 <code>/secure_area/</code> 时，Nginx 首先进行 IP 检查。</li>
+<li>如果 IP 不在 <code>192.168.1.0/24</code> 范围内，请求立即被 <code>deny all;</code> 拒绝（<code>403 Forbidden</code>）。</li>
+<li>如果 IP 在 <code>192.168.1.0/24</code> 范围内，Nginx 接着强制进行用户名密码认证。认证通过才允许访问。</li>
+</ul>
+<hr>
+<h3 id="应用和调试"><a href="#应用和调试" class="headerlink" title="应用和调试"></a>应用和调试</h3><p>配置完成后，请务必进行以下操作：</p>
+<ol>
+<li><p><strong>检查 Nginx 配置语法：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> nginx -t</span><br></pre></td></tr></table></figure>
+<p>确保没有语法错误。</p>
+</li>
+<li><p><strong>重载 Nginx 服务：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> systemctl reload nginx</span><br><span class="line"><span class="comment"># 或 sudo service nginx reload</span></span><br></pre></td></tr></table></figure>
+<p>使新配置生效。</p>
+</li>
+<li><p><strong>测试访问：</strong> 使用不同的 IP 地址和认证凭据测试你的访问控制规则，确保它们按预期工作。</p>
+</li>
+<li><p><strong>注意错误页面：</strong> Nginx 默认的 403 Forbidden 或 401 Unauthorized 页面可能不够友好。你可以通过 <code>error_page</code> 指令配置自定义的错误页面：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 在 server 块中</span></span><br><span class="line"><span class="attribute">error_page</span> <span class="number">403</span> /custom_403.html;</span><br><span class="line"><span class="attribute">error_page</span> <span class="number">401</span> /custom_401.html;</span><br><span class="line"></span><br><span class="line"><span class="section">location</span> = /custom_403.html &#123;</span><br><span class="line">    <span class="attribute">root</span> /var/www/html; <span class="comment"># 你的 HTML 文件存放位置</span></span><br><span class="line">    internal; <span class="comment"># 内部请求，不能直接访问</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="section">location</span> = /custom_401.html &#123;</span><br><span class="line">    <span class="attribute">root</span> /var/www/html;</span><br><span class="line">    internal;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+<p>通过这些方法，你可以在 Nginx 中灵活且有效地实现各种访问控制策略，增强你的 Web 服务的安全性。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E8%AF%81%E4%B9%A6%E6%9B%B4%E6%96%B0/" rel="prev" title="证书更新">
+      <i class="fa fa-chevron-left"></i> 证书更新
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E8%8A%82%E7%82%B9%E7%9B%91%E6%8E%A7/" rel="next" title="节点监控">
+      节点监控 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Nginx-%E8%AE%BF%E9%97%AE%E6%8E%A7%E5%88%B6%E7%9A%84%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.</span> <span class="nav-text">Nginx 访问控制的类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E5%9F%BA%E4%BA%8E-IP-%E5%9C%B0%E5%9D%80%E7%9A%84%E8%AE%BF%E9%97%AE%E6%8E%A7%E5%88%B6-Allow-Deny"><span class="nav-number">2.</span> <span class="nav-text">1. 基于 IP 地址的访问控制 (Allow&#x2F;Deny)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B-1-%E4%BB%85%E5%85%81%E8%AE%B8%E7%89%B9%E5%AE%9A-IP-%E8%AE%BF%E9%97%AE-%E7%99%BD%E5%90%8D%E5%8D%95"><span class="nav-number">2.1.</span> <span class="nav-text">示例 1: 仅允许特定 IP 访问 (白名单)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B-2-%E6%8B%92%E7%BB%9D%E7%89%B9%E5%AE%9A-IP-%E8%AE%BF%E9%97%AE-%E9%BB%91%E5%90%8D%E5%8D%95"><span class="nav-number">2.2.</span> <span class="nav-text">示例 2: 拒绝特定 IP 访问 (黑名单)</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E5%9F%BA%E4%BA%8E%E7%94%A8%E6%88%B7%E8%AE%A4%E8%AF%81%E7%9A%84%E8%AE%BF%E9%97%AE%E6%8E%A7%E5%88%B6-HTTP-Basic-Authentication"><span class="nav-number">3.</span> <span class="nav-text">2. 基于用户认证的访问控制 (HTTP Basic Authentication)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B-3-%E5%AF%B9-private-%E7%9B%AE%E5%BD%95%E8%BF%9B%E8%A1%8C%E5%AF%86%E7%A0%81%E4%BF%9D%E6%8A%A4"><span class="nav-number">3.1.</span> <span class="nav-text">示例 3: 对 &#x2F;private 目录进行密码保护</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B-4-%E7%BB%93%E5%90%88-IP-%E5%9C%B0%E5%9D%80%E5%92%8C%E7%94%A8%E6%88%B7%E8%AE%A4%E8%AF%81"><span class="nav-number">3.2.</span> <span class="nav-text">示例 4: 结合 IP 地址和用户认证</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BA%94%E7%94%A8%E5%92%8C%E8%B0%83%E8%AF%95"><span class="nav-number">4.</span> <span class="nav-text">应用和调试</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

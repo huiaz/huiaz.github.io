@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="在 Go 语言中，所有的数据传递（包括赋值和函数参数传递）都是按值进行的。  Go 语言中的“值”是什么？这取决于变量的类型：  **值类型 (Value Types)**：  基本数据类型：int, float64, bool, string, complex 等。 数组 (Array)：[N]Type。 结构体 (Struct)：如果结构体的所有字段都是值类型。 当传递这些类型时，会创建它们的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深拷贝与浅拷贝">
+<meta property="og:url" content="http://example.com/2025/09/11/%E6%B7%B1%E6%8B%B7%E8%B4%9D%E4%B8%8E%E6%B5%85%E6%8B%B7%E8%B4%9D/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="在 Go 语言中，所有的数据传递（包括赋值和函数参数传递）都是按值进行的。  Go 语言中的“值”是什么？这取决于变量的类型：  **值类型 (Value Types)**：  基本数据类型：int, float64, bool, string, complex 等。 数组 (Array)：[N]Type。 结构体 (Struct)：如果结构体的所有字段都是值类型。 当传递这些类型时，会创建它们的">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:15:58.056Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Go">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/%E6%B7%B1%E6%8B%B7%E8%B4%9D%E4%B8%8E%E6%B5%85%E6%8B%B7%E8%B4%9D/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>深拷贝与浅拷贝 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/%E6%B7%B1%E6%8B%B7%E8%B4%9D%E4%B8%8E%E6%B5%85%E6%8B%B7%E8%B4%9D/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          深拷贝与浅拷贝
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:15:58" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/go/" itemprop="url" rel="index"><span itemprop="name">go</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>8.1k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>7 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><strong>在 Go 语言中，所有的数据传递（包括赋值和函数参数传递）都是按值进行的</strong>。</p>
+<hr>
+<h3 id="Go-语言中的“值”是什么？"><a href="#Go-语言中的“值”是什么？" class="headerlink" title="Go 语言中的“值”是什么？"></a>Go 语言中的“值”是什么？</h3><p>这取决于变量的类型：</p>
+<ol>
+<li><p>**值类型 (Value Types)**：</p>
+<ul>
+<li>基本数据类型：<code>int</code>, <code>float64</code>, <code>bool</code>, <code>string</code>, <code>complex</code> 等。</li>
+<li>数组 (Array)：<code>[N]Type</code>。</li>
+<li>结构体 (Struct)：如果结构体的所有字段都是值类型。</li>
+<li>当传递这些类型时，会创建它们的<strong>完整副本</strong>。</li>
+</ul>
+</li>
+<li><p>**引用类型 (Reference Types)**：</p>
+<ul>
+<li>切片 (Slice)：<code>[]Type</code></li>
+<li>映射 (Map)：<code>map[KeyType]ValueType</code></li>
+<li>通道 (Channel)：<code>chan Type</code></li>
+<li>接口 (Interface)：<code>interface&#123;&#125;</code></li>
+<li>指针 (Pointer)：<code>*Type</code></li>
+<li>函数 (Function)：<code>func(...)</code></li>
+<li>当传递这些类型时，实际拷贝的是它们的<strong>“头部”（header）或者说“描述符”</strong>, 这个头部包含了指向底层数据结构的指针。<strong>底层数据本身并没有被复制</strong>。</li>
+</ul>
+</li>
+</ol>
+<p>理解了这一点，我们就可以区分深拷贝和浅拷贝了。</p>
+<hr>
+<h3 id="1-浅拷贝-Shallow-Copy"><a href="#1-浅拷贝-Shallow-Copy" class="headerlink" title="1. 浅拷贝 (Shallow Copy)"></a>1. 浅拷贝 (Shallow Copy)</h3><p><strong>定义：</strong> 浅拷贝是指在拷贝一个数据结构时，只拷贝其<strong>顶层（或第一层）的数据值</strong>。如果顶层数据中包含指向其他内存地址的引用（即指针），那么这些引用会被直接复制，而不会去复制它们所指向的实际数据。结果是，<strong>原数据和副本会共享底层的数据</strong>。</p>
+<p><strong>在 Go 语言中的表现：</strong><br>当对一个<strong>引用类型</strong>变量进行赋值或作为函数参数传递时，发生的就是浅拷贝。拷贝的是引用，而不是引用指向的实际数据。</p>
+<p><strong>浅拷贝的特点：</strong></p>
+<ul>
+<li><strong>共享底层数据：</strong> 原始数据和新数据引用的是同一块内存区域。</li>
+<li><strong>副作用：</strong> 通过新数据修改共享的底层数据，会影响到原始数据。</li>
+</ul>
+<p><strong>示例：</strong></p>
+<h4 id="示例-1-切片-Slice-的浅拷贝"><a href="#示例-1-切片-Slice-的浅拷贝" class="headerlink" title="示例 1: 切片 (Slice) 的浅拷贝"></a>示例 1: 切片 (Slice) 的浅拷贝</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    originalSlice := []<span class="type">int</span>&#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>&#125;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;原切片地址（header值）: %p, 数据地址: %p, 内容: %v\n&quot;</span>, &amp;originalSlice, originalSlice, originalSlice)</span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 浅拷贝：copySlice 接收了 originalSlice 的 header 值的副本</span></span><br><span class="line">    <span class="comment">// 这个副本指向和 originalSlice 相同的底层数组</span></span><br><span class="line">    copySlice := originalSlice</span><br><span class="line">    fmt.Printf(<span class="string">&quot;复制切片地址（header值）: %p, 数据地址: %p, 内容: %v\n&quot;</span>, &amp;copySlice, copySlice, copySlice)</span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 修改 copySlice 的元素</span></span><br><span class="line">    copySlice[<span class="number">0</span>] = <span class="number">99</span></span><br><span class="line">  </span><br><span class="line">    fmt.Println(<span class="string">&quot;\n修改 copySlice[0] 后:&quot;</span>)</span><br><span class="line">    fmt.Printf(<span class="string">&quot;原切片内容: %v\n&quot;</span>, originalSlice) <span class="comment">// originalSlice 也被修改了！</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;复制切片内容: %v\n&quot;</span>, copySlice)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 注意：s = append(s, val) 如果导致底层数组 reallocate，则新的 s 将不再共享底层数组</span></span><br><span class="line">    <span class="comment">// 但在 reallocate 发生之前，它们是共享的。</span></span><br><span class="line">    <span class="comment">// 如果是 copySlice = append(copySlice, 100)，且原capacity不足，则copySlice会指向新数组</span></span><br><span class="line">    <span class="comment">// 此时originalSlice将不会受到后续append操作的影响（除非你修改了原来的共享部分）</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>解释：</strong> <code>originalSlice</code> 和 <code>copySlice</code> 的值（即它们的 slice header）虽然是不同的内存地址，但它们内部的底层数组指针却指向同一块内存区域。因此，通过 <code>copySlice[0] = 99</code> 修改元素时，实际上是修改了这块共享的底层内存，<code>originalSlice</code> 也随之改变。</p>
+<h4 id="示例-2-映射-Map-的浅拷贝"><a href="#示例-2-映射-Map-的浅拷贝" class="headerlink" title="示例 2: 映射 (Map) 的浅拷贝"></a>示例 2: 映射 (Map) 的浅拷贝</h4><figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    originalMap := <span class="keyword">map</span>[<span class="type">string</span>]<span class="type">int</span>&#123;<span class="string">&quot;a&quot;</span>: <span class="number">1</span>, <span class="string">&quot;b&quot;</span>: <span class="number">2</span>&#125;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;原 map 地址（header值）: %p, 内容: %v\n&quot;</span>, &amp;originalMap, originalMap)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 浅拷贝：copyMap 接收了 originalMap 的 header 值的副本</span></span><br><span class="line">    <span class="comment">// 这个副本指向和 originalMap 相同的底层 hash map 结构</span></span><br><span class="line">    copyMap := originalMap</span><br><span class="line">    fmt.Printf(<span class="string">&quot;复制 map 地址（header值）: %p, 内容: %v\n&quot;</span>, &amp;copyMap, copyMap)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 修改 copyMap 的元素</span></span><br><span class="line">    copyMap[<span class="string">&quot;a&quot;</span>] = <span class="number">99</span></span><br><span class="line">    copyMap[<span class="string">&quot;c&quot;</span>] = <span class="number">3</span> <span class="comment">// 添加新元素</span></span><br><span class="line"></span><br><span class="line">    fmt.Println(<span class="string">&quot;\n修改 copyMap[&#x27;a&#x27;] 后:&quot;</span>)</span><br><span class="line">    fmt.Printf(<span class="string">&quot;原 map 内容: %v\n&quot;</span>, originalMap) <span class="comment">// originalMap 也被修改了！</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;复制 map 内容: %v\n&quot;</span>, copyMap)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>解释：</strong> <code>map</code> 类型在 Go 中也是引用类型。<code>copyMap = originalMap</code> 实际上只是复制了 <code>map</code> 的描述符，它们都指向内存中的同一个哈希表结构。因此，对 <code>copyMap</code> 进行增删改查操作，都会直接作用于底层哈希表，<code>originalMap</code> 自然也会反映这些变化。</p>
+<hr>
+<h3 id="2-深拷贝-Deep-Copy"><a href="#2-深拷贝-Deep-Copy" class="headerlink" title="2. 深拷贝 (Deep Copy)"></a>2. 深拷贝 (Deep Copy)</h3><p><strong>定义：</strong> 深拷贝是指在拷贝一个数据结构时，<strong>不仅拷贝顶层的数据值，还会递归地拷贝所有嵌套的引用类型数据</strong>。最终结果是一个与原始数据完全独立的副本，它们之间没有任何共享的底层数据。</p>
+<p><strong>在 Go 语言中的表现：</strong><br>Go 语言<strong>没有内置通用的深拷贝机制</strong>。你需要根据数据结构的具体情况，手动编写代码来实现深拷贝，或者利用序列化&#x2F;反序列化库。</p>
+<p><strong>深拷贝的特点：</strong></p>
+<ul>
+<li><strong>完全独立：</strong> 原始数据和新数据互不影响。</li>
+<li><strong>无副作用：</strong> 修改新数据不会影响原始数据。</li>
+</ul>
+<p><strong>示例：</strong></p>
+<h4 id="示例-1-切片-Slice-的深拷贝"><a href="#示例-1-切片-Slice-的深拷贝" class="headerlink" title="示例 1: 切片 (Slice) 的深拷贝"></a>示例 1: 切片 (Slice) 的深拷贝</h4><p>要深拷贝切片，你需要创建一个新的底层数组，并将原切片的内容逐个复制过来。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    originalSlice := []<span class="type">int</span>&#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>&#125;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;原切片地址（header值）: %p, 数据地址: %p, 内容: %v\n&quot;</span>, &amp;originalSlice, originalSlice, originalSlice)</span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 深拷贝切片：</span></span><br><span class="line">    <span class="comment">// 1. 创建一个与原切片长度和容量相同的新切片</span></span><br><span class="line">    deepCopiedSlice := <span class="built_in">make</span>([]<span class="type">int</span>, <span class="built_in">len</span>(originalSlice), <span class="built_in">cap</span>(originalSlice))</span><br><span class="line">    <span class="comment">// 2. 使用内置的 copy() 函数将元素从原切片复制到新切片</span></span><br><span class="line">    <span class="built_in">copy</span>(deepCopiedSlice, originalSlice)</span><br><span class="line"></span><br><span class="line">    fmt.Printf(<span class="string">&quot;深拷贝切片地址（header值）: %p, 数据地址: %p, 内容: %v\n&quot;</span>, &amp;deepCopiedSlice, deepCopiedSlice, deepCopiedSlice)</span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 修改深拷贝后的切片元素</span></span><br><span class="line">    deepCopiedSlice[<span class="number">0</span>] = <span class="number">99</span></span><br><span class="line">  </span><br><span class="line">    fmt.Println(<span class="string">&quot;\n修改 deepCopiedSlice[0] 后:&quot;</span>)</span><br><span class="line">    fmt.Printf(<span class="string">&quot;原切片内容: %v\n&quot;</span>, originalSlice)       <span class="comment">// originalSlice 不受影响</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;深拷贝切片内容: %v\n&quot;</span>, deepCopiedSlice) <span class="comment">// deepCopiedSlice 已被修改</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>解释：</strong> <code>make([]int, len(originalSlice), cap(originalSlice))</code> 创建了一个<strong>新的</strong>底层数组，<code>copy()</code> 函数将 <code>originalSlice</code> 中的元素值逐个复制到这个新数组中。此时，<code>originalSlice</code> 和 <code>deepCopiedSlice</code> 不仅它们的 slice header 值不同，它们指向的底层数组也是完全独立的。</p>
+<h4 id="示例-2-映射-Map-的深拷贝"><a href="#示例-2-映射-Map-的深拷贝" class="headerlink" title="示例 2: 映射 (Map) 的深拷贝"></a>示例 2: 映射 (Map) 的深拷贝</h4><p>要深拷贝 Map，你需要创建一个新的 Map，并遍历原始 Map 的所有键值对，逐个将其添加到新 Map 中。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    originalMap := <span class="keyword">map</span>[<span class="type">string</span>]<span class="type">int</span>&#123;<span class="string">&quot;a&quot;</span>: <span class="number">1</span>, <span class="string">&quot;b&quot;</span>: <span class="number">2</span>&#125;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;原 map 地址（header值）: %p, 内容: %v\n&quot;</span>, &amp;originalMap, originalMap)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 深拷贝 map：</span></span><br><span class="line">    <span class="comment">// 1. 创建一个新 map</span></span><br><span class="line">    deepCopiedMap := <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">string</span>]<span class="type">int</span>, <span class="built_in">len</span>(originalMap))</span><br><span class="line">    <span class="comment">// 2. 遍历原 map，将键值对逐个复制到新 map</span></span><br><span class="line">    <span class="keyword">for</span> k, v := <span class="keyword">range</span> originalMap &#123;</span><br><span class="line">        deepCopiedMap[k] = v</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    fmt.Printf(<span class="string">&quot;深拷贝 map 地址（header值）: %p, 内容: %v\n&quot;</span>, &amp;deepCopiedMap, deepCopiedMap)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 修改深拷贝后的 map 元素</span></span><br><span class="line">    deepCopiedMap[<span class="string">&quot;a&quot;</span>] = <span class="number">99</span></span><br><span class="line">    deepCopiedMap[<span class="string">&quot;c&quot;</span>] = <span class="number">3</span></span><br><span class="line"></span><br><span class="line">    fmt.Println(<span class="string">&quot;\n修改 deepCopiedMap 后:&quot;</span>)</span><br><span class="line">    fmt.Printf(<span class="string">&quot;原 map 内容: %v\n&quot;</span>, originalMap)       <span class="comment">// originalMap 不受影响</span></span><br><span class="line">    fmt.Printf(<span class="string">&quot;深拷贝 map 内容: %v\n&quot;</span>, deepCopiedMap) <span class="comment">// deepCopiedMap 已被修改</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="示例-3-包含引用类型的结构体（最常见的深拷贝需求）"><a href="#示例-3-包含引用类型的结构体（最常见的深拷贝需求）" class="headerlink" title="示例 3: 包含引用类型的结构体（最常见的深拷贝需求）"></a>示例 3: 包含引用类型的结构体（最常见的深拷贝需求）</h4><p>如果结构体中包含切片、Map 或其他指针等引用类型字段，仅仅进行结构体赋值（按值拷贝其顶层结构），<strong>会导致内部引用字段仍是浅拷贝</strong>。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> User <span class="keyword">struct</span> &#123;</span><br><span class="line">    ID      <span class="type">int</span></span><br><span class="line">    Name    <span class="type">string</span></span><br><span class="line">    Hobbies []<span class="type">string</span> <span class="comment">// 这是一个切片，引用类型</span></span><br><span class="line">    Settings <span class="keyword">map</span>[<span class="type">string</span>]<span class="type">string</span> <span class="comment">// 这是一个map，引用类型</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// DeepCopyUser 手动实现 User 结构体的深拷贝方法</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(u *User)</span></span> DeepCopy() *User &#123;</span><br><span class="line">    <span class="keyword">if</span> u == <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 拷贝基本类型字段</span></span><br><span class="line">    newUser := &amp;User&#123;</span><br><span class="line">        ID:      u.ID,</span><br><span class="line">        Name:    u.Name,</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 深拷贝 Hobbies 切片</span></span><br><span class="line">    <span class="keyword">if</span> u.Hobbies != <span class="literal">nil</span> &#123;</span><br><span class="line">        newUser.Hobbies = <span class="built_in">make</span>([]<span class="type">string</span>, <span class="built_in">len</span>(u.Hobbies))</span><br><span class="line">        <span class="built_in">copy</span>(newUser.Hobbies, u.Hobbies)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 深拷贝 Settings Map</span></span><br><span class="line">    <span class="keyword">if</span> u.Settings != <span class="literal">nil</span> &#123;</span><br><span class="line">        newUser.Settings = <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="type">string</span>]<span class="type">string</span>, <span class="built_in">len</span>(u.Settings))</span><br><span class="line">        <span class="keyword">for</span> k, v := <span class="keyword">range</span> u.Settings &#123;</span><br><span class="line">            newUser.Settings[k] = v</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> newUser</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    originalUser := &amp;User&#123;</span><br><span class="line">        ID:      <span class="number">1</span>,</span><br><span class="line">        Name:    <span class="string">&quot;Alice&quot;</span>,</span><br><span class="line">        Hobbies: []<span class="type">string</span>&#123;<span class="string">&quot;reading&quot;</span>, <span class="string">&quot;coding&quot;</span>&#125;,</span><br><span class="line">        Settings: <span class="keyword">map</span>[<span class="type">string</span>]<span class="type">string</span>&#123;<span class="string">&quot;theme&quot;</span>: <span class="string">&quot;dark&quot;</span>, <span class="string">&quot;locale&quot;</span>: <span class="string">&quot;en&quot;</span>&#125;,</span><br><span class="line">    &#125;</span><br><span class="line">    fmt.Printf(<span class="string">&quot;Original User: %+v, Hobbies addr: %p, Settings addr: %p\n&quot;</span>, originalUser, originalUser.Hobbies, originalUser.Settings)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 1. 尝试浅拷贝 (直接赋值或传指针) - Hobbies 和 Settings 仍是共享的</span></span><br><span class="line">    <span class="comment">// shallowCopyUser := originalUser // 拷贝的是指针值</span></span><br><span class="line">    <span class="comment">// shallowCopyUser.Hobbies[0] = &quot;swimming&quot; // 这会影响 originalUser</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 2. ✨深拷贝✨</span></span><br><span class="line">    deepCopiedUser := originalUser.DeepCopy()</span><br><span class="line">    fmt.Printf(<span class="string">&quot;Deep Copied User: %+v, Hobbies addr: %p, Settings addr: %p\n&quot;</span>, deepCopiedUser, deepCopiedUser.Hobbies, deepCopiedUser.Settings)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 修改深拷贝后的数据</span></span><br><span class="line">    deepCopiedUser.Name = <span class="string">&quot;Bob&quot;</span></span><br><span class="line">    deepCopiedUser.Hobbies[<span class="number">0</span>] = <span class="string">&quot;gaming&quot;</span></span><br><span class="line">    deepCopiedUser.Settings[<span class="string">&quot;theme&quot;</span>] = <span class="string">&quot;light&quot;</span></span><br><span class="line">    deepCopiedUser.Settings[<span class="string">&quot;font_size&quot;</span>] = <span class="string">&quot;large&quot;</span></span><br><span class="line"></span><br><span class="line">    fmt.Println(<span class="string">&quot;\nModification after deep copy:&quot;</span>)</span><br><span class="line">    fmt.Printf(<span class="string">&quot;Original User: %+v\n&quot;</span>, originalUser)</span><br><span class="line">    fmt.Printf(<span class="string">&quot;Deep Copied User: %+v\n&quot;</span>, deepCopiedUser)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>解释：</strong> 对于包含引用类型字段的结构体，必须为每个引用类型字段<strong>单独进行深拷贝</strong>。上述 <code>DeepCopy()</code> 方法就展示了如何为 <code>Hobbies</code> 切片和 <code>Settings</code> Map 创建独立的副本。</p>
+<h4 id="通用深拷贝方法（序列化-反序列化）"><a href="#通用深拷贝方法（序列化-反序列化）" class="headerlink" title="通用深拷贝方法（序列化&#x2F;反序列化）"></a>通用深拷贝方法（序列化&#x2F;反序列化）</h4><p>对于非常复杂或嵌套很深的数据结构，手动实现深拷贝可能非常繁琐且容易出错。此时，可以考虑使用 Go 的序列化&#x2F;反序列化机制，例如 <code>encoding/gob</code> 或 <code>encoding/json</code>。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;bytes&quot;</span></span><br><span class="line">	<span class="string">&quot;encoding/gob&quot;</span></span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> ComplexData <span class="keyword">struct</span> &#123;</span><br><span class="line">	ID      <span class="type">int</span></span><br><span class="line">	Values <span class="keyword">map</span>[<span class="type">string</span>][]<span class="type">int</span></span><br><span class="line">	Nested  *ComplexData <span class="comment">// 嵌套自身</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// DeepCopyGob 通过 Gob 序列化/反序列化实现深拷贝</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">DeepCopyGob</span><span class="params">(src, dst <span class="keyword">interface</span>&#123;&#125;)</span></span> <span class="type">error</span> &#123;</span><br><span class="line">	<span class="keyword">var</span> buf bytes.Buffer</span><br><span class="line">	<span class="keyword">if</span> err := gob.NewEncoder(&amp;buf).Encode(src); err != <span class="literal">nil</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> err</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> gob.NewDecoder(&amp;buf).Decode(dst)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	original := ComplexData&#123;</span><br><span class="line">		ID: <span class="number">1</span>,</span><br><span class="line">		Values: <span class="keyword">map</span>[<span class="type">string</span>][]<span class="type">int</span>&#123;</span><br><span class="line">			<span class="string">&quot;A&quot;</span>: &#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>&#125;,</span><br><span class="line">			<span class="string">&quot;B&quot;</span>: &#123;<span class="number">4</span>, <span class="number">5</span>&#125;,</span><br><span class="line">		&#125;,</span><br><span class="line">		Nested: &amp;ComplexData&#123;</span><br><span class="line">			ID: <span class="number">2</span>,</span><br><span class="line">			Values: <span class="keyword">map</span>[<span class="type">string</span>][]<span class="type">int</span>&#123;</span><br><span class="line">				<span class="string">&quot;C&quot;</span>: &#123;<span class="number">6</span>, <span class="number">7</span>&#125;,</span><br><span class="line">			&#125;,</span><br><span class="line">		&#125;,</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">var</span> deepCopied ComplexData</span><br><span class="line">	err := DeepCopyGob(&amp;original, &amp;deepCopied)</span><br><span class="line">	<span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">		fmt.Println(<span class="string">&quot;深拷贝失败:&quot;</span>, err)</span><br><span class="line">		<span class="keyword">return</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	fmt.Printf(<span class="string">&quot;Original: %+v\n&quot;</span>, original)</span><br><span class="line">	fmt.Printf(<span class="string">&quot;Deep Copied: %+v\n&quot;</span>, deepCopied)</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 修改深拷贝后的数据</span></span><br><span class="line">	deepCopied.ID = <span class="number">100</span></span><br><span class="line">	deepCopied.Values[<span class="string">&quot;A&quot;</span>][<span class="number">0</span>] = <span class="number">999</span></span><br><span class="line">	deepCopied.Nested.ID = <span class="number">200</span></span><br><span class="line">    deepCopied.Nested.Values[<span class="string">&quot;C&quot;</span>][<span class="number">0</span>] = <span class="number">888</span></span><br><span class="line"></span><br><span class="line">	fmt.Println(<span class="string">&quot;\nAfter modification:&quot;</span>)</span><br><span class="line">	fmt.Printf(<span class="string">&quot;Original: %+v\n&quot;</span>, original)</span><br><span class="line">	fmt.Printf(<span class="string">&quot;Deep Copied: %+v\n&quot;</span>, deepCopied)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>优点：</strong> 简洁、通用，无需手动处理每个字段。<br><strong>缺点：</strong> 性能开销通常比手动拷贝大，且要求数据类型可被序列化（例如，不可导出字段在 JSON 中无法序列化）。</p>
+<hr>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><ul>
+<li><strong>Go 中所有赋值和参数传递都是“传值”</strong>。</li>
+<li>对于<strong>值类型</strong>（基本类型、数组、仅含值类型的结构体），”传值“即是<strong>深拷贝</strong>。</li>
+<li>对于<strong>引用类型</strong>（切片、Map、通道、指针、函数、接口），”传值“则意味着复制了其<strong>引用（头部）</strong>，但底层数据仍是共享的，这表现为<strong>浅拷贝</strong>。</li>
+<li>要实现引用类型的<strong>深拷贝</strong>，需要<strong>手动创建新的底层数据结构并复制内容</strong>，或者利用<strong>序列化&#x2F;反序列化</strong>机制。</li>
+<li>理解并正确应用深浅拷贝是避免 Go 语言程序中意外副作用和数据损坏的关键所在。</li>
+</ul>
+<p>希望这份详细的解释能帮助您彻底理解 Go 语言中的深拷贝和浅拷贝！</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Go/" rel="tag"># Go</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E7%9B%91%E6%8E%A7%20APIServer/" rel="prev" title="监控 APIServer">
+      <i class="fa fa-chevron-left"></i> 监控 APIServer
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E6%8E%A8%E6%8B%89%E6%A8%A1%E5%9E%8B/" rel="next" title="消息队列推拉模型">
+      消息队列推拉模型 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Go-%E8%AF%AD%E8%A8%80%E4%B8%AD%E7%9A%84%E2%80%9C%E5%80%BC%E2%80%9D%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">Go 语言中的“值”是什么？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E6%B5%85%E6%8B%B7%E8%B4%9D-Shallow-Copy"><span class="nav-number">2.</span> <span class="nav-text">1. 浅拷贝 (Shallow Copy)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B-1-%E5%88%87%E7%89%87-Slice-%E7%9A%84%E6%B5%85%E6%8B%B7%E8%B4%9D"><span class="nav-number">2.1.</span> <span class="nav-text">示例 1: 切片 (Slice) 的浅拷贝</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B-2-%E6%98%A0%E5%B0%84-Map-%E7%9A%84%E6%B5%85%E6%8B%B7%E8%B4%9D"><span class="nav-number">2.2.</span> <span class="nav-text">示例 2: 映射 (Map) 的浅拷贝</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E6%B7%B1%E6%8B%B7%E8%B4%9D-Deep-Copy"><span class="nav-number">3.</span> <span class="nav-text">2. 深拷贝 (Deep Copy)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B-1-%E5%88%87%E7%89%87-Slice-%E7%9A%84%E6%B7%B1%E6%8B%B7%E8%B4%9D"><span class="nav-number">3.1.</span> <span class="nav-text">示例 1: 切片 (Slice) 的深拷贝</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B-2-%E6%98%A0%E5%B0%84-Map-%E7%9A%84%E6%B7%B1%E6%8B%B7%E8%B4%9D"><span class="nav-number">3.2.</span> <span class="nav-text">示例 2: 映射 (Map) 的深拷贝</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B-3-%E5%8C%85%E5%90%AB%E5%BC%95%E7%94%A8%E7%B1%BB%E5%9E%8B%E7%9A%84%E7%BB%93%E6%9E%84%E4%BD%93%EF%BC%88%E6%9C%80%E5%B8%B8%E8%A7%81%E7%9A%84%E6%B7%B1%E6%8B%B7%E8%B4%9D%E9%9C%80%E6%B1%82%EF%BC%89"><span class="nav-number">3.3.</span> <span class="nav-text">示例 3: 包含引用类型的结构体（最常见的深拷贝需求）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%80%9A%E7%94%A8%E6%B7%B1%E6%8B%B7%E8%B4%9D%E6%96%B9%E6%B3%95%EF%BC%88%E5%BA%8F%E5%88%97%E5%8C%96-%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%EF%BC%89"><span class="nav-number">3.4.</span> <span class="nav-text">通用深拷贝方法（序列化&#x2F;反序列化）</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

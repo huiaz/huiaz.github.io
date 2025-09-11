@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="什么是负载均衡（Load Balancing）？在 Web 服务器环境中，负载均衡是一种将网络请求（流量）有效地分发到多个服务器（通常称为后端服务器或上游服务器）上的技术。其核心目标是：  提高系统可用性： 当某台后端服务器出现故障时，负载均衡器可以将流量自动路由到健康的服务器，避免服务中断。 提高系统性能： 通过将请求分散到多台服务器上，可以避免单台服务器过载，缩短响应时间，提高处理能力。 提高">
+<meta property="og:type" content="article">
+<meta property="og:title" content="负载均衡">
+<meta property="og:url" content="http://example.com/2025/09/11/%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="什么是负载均衡（Load Balancing）？在 Web 服务器环境中，负载均衡是一种将网络请求（流量）有效地分发到多个服务器（通常称为后端服务器或上游服务器）上的技术。其核心目标是：  提高系统可用性： 当某台后端服务器出现故障时，负载均衡器可以将流量自动路由到健康的服务器，避免服务中断。 提高系统性能： 通过将请求分散到多台服务器上，可以避免单台服务器过载，缩短响应时间，提高处理能力。 提高">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T12:42:57.177Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>负载均衡 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          负载均衡
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：20:42:57" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/" itemprop="url" rel="index"><span itemprop="name">WEB</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/Nginx/" itemprop="url" rel="index"><span itemprop="name">Nginx</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.5k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="什么是负载均衡（Load-Balancing）？"><a href="#什么是负载均衡（Load-Balancing）？" class="headerlink" title="什么是负载均衡（Load Balancing）？"></a>什么是负载均衡（Load Balancing）？</h3><p>在 Web 服务器环境中，<strong>负载均衡</strong>是一种将网络请求（流量）有效地分发到多个服务器（通常称为后端服务器或上游服务器）上的技术。其核心目标是：</p>
+<ol>
+<li><strong>提高系统可用性：</strong> 当某台后端服务器出现故障时，负载均衡器可以将流量自动路由到健康的服务器，避免服务中断。</li>
+<li><strong>提高系统性能：</strong> 通过将请求分散到多台服务器上，可以避免单台服务器过载，缩短响应时间，提高处理能力。</li>
+<li><strong>提高系统可伸缩性：</strong> 随着业务增长，可以通过简单地增加后端服务器来扩展系统的处理能力，而无需升级单台服务器。</li>
+<li><strong>优化资源利用：</strong> 确保所有后端服务器都能得到合理的利用，而不是某些服务器空闲而另一些过载。</li>
+</ol>
+<p>简单来说，负载均衡器就像一个交通指挥官，它接收到客户端的请求后，不会让请求直接去某一台具体的服务器，而是根据预设的算法和规则，将其导向当前最合适（或下一个）的后端服务器去处理，并将处理结果返回给客户端。</p>
+<h3 id="负载均衡的常见算法"><a href="#负载均衡的常见算法" class="headerlink" title="负载均衡的常见算法"></a>负载均衡的常见算法</h3><p>负载均衡器会根据不同的算法来决定将请求分发给哪台后端服务器。Nginx 支持多种算法：</p>
+<ol>
+<li><strong>轮询 (Round Robin)：</strong><ul>
+<li><strong>原理：</strong> 默认算法。请求按时间顺序依次分发到后端服务器，即第一个请求给服务器 A，第二个给服务器 B，第三个给服务器 C，然后第四个再给服务器 A，以此类推。</li>
+<li><strong>优点：</strong> 简单公平，易于实现。</li>
+<li><strong>缺点：</strong> 不考虑服务器实际负载或处理能力，如果后端服务器性能不一致，可能会导致性能好的服务器空闲，性能差的服务器过载。</li>
+</ul>
+</li>
+<li><strong>加权轮询 (Weighted Round Robin)：</strong><ul>
+<li><strong>原理：</strong> 在轮询的基础上，为每台服务器设置一个权重（weight）。权重越高的服务器将获得越多的请求。</li>
+<li><strong>优点：</strong> 能够根据后端服务器的性能差异进行更智能的分发。</li>
+<li><strong>缺点：</strong> 依然不考虑实时负载。如果权重设置不合理，也可能导致问题。</li>
+</ul>
+</li>
+<li><strong>最少连接 (Least Connected)：</strong><ul>
+<li><strong>原理：</strong> 将新的请求发送给当前活动连接数最少的后端服务器。</li>
+<li><strong>优点：</strong> 更智能，考虑了服务器的实时负载情况，使得负载更均衡。适用于会话时间较长的场景。</li>
+<li><strong>缺点：</strong> 需要负载均衡器实时维护连接数，增加了额外开销。</li>
+</ul>
+</li>
+<li><strong>IP 哈希 (IP Hash)：</strong><ul>
+<li><strong>原理：</strong> 根据客户端的 IP 地址计算一个哈希值，然后根据这个哈希值决定将请求发送给哪台后端服务器。来自相同 IP 的请求通常会始终被发送到同一台服务器。</li>
+<li><strong>优点：</strong> 实现了“会话粘性&#x2F;会话保持 (Session Affinity)”，对于需要保持用户会话状态的应用非常有用，避免了会话数据丢失。</li>
+<li><strong>缺点：</strong> 如果某个 IP 地址的请求量非常大，可能会导致该 IP 对应的服务器负载过高。在有大量代理服务器的情况下，所有请求可能来自同一个代理IP，导致负载不均。</li>
+</ul>
+</li>
+<li><strong>通用哈希 (Generic Hash)：</strong><ul>
+<li><strong>原理：</strong> 允许用户指定一个字符串（可以是 URL、Header 甚至 Cookie 等）作为哈希键，然后根据该键的哈希值来分发请求。</li>
+<li><strong>优点：</strong> 提供了比 IP Hash 更灵活的会话粘性方式。</li>
+<li><strong>缺点：</strong> 和 IP Hash 类似，如果哈希键的分布不均，可能导致负载不均。</li>
+</ul>
+</li>
+<li><strong>随机 (Random)：</strong> <strong>（Nginx Plus 功能，或通过 Lua 脚本实现）</strong><ul>
+<li><strong>原理：</strong> 随机选择一台后端服务器。可以结合权重。</li>
+<li><strong>优点：</strong> 简单，适用于后端服务器数量大且性能差异不大的情况。</li>
+</ul>
+</li>
+</ol>
+<h3 id="如何在-Nginx-中配置负载均衡？"><a href="#如何在-Nginx-中配置负载均衡？" class="headerlink" title="如何在 Nginx 中配置负载均衡？"></a>如何在 Nginx 中配置负载均衡？</h3><p>Nginx 通过 <code>upstream</code> 模块来实现强大的负载均衡功能。</p>
+<h4 id="基本配置结构"><a href="#基本配置结构" class="headerlink" title="基本配置结构"></a>基本配置结构</h4><p>负载均衡的配置主要在 <code>http</code> 块中通过 <code>upstream</code> 指令定义一个后端服务器组，然后在 <code>server</code> 块的 <code>location</code> 中通过 <code>proxy_pass</code> 指令引用这个组。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># step 1: 在 http 块中定义一个上游服务器组 (upstream)</span></span><br><span class="line"><span class="section">http</span> &#123;</span><br><span class="line">    <span class="comment"># limit_conn_zone ... # 其他 http 块配置</span></span><br><span class="line"></span><br><span class="line">    <span class="section">upstream</span> my_webapp_cluster &#123;</span><br><span class="line">        <span class="comment"># 定义后端服务器列表</span></span><br><span class="line">        <span class="attribute">server</span> backend1.example.com:<span class="number">8080</span>;</span><br><span class="line">        <span class="attribute">server</span> backend2.example.com:<span class="number">8080</span>;</span><br><span class="line">        <span class="attribute">server</span> backend3.example.com:<span class="number">8080</span>;</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 可选：指定负载均衡算法（默认是轮询）</span></span><br><span class="line">        <span class="comment"># least_conn;  # 最少连接数</span></span><br><span class="line">        <span class="comment"># ip_hash;     # IP 哈希</span></span><br><span class="line">        <span class="comment"># random;      # 随机 (Nginx Plus 或特定模块)</span></span><br><span class="line">        <span class="comment"># hash $request_uri consistent; # 通用哈希，根据URI做一致性哈希 (Nginx Plus)</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># 可选：健康检查和故障转移</span></span><br><span class="line">        <span class="comment"># server backend4.example.com:8080 backup; # 备用服务器，只有当所有主服务器都失效时才启用</span></span><br><span class="line">        <span class="comment"># server backend5.example.com:8080 down;   # 标记为永久离线，不工作</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment"># step 2: 配置一个 server 块来监听客户端请求，并使用 upstream 组</span></span><br><span class="line">    <span class="section">server</span> &#123;</span><br><span class="line">        <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">        <span class="attribute">server_name</span> your_domain.com;</span><br><span class="line"></span><br><span class="line">        <span class="section">location</span> / &#123;</span><br><span class="line">            <span class="comment"># 将所有请求代理到上面定义的 upstream 组</span></span><br><span class="line">            <span class="attribute">proxy_pass</span> http://my_webapp_cluster;</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 常见的 proxy_set_header 配置，用于传递客户端信息给后端</span></span><br><span class="line">            <span class="attribute">proxy_set_header</span> Host <span class="variable">$host</span>;</span><br><span class="line">            <span class="attribute">proxy_set_header</span> X-Real-IP <span class="variable">$remote_addr</span>;</span><br><span class="line">            <span class="attribute">proxy_set_header</span> X-Forwarded-For <span class="variable">$proxy_add_x_forwarded_for</span>;</span><br><span class="line">            <span class="attribute">proxy_buffering</span> <span class="literal">off</span>; <span class="comment"># 通常对于动态内容禁用缓冲，直接流式传输</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="各种负载均衡算法的-Nginx-配置示例"><a href="#各种负载均衡算法的-Nginx-配置示例" class="headerlink" title="各种负载均衡算法的 Nginx 配置示例"></a>各种负载均衡算法的 Nginx 配置示例</h4><p><strong>1. 轮询 (Round Robin) - 默认</strong></p>
+<p>这是最简单的配置，不需要额外的指令，<code>upstream</code> 块中的 <code>server</code> 指令列表就是轮询。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">upstream</span> my_webapp_cluster &#123;</span><br><span class="line">    <span class="attribute">server</span> <span class="number">192.168.1.10:8080</span>;</span><br><span class="line">    <span class="attribute">server</span> <span class="number">192.168.1.11:8080</span>;</span><br><span class="line">    <span class="attribute">server</span> <span class="number">192.168.1.12:8080</span>;</span><br><span class="line">    <span class="comment"># 默认就是轮询</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>2. 加权轮询 (Weighted Round Robin)</strong></p>
+<p>通过 <code>weight</code> 参数为每个 <code>server</code> 指定权重。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">upstream</span> my_webapp_cluster &#123;</span><br><span class="line">    <span class="attribute">server</span> <span class="number">192.168.1.10:8080</span> weight=<span class="number">5</span>; <span class="comment"># 这台服务器会获得 5 份请求</span></span><br><span class="line">    <span class="attribute">server</span> <span class="number">192.168.1.11:8080</span> weight=<span class="number">3</span>; <span class="comment"># 这台服务器会获得 3 份请求</span></span><br><span class="line">    <span class="attribute">server</span> <span class="number">192.168.1.12:8080</span> weight=<span class="number">1</span>; <span class="comment"># 这台服务器会获得 1 份请求</span></span><br><span class="line">    <span class="comment"># 总共 9 份请求，按比例分配</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>3. 最少连接 (Least Connected)</strong></p>
+<p>在 <code>upstream</code> 块内添加 <code>least_conn;</code> 指令。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">upstream</span> my_webapp_cluster &#123;</span><br><span class="line">    least_conn; <span class="comment"># 使用最少连接算法</span></span><br><span class="line">    <span class="attribute">server</span> <span class="number">192.168.1.10:8080</span>;</span><br><span class="line">    <span class="attribute">server</span> <span class="number">192.168.1.11:8080</span>;</span><br><span class="line">    <span class="attribute">server</span> <span class="number">192.168.1.12:8080</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>4. IP 哈希 (IP Hash)</strong></p>
+<p>在 <code>upstream</code> 块内添加 <code>ip_hash;</code> 指令。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">upstream</span> my_webapp_cluster &#123;</span><br><span class="line">    ip_hash; <span class="comment"># 使用 IP 哈希算法</span></span><br><span class="line">    <span class="attribute">server</span> <span class="number">192.168.1.10:8080</span>;</span><br><span class="line">    <span class="attribute">server</span> <span class="number">192.168.1.11:8080</span>;</span><br><span class="line">    <span class="attribute">server</span> <span class="number">192.168.1.12:8080</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>注意：</strong> 如果使用 <code>ip_hash</code>，并且后端服务器数量发生变化（如移除或增加），可能会导致一部分用户的会话被重定向到不同的服务器，从而丢失会话。</p>
+<p><strong>5. 通用哈希 (Generic Hash) - Nginx Plus 或结合 <code>map</code> 模块</strong></p>
+<p>这是一个更高级的功能，在开源版中通常需要结合其他模块实现或依赖 Nginx Plus。<br>例如，根据 URI 进行哈希：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># if Nginx Plus</span></span><br><span class="line"><span class="section">upstream</span> my_webapp_cluster &#123;</span><br><span class="line">    <span class="attribute">hash</span> <span class="variable">$request_uri</span> consistent; <span class="comment"># 根据请求URI哈希，并使用一致性哈希，降低后端变化时的影响</span></span><br><span class="line">    <span class="attribute">server</span> <span class="number">192.168.1.10:8080</span>;</span><br><span class="line">    <span class="attribute">server</span> <span class="number">192.168.1.11:8080</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># 开源版通常需要变通，例如通过 map 和 proxy_next_upstream 来模拟特定逻辑</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="健康检查和故障转移"><a href="#健康检查和故障转移" class="headerlink" title="健康检查和故障转移"></a>健康检查和故障转移</h4><p>Nginx 的 <code>upstream</code> 模块还支持一些参数来增强负载均衡的可靠性：</p>
+<ul>
+<li><strong><code>backup</code>：</strong> 标记服务器为备用服务器。只有当所有非 <code>backup</code> 服务器都失效时，请求才会被发送到 <code>backup</code> 服务器。<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">upstream</span> my_webapp_cluster &#123;</span><br><span class="line">    <span class="attribute">server</span> <span class="number">192.168.1.10:8080</span>;</span><br><span class="line">    <span class="attribute">server</span> <span class="number">192.168.1.11:8080</span>;</span><br><span class="line">    <span class="attribute">server</span> <span class="number">192.168.1.12:8080</span> backup; <span class="comment"># 备用服务器</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><strong><code>down</code>：</strong> 明确标记服务器为离线状态，不参与负载均衡。<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">upstream</span> my_webapp_cluster &#123;</span><br><span class="line">    <span class="attribute">server</span> <span class="number">192.168.1.10:8080</span>;</span><br><span class="line">    <span class="attribute">server</span> <span class="number">192.168.1.11:8080</span> down; <span class="comment"># 这台服务器将不会收到请求</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+<li><strong><code>max_fails=number</code> 和 <code>fail_timeout=time</code>：</strong> 这两个参数通常一起使用，用于简单的健康检查。<ul>
+<li><code>max_fails</code>：在 <code>fail_timeout</code> 期间，如果与服务器通信失败的次数达到 <code>max_fails</code>，则 Nginx 会认为该服务器已失效。默认是 1。0 表示不检查。</li>
+<li><code>fail_timeout</code>：如果服务器在 <code>fail_timeout</code> 时间内被标记为失效，Nginx 会在这段时间内停止向其发送请求。这段时间过后，Nginx 会尝试向它发送一次请求，如果成功则重新标记为正常。默认是 10 秒。<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">upstream</span> my_webapp_cluster &#123;</span><br><span class="line">    <span class="attribute">server</span> <span class="number">192.168.1.10:8080</span> max_fails=<span class="number">3</span> fail_timeout=<span class="number">30s</span>;</span><br><span class="line">    <span class="attribute">server</span> <span class="number">192.168.1.11:8080</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<strong>注意：</strong> 这里的健康检查是<strong>被动健康检查</strong>。Nginx 只有在尝试向后端服务器发送请求并失败后，才能感知到服务器的故障。对于更复杂的<strong>主动健康检查</strong>（例如定期发送探测请求来检查服务器状态），需要 Nginx Plus 版本提供的 <code>health_check</code> 指令，或者通过第三方模块（如 <code>nginx_upstream_check_module</code>）或外部脚本实现。</li>
+</ul>
+</li>
+</ul>
+<h4 id="配置完成后"><a href="#配置完成后" class="headerlink" title="配置完成后"></a>配置完成后</h4><ol>
+<li><strong>保存 Nginx 配置文件</strong>。</li>
+<li><strong>测试配置文件的语法</strong>：<code>sudo nginx -t</code></li>
+<li><strong>重新加载 Nginx 配置</strong>：<code>sudo systemctl reload nginx</code> 或 <code>sudo service nginx reload</code></li>
+</ol>
+<p>通过以上配置，Nginx 就能有效地将客户端请求分发到后端服务器集群，从而实现高可用、可伸缩和高性能的 Web 服务。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E8%B0%83%E5%BA%A6%E5%99%A8%E4%BB%8B%E7%BB%8D/" rel="prev" title="调度器介绍">
+      <i class="fa fa-chevron-left"></i> 调度器介绍
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E8%AF%81%E4%B9%A6%E6%9B%B4%E6%96%B0/" rel="next" title="证书更新">
+      证书更新 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%EF%BC%88Load-Balancing%EF%BC%89%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">什么是负载均衡（Load Balancing）？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E7%9A%84%E5%B8%B8%E8%A7%81%E7%AE%97%E6%B3%95"><span class="nav-number">2.</span> <span class="nav-text">负载均衡的常见算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%9C%A8-Nginx-%E4%B8%AD%E9%85%8D%E7%BD%AE%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%EF%BC%9F"><span class="nav-number">3.</span> <span class="nav-text">如何在 Nginx 中配置负载均衡？</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E9%85%8D%E7%BD%AE%E7%BB%93%E6%9E%84"><span class="nav-number">3.1.</span> <span class="nav-text">基本配置结构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%90%84%E7%A7%8D%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E7%AE%97%E6%B3%95%E7%9A%84-Nginx-%E9%85%8D%E7%BD%AE%E7%A4%BA%E4%BE%8B"><span class="nav-number">3.2.</span> <span class="nav-text">各种负载均衡算法的 Nginx 配置示例</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%81%A5%E5%BA%B7%E6%A3%80%E6%9F%A5%E5%92%8C%E6%95%85%E9%9A%9C%E8%BD%AC%E7%A7%BB"><span class="nav-number">3.3.</span> <span class="nav-text">健康检查和故障转移</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E5%AE%8C%E6%88%90%E5%90%8E"><span class="nav-number">3.4.</span> <span class="nav-text">配置完成后</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

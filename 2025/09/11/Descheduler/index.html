@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Descheduler从 kube-scheduler 的角度来看，它是通过一系列算法计算出最佳节点运行 Pod，当出现新的 Pod 进行调度时，调度程序会根据其当时对 Kubernetes 集群的资源描述做出最佳调度决定，但是 Kubernetes 集群是非常动态的，由于整个集群范围内的变化，比如一个节点为了维护，我们先执行了驱逐操作，这个节点上的所有 Pod 会被驱逐到其他节点去，但是当我们维">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Descheduler">
+<meta property="og:url" content="http://example.com/2025/09/11/Descheduler/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="Descheduler从 kube-scheduler 的角度来看，它是通过一系列算法计算出最佳节点运行 Pod，当出现新的 Pod 进行调度时，调度程序会根据其当时对 Kubernetes 集群的资源描述做出最佳调度决定，但是 Kubernetes 集群是非常动态的，由于整个集群范围内的变化，比如一个节点为了维护，我们先执行了驱逐操作，这个节点上的所有 Pod 会被驱逐到其他节点去，但是当我们维">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/tkf2ne.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/pbmrlv.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/2q9llh.png">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:27:59.528Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://mudutestmenu.mudu.tv/upload/tkf2ne.png">
+
+<link rel="canonical" href="http://example.com/2025/09/11/Descheduler/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Descheduler | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Descheduler/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Descheduler
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:27:59" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E8%B0%83%E5%BA%A6%E5%99%A8/" itemprop="url" rel="index"><span itemprop="name">调度器</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>13k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>12 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Descheduler"><a href="#Descheduler" class="headerlink" title="Descheduler"></a>Descheduler</h1><p>从 kube-scheduler 的角度来看，它是通过一系列算法计算出最佳节点运行 Pod，当出现新的 Pod 进行调度时，调度程序会根据其当时对 Kubernetes 集群的资源描述做出最佳调度决定，但是 Kubernetes 集群是非常动态的，由于整个集群范围内的变化，比如一个节点为了维护，我们先执行了驱逐操作，这个节点上的所有 Pod 会被驱逐到其他节点去，但是当我们维护完成后，之前的 Pod 并不会自动回到该节点上来，因为 Pod 一旦被绑定了节点是不会触发重新调度的，由于这些变化，Kubernetes 集群在一段时间内就可能会出现不均衡的状态，所以需要均衡器来重新平衡集群。</p>
+<p>当然我们可以去手动做一些集群的平衡，比如手动去删掉某些 Pod，触发重新调度就可以了，但是显然这是一个繁琐的过程，也不是解决问题的方式。为了解决实际运行中集群资源无法充分利用或浪费的问题，可以使用 <a target="_blank" rel="noopener" href="https://github.com/kubernetes-sigs/descheduler">descheduler</a> 组件对集群的 Pod 进行调度优化，<code>descheduler</code> 可以根据一些规则和配置策略来帮助我们重新平衡集群状态，其核心原理是根据其策略配置找到可以被移除的 Pod 并驱逐它们，其本身并不会进行调度被驱逐的 Pod，而是依靠默认的调度器来实现，目前支持的策略有：</p>
+<ul>
+<li>RemoveDuplicates</li>
+<li>LowNodeUtilization</li>
+<li>RemovePodsViolatingInterPodAntiAffinity</li>
+<li>RemovePodsViolatingNodeAffinity</li>
+<li>RemovePodsViolatingNodeTaints</li>
+<li>RemovePodsViolatingTopologySpreadConstraint</li>
+<li>RemovePodsHavingTooManyRestarts</li>
+<li>PodLifeTime</li>
+</ul>
+<p>这些策略都是可以启用或者禁用的，作为策略的一部分，也可以配置与策略相关的一些参数，默认情况下，所有策略都是启用的。另外，还有一些通用配置，如下：</p>
+<ul>
+<li><code>nodeSelector</code>：限制要处理的节点</li>
+<li><code>evictLocalStoragePods</code>: 驱逐使用 LocalStorage 的 Pods</li>
+<li><code>ignorePvcPods</code>: 是否忽略配置 PVC 的 Pods，默认是 False</li>
+<li><code>maxNoOfPodsToEvictPerNode</code>：节点允许的最大驱逐 Pods 数</li>
+</ul>
+<p>我们可以通过如下所示的 <code>DeschedulerPolicy</code> 来配置：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">&#x27;descheduler/v1alpha1&#x27;</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">&#x27;DeschedulerPolicy&#x27;</span></span><br><span class="line"><span class="attr">nodeSelector:</span> <span class="string">prod=dev</span></span><br><span class="line"><span class="attr">evictLocalStoragePods:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">maxNoOfPodsToEvictPerNode:</span> <span class="number">40</span></span><br><span class="line"><span class="attr">ignorePvcPods:</span> <span class="literal">false</span></span><br><span class="line"><span class="attr">strategies:</span> <span class="comment"># 配置策略</span></span><br><span class="line">  <span class="string">...</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><p><code>descheduler</code> 可以以 <code>Job</code>、<code>CronJob</code> 或者 <code>Deployment</code> 的形式运行在 k8s 集群内，同样我们可以使用 Helm Chart 来安装 <code>descheduler</code>：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">➜ helm repo add descheduler https://kubernetes-sigs.github.io/descheduler/</span><br></pre></td></tr></table></figure>
+
+
+
+<p>通过 Helm Chart 我们可以配置 <code>descheduler</code> 以 <code>CronJob</code> 或者 <code>Deployment</code> 方式运行，默认情况下 <code>descheduler</code> 会以一个 <code>critical pod</code> 运行，以避免被自己或者 kubelet 驱逐了，需要确保集群中有 <code>system-cluster-critical</code> 这个 Priorityclass：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl get priorityclass system-cluster-critical</span><br><span class="line">NAME                      VALUE        GLOBAL-DEFAULT   AGE</span><br><span class="line">system-cluster-critical   2000000000   false            87d</span><br></pre></td></tr></table></figure>
+
+
+
+<p>使用 Helm Chart 安装默认情况下会以 <code>CronJob</code> 的形式运行，执行周期为 <code>schedule: &quot;*/2 * * * *&quot;</code>，这样每隔两分钟会执行一次 <code>descheduler</code> 任务，默认的配置策略如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">ConfigMap</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">descheduler</span></span><br><span class="line"><span class="attr">data:</span></span><br><span class="line">  <span class="attr">policy.yaml:</span> <span class="string">|</span></span><br><span class="line"><span class="string">    apiVersion: &quot;descheduler/v1alpha1&quot;</span></span><br><span class="line"><span class="string">    kind: &quot;DeschedulerPolicy&quot;</span></span><br><span class="line"><span class="string">    strategies:</span></span><br><span class="line"><span class="string">      LowNodeUtilization:</span></span><br><span class="line"><span class="string">        enabled: true</span></span><br><span class="line"><span class="string">        params:</span></span><br><span class="line"><span class="string">          nodeResourceUtilizationThresholds:</span></span><br><span class="line"><span class="string">            targetThresholds:</span></span><br><span class="line"><span class="string">              cpu: 50</span></span><br><span class="line"><span class="string">              memory: 50</span></span><br><span class="line"><span class="string">              pods: 50</span></span><br><span class="line"><span class="string">            thresholds:</span></span><br><span class="line"><span class="string">              cpu: 20</span></span><br><span class="line"><span class="string">              memory: 20</span></span><br><span class="line"><span class="string">              pods: 20</span></span><br><span class="line"><span class="string">      RemoveDuplicates:</span></span><br><span class="line"><span class="string">        enabled: true</span></span><br><span class="line"><span class="string">      RemovePodsViolatingInterPodAntiAffinity:</span></span><br><span class="line"><span class="string">        enabled: true</span></span><br><span class="line"><span class="string">      RemovePodsViolatingNodeAffinity:</span></span><br><span class="line"><span class="string">        enabled: true</span></span><br><span class="line"><span class="string">        params:</span></span><br><span class="line"><span class="string">          nodeAffinityType:</span></span><br><span class="line"><span class="string">          - requiredDuringSchedulingIgnoredDuringExecution</span></span><br><span class="line"><span class="string">      RemovePodsViolatingNodeTaints:</span></span><br><span class="line"><span class="string">        enabled: true</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>通过配置 <code>DeschedulerPolicy</code> 的 <code>strategies</code>，可以指定 <code>descheduler</code> 的执行策略，这些策略都是可以启用或禁用的，下面我们会详细介绍，这里我们使用默认策略即可，使用如下命令直接安装即可：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">➜ helm upgrade --install descheduler descheduler/descheduler --set image.repository=cnych/descheduler,podSecurityPolicy.create=false -n kube-system</span><br><span class="line">Release &quot;descheduler&quot; does not exist. Installing it now.</span><br><span class="line">NAME: descheduler</span><br><span class="line">LAST DEPLOYED: Fri Jan 21 10:35:55 2022</span><br><span class="line">NAMESPACE: kube-system</span><br><span class="line">STATUS: deployed</span><br><span class="line">REVISION: 1</span><br><span class="line">NOTES:</span><br><span class="line">Descheduler installed as a cron job.</span><br></pre></td></tr></table></figure>
+
+
+
+<p>部署完成后会创建一个 <code>CronJob</code> 资源对象来平衡集群状态：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl get cronjob -n kube-system</span><br><span class="line">NAME          SCHEDULE      SUSPEND   ACTIVE   LAST SCHEDULE   AGE</span><br><span class="line">descheduler   */2 * * * *   False     1        27s             31s</span><br><span class="line">➜ kubectl get job -n kube-system</span><br><span class="line">NAME                   COMPLETIONS   DURATION   AGE</span><br><span class="line">descheduler-27378876   1/1           72s        79s</span><br><span class="line">➜ kubectl get pods -n kube-system -l job-name=descheduler-27378876</span><br><span class="line">NAME                            READY   STATUS      RESTARTS   AGE</span><br><span class="line">descheduler-27378876--1-btjmd   0/1     Completed   0          2m21s</span><br></pre></td></tr></table></figure>
+
+
+
+<p>正常情况下就会创建一个对应的 Job 来执行 <code>descheduler</code> 任务，我们可以通过查看日志可以了解做了哪些平衡操作：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">➜ kubectl logs -f descheduler-27378876--1-btjmd -n kube-system</span><br><span class="line">I0121 02:37:10.127266       1 named_certificates.go:53] &quot;Loaded SNI cert&quot; index=0 certName=&quot;self-signed loopback&quot; certDetail=&quot;\&quot;apiserver-loopback-client@1642732630\&quot; [serving] validServingFor=[apiserver-loopback-client] issuer=\&quot;apiserver-loopback-client-ca@1642732629\&quot; (2022-01-21 01:37:09 +0000 UTC to 2023-01-21 01:37:09 +0000 UTC (now=2022-01-21 02:37:10.127237 +0000 UTC))&quot;</span><br><span class="line">I0121 02:37:10.127324       1 secure_serving.go:195] Serving securely on [::]:10258</span><br><span class="line">I0121 02:37:10.127363       1 tlsconfig.go:240] &quot;Starting DynamicServingCertificateController&quot;</span><br><span class="line">I0121 02:37:10.138724       1 node.go:46] &quot;Node lister returned empty list, now fetch directly&quot;</span><br><span class="line">I0121 02:37:10.172264       1 nodeutilization.go:167] &quot;Node is overutilized&quot; node=&quot;master1&quot; usage=map[cpu:1225m memory:565Mi pods:16] usagePercentage=map[cpu:61.25 memory:15.391786081415567 pods:14.545454545454545]</span><br><span class="line">I0121 02:37:10.172313       1 nodeutilization.go:164] &quot;Node is underutilized&quot; node=&quot;node1&quot; usage=map[cpu:675m memory:735Mi pods:16] usagePercentage=map[cpu:16.875 memory:9.542007959787252 pods:14.545454545454545]</span><br><span class="line">I0121 02:37:10.172328       1 nodeutilization.go:170] &quot;Node is appropriately utilized&quot; node=&quot;node2&quot; usage=map[cpu:975m memory:1515Mi pods:15] usagePercentage=map[cpu:24.375 memory:19.66820054018583 pods:13.636363636363637]</span><br><span class="line">I0121 02:37:10.172340       1 lownodeutilization.go:100] &quot;Criteria for a node under utilization&quot; CPU=20 Mem=20 Pods=20</span><br><span class="line">I0121 02:37:10.172346       1 lownodeutilization.go:101] &quot;Number of underutilized nodes&quot; totalNumber=1</span><br><span class="line">I0121 02:37:10.172355       1 lownodeutilization.go:114] &quot;Criteria for a node above target utilization&quot; CPU=50 Mem=50 Pods=50</span><br><span class="line">I0121 02:37:10.172360       1 lownodeutilization.go:115] &quot;Number of overutilized nodes&quot; totalNumber=1</span><br><span class="line">I0121 02:37:10.172374       1 nodeutilization.go:223] &quot;Total capacity to be moved&quot; CPU=1325 Mem=3267772416 Pods=39</span><br><span class="line">I0121 02:37:10.172399       1 nodeutilization.go:226] &quot;Evicting pods from node&quot; node=&quot;master1&quot; usage=map[cpu:1225m memory:565Mi pods:16]</span><br><span class="line">I0121 02:37:10.172485       1 nodeutilization.go:229] &quot;Pods on node&quot; node=&quot;master1&quot; allPods=16 nonRemovablePods=13 removablePods=3</span><br><span class="line">I0121 02:37:10.172495       1 nodeutilization.go:236] &quot;Evicting pods based on priority, if they have same priority, they&#x27;ll be evicted based on QoS tiers&quot;</span><br><span class="line">I0121 02:37:10.180353       1 evictions.go:130] &quot;Evicted pod&quot; pod=&quot;default/topo-demo-6bbf65d967-lzlfh&quot; reason=&quot;LowNodeUtilization&quot;</span><br><span class="line">I0121 02:37:10.181506       1 nodeutilization.go:269] &quot;Evicted pods&quot; pod=&quot;default/topo-demo-6bbf65d967-lzlfh&quot; err=&lt;nil&gt;</span><br><span class="line">I0121 02:37:10.181541       1 nodeutilization.go:294] &quot;Updated node usage&quot; node=&quot;master1&quot; CPU=1225 Mem=592445440 Pods=15</span><br><span class="line">I0121 02:37:10.182496       1 event.go:291] &quot;Event occurred&quot; object=&quot;default/topo-demo-6bbf65d967-lzlfh&quot; kind=&quot;Pod&quot; apiVersion=&quot;v1&quot; type=&quot;Normal&quot; reason=&quot;Descheduled&quot; message=&quot;pod evicted by sigs.k8s.io/deschedulerLowNodeUtilization&quot;</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+
+
+
+<p>从日志中我们就可以清晰的知道因为什么策略驱逐了哪些 Pods。</p>
+<h2 id="PDB"><a href="#PDB" class="headerlink" title="PDB"></a>PDB</h2><p>由于使用 <code>descheduler</code> 会将 Pod 驱逐进行重调度，但是如果一个服务的所有副本都被驱逐的话，则可能导致该服务不可用。如果服务本身存在单点故障，驱逐的时候肯定就会造成服务不可用了，这种情况我们强烈建议使用反亲和性和多副本来避免单点故障，但是如果服务本身就被打散在多个节点上，这些 Pod 都被驱逐的话，这个时候也会造成服务不可用了，这种情况下我们可以通过配置 <code>PDB（PodDisruptionBudget）</code> 对象来避免所有副本同时被删除，比如我们可以设置在驱逐的时候某应用最多只有一个副本不可用，则创建如下所示的资源清单即可：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">policy/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">PodDisruptionBudget</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">pdb-demo</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">maxUnavailable:</span> <span class="number">1</span> <span class="comment"># 设置最多不可用的副本数量，或者使用 minAvailable，可以使用整数或百分比</span></span><br><span class="line">  <span class="attr">selector:</span></span><br><span class="line">    <span class="attr">matchLabels:</span> <span class="comment"># 匹配Pod标签</span></span><br><span class="line">      <span class="attr">app:</span> <span class="string">demo</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>关于 PDB 的更多详细信息可以查看官方文档：<a target="_blank" rel="noopener" href="https://kubernetes.io/docs/tasks/run-application/configure-pdb/%E3%80%82">https://kubernetes.io/docs/tasks/run-application/configure-pdb/。</a></p>
+<p>所以如果我们使用 <code>descheduler</code> 来重新平衡集群状态，那么我们强烈建议给应用创建一个对应的 <code>PodDisruptionBudget</code> 对象进行保护。</p>
+<h2 id="策略"><a href="#策略" class="headerlink" title="策略"></a>策略</h2><h3 id="PodLifeTime"><a href="#PodLifeTime" class="headerlink" title="PodLifeTime"></a>PodLifeTime</h3><p>该策略用于驱逐比 <code>maxPodLifeTimeSeconds</code> 更旧的 Pods，可以通过 <code>podStatusPhases</code> 来配置哪类状态的 Pods 会被驱逐，建议为每个应用程序创建一个 PDB，以确保应用程序的可用性，比如我们可以配置如下所示的策略来驱逐运行超过 7 天的 Pod：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">&#x27;descheduler/v1alpha1&#x27;</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">&#x27;DeschedulerPolicy&#x27;</span></span><br><span class="line"><span class="attr">strategies:</span></span><br><span class="line">  <span class="attr">&#x27;PodLifeTime&#x27;:</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">params:</span></span><br><span class="line">      <span class="attr">maxPodLifeTimeSeconds:</span> <span class="number">604800</span> <span class="comment"># Pods 运行最多7天</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="RemoveDuplicates"><a href="#RemoveDuplicates" class="headerlink" title="RemoveDuplicates"></a>RemoveDuplicates</h3><p>该策略确保只有一个和 Pod 关联的 RS、Deployment 或者 Job 资源对象运行在同一节点上。如果还有更多的 Pod 则将这些重复的 Pod 进行驱逐，以便更好地在集群中分散 Pod。如果某些节点由于某些原因崩溃了，这些节点上的 Pod 漂移到了其他节点，导致多个与 RS 关联的 Pod 在同一个节点上运行，就有可能发生这种情况，一旦出现故障的节点再次准备就绪，就可以启用该策略来驱逐这些重复的 Pod。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/tkf2ne.png" alt="RemoveDuplicates"></p>
+<p>配置策略的时候，可以指定参数 <code>excludeOwnerKinds</code> 用于排除类型，这些类型下的 Pod 不会被驱逐：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">&#x27;descheduler/v1alpha1&#x27;</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">&#x27;DeschedulerPolicy&#x27;</span></span><br><span class="line"><span class="attr">strategies:</span></span><br><span class="line">  <span class="attr">&#x27;RemoveDuplicates&#x27;:</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">params:</span></span><br><span class="line">      <span class="attr">removeDuplicates:</span></span><br><span class="line">        <span class="attr">excludeOwnerKinds:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="string">&#x27;ReplicaSet&#x27;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="LowNodeUtilization"><a href="#LowNodeUtilization" class="headerlink" title="LowNodeUtilization"></a>LowNodeUtilization</h3><p>该策略主要用于查找未充分利用的节点，并从其他节点驱逐 Pod，以便 kube-scheudler 重新将它们调度到未充分利用的节点上。该策略的参数可以通过字段 <code>nodeResourceUtilizationThresholds</code> 进行配置。</p>
+<p>节点的利用率不足可以通过配置 <code>thresholds</code> 阈值参数来确定，可以通过 CPU、内存和 Pods 数量的百分比进行配置。如果节点的使用率均低于所有阈值，则认为该节点未充分利用。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/pbmrlv.png" alt="LowNodeUtilization"></p>
+<p>此外，还有一个可配置的阈值 <code>targetThresholds</code>，用于计算可能驱逐 Pods 的潜在节点，该参数也可以配置 CPU、内存以及 Pods 数量的百分比进行配置。<code>thresholds</code> 和 <code>targetThresholds</code> 可以根据你的集群需求进行动态调整，如下所示示例：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">&#x27;descheduler/v1alpha1&#x27;</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">&#x27;DeschedulerPolicy&#x27;</span></span><br><span class="line"><span class="attr">strategies:</span></span><br><span class="line">  <span class="attr">&#x27;LowNodeUtilization&#x27;:</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">params:</span></span><br><span class="line">      <span class="attr">nodeResourceUtilizationThresholds:</span></span><br><span class="line">        <span class="attr">thresholds:</span></span><br><span class="line">          <span class="attr">&#x27;cpu&#x27;:</span> <span class="number">20</span></span><br><span class="line">          <span class="attr">&#x27;memory&#x27;:</span> <span class="number">20</span></span><br><span class="line">          <span class="attr">&#x27;pods&#x27;:</span> <span class="number">20</span></span><br><span class="line">        <span class="attr">targetThresholds:</span></span><br><span class="line">          <span class="attr">&#x27;cpu&#x27;:</span> <span class="number">50</span></span><br><span class="line">          <span class="attr">&#x27;memory&#x27;:</span> <span class="number">50</span></span><br><span class="line">          <span class="attr">&#x27;pods&#x27;:</span> <span class="number">50</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>需要注意的是：</p>
+<ul>
+<li>仅支持以下三种资源类型：cpu、memory、pods</li>
+<li><code>thresholds</code> 和 <code>targetThresholds</code> 必须配置相同的类型</li>
+<li>参数值的访问是 0-100（百分制）</li>
+<li>相同的资源类型，<code>thresholds</code> 的配置不能高于 <code>targetThresholds</code> 的配置</li>
+</ul>
+<p>如果未指定任何资源类型，则默认是 100%，以避免节点从未充分利用变为过度利用。和 <code>LowNodeUtilization</code> 策略关联的另一个参数是 <code>numberOfNodes</code>，只有当未充分利用的节点数大于该配置值的时候，才可以配置该参数来激活该策略，该参数对于大型集群非常有用，其中有一些节点可能会频繁使用或短期使用不足，默认情况下，numberOfNodes 为 0。</p>
+<h3 id="RemovePodsViolatingInterPodAntiAffinity"><a href="#RemovePodsViolatingInterPodAntiAffinity" class="headerlink" title="RemovePodsViolatingInterPodAntiAffinity"></a>RemovePodsViolatingInterPodAntiAffinity</h3><p>该策略可以确保从节点中删除违反 Pod 反亲和性的 Pod，比如某个节点上有 podA 这个 Pod，并且 podB 和 podC（在同一个节点上运行）具有禁止它们在同一个节点上运行的反亲和性规则，则 podA 将被从该节点上驱逐，以便 podB 和 podC 运行正常运行。当 podB 和 podC 已经运行在节点上后，反亲和性规则被创建就会发送这样的问题。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/2q9llh.png" alt="RemovePodsViolatingInterPodAntiAffinity"></p>
+<p>要禁用该策略，直接配置成 false 即可：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">&#x27;descheduler/v1alpha1&#x27;</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">&#x27;DeschedulerPolicy&#x27;</span></span><br><span class="line"><span class="attr">strategies:</span></span><br><span class="line">  <span class="attr">&#x27;RemovePodsViolatingInterPodAntiAffinity&#x27;:</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">false</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="RemovePodsViolatingNodeTaints"><a href="#RemovePodsViolatingNodeTaints" class="headerlink" title="RemovePodsViolatingNodeTaints"></a>RemovePodsViolatingNodeTaints</h3><p>该策略可以确保从节点中删除违反 <code>NoSchedule</code> 污点的 Pod，比如有一个名为 podA 的 Pod，通过配置容忍 <code>key=value:NoSchedule</code> 允许被调度到有该污点配置的节点上，如果节点的污点随后被更新或者删除了，则污点将不再被 Pods 的容忍满足，然后将被驱逐：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">&#x27;descheduler/v1alpha1&#x27;</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">&#x27;DeschedulerPolicy&#x27;</span></span><br><span class="line"><span class="attr">strategies:</span></span><br><span class="line">  <span class="attr">&#x27;RemovePodsViolatingNodeTaints&#x27;:</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="RemovePodsViolatingNodeAffinity"><a href="#RemovePodsViolatingNodeAffinity" class="headerlink" title="RemovePodsViolatingNodeAffinity"></a>RemovePodsViolatingNodeAffinity</h3><p>该策略确保从节点中删除违反节点亲和性的 Pod。比如名为 podA 的 Pod 被调度到了节点 nodeA，podA 在调度的时候满足了节点亲和性规则 <code>requiredDuringSchedulingIgnoredDuringExecution</code>，但是随着时间的推移，节点 nodeA 不再满足该规则了，那么如果另一个满足节点亲和性规则的节点 nodeB 可用，则 podA 将被从节点 nodeA 驱逐，如下所示的策略配置示例：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">&#x27;descheduler/v1alpha1&#x27;</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">&#x27;DeschedulerPolicy&#x27;</span></span><br><span class="line"><span class="attr">strategies:</span></span><br><span class="line">  <span class="attr">&#x27;RemovePodsViolatingNodeAffinity&#x27;:</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">params:</span></span><br><span class="line">      <span class="attr">nodeAffinityType:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="string">&#x27;requiredDuringSchedulingIgnoredDuringExecution&#x27;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="RemovePodsViolatingTopologySpreadConstraint"><a href="#RemovePodsViolatingTopologySpreadConstraint" class="headerlink" title="RemovePodsViolatingTopologySpreadConstraint"></a>RemovePodsViolatingTopologySpreadConstraint</h3><p>该策略确保从节点驱逐违反拓扑分布约束的 Pods，具体来说，它试图驱逐将拓扑域平衡到每个约束的 <code>maxSkew</code> 内所需的最小 Pod 数，不过该策略需要 k8s 版本高于 1.18 才能使用。</p>
+<p>默认情况下，此策略仅处理硬约束，如果将参数 <code>includeSoftConstraints</code> 设置为 True，也将支持软约束。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">&#x27;descheduler/v1alpha1&#x27;</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">&#x27;DeschedulerPolicy&#x27;</span></span><br><span class="line"><span class="attr">strategies:</span></span><br><span class="line">  <span class="attr">&#x27;RemovePodsViolatingTopologySpreadConstraint&#x27;:</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">params:</span></span><br><span class="line">      <span class="attr">includeSoftConstraints:</span> <span class="literal">false</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="RemovePodsHavingTooManyRestarts"><a href="#RemovePodsHavingTooManyRestarts" class="headerlink" title="RemovePodsHavingTooManyRestarts"></a>RemovePodsHavingTooManyRestarts</h3><p>该策略确保从节点中删除重启次数过多的 Pods，它的参数包括 <code>podRestartThreshold</code>（这是应将 Pod 逐出的重新启动次数），以及包括<code>InitContainers</code>，它确定在计算中是否应考虑初始化容器的重新启动，策略配置如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">&#x27;descheduler/v1alpha1&#x27;</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">&#x27;DeschedulerPolicy&#x27;</span></span><br><span class="line"><span class="attr">strategies:</span></span><br><span class="line">  <span class="attr">&#x27;RemovePodsHavingTooManyRestarts&#x27;:</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">params:</span></span><br><span class="line">      <span class="attr">podsHavingTooManyRestarts:</span></span><br><span class="line">        <span class="attr">podRestartThreshold:</span> <span class="number">100</span></span><br><span class="line">        <span class="attr">includingInitContainers:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="Filter-Pods"><a href="#Filter-Pods" class="headerlink" title="Filter Pods"></a>Filter Pods</h2><p>在驱逐 Pods 的时候，有时并不需要所有 Pods 都被驱逐，<code>descheduler</code> 提供了两种主要的方式进行过滤：命名空间过滤和优先级过滤。</p>
+<h3 id="命名空间过滤"><a href="#命名空间过滤" class="headerlink" title="命名空间过滤"></a>命名空间过滤</h3><p>该策略可以配置是包含还是排除某些名称空间。可以使用该策略的有：</p>
+<ul>
+<li>PodLifeTime</li>
+<li>RemovePodsHavingTooManyRestarts</li>
+<li>RemovePodsViolatingNodeTaints</li>
+<li>RemovePodsViolatingNodeAffinity</li>
+<li>RemovePodsViolatingInterPodAntiAffinity</li>
+<li>RemoveDuplicates</li>
+<li>RemovePodsViolatingTopologySpreadConstraint</li>
+</ul>
+<p>比如只驱逐某些命令空间下的 Pods，则可以使用 <code>include</code> 参数进行配置，如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">&#x27;descheduler/v1alpha1&#x27;</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">&#x27;DeschedulerPolicy&#x27;</span></span><br><span class="line"><span class="attr">strategies:</span></span><br><span class="line">  <span class="attr">&#x27;PodLifeTime&#x27;:</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">params:</span></span><br><span class="line">      <span class="attr">podLifeTime:</span></span><br><span class="line">        <span class="attr">maxPodLifeTimeSeconds:</span> <span class="number">86400</span></span><br><span class="line">      <span class="attr">namespaces:</span></span><br><span class="line">        <span class="attr">include:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="string">&#x27;namespace1&#x27;</span></span><br><span class="line">          <span class="bullet">-</span> <span class="string">&#x27;namespace2&#x27;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>又或者要排除掉某些命令空间下的 Pods，则可以使用 <code>exclude</code> 参数配置，如下所示：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">&#x27;descheduler/v1alpha1&#x27;</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">&#x27;DeschedulerPolicy&#x27;</span></span><br><span class="line"><span class="attr">strategies:</span></span><br><span class="line">  <span class="attr">&#x27;PodLifeTime&#x27;:</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">params:</span></span><br><span class="line">      <span class="attr">podLifeTime:</span></span><br><span class="line">        <span class="attr">maxPodLifeTimeSeconds:</span> <span class="number">86400</span></span><br><span class="line">      <span class="attr">namespaces:</span></span><br><span class="line">        <span class="attr">exclude:</span></span><br><span class="line">          <span class="bullet">-</span> <span class="string">&#x27;namespace1&#x27;</span></span><br><span class="line">          <span class="bullet">-</span> <span class="string">&#x27;namespace2&#x27;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="优先级过滤"><a href="#优先级过滤" class="headerlink" title="优先级过滤"></a>优先级过滤</h3><p>所有策略都可以配置优先级阈值，只有在该阈值以下的 Pod 才会被驱逐，我们可以通过设置 <code>thresholdPriorityClassName</code>（将阈值设置为指定优先级类别的值）或 <code>thresholdPriority</code>（直接设置阈值）参数来指定该阈值。默认情况下，该阈值设置为 <code>system-cluster-critical</code> 这个 PriorityClass 类的值。</p>
+<p>比如使用 <code>thresholdPriority</code>：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">&#x27;descheduler/v1alpha1&#x27;</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">&#x27;DeschedulerPolicy&#x27;</span></span><br><span class="line"><span class="attr">strategies:</span></span><br><span class="line">  <span class="attr">&#x27;PodLifeTime&#x27;:</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">params:</span></span><br><span class="line">      <span class="attr">podLifeTime:</span></span><br><span class="line">        <span class="attr">maxPodLifeTimeSeconds:</span> <span class="number">86400</span></span><br><span class="line">      <span class="attr">thresholdPriority:</span> <span class="number">10000</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>或者使用 <code>thresholdPriorityClassName</code> 进行过滤：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">&#x27;descheduler/v1alpha1&#x27;</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">&#x27;DeschedulerPolicy&#x27;</span></span><br><span class="line"><span class="attr">strategies:</span></span><br><span class="line">  <span class="attr">&#x27;PodLifeTime&#x27;:</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">params:</span></span><br><span class="line">      <span class="attr">podLifeTime:</span></span><br><span class="line">        <span class="attr">maxPodLifeTimeSeconds:</span> <span class="number">86400</span></span><br><span class="line">      <span class="attr">thresholdPriorityClassName:</span> <span class="string">&#x27;priorityclass1&#x27;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>不过需要注意不能同时配置 <code>thresholdPriority</code> 和 <code>thresholdPriorityClassName</code>，如果指定的优先级类不存在，则 descheduler 不会创建它，并且会引发错误。</p>
+<h2 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h2><p>当使用 descheduler 驱除 Pods 的时候，需要注意以下几点：</p>
+<ul>
+<li>关键性 Pod 不会被驱逐，比如 <code>priorityClassName</code> 设置为 <code>system-cluster-critical</code> 或 <code>system-node-critical</code> 的 Pod</li>
+<li>不属于 RS、Deployment 或 Job 管理的 Pods 不会被驱逐</li>
+<li>DaemonSet 创建的 Pods 不会被驱逐</li>
+<li>使用 <code>LocalStorage</code> 的 Pod 不会被驱逐，除非设置 <code>evictLocalStoragePods: true</code></li>
+<li>具有 PVC 的 Pods 不会被驱逐，除非设置 <code>ignorePvcPods: true</code></li>
+<li>在 <code>LowNodeUtilization</code> 和 <code>RemovePodsViolatingInterPodAntiAffinity</code> 策略下，Pods 按优先级从低到高进行驱逐，如果优先级相同，<code>Besteffort</code> 类型的 Pod 要先于 <code>Burstable</code> 和 <code>Guaranteed</code> 类型被驱逐</li>
+<li><code>annotations</code> 中带有 <code>descheduler.alpha.kubernetes.io/evict</code> 字段的 Pod 都可以被驱逐，该注释用于覆盖阻止驱逐的检查，用户可以选择驱逐哪个 Pods</li>
+<li>如果 Pods 驱逐失败，可以设置 <code>--v=4</code> 从 <code>descheduler</code> 日志中查找原因，如果驱逐违反 PDB 约束，则不会驱逐这类 Pods</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/DevStream/" rel="prev" title="DevStream">
+      <i class="fa fa-chevron-left"></i> DevStream
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Deployment/" rel="next" title="Deployment">
+      Deployment <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Descheduler"><span class="nav-number">1.</span> <span class="nav-text">Descheduler</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85"><span class="nav-number">1.1.</span> <span class="nav-text">安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#PDB"><span class="nav-number">1.2.</span> <span class="nav-text">PDB</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AD%96%E7%95%A5"><span class="nav-number">1.3.</span> <span class="nav-text">策略</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#PodLifeTime"><span class="nav-number">1.3.1.</span> <span class="nav-text">PodLifeTime</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RemoveDuplicates"><span class="nav-number">1.3.2.</span> <span class="nav-text">RemoveDuplicates</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#LowNodeUtilization"><span class="nav-number">1.3.3.</span> <span class="nav-text">LowNodeUtilization</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RemovePodsViolatingInterPodAntiAffinity"><span class="nav-number">1.3.4.</span> <span class="nav-text">RemovePodsViolatingInterPodAntiAffinity</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RemovePodsViolatingNodeTaints"><span class="nav-number">1.3.5.</span> <span class="nav-text">RemovePodsViolatingNodeTaints</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RemovePodsViolatingNodeAffinity"><span class="nav-number">1.3.6.</span> <span class="nav-text">RemovePodsViolatingNodeAffinity</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RemovePodsViolatingTopologySpreadConstraint"><span class="nav-number">1.3.7.</span> <span class="nav-text">RemovePodsViolatingTopologySpreadConstraint</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RemovePodsHavingTooManyRestarts"><span class="nav-number">1.3.8.</span> <span class="nav-text">RemovePodsHavingTooManyRestarts</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Filter-Pods"><span class="nav-number">1.4.</span> <span class="nav-text">Filter Pods</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4%E8%BF%87%E6%BB%A4"><span class="nav-number">1.4.1.</span> <span class="nav-text">命名空间过滤</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BC%98%E5%85%88%E7%BA%A7%E8%BF%87%E6%BB%A4"><span class="nav-number">1.4.2.</span> <span class="nav-text">优先级过滤</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9"><span class="nav-number">1.5.</span> <span class="nav-text">注意事项</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Linux 系统权限管理 一、Linux 权限管理的核心理念：用户、组与权限Linux 系统中的权限管理围绕着三个核心概念展开：用户（User）、组（Group） 和 其他（Others），以及针对这些实体设定的读（Read）、写（Write）、执行（Execute） 三种基本权限。 1. 用户 (User)：每个用户都有一个唯一的用户 ID (UID)。系统通过 UID 来识别用户。  root">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux 文件权限">
+<meta property="og:url" content="http://example.com/2025/09/11/Linux%20%E6%96%87%E4%BB%B6%E6%9D%83%E9%99%90/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="Linux 系统权限管理 一、Linux 权限管理的核心理念：用户、组与权限Linux 系统中的权限管理围绕着三个核心概念展开：用户（User）、组（Group） 和 其他（Others），以及针对这些实体设定的读（Read）、写（Write）、执行（Execute） 三种基本权限。 1. 用户 (User)：每个用户都有一个唯一的用户 ID (UID)。系统通过 UID 来识别用户。  root">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:47:11.353Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/Linux%20%E6%96%87%E4%BB%B6%E6%9D%83%E9%99%90/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Linux 文件权限 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Linux%20%E6%96%87%E4%BB%B6%E6%9D%83%E9%99%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Linux 文件权限
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:47:11" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/Manage/" itemprop="url" rel="index"><span itemprop="name">Manage</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.4k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="Linux-系统权限管理"><a href="#Linux-系统权限管理" class="headerlink" title="Linux 系统权限管理"></a>Linux 系统权限管理</h3><hr>
+<h3 id="一、Linux-权限管理的核心理念：用户、组与权限"><a href="#一、Linux-权限管理的核心理念：用户、组与权限" class="headerlink" title="一、Linux 权限管理的核心理念：用户、组与权限"></a>一、Linux 权限管理的核心理念：用户、组与权限</h3><p>Linux 系统中的权限管理围绕着三个核心概念展开：<strong>用户（User）</strong>、<strong>组（Group）</strong> 和 <strong>其他（Others）</strong>，以及针对这些实体设定的<strong>读（Read）</strong>、<strong>写（Write）</strong>、<strong>执行（Execute）</strong> 三种基本权限。</p>
+<h4 id="1-用户-User-："><a href="#1-用户-User-：" class="headerlink" title="1. 用户 (User)："></a>1. 用户 (User)：</h4><p>每个用户都有一个唯一的用户 ID (UID)。系统通过 UID 来识别用户。</p>
+<ul>
+<li><strong>root 用户：</strong> UID 为 0，拥有系统最高权限，可以执行任何操作。</li>
+<li><strong>系统用户：</strong> UID 1-999 (具体范围依发行版可能不同)，用于运行系统服务，通常不能登录。</li>
+<li><strong>普通用户：</strong> UID 1000 及以上，是日常操作的用户。</li>
+</ul>
+<h4 id="2-组-Group-："><a href="#2-组-Group-：" class="headerlink" title="2. 组 (Group)："></a>2. 组 (Group)：</h4><p>每个组都有一个唯一的组 ID (GID)。用户可以属于一个或多个组。</p>
+<ul>
+<li><strong>Primary Group (主组)：</strong> 用户创建时自动归属的组。</li>
+<li><strong>Secondary Groups (附加组)：</strong> 用户除了主组外，还可以加入多个附加组。</li>
+<li><strong>目的：</strong> 简化权限管理。可以将文件权限赋给一个组，所有属于该组的用户都将获得相应的权限，而无需单独为每个用户设置。</li>
+</ul>
+<h4 id="3-其他-Others-World-："><a href="#3-其他-Others-World-：" class="headerlink" title="3. 其他 (Others &#x2F; World)："></a>3. 其他 (Others &#x2F; World)：</h4><p>指系统中除文件所有者和文件所属组之外的所有其他用户。</p>
+<h4 id="4-基本权限-Permissions-："><a href="#4-基本权限-Permissions-：" class="headerlink" title="4. 基本权限 (Permissions)："></a>4. 基本权限 (Permissions)：</h4><p>针对文件或目录，有三种基本权限：</p>
+<ul>
+<li><strong>r (Read 读)：</strong><ul>
+<li><strong>对文件：</strong> 允许查看文件内容。</li>
+<li><strong>对目录：</strong> 允许列出目录中的文件和子目录（即 <code>ls</code> 命令）。</li>
+</ul>
+</li>
+<li><strong>w (Write 写)：</strong><ul>
+<li><strong>对文件：</strong> 允许修改或删除文件内容（但删除文件还需要拥有父目录的写权限）。</li>
+<li><strong>对目录：</strong> 允许在目录中创建、删除、重命名文件或子目录。</li>
+</ul>
+</li>
+<li><strong>x (Execute 执行)：</strong><ul>
+<li><strong>对文件：</strong> 允许将该文件作为程序或脚本执行。</li>
+<li><strong>对目录：</strong> 允许进入该目录（即 <code>cd</code> 命令）并访问其下的文件。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="二、权限的表示方式"><a href="#二、权限的表示方式" class="headerlink" title="二、权限的表示方式"></a>二、权限的表示方式</h3><p>权限可以用符号表示（符号模式），也可以用数字表示（八进制模式）。</p>
+<h4 id="1-符号模式-Symbolic-Mode-："><a href="#1-符号模式-Symbolic-Mode-：" class="headerlink" title="1. 符号模式 (Symbolic Mode)："></a>1. 符号模式 (Symbolic Mode)：</h4><p><code>rwx rwx rwx</code> （文件所有者、文件所属组、其他用户）</p>
+<p>示例：<code>rwxrw-r--</code></p>
+<ul>
+<li>文件所有者：读、写、执行 (<code>rwx</code>)</li>
+<li>文件所属组：读、写 (<code>rw-</code>)</li>
+<li>其他用户：读 (<code>r--</code>)</li>
+</ul>
+<h4 id="2-八进制模式-Octal-Mode-："><a href="#2-八进制模式-Octal-Mode-：" class="headerlink" title="2. 八进制模式 (Octal Mode)："></a>2. 八进制模式 (Octal Mode)：</h4><p>将 <code>rwx</code> 映射为三位二进制数，再转换为八进制：</p>
+<ul>
+<li><code>r</code> &#x3D; 4 (100)</li>
+<li><code>w</code> &#x3D; 2 (010)</li>
+<li><code>x</code> &#x3D; 1 (001)</li>
+<li><code>-</code> &#x3D; 0 (000)</li>
+</ul>
+<p>将所有者、组、其他的权限数字相加，得到三位八进制数。</p>
+<p>示例：<code>rwxrw-r--</code> 转换为八进制</p>
+<ul>
+<li>所有者：<code>rwx</code> &#x3D; 4 + 2 + 1 &#x3D; 7</li>
+<li>组：<code>rw-</code> &#x3D; 4 + 2 + 0 &#x3D; 6</li>
+<li>其他：<code>r--</code> &#x3D; 4 + 0 + 0 &#x3D; 4<br>所以 <code>rwxrw-r--</code> 对应的八进制权限是 <code>764</code>。</li>
+</ul>
+<p><strong>常用权限数字：</strong></p>
+<ul>
+<li><code>777</code>：所有人可读、写、执行 (非常不安全)</li>
+<li><code>755</code>：所有者读、写、执行；组用户和其他用户只读、执行 (目录常用)</li>
+<li><code>644</code>：所有者读、写；组用户和其他用户只读 (文件常用)</li>
+<li><code>600</code>：所有者读、写；组用户和其他用户无任何权限 (非常私密的文件)</li>
+</ul>
+<hr>
+<h3 id="三、常用的权限管理命令"><a href="#三、常用的权限管理命令" class="headerlink" title="三、常用的权限管理命令"></a>三、常用的权限管理命令</h3><h4 id="1-ls-l：查看文件或目录权限"><a href="#1-ls-l：查看文件或目录权限" class="headerlink" title="1. ls -l：查看文件或目录权限"></a>1. <code>ls -l</code>：查看文件或目录权限</h4><ul>
+<li><code>-rw-r--r--. 1 user group 1024 Oct 26 10:00 filename.txt</code><ul>
+<li>第一个字符 <code>-</code>：表示文件类型（<code>-</code> 普通文件, <code>d</code> 目录, <code>l</code> 链接, <code>c</code> 字符设备, <code>b</code> 块设备等）。</li>
+<li>接下来的 9 个字符 (<code>rw-r--r--</code>)：分别代表所有者、组、其他的读&#x2F;写&#x2F;执行权限。</li>
+<li>点号 <code>.</code>：在 RHEL&#x2F;CentOS 系统中，如果存在 ACL 权限或 SELinux 上下文，会有一个点号，表示可能存在额外的安全属性。</li>
+<li><code>1</code>：链接数（硬链接）。</li>
+<li><code>user</code>：文件所有者。</li>
+<li><code>group</code>：文件所属组。</li>
+<li><code>1024</code>：文件大小（字节）。</li>
+<li><code>Oct 26 10:00</code>：最后修改时间。</li>
+<li><code>filename.txt</code>：文件名。</li>
+</ul>
+</li>
+</ul>
+<h4 id="2-chmod：改变文件或目录权限"><a href="#2-chmod：改变文件或目录权限" class="headerlink" title="2. chmod：改变文件或目录权限"></a>2. <code>chmod</code>：改变文件或目录权限</h4><ul>
+<li><strong>八进制模式：</strong><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">chmod</span> 755 script.sh           <span class="comment"># 将脚本文件设置为所有者可读写执行，组用户和其他用户只读执行</span></span><br><span class="line"><span class="built_in">chmod</span> 644 myfile.txt          <span class="comment"># 将文件设置为所有者可读写，组用户和其他用户只读</span></span><br><span class="line"><span class="built_in">chmod</span> -R 770 mydir            <span class="comment"># 递归地将目录及其内容设置为所有者和组可读写执行，其他人无权限</span></span><br></pre></td></tr></table></figure></li>
+<li><strong>符号模式：</strong><ul>
+<li><code>u</code> (user), <code>g</code> (group), <code>o</code> (others), <code>a</code> (all)</li>
+<li><code>+</code> (添加权限), <code>-</code> (删除权限), <code>=</code> (精确设置权限)<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">chmod</span> u+x script.sh           <span class="comment"># 为文件所有者添加执行权限</span></span><br><span class="line"><span class="built_in">chmod</span> g-w myfile.txt          <span class="comment"># 为文件所属组移除写权限</span></span><br><span class="line"><span class="built_in">chmod</span> o=r myfile.txt          <span class="comment"># 设置其他用户只读权限</span></span><br><span class="line"><span class="built_in">chmod</span> ug+w,o-rwx mydir        <span class="comment"># 同时为所有者和组添加写权限，并移除其他所有权限</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+</ul>
+<h4 id="3-chown：改变文件或目录的所有者"><a href="#3-chown：改变文件或目录的所有者" class="headerlink" title="3. chown：改变文件或目录的所有者"></a>3. <code>chown</code>：改变文件或目录的所有者</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">chown</span> newuser filename.txt            <span class="comment"># 改变文件的所有者为 newuser</span></span><br><span class="line"><span class="built_in">chown</span> newuser:newgroup filename.txt   <span class="comment"># 同时改变所有者为 newuser，所属组为 newgroup</span></span><br><span class="line"><span class="built_in">chown</span> :newgroup filename.txt          <span class="comment"># 只改变文件的所属组为 newgroup</span></span><br><span class="line"><span class="built_in">chown</span> -R newuser:newgroup /path/to/directory <span class="comment"># 递归地改变目录及其内容的所有者和组</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="4-chgrp：改变文件或目录的所属组"><a href="#4-chgrp：改变文件或目录的所属组" class="headerlink" title="4. chgrp：改变文件或目录的所属组"></a>4. <code>chgrp</code>：改变文件或目录的所属组</h4><p><code>chgrp</code> 命令只改变所属组，不改变所有者，功能上等同于 <code>chown :newgroup</code>。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">chgrp</span> newgroup filename.txt</span><br><span class="line"><span class="built_in">chgrp</span> -R newgroup /path/to/directory</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="四、特殊权限位"><a href="#四、特殊权限位" class="headerlink" title="四、特殊权限位"></a>四、特殊权限位</h3><p>除了 <code>rwx</code> 基本权限外，Linux 还有三种特殊的权限位，它们提供额外的功能。</p>
+<h4 id="1-SBIT-Sticky-Bit-粘滞位"><a href="#1-SBIT-Sticky-Bit-粘滞位" class="headerlink" title="1. SBIT &#x2F; Sticky Bit (粘滞位)"></a>1. SBIT &#x2F; Sticky Bit (粘滞位)</h4><ul>
+<li><strong>符号表示：</strong> <code>t</code> (当 <code>x</code> 权限位设置时), <code>T</code> (当 <code>x</code> 权限位未设置时)</li>
+<li><strong>八进制：</strong> <code>1000</code> (加在八进制权限数字的最前面，如 <code>1777</code>)</li>
+<li><strong>作用：</strong> 主要用于目录。当一个目录设置了粘滞位后，只有文件所有者、目录所有者或 <code>root</code> 用户才能删除或重命名该目录下的文件，即使其他用户对该目录有写权限。</li>
+<li><strong>场景：</strong> 典型的应用是 <code>/tmp</code> 目录。所有用户都可以在 <code>/tmp</code> 中创建文件，但只能删除自己的文件，而不能删除别人的文件。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">chmod</span> +t /tmp</span><br><span class="line"><span class="comment"># 或者</span></span><br><span class="line"><span class="built_in">chmod</span> 1777 /tmp</span><br></pre></td></tr></table></figure></li>
+</ul>
+<h4 id="2-SUID-Set-User-ID-设置用户-ID"><a href="#2-SUID-Set-User-ID-设置用户-ID" class="headerlink" title="2. SUID &#x2F; Set User ID (设置用户 ID)"></a>2. SUID &#x2F; Set User ID (设置用户 ID)</h4><ul>
+<li><strong>符号表示：</strong> <code>s</code> (当用户 <code>x</code> 权限位设置时), <code>S</code> (当用户 <code>x</code> 权限位未设置时)</li>
+<li><strong>八进制：</strong> <code>4000</code> (加在八进制权限数字的最前面，如 <code>4755</code>)</li>
+<li><strong>作用：</strong> 针对可执行文件。当一个可执行文件设置了 SUID 权限后，任何用户执行该文件时，其进程会以文件所有者的身份运行，而不是以执行者的身份运行。</li>
+<li><strong>场景：</strong> 最典型的例子是 <code>passwd</code> 命令。普通用户执行 <code>passwd</code> 能够修改 <code>/etc/shadow</code> 文件（该文件的所有者是 <code>root</code>，且只有 <code>root</code> 有写权限），就是因为 <code>passwd</code> 命令设置了 SUID，使其在运行时拥有 <code>root</code> 权限。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">ls</span> -l /usr/bin/passwd</span><br><span class="line"><span class="comment"># -rwsr-xr-x. 1 root root ... /usr/bin/passwd</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li><strong>安全风险：</strong> SUID 权限非常危险，如果被恶意利用，可能导致权限提升。应谨慎使用。</li>
+</ul>
+</li>
+</ul>
+<h4 id="3-SGID-Set-Group-ID-设置组-ID"><a href="#3-SGID-Set-Group-ID-设置组-ID" class="headerlink" title="3. SGID &#x2F; Set Group ID (设置组 ID)"></a>3. SGID &#x2F; Set Group ID (设置组 ID)</h4><ul>
+<li><strong>符号表示：</strong> <code>s</code> (当组 <code>x</code> 权限位设置时), <code>S</code> (当组 <code>x</code> 权限位未设置时)</li>
+<li><strong>八进制：</strong> <code>2000</code> (加在八进制权限数字的最前面，如 <code>2775</code>)</li>
+<li><strong>作用：</strong><ul>
+<li><strong>对可执行文件：</strong> 当一个可执行文件设置了 SGID 权限后，任何用户执行该文件时，其进程会以文件所属组的身份运行。</li>
+<li><strong>对目录：</strong> 更常用的功能。当目录设置了 SGID 权限后，在该目录下创建的任何新文件或子目录，其所属组将自动继承父目录的组，而不是创建者用户的默认组。这对于团队协作非常有用。</li>
+</ul>
+</li>
+<li><strong>场景：</strong> 团队项目目录。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> /project</span><br><span class="line"><span class="built_in">chgrp</span> developers /project</span><br><span class="line"><span class="built_in">chmod</span> g+s /project</span><br><span class="line"><span class="comment"># 或者</span></span><br><span class="line"><span class="built_in">chmod</span> 2775 /project</span><br></pre></td></tr></table></figure>
+现在，任何在 <code>/project</code> 目录下创建的文件或目录，其组都会是 <code>developers</code>。</li>
+</ul>
+<hr>
+<h3 id="五、ACL-Access-Control-Lists"><a href="#五、ACL-Access-Control-Lists" class="headerlink" title="五、ACL (Access Control Lists)"></a>五、ACL (Access Control Lists)</h3><p>传统的 Linux 权限（UGO 权限）在某些复杂场景下可能无法满足细粒度的权限控制需求（例如，一个文件需要给某个特定用户 A 读写权限，给用户 B 只读权限，但传统权限只能给所有者、组、其他人设置）。为了解决这个问题，Linux 支持 **访问控制列表 (ACLs)**。</p>
+<ul>
+<li><p><strong>作用：</strong> 允许对单个文件或目录设置多个用户或组的权限，超越了传统 UGO 权限的限制。</p>
+</li>
+<li><p><strong>命令：</strong></p>
+<ul>
+<li><code>getfacl &lt;file/directory&gt;</code>：查看文件或目录的 ACL 权限。</li>
+<li><code>setfacl &lt;options&gt; &lt;file/directory&gt;</code>：设置文件或目录的 ACL 权限。</li>
+</ul>
+</li>
+<li><p><strong>示例：</strong></p>
+<ul>
+<li><strong>给用户 <code>john</code> 对 <code>report.txt</code> 文件读写权限：</strong><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">setfacl -m u:john:rw report.txt</span><br></pre></td></tr></table></figure></li>
+<li><strong>给组 <code>analysts</code> 对 <code>data/</code> 目录读和执行权限：</strong><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">setfacl -m g:analysts:r-x data/</span><br></pre></td></tr></table></figure></li>
+<li><strong>递归设置 ACL：</strong><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">setfacl -R -m u:john:rwX data/ <span class="comment"># X 表示如果目录有执行权限，则赋予执行权限</span></span><br></pre></td></tr></table></figure></li>
+<li><strong>清除所有 ACL 权限：</strong><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">setfacl -b report.txt</span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p><strong>与传统权限的联系：</strong> 当文件存在 ACL 权限时，<code>ls -l</code> 命令的权限字段会显示一个 <code>+</code> 号 (<code>rw-r--r--+</code>)。</p>
+</li>
+</ul>
+<hr>
+<h3 id="六、SELinux-Security-Enhanced-Linux-和-AppArmor"><a href="#六、SELinux-Security-Enhanced-Linux-和-AppArmor" class="headerlink" title="六、SELinux (Security-Enhanced Linux) 和 AppArmor"></a>六、SELinux (Security-Enhanced Linux) 和 AppArmor</h3><p>除了传统的 UGO 权限和 ACLs，更现代的 Linux 系统还集成了强制访问控制 (MAC) 机制，如 SELinux 或 AppArmor，这些提供了更高层次和更细粒度的安全防护。</p>
+<ul>
+<li><strong>SELinux：</strong> (如前所述) 为系统中的所有文件、进程、端口等资源分配安全上下文，并根据预设的策略规则强制执行访问控制。权限是基于类型和角色的，而不是简单的用户ID。</li>
+<li><strong>AppArmor：</strong> 另一种 MAC 实现，它通过配置文件为程序或服务创建安全配置文件，限制其能够访问的系统资源。</li>
+</ul>
+<p>这些 MAC 机制在传统权限之上提供了额外的安全层，即使传统权限允许某个操作，如果 MAC 策略禁止，该操作也会被拒绝。</p>
+<hr>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>Linux 权限管理是一个分层且强大的机制。作为运维工程师，我们必须熟练掌握：</p>
+<ol>
+<li>**基本权限 (UGO)**：它是核心，用于日常的文件和目录访问控制。</li>
+<li>**特殊权限位 (SUID, SGID, Sticky Bit)**：用于实现特定功能，如进程身份切换或目录协作，但需警惕 SUID 和 SGID 的安全风险。</li>
+<li><strong>ACLs</strong>：用于满足更复杂的细粒度权限需求。</li>
+<li>**MAC (SELinux&#x2F;AppArmor)**：提供最强的安全控制，作为额外的防御层，即使面对权限提升攻击也能起到限制作用。</li>
+</ol>
+<p>合理的权限配置是系统安全的重要组成部分，能够有效防止未经授权的访问和恶意操作，确保系统的稳定运行。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Linux%20%E7%B3%BB%E7%BB%9F%20dmesg%20%E5%91%BD%E4%BB%A4/" rel="prev" title="Linux 系统 dmesg 命令">
+      <i class="fa fa-chevron-left"></i> Linux 系统 dmesg 命令
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Linux%20%E6%95%85%E9%9A%9C%E8%AF%8A%E6%96%AD%E5%B7%A5%E5%85%B7/" rel="next" title="Linux 故障诊断工具">
+      Linux 故障诊断工具 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Linux-%E7%B3%BB%E7%BB%9F%E6%9D%83%E9%99%90%E7%AE%A1%E7%90%86"><span class="nav-number">1.</span> <span class="nav-text">Linux 系统权限管理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E3%80%81Linux-%E6%9D%83%E9%99%90%E7%AE%A1%E7%90%86%E7%9A%84%E6%A0%B8%E5%BF%83%E7%90%86%E5%BF%B5%EF%BC%9A%E7%94%A8%E6%88%B7%E3%80%81%E7%BB%84%E4%B8%8E%E6%9D%83%E9%99%90"><span class="nav-number">2.</span> <span class="nav-text">一、Linux 权限管理的核心理念：用户、组与权限</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E7%94%A8%E6%88%B7-User-%EF%BC%9A"><span class="nav-number">2.1.</span> <span class="nav-text">1. 用户 (User)：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E7%BB%84-Group-%EF%BC%9A"><span class="nav-number">2.2.</span> <span class="nav-text">2. 组 (Group)：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E5%85%B6%E4%BB%96-Others-World-%EF%BC%9A"><span class="nav-number">2.3.</span> <span class="nav-text">3. 其他 (Others &#x2F; World)：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-%E5%9F%BA%E6%9C%AC%E6%9D%83%E9%99%90-Permissions-%EF%BC%9A"><span class="nav-number">2.4.</span> <span class="nav-text">4. 基本权限 (Permissions)：</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E6%9D%83%E9%99%90%E7%9A%84%E8%A1%A8%E7%A4%BA%E6%96%B9%E5%BC%8F"><span class="nav-number">3.</span> <span class="nav-text">二、权限的表示方式</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E7%AC%A6%E5%8F%B7%E6%A8%A1%E5%BC%8F-Symbolic-Mode-%EF%BC%9A"><span class="nav-number">3.1.</span> <span class="nav-text">1. 符号模式 (Symbolic Mode)：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E5%85%AB%E8%BF%9B%E5%88%B6%E6%A8%A1%E5%BC%8F-Octal-Mode-%EF%BC%9A"><span class="nav-number">3.2.</span> <span class="nav-text">2. 八进制模式 (Octal Mode)：</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E3%80%81%E5%B8%B8%E7%94%A8%E7%9A%84%E6%9D%83%E9%99%90%E7%AE%A1%E7%90%86%E5%91%BD%E4%BB%A4"><span class="nav-number">4.</span> <span class="nav-text">三、常用的权限管理命令</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-ls-l%EF%BC%9A%E6%9F%A5%E7%9C%8B%E6%96%87%E4%BB%B6%E6%88%96%E7%9B%AE%E5%BD%95%E6%9D%83%E9%99%90"><span class="nav-number">4.1.</span> <span class="nav-text">1. ls -l：查看文件或目录权限</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-chmod%EF%BC%9A%E6%94%B9%E5%8F%98%E6%96%87%E4%BB%B6%E6%88%96%E7%9B%AE%E5%BD%95%E6%9D%83%E9%99%90"><span class="nav-number">4.2.</span> <span class="nav-text">2. chmod：改变文件或目录权限</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-chown%EF%BC%9A%E6%94%B9%E5%8F%98%E6%96%87%E4%BB%B6%E6%88%96%E7%9B%AE%E5%BD%95%E7%9A%84%E6%89%80%E6%9C%89%E8%80%85"><span class="nav-number">4.3.</span> <span class="nav-text">3. chown：改变文件或目录的所有者</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-chgrp%EF%BC%9A%E6%94%B9%E5%8F%98%E6%96%87%E4%BB%B6%E6%88%96%E7%9B%AE%E5%BD%95%E7%9A%84%E6%89%80%E5%B1%9E%E7%BB%84"><span class="nav-number">4.4.</span> <span class="nav-text">4. chgrp：改变文件或目录的所属组</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%9B%E3%80%81%E7%89%B9%E6%AE%8A%E6%9D%83%E9%99%90%E4%BD%8D"><span class="nav-number">5.</span> <span class="nav-text">四、特殊权限位</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-SBIT-Sticky-Bit-%E7%B2%98%E6%BB%9E%E4%BD%8D"><span class="nav-number">5.1.</span> <span class="nav-text">1. SBIT &#x2F; Sticky Bit (粘滞位)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-SUID-Set-User-ID-%E8%AE%BE%E7%BD%AE%E7%94%A8%E6%88%B7-ID"><span class="nav-number">5.2.</span> <span class="nav-text">2. SUID &#x2F; Set User ID (设置用户 ID)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-SGID-Set-Group-ID-%E8%AE%BE%E7%BD%AE%E7%BB%84-ID"><span class="nav-number">5.3.</span> <span class="nav-text">3. SGID &#x2F; Set Group ID (设置组 ID)</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%94%E3%80%81ACL-Access-Control-Lists"><span class="nav-number">6.</span> <span class="nav-text">五、ACL (Access Control Lists)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%AD%E3%80%81SELinux-Security-Enhanced-Linux-%E5%92%8C-AppArmor"><span class="nav-number">7.</span> <span class="nav-text">六、SELinux (Security-Enhanced Linux) 和 AppArmor</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">8.</span> <span class="nav-text">总结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

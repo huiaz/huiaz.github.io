@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="CGroups 与 Namespaces本节我们来一起了解下容器背后的两个核心技术：CGroups 和 Namespace。 CGroups 概述CGroups 全称为 Linux Control Group，其作用是限制一组进程使用的资源（CPU、内存等）上限，CGroups 也是 Containerd 容器技术的核心实现原理之一，首先我们需要先了解几个 CGroups 的基本概念：  Task">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CGroups 与 Namespaces">
+<meta property="og:url" content="http://example.com/2025/09/11/CGroups%20%E4%B8%8E%20Namespaces/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="CGroups 与 Namespaces本节我们来一起了解下容器背后的两个核心技术：CGroups 和 Namespace。 CGroups 概述CGroups 全称为 Linux Control Group，其作用是限制一组进程使用的资源（CPU、内存等）上限，CGroups 也是 Containerd 容器技术的核心实现原理之一，首先我们需要先了解几个 CGroups 的基本概念：  Task">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/l9c1gs.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/ld20w2.png">
+<meta property="og:image" content="https://picdn.youdianzhishi.com/images/20211021121336.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/5hh68b.png">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:25:19.626Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://mudutestmenu.mudu.tv/upload/l9c1gs.png">
+
+<link rel="canonical" href="http://example.com/2025/09/11/CGroups%20%E4%B8%8E%20Namespaces/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>CGroups 与 Namespaces | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/CGroups%20%E4%B8%8E%20Namespaces/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          CGroups 与 Namespaces
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:25:19" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E5%AE%B9%E5%99%A8%E8%BF%90%E8%A1%8C%E6%97%B6/" itemprop="url" rel="index"><span itemprop="name">容器运行时</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>13k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>12 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="CGroups-与-Namespaces"><a href="#CGroups-与-Namespaces" class="headerlink" title="CGroups 与 Namespaces"></a>CGroups 与 Namespaces</h1><p>本节我们来一起了解下容器背后的两个核心技术：CGroups 和 Namespace。</p>
+<h2 id="CGroups-概述"><a href="#CGroups-概述" class="headerlink" title="CGroups 概述"></a>CGroups 概述</h2><p><code>CGroups</code> 全称为 <code>Linux Control Group</code>，其作用是限制一组进程使用的资源（CPU、内存等）上限，<code>CGroups</code> 也是 Containerd 容器技术的核心实现原理之一，首先我们需要先了解几个 <code>CGroups</code> 的基本概念：</p>
+<ul>
+<li>Task: 在 cgroup 中，task 可以理解为一个进程，但这里的进程和一般意义上的操作系统进程不太一样，实际上是进程 ID 和线程 ID 列表。</li>
+<li>CGroup: 即控制组，一个控制组就是一组按照某种标准划分的 Tasks，可以理解为资源限制是以进程组为单位实现的，一个进程加入到某个控制组后，就会受到相应配置的资源限制。</li>
+<li>Hierarchy: cgroup 的层级组织关系，cgroup 以树形层级组织，每个 cgroup 子节点默认继承其父 cgroup 节点的配置属性，这样每个 Hierarchy 在初始化会有 root cgroup。</li>
+<li>Subsystem: 即子系统，子系统表示具体的资源配置，如 CPU 使用，内存占用等，Subsystem 附加到 Hierarchy 上后可用。</li>
+</ul>
+<p><code>CGroups</code> 支持的子系统包含以下几类，即为每种可以控制的资源定义了一个子系统:</p>
+<ul>
+<li><code>cpuset</code>: 为 cgroup 中的进程分配单独的 CPU 节点，即可以绑定到特定的 CPU</li>
+<li><code>cpu</code>: 限制 cgroup 中进程的 CPU 使用份额</li>
+<li><code>cpuacct</code>: 统计 cgroup 中进程的 CPU 使用情况</li>
+<li><code>memory</code>: 限制 cgroup 中进程的内存使用,并能报告内存使用情况</li>
+<li><code>devices</code>: 控制 cgroup 中进程能访问哪些文件设备(设备文件的创建、读写)</li>
+<li><code>freezer</code>: 挂起或恢复 cgroup 中的 task</li>
+<li><code>net_cls</code>: 可以标记 cgroups 中进程的网络数据包，然后可以使用 tc 模块(traffic contro)对数据包进行控制</li>
+<li><code>blkio</code>: 限制 cgroup 中进程的块设备 IO</li>
+<li><code>perf_event</code>: 监控 cgroup 中进程的 perf 时间，可用于性能调优</li>
+<li><code>hugetlb</code>: hugetlb 的资源控制功能</li>
+<li><code>pids</code>: 限制 cgroup 中可以创建的进程数</li>
+<li><code>net_prio</code>: 允许管理员动态的通过各种应用程序设置网络传输的优先级</li>
+</ul>
+<p>通过上面的各个子系统，可以看出使用 <code>CGroups</code> 可以控制的资源有: CPU、内存、网络、IO、文件设备等。<code>CGroups</code> 具有以下几个特点：</p>
+<ul>
+<li>CGroups 的 API 以一个伪文件系统（&#x2F;sys&#x2F;fs&#x2F;cgroup&#x2F;）的实现方式，用户的程序可以通过文件系统实现 CGroups 的组件管理</li>
+<li>CGroups 的组件管理操作单元可以细粒度到线程级别，用户可以创建和销毁 CGroups，从而实现资源载分配和再利用</li>
+<li>所有资源管理的功能都以子系统（cpu、cpuset 这些）的方式实现，接口统一子任务创建之初与其父任务处于同一个 CGroups 的控制组</li>
+</ul>
+<p>我们可以通过查看 <code>/proc/cgroups</code> 文件来查找当前系统支持的 <code>CGroups</code> 子系统:</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/l9c1gs.png" alt="cgroups subsystem"></p>
+<p>在使用 <code>CGroups</code> 时需要先挂载，我们可以使用 <code>df -h | grep cgroup</code> 命令进行查看:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ df -h | grep cgroup</span><br><span class="line">tmpfs                          3.9G     0  3.9G   0% /sys/fs/cgroup</span><br></pre></td></tr></table></figure>
+
+<p>可以看到被挂载到了 cd，cgroup 其实是一种文件系统类型，所有的操作都是通过文件来完成的，我们可以使用 <code>mount --type cgroup</code>命令查看当前系统挂载了哪些 cgroup：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ mount --type cgroup</span><br><span class="line">cgroup on /sys/fs/cgroup/systemd type cgroup (rw,nosuid,nodev,noexec,relatime,xattr,release_agent=/usr/lib/systemd/systemd-cgroups-agent,name=systemd)</span><br><span class="line">cgroup on /sys/fs/cgroup/cpuset type cgroup (rw,nosuid,nodev,noexec,relatime,cpuset)</span><br><span class="line">cgroup on /sys/fs/cgroup/perf_event type cgroup (rw,nosuid,nodev,noexec,relatime,perf_event)</span><br><span class="line">cgroup on /sys/fs/cgroup/cpu,cpuacct type cgroup (rw,nosuid,nodev,noexec,relatime,cpuacct,cpu)</span><br><span class="line">cgroup on /sys/fs/cgroup/memory type cgroup (rw,nosuid,nodev,noexec,relatime,memory)</span><br><span class="line">cgroup on /sys/fs/cgroup/freezer type cgroup (rw,nosuid,nodev,noexec,relatime,freezer)</span><br><span class="line">cgroup on /sys/fs/cgroup/net_cls,net_prio type cgroup (rw,nosuid,nodev,noexec,relatime,net_prio,net_cls)</span><br><span class="line">cgroup on /sys/fs/cgroup/blkio type cgroup (rw,nosuid,nodev,noexec,relatime,blkio)</span><br><span class="line">cgroup on /sys/fs/cgroup/hugetlb type cgroup (rw,nosuid,nodev,noexec,relatime,hugetlb)</span><br><span class="line">cgroup on /sys/fs/cgroup/pids type cgroup (rw,nosuid,nodev,noexec,relatime,pids)</span><br><span class="line">cgroup on /sys/fs/cgroup/devices type cgroup (rw,nosuid,nodev,noexec,relatime,devices)</span><br></pre></td></tr></table></figure>
+
+<p><code>/sys/fs/cgroup</code> 目录下的每个子目录就对应着一个子系统，cgroup 是以目录形式组织的，<code>/</code> 是 cgroup 的根目录，但是这个根目录可以被挂载到任意目录，例如 CGroups 的 memory 子系统的挂载点是 <code>/sys/fs/cgroup/memory</code>，那么 <code>/sys/fs/cgroup/memory/</code> 对应 memory 子系统的根目录，我们可以列出该目录下面的文件：c</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ ll /sys/fs/cgroup/memory/</span><br><span class="line">total 0</span><br><span class="line">-rw-r--r--  1 root root 0 Oct 21 10:10 cgroup.clone_children</span><br><span class="line">--w--w--w-  1 root root 0 Oct 21 10:10 cgroup.event_control</span><br><span class="line">-rw-r--r--  1 root root 0 Oct 21 10:10 cgroup.procs</span><br><span class="line">-r--r--r--  1 root root 0 Oct 21 10:10 cgroup.sane_behavior</span><br><span class="line">drwxr-xr-x  4 root root 0 Oct 21 10:10 kubepods.slice</span><br><span class="line">-rw-r--r--  1 root root 0 Oct 21 10:10 memory.failcnt</span><br><span class="line">--w-------  1 root root 0 Oct 21 10:10 memory.force_empty</span><br><span class="line">-rw-r--r--  1 root root 0 Oct 21 10:10 memory.kmem.failcnt</span><br><span class="line">-rw-r--r--  1 root root 0 Oct 21 10:10 memory.kmem.limit_in_bytes</span><br><span class="line">-rw-r--r--  1 root root 0 Oct 21 10:10 memory.kmem.max_usage_in_bytes</span><br><span class="line">-r--r--r--  1 root root 0 Oct 21 10:10 memory.kmem.slabinfo</span><br><span class="line">-rw-r--r--  1 root root 0 Oct 21 10:10 memory.kmem.tcp.failcnt</span><br><span class="line">-rw-r--r--  1 root root 0 Oct 21 10:10 memory.kmem.tcp.limit_in_bytes</span><br><span class="line">-rw-r--r--  1 root root 0 Oct 21 10:10 memory.kmem.tcp.max_usage_in_bytes</span><br><span class="line">-r--r--r--  1 root root 0 Oct 21 10:10 memory.kmem.tcp.usage_in_bytes</span><br><span class="line">-r--r--r--  1 root root 0 Oct 21 10:10 memory.kmem.usage_in_bytes</span><br><span class="line">-rw-r--r--  1 root root 0 Oct 21 10:10 memory.limit_in_bytes</span><br><span class="line">-rw-r--r--  1 root root 0 Oct 21 10:10 memory.max_usage_in_bytes</span><br><span class="line">-rw-r--r--  1 root root 0 Oct 21 10:10 memory.memsw.failcnt</span><br><span class="line">-rw-r--r--  1 root root 0 Oct 21 10:10 memory.memsw.limit_in_bytes</span><br><span class="line">-rw-r--r--  1 root root 0 Oct 21 10:10 memory.memsw.max_usage_in_bytes</span><br><span class="line">-r--r--r--  1 root root 0 Oct 21 10:10 memory.memsw.usage_in_bytes</span><br><span class="line">-rw-r--r--  1 root root 0 Oct 21 10:10 memory.move_charge_at_immigrate</span><br><span class="line">-r--r--r--  1 root root 0 Oct 21 10:10 memory.numa_stat</span><br><span class="line">-rw-r--r--  1 root root 0 Oct 21 10:10 memory.oom_control</span><br><span class="line">----------  1 root root 0 Oct 21 10:10 memory.pressure_level</span><br><span class="line">-rw-r--r--  1 root root 0 Oct 21 10:10 memory.soft_limit_in_bytes</span><br><span class="line">-r--r--r--  1 root root 0 Oct 21 10:10 memory.stat</span><br><span class="line">-rw-r--r--  1 root root 0 Oct 21 10:10 memory.swappiness</span><br><span class="line">-r--r--r--  1 root root 0 Oct 21 10:10 memory.usage_in_bytes</span><br><span class="line">-rw-r--r--  1 root root 0 Oct 21 10:10 memory.use_hierarchy</span><br><span class="line">-rw-r--r--  1 root root 0 Oct 21 10:10 notify_on_release</span><br><span class="line">-rw-r--r--  1 root root 0 Oct 21 10:10 release_agent</span><br><span class="line">drwxr-xr-x 65 root root 0 Oct 21 10:25 system.slice</span><br><span class="line">-rw-r--r--  1 root root 0 Oct 21 10:10 tasks</span><br><span class="line">drwxr-xr-x  2 root root 0 Oct 21 10:10 user.slice</span><br></pre></td></tr></table></figure>
+
+<p>上面包含 <code>kubepods.slice</code>、<code>system.slice</code>、<code>user.slice</code> 等目录，这些目录下可能还会有子目录，相当于一颗有层级关系的树来进行组织：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">/</span><br><span class="line">├── kubepods.slice</span><br><span class="line">├── system.slice</span><br><span class="line">└── user.slice</span><br></pre></td></tr></table></figure>
+
+<p>例如我在节点上使用 systemd 管理了一个 Prometheus 的应用，我们可以使用 <code>systemctl status prometheus</code> 命令查看 Prometheus 进程所在的 cgroup 为 <code>/system.slice/prometheus.service</code>:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ systemctl status prometheus</span><br><span class="line">● prometheus.service - prometheus service</span><br><span class="line">   Loaded: loaded (/etc/systemd/system/prometheus.service; enabled; vendor preset: disabled)</span><br><span class="line">   Active: active (running) since Thu 2021-10-21 10:10:12 CST; 1h 40min ago</span><br><span class="line">     Docs: https://prometheus.io</span><br><span class="line"> Main PID: 1065 (prometheus)</span><br><span class="line">    Tasks: 10</span><br><span class="line">   Memory: 167.4M</span><br><span class="line">   CGroup: /system.slice/prometheus.service</span><br><span class="line">           └─1065 /root/p8strain/prometheus-2.30.2.linux-amd64/prometheus --config.file=/root/p8strain/prometheu...</span><br></pre></td></tr></table></figure>
+
+<p>上面显示的 CGroup 只是一个相对的路径，实际的文件系统目录是在对应的子系统下面，比如 <code>/sys/fs/cgroup/cpu/system.slice/prometheus.service</code>、<code>/sys/fs/cgroup/memory/system.slice/prometheus.service</code> 目录：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/ld20w2.png" alt="prometheus cgroup"></p>
+<p>这其实可以理解为 cpu 和 memory 子系统被附加到了 <code>/system.slice/prometheus.service</code> 这个 cgroup 上。</p>
+<blockquote>
+<p>如果 linux 系统使用 systemd 初始化系统，初始化进程会生成一个 root cgroup，每个 <code>systemd unit</code> 都将会被分配一个 cgroup，同样可以配置容器运行时如 containerd 选择使用 cgroupfs 或 systemd 作为 cgroup 驱动，containerd 默认使用的是 cgroupfs，但对于使用了 systemd 的 linux 发行版来说就同时存在两个 cgroup 管理器，对于该服务器上启动的容器使用的是 cgroupfs，而对于其他 systemd 管理的进程使用的是 systemd，这样在服务器资源负载高的情况下可能会变的不稳定。因此对于使用了 systemd 的 linux 系统，推荐将容器运行时的 cgroup 驱动使用 systemd。</p>
+</blockquote>
+<h2 id="CGroup-测试"><a href="#CGroup-测试" class="headerlink" title="CGroup 测试"></a>CGroup 测试</h2><p>接下来我们来尝试手动设置下 cgroup，以 CPU 这个子系统为例进行说明，首先我们在 <code>/sys/fs/cgroup/cpu</code> 目录下面创建一个名为 <code>ydzs.test</code> 的目录：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ mkdir -p /sys/fs/cgroup/cpu/ydzs.test</span><br><span class="line">➜  ~ ls /sys/fs/cgroup/cpu/ydzs.test/</span><br><span class="line">cgroup.clone_children  cpuacct.stat          cpu.cfs_period_us  cpu.rt_runtime_us  notify_on_release</span><br><span class="line">cgroup.event_control   cpuacct.usage         cpu.cfs_quota_us   cpu.shares         tasks</span><br><span class="line">cgroup.procs           cpuacct.usage_percpu  cpu.rt_period_us   cpu.stat</span><br></pre></td></tr></table></figure>
+
+<p>我们可以看到目录创建完成后，下面就会已经自动创建 cgroup 的相关文件，这里我们重点关注 <code>cpu.cfs_period_us</code> 和 <code>cpu.cfs_quota_us</code> 这两个文件，前面一个是用来配置 CPU 时间周期长度的，默认为 <code>100000us</code>，后者用来设置在此时间周期长度内所能使用的 CPU 时间数，默认值为-1，表示不受时间限制。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ cat /sys/fs/cgroup/cpu/ydzs.test/cpu.cfs_period_us</span><br><span class="line">100000</span><br><span class="line">➜  ~ cat /sys/fs/cgroup/cpu/ydzs.test/cpu.cfs_quota_us</span><br><span class="line">-1</span><br></pre></td></tr></table></figure>
+
+<p>现在我们写一个简单的 Python 脚本来消耗 CPU：</p>
+<figure class="highlight py"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># cgroup.py</span></span><br><span class="line"><span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">    <span class="keyword">pass</span></span><br></pre></td></tr></table></figure>
+
+<p>直接执行这个死循环脚本即可：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ python cgroup.py &amp;</span><br><span class="line">[1] 2113</span><br></pre></td></tr></table></figure>
+
+<p>使用 top 命令可以看到进程号 2113 的 CPU 使用率达到了 100%</p>
+<p><img data-src="https://picdn.youdianzhishi.com/images/20211021121336.png" alt="cgroup test"></p>
+<p>现在我们将这个进程 ID 写入到 <code>/sys/fs/cgroup/cpu/ydzs.test/tasks</code> 文件下面去，然后设置 <code>/sys/fs/cgroup/cpu/ydzs.test/cpu.cfs_quota_us</code> 为 <code>10000us</code>，因为 <code>cpu.cfs_period_us</code> 默认值为 <code>100000us</code>，所以这表示我们要限制 CPU 使用率为 10%：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ echo 2113 &gt; /sys/fs/cgroup/cpu/ydzs.test/tasks</span><br><span class="line">➜  ~ echo 10000 &gt; /sys/fs/cgroup/cpu/ydzs.test/cpu.cfs_quota_us</span><br></pre></td></tr></table></figure>
+
+<p>设置完过后上面我们的测试进程 CPU 就会被限制在 10% 左右了，再次使用 top 命令查看该进程可以验证。</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/5hh68b.png" alt="cgroup test valid"></p>
+<p>如果要限制内存等其他资源的话，同样去对应的子系统下面设置资源，并将进程 ID 加入 tasks 中即可。如果要删除这个 cgroup，直接删除文件夹是不行的，需要使用 <code>libcgroup</code> 工具：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ yum install libcgroup libcgroup-tools</span><br><span class="line">➜  ~ cgdelete cpu:ydzs.test</span><br><span class="line">➜  ~ ls /sys/fs/cgroup/cpu/ydzs.test</span><br><span class="line">ls: cannot access /sys/fs/cgroup/cpu/ydzs.test: No such file or directory</span><br></pre></td></tr></table></figure>
+
+<h2 id="在容器中使用-CGroups"><a href="#在容器中使用-CGroups" class="headerlink" title="在容器中使用 CGroups"></a>在容器中使用 CGroups</h2><p>上面我们测试了一个普通应用如何配置 cgroup，接下来我们在 Containerd 的容器中来使用 cgroup，比如使用 nerdctl 启动一个 nginx 容器，并限制其使用内存为 50M:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ nerdctl run -d -m 50m --name nginx nginx:alpine</span><br><span class="line">8690c7dba4ffe03d63983555c594e2784c146b5f9939de1195a9626339c9129c</span><br><span class="line">➜  ~ nerdctl ps</span><br><span class="line">CONTAINER ID    IMAGE                             COMMAND                   CREATED           STATUS    PORTS    NAMES</span><br><span class="line">8690c7dba4ff    docker.io/library/nginx:alpine    &quot;/docker-entrypoint.…&quot;    53 seconds ago    Up                 nginx</span><br></pre></td></tr></table></figure>
+
+<p>在使用 <code>nerdctl run</code> 启动容器的时候可以使用 <code>-m</code> 或 <code>--memory</code> 参数来现在内存，启动完成后该容器的 cgroup 会出现在 名为 <code>default</code> 的目录下面，比如查看内存子系统的目录：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ ll /sys/fs/cgroup/memory/default/</span><br><span class="line">total 0</span><br><span class="line">drwxr-xr-x 2 root root 0 Oct 21 15:01 8690c7dba4ffe03d63983555c594e2784c146b5f9939de1195a9626339c9129c</span><br><span class="line">-rw-r--r-- 1 root root 0 Oct 21 15:01 cgroup.clone_children</span><br><span class="line">--w--w--w- 1 root root 0 Oct 21 15:01 cgroup.event_control</span><br><span class="line">-rw-r--r-- 1 root root 0 Oct 21 15:01 cgroup.procs</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+
+<p>上面我们启动的 nginx 容器 ID 的目录会出现在 <code>/sys/fs/cgroup/memory/default/</code> 下面，该文件夹下面有很多和内存相关的 cgroup 配置文件，要进行相关的配置就需要在该目录下对应的文件中去操作：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ ll /sys/fs/cgroup/memory/default/8690c7dba4ffe03d63983555c594e2784c146b5f9939de1195a9626339c9129c</span><br><span class="line">total 0</span><br><span class="line">-rw-r--r-- 1 root root 0 Oct 21 15:01 cgroup.clone_children</span><br><span class="line">--w--w--w- 1 root root 0 Oct 21 15:01 cgroup.event_control</span><br><span class="line">-rw-r--r-- 1 root root 0 Oct 21 15:01 cgroup.procs</span><br><span class="line">-rw-r--r-- 1 root root 0 Oct 21 15:01 memory.failcnt</span><br><span class="line">--w------- 1 root root 0 Oct 21 15:01 memory.force_empty</span><br><span class="line">-rw-r--r-- 1 root root 0 Oct 21 15:01 memory.kmem.failcnt</span><br><span class="line">-rw-r--r-- 1 root root 0 Oct 21 15:01 memory.kmem.limit_in_bytes</span><br><span class="line">-rw-r--r-- 1 root root 0 Oct 21 15:01 memory.kmem.max_usage_in_bytes</span><br><span class="line">-r--r--r-- 1 root root 0 Oct 21 15:01 memory.kmem.slabinfo</span><br><span class="line">-rw-r--r-- 1 root root 0 Oct 21 15:01 memory.kmem.tcp.failcnt</span><br><span class="line">-rw-r--r-- 1 root root 0 Oct 21 15:01 memory.kmem.tcp.limit_in_bytes</span><br><span class="line">-rw-r--r-- 1 root root 0 Oct 21 15:01 memory.kmem.tcp.max_usage_in_bytes</span><br><span class="line">-r--r--r-- 1 root root 0 Oct 21 15:01 memory.kmem.tcp.usage_in_bytes</span><br><span class="line">-r--r--r-- 1 root root 0 Oct 21 15:01 memory.kmem.usage_in_bytes</span><br><span class="line">-rw-r--r-- 1 root root 0 Oct 21 15:01 memory.limit_in_bytes</span><br><span class="line">-rw-r--r-- 1 root root 0 Oct 21 15:01 memory.max_usage_in_bytes</span><br><span class="line">-rw-r--r-- 1 root root 0 Oct 21 15:01 memory.memsw.failcnt</span><br><span class="line">-rw-r--r-- 1 root root 0 Oct 21 15:01 memory.memsw.limit_in_bytes</span><br><span class="line">-rw-r--r-- 1 root root 0 Oct 21 15:01 memory.memsw.max_usage_in_bytes</span><br><span class="line">-r--r--r-- 1 root root 0 Oct 21 15:01 memory.memsw.usage_in_bytes</span><br><span class="line">-rw-r--r-- 1 root root 0 Oct 21 15:01 memory.move_charge_at_immigrate</span><br><span class="line">-r--r--r-- 1 root root 0 Oct 21 15:01 memory.numa_stat</span><br><span class="line">-rw-r--r-- 1 root root 0 Oct 21 15:01 memory.oom_control</span><br><span class="line">---------- 1 root root 0 Oct 21 15:01 memory.pressure_level</span><br><span class="line">-rw-r--r-- 1 root root 0 Oct 21 15:01 memory.soft_limit_in_bytes</span><br><span class="line">-r--r--r-- 1 root root 0 Oct 21 15:01 memory.stat</span><br><span class="line">-rw-r--r-- 1 root root 0 Oct 21 15:01 memory.swappiness</span><br><span class="line">-r--r--r-- 1 root root 0 Oct 21 15:01 memory.usage_in_bytes</span><br><span class="line">-rw-r--r-- 1 root root 0 Oct 21 15:01 memory.use_hierarchy</span><br><span class="line">-rw-r--r-- 1 root root 0 Oct 21 15:01 notify_on_release</span><br><span class="line">-rw-r--r-- 1 root root 0 Oct 21 15:01 tasks</span><br></pre></td></tr></table></figure>
+
+<p>我们这里需要关心的是 <code>memory.limit_in_bytes</code> 文件，该文件就是用来设置内存大小的，正常应该是 50M 的内存限制：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ cat /sys/fs/cgroup/memory/default/8690c7dba4ffe03d63983555c594e2784c146b5f9939de1195a9626339c9129c/memory.limit_in_bytes</span><br><span class="line">52428800</span><br></pre></td></tr></table></figure>
+
+<p>同样我们的 nginx 容器进程 ID 也会出现在上面的 <code>tasks</code> 文件中：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ cat /sys/fs/cgroup/memory/default/8690c7dba4ffe03d63983555c594e2784c146b5f9939de1195a9626339c9129c/tasks</span><br><span class="line">2686</span><br><span class="line">2815</span><br><span class="line">2816</span><br><span class="line">2817</span><br><span class="line">2818</span><br></pre></td></tr></table></figure>
+
+<p>我们可以通过如下命令过滤该进程号，可以看出第一行的 2686 就是 nginx 进程在主机上的进程 ID，下面几个是这个进程下的线程：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ ps -ef | grep 2686</span><br><span class="line">root       2686   2656  0 15:01 ?        00:00:00 nginx: master process nginx -g daemon off;</span><br><span class="line">101        2815   2686  0 15:01 ?        00:00:00 nginx: worker process</span><br><span class="line">101        2816   2686  0 15:01 ?        00:00:00 nginx: worker process</span><br><span class="line">101        2817   2686  0 15:01 ?        00:00:00 nginx: worker process</span><br><span class="line">101        2818   2686  0 15:01 ?        00:00:00 nginx: worker process</span><br><span class="line">root       2950   1976  0 15:36 pts/0    00:00:00 grep --color=auto 2686</span><br></pre></td></tr></table></figure>
+
+<p>我们删除这个容器后，<code>/sys/fs/cgroup/memory/default/</code> 目录下的容器 ID 文件夹也会自动删除。</p>
+<h2 id="Namespaces"><a href="#Namespaces" class="headerlink" title="Namespaces"></a>Namespaces</h2><p><code>namespace</code> 也称命名空间，是 Linux 为我们提供的用于隔离进程树、网络接口、挂载点以及进程间通信等资源的方法。在日常使用个人 PC 时，我们并没有运行多个完全分离的服务器的需求，但是如果我们在服务器上启动了多个服务，这些服务其实会相互影响的，每一个服务都能看到其他服务的进程，也可以访问宿主机器上的任意文件，一旦服务器上的某一个服务被入侵，那么入侵者就能够访问当前机器上的所有服务和文件，这是我们不愿意看到的，我们更希望运行在同一台机器上的不同服务能做到完全隔离，就像运行在多台不同的机器上一样。而我们这里的容器其实就通过 Linux 的 Namespaces 技术来实现的对不同的容器进行隔离。</p>
+<p>linux 共有 6(7)种命名空间:</p>
+<ul>
+<li><code>ipc namespace</code>: 管理对 IPC 资源（进程间通信（信号量、消息队列和共享内存）的访问</li>
+<li><code>net namespace</code>: 网络设备、网络栈、端口等隔离</li>
+<li><code>mnt namespace</code>: 文件系统挂载点隔离</li>
+<li><code>pid namespace</code>: 用于进程隔离</li>
+<li><code>user namespace</code>: 用户和用户组隔离（3.8 以后的内核才支持）</li>
+<li><code>uts namespace</code>: 主机和域名隔离</li>
+<li><code>cgroup namespace</code>：用于 cgroup 根目录隔离（4.6 以后版本的内核才支持）</li>
+</ul>
+<p>我们可以通过 <code>lsns</code> 命令查看当前系统已经创建的命名空间：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ lsns</span><br><span class="line">        NS TYPE  NPROCS   PID USER    COMMAND</span><br><span class="line">4026531836 pid      143     1 root    /usr/lib/systemd/systemd --switched-root --system --deserialize 22</span><br><span class="line">4026531837 user     143     1 root    /usr/lib/systemd/systemd --switched-root --system --deserialize 22</span><br><span class="line">4026531838 uts      143     1 root    /usr/lib/systemd/systemd --switched-root --system --deserialize 22</span><br><span class="line">4026531839 ipc      143     1 root    /usr/lib/systemd/systemd --switched-root --system --deserialize 22</span><br><span class="line">4026531840 mnt      138     1 root    /usr/lib/systemd/systemd --switched-root --system --deserialize 22</span><br><span class="line">4026531856 mnt        1    28 root    kdevtmpfs</span><br><span class="line">4026531956 net      143     1 root    /usr/lib/systemd/systemd --switched-root --system --deserialize 22</span><br><span class="line">4026532503 mnt        2   728 root    /usr/sbin/NetworkManager --no-daemon</span><br><span class="line">4026532504 mnt        1   745 chrony  /usr/sbin/chronyd</span><br><span class="line">4026532642 mnt        1  1076 grafana /usr/sbin/grafana-server --config=/etc/grafana/grafana.ini --pidfile=/var/run</span><br></pre></td></tr></table></figure>
+
+<p>要查看一个进程所属的命名空间信息，可以到 <code>/proc/&lt;pid&gt;/ns</code> 目录下查看：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ ps -ef | grep prometheus</span><br><span class="line">root       1065      1  0 10:10 ?        00:01:13 /root/p8strain/prometheus-2.30.2.linux-amd64/prometheus --config.file=/root/p8strain/prometheus-2.30.2.linux-amd64/prometheus.yml</span><br><span class="line">➜  ~ ll /proc/1065/ns</span><br><span class="line">total 0</span><br><span class="line">lrwxrwxrwx 1 root root 0 Oct 21 15:58 ipc -&gt; ipc:[4026531839]</span><br><span class="line">lrwxrwxrwx 1 root root 0 Oct 21 15:58 mnt -&gt; mnt:[4026531840]</span><br><span class="line">lrwxrwxrwx 1 root root 0 Oct 21 15:58 net -&gt; net:[4026531956]</span><br><span class="line">lrwxrwxrwx 1 root root 0 Oct 21 15:58 pid -&gt; pid:[4026531836]</span><br><span class="line">lrwxrwxrwx 1 root root 0 Oct 21 15:58 user -&gt; user:[4026531837]</span><br><span class="line">lrwxrwxrwx 1 root root 0 Oct 21 15:58 uts -&gt; uts:[4026531838]</span><br></pre></td></tr></table></figure>
+
+<p>这些 namespace 都是链接文件, 格式为 <code>namespaceType:[inode number]</code>，<code>inode number</code> 用来标识一个 namespace，可以理解为 namespace id，如果两个进程的某个命名空间的链接文件指向同一个，那么其相关资源在同一个命名空间中，也就没有隔离了。比如同样针对上面运行的 nginx 容器，我们查看其命名空间：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ lsns  |grep nginx</span><br><span class="line">4026532505 mnt        5  3171 root    nginx: master process nginx -g daemon off</span><br><span class="line">4026532506 uts        5  3171 root    nginx: master process nginx -g daemon off</span><br><span class="line">4026532507 ipc        5  3171 root    nginx: master process nginx -g daemon off</span><br><span class="line">4026532508 pid        5  3171 root    nginx: master process nginx -g daemon off</span><br><span class="line">4026532510 net        5  3171 root    nginx: master process nginx -g daemon off</span><br></pre></td></tr></table></figure>
+
+<p>可以看出 nginx 容器启动后，已经为该容器自动创建了单独的 <code>mtn</code>、<code>uts</code>、<code>ipc</code>、<code>pid</code>、<code>net</code> 命名空间，也就是这个容器在这些方面是独立隔离的，其他容器想要和该容器共享某一个命名空间，那么就需要指向同一个命名空间。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/CRD/" rel="prev" title="CRD">
+      <i class="fa fa-chevron-left"></i> CRD
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/BGP%20%E5%8D%8F%E8%AE%AE/" rel="next" title="BGP 协议">
+      BGP 协议 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#CGroups-%E4%B8%8E-Namespaces"><span class="nav-number">1.</span> <span class="nav-text">CGroups 与 Namespaces</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#CGroups-%E6%A6%82%E8%BF%B0"><span class="nav-number">1.1.</span> <span class="nav-text">CGroups 概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CGroup-%E6%B5%8B%E8%AF%95"><span class="nav-number">1.2.</span> <span class="nav-text">CGroup 测试</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%A8%E5%AE%B9%E5%99%A8%E4%B8%AD%E4%BD%BF%E7%94%A8-CGroups"><span class="nav-number">1.3.</span> <span class="nav-text">在容器中使用 CGroups</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Namespaces"><span class="nav-number">1.4.</span> <span class="nav-text">Namespaces</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="其核心思想是：使用常量（const）和自定义类型（type）。  场景设定假设我们正在开发一个订单处理系统，订单有以下几种状态：  待处理 (Pending) 处理中 (InProgress) 已完成 (Completed) 已失败 (Failed)  第 1 步：使用常量（const）和 iota这是实现枚举的基础。iota 是一个特殊的常量，可以被编译器自动修改。在每个 const 声明中，i">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go 枚举实现方法">
+<meta property="og:url" content="http://example.com/2025/09/11/Go%20%E6%9E%9A%E4%B8%BE%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="其核心思想是：使用常量（const）和自定义类型（type）。  场景设定假设我们正在开发一个订单处理系统，订单有以下几种状态：  待处理 (Pending) 处理中 (InProgress) 已完成 (Completed) 已失败 (Failed)  第 1 步：使用常量（const）和 iota这是实现枚举的基础。iota 是一个特殊的常量，可以被编译器自动修改。在每个 const 声明中，i">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:32:40.803Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Go 枚举实现方法">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/Go%20%E6%9E%9A%E4%B8%BE%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Go 枚举实现方法 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Go%20%E6%9E%9A%E4%B8%BE%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Go 枚举实现方法
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:32:40" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/go/" itemprop="url" rel="index"><span itemprop="name">go</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.7k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>其核心思想是：<strong>使用常量（<code>const</code>）和自定义类型（<code>type</code>）。</strong></p>
+<hr>
+<h3 id="场景设定"><a href="#场景设定" class="headerlink" title="场景设定"></a>场景设定</h3><p>假设我们正在开发一个订单处理系统，订单有以下几种状态：</p>
+<ul>
+<li>待处理 (Pending)</li>
+<li>处理中 (InProgress)</li>
+<li>已完成 (Completed)</li>
+<li>已失败 (Failed)</li>
+</ul>
+<h3 id="第-1-步：使用常量（const）和-iota"><a href="#第-1-步：使用常量（const）和-iota" class="headerlink" title="第 1 步：使用常量（const）和 iota"></a>第 1 步：使用常量（<code>const</code>）和 <code>iota</code></h3><p>这是实现枚举的基础。<code>iota</code> 是一个特殊的常量，可以被编译器自动修改。在每个 <code>const</code> 声明中，<code>iota</code> 从 0 开始，每行递增 1。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">    <span class="comment">// iota 在这里是 0</span></span><br><span class="line">	StatusPending = <span class="literal">iota</span> </span><br><span class="line">    <span class="comment">// iota 在这里是 1</span></span><br><span class="line">	StatusInProgress</span><br><span class="line">    <span class="comment">// iota 在这里是 2</span></span><br><span class="line">	StatusCompleted</span><br><span class="line">    <span class="comment">// iota 在这里是 3</span></span><br><span class="line">	StatusFailed</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">    <span class="comment">// 输出: 0 1 2 3</span></span><br><span class="line">	fmt.Println(StatusPending, StatusInProgress, StatusCompleted, StatusFailed) </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>优点：</strong></p>
+<ul>
+<li>简洁，自动递增，避免手动设置 <code>0, 1, 2, 3...</code> 带来的“魔法数字”和潜在错误。</li>
+</ul>
+<p><strong>缺点：</strong></p>
+<ul>
+<li><strong>缺乏类型安全</strong>。这些常量本质上都是 <code>int</code> 类型。这意味着任何 <code>int</code> 都可以被传递给需要订单状态的函数，编译器无法发现错误。例如： <code>processOrderStatus(99)</code> 是合法的，但逻辑上是错误的。</li>
+</ul>
+<hr>
+<h3 id="第-2-步：引入自定义类型（实现类型安全）"><a href="#第-2-步：引入自定义类型（实现类型安全）" class="headerlink" title="第 2 步：引入自定义类型（实现类型安全）"></a>第 2 步：引入自定义类型（实现类型安全）</h3><p>为了解决类型安全问题，我们将为订单状态创建一个新的、独立的类型。这是 Go 中实现枚举的<strong>惯用（idiomatic）方法</strong>。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 1. 创建一个自定义类型 OrderStatus，其底层类型是 int</span></span><br><span class="line"><span class="keyword">type</span> OrderStatus <span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 2. 将常量与我们的新类型关联起来</span></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Pending OrderStatus = <span class="literal">iota</span> <span class="comment">// 现在是 OrderStatus 类型，值为 0</span></span><br><span class="line">	InProgress</span><br><span class="line">	Completed</span><br><span class="line">	Failed</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment">// 这个函数现在只接受 OrderStatus 类型的参数</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">processOrderStatus</span><span class="params">(status OrderStatus)</span></span> &#123;</span><br><span class="line">	fmt.Printf(<span class="string">&quot;Processing status: %d\n&quot;</span>, status)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	processOrderStatus(Completed) <span class="comment">// 正确</span></span><br><span class="line"></span><br><span class="line">	<span class="comment">// processOrderStatus(2) // 编译错误！</span></span><br><span class="line">	<span class="comment">// 错误信息: cannot use 2 (untyped int constant) as OrderStatus value in argument to processOrderStatus</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// var someOtherInt int = 1</span></span><br><span class="line">    <span class="comment">// processOrderStatus(someOtherInt) // 同样会编译错误！</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>优点：</strong></p>
+<ul>
+<li><strong>类型安全</strong>：编译器会确保只有 <code>OrderStatus</code> 类型的值才能传递给相关函数，极大地减少了运行时错误。</li>
+</ul>
+<p><strong>缺点：</strong></p>
+<ul>
+<li><strong>可读性差</strong>：当打印或记录日志时，我们看到的是 <code>0, 1, 2, 3</code>，而不是 <code>Pending</code>, <code>InProgress</code> 等有意义的字符串。</li>
+</ul>
+<hr>
+<h3 id="第-3-步：实现-String-方法（提升可读性）"><a href="#第-3-步：实现-String-方法（提升可读性）" class="headerlink" title="第 3 步：实现 String() 方法（提升可读性）"></a>第 3 步：实现 <code>String()</code> 方法（提升可读性）</h3><p>为了解决可读性问题，我们可以为 <code>OrderStatus</code> 类型实现 <code>fmt.Stringer</code> 接口。该接口只有一个方法：<code>String() string</code>。<code>fmt</code> 包在打印值时会自动检查并调用这个方法。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> <span class="string">&quot;fmt&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> OrderStatus <span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	Pending OrderStatus = <span class="literal">iota</span></span><br><span class="line">	InProgress</span><br><span class="line">	Completed</span><br><span class="line">	Failed</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="comment">// 为 OrderStatus 类型实现 String() 方法</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s OrderStatus)</span></span> String() <span class="type">string</span> &#123;</span><br><span class="line">	<span class="keyword">switch</span> s &#123;</span><br><span class="line">	<span class="keyword">case</span> Pending:</span><br><span class="line">		<span class="keyword">return</span> <span class="string">&quot;PENDING&quot;</span></span><br><span class="line">	<span class="keyword">case</span> InProgress:</span><br><span class="line">		<span class="keyword">return</span> <span class="string">&quot;IN_PROGRESS&quot;</span></span><br><span class="line">	<span class="keyword">case</span> Completed:</span><br><span class="line">		<span class="keyword">return</span> <span class="string">&quot;COMPLETED&quot;</span></span><br><span class="line">	<span class="keyword">case</span> Failed:</span><br><span class="line">		<span class="keyword">return</span> <span class="string">&quot;FAILED&quot;</span></span><br><span class="line">	<span class="keyword">default</span>:</span><br><span class="line">		<span class="keyword">return</span> <span class="string">&quot;UNKNOWN&quot;</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	status := Completed</span><br><span class="line">  </span><br><span class="line">    <span class="comment">// fmt.Println 和 fmt.Printf(&quot;%v&quot;, ...) 会自动调用 String() 方法</span></span><br><span class="line">	fmt.Println(<span class="string">&quot;Current status is:&quot;</span>, status) <span class="comment">// 输出: Current status is: COMPLETED</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>优点：</strong></p>
+<ul>
+<li><strong>可读性极佳</strong>：无论是打印到控制台还是写入日志文件，都能显示人类可读的字符串。</li>
+<li>符合 Go 的接口设计哲学。</li>
+</ul>
+<hr>
+<h3 id="第-4-步：生产级考量-JSON-序列化"><a href="#第-4-步：生产级考量-JSON-序列化" class="headerlink" title="第 4 步：生产级考量 (JSON 序列化)"></a>第 4 步：生产级考量 (JSON 序列化)</h3><p>在后端 API 开发中，枚举值经常需要在 JSON 中表示为字符串。默认情况下，Go 的 <code>json.Marshal</code> 会将 <code>OrderStatus</code> 序列化为其底层 <code>int</code> 值（<code>0, 1, 2...</code>）。这对于 API 客户端非常不友好。</p>
+<p>我们可以通过实现 <code>json.Marshaler</code> 和 <code>json.Unmarshaler</code> 接口来自定义 JSON 行为。</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">	<span class="string">&quot;encoding/json&quot;</span></span><br><span class="line">	<span class="string">&quot;errors&quot;</span></span><br><span class="line">	<span class="string">&quot;fmt&quot;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> OrderStatus <span class="type">int</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> (</span><br><span class="line">	<span class="comment">// ... (同上)</span></span><br><span class="line">	Pending OrderStatus = <span class="literal">iota</span></span><br><span class="line">	InProgress</span><br><span class="line">	Completed</span><br><span class="line">	Failed</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s OrderStatus)</span></span> String() <span class="type">string</span> &#123;</span><br><span class="line">    <span class="comment">// 将字符串列表存储在一个变量中以便复用</span></span><br><span class="line">	statuses := [...]<span class="type">string</span>&#123;<span class="string">&quot;PENDING&quot;</span>, <span class="string">&quot;IN_PROGRESS&quot;</span>, <span class="string">&quot;COMPLETED&quot;</span>, <span class="string">&quot;FAILED&quot;</span>&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 边界检查</span></span><br><span class="line">	<span class="keyword">if</span> s &lt; <span class="number">0</span> || <span class="type">int</span>(s) &gt;= <span class="built_in">len</span>(statuses) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="string">&quot;UNKNOWN&quot;</span></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> statuses[s]</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// MarshalJSON 自定义如何将 OrderStatus 序列化为 JSON</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s OrderStatus)</span></span> MarshalJSON() ([]<span class="type">byte</span>, <span class="type">error</span>) &#123;</span><br><span class="line">	<span class="comment">// 将状态转换为字符串，并用双引号包裹，使其成为合法的 JSON 字符串</span></span><br><span class="line">	<span class="keyword">return</span> []<span class="type">byte</span>(<span class="string">`&quot;`</span> + s.String() + <span class="string">`&quot;`</span>), <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// UnmarshalJSON 自定义如何从 JSON 反序列化为 OrderStatus</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s *OrderStatus)</span></span> UnmarshalJSON(data []<span class="type">byte</span>) <span class="type">error</span> &#123;</span><br><span class="line">    <span class="comment">// data 包含双引号，例如 &quot;PENDING&quot;</span></span><br><span class="line">	str := <span class="type">string</span>(data)</span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 移除双引号</span></span><br><span class="line">	<span class="keyword">if</span> <span class="built_in">len</span>(str) &lt; <span class="number">2</span> || str[<span class="number">0</span>] != <span class="string">&#x27;&quot;&#x27;</span> || str[<span class="built_in">len</span>(str)<span class="number">-1</span>] != <span class="string">&#x27;&quot;&#x27;</span> &#123;</span><br><span class="line">		<span class="keyword">return</span> errors.New(<span class="string">&quot;OrderStatus: invalid JSON value&quot;</span>)</span><br><span class="line">	&#125;</span><br><span class="line">	str = str[<span class="number">1</span> : <span class="built_in">len</span>(str)<span class="number">-1</span>]</span><br><span class="line"></span><br><span class="line">	<span class="keyword">switch</span> str &#123;</span><br><span class="line">	<span class="keyword">case</span> <span class="string">&quot;PENDING&quot;</span>:</span><br><span class="line">		*s = Pending</span><br><span class="line">	<span class="keyword">case</span> <span class="string">&quot;IN_PROGRESS&quot;</span>:</span><br><span class="line">		*s = InProgress</span><br><span class="line">	<span class="keyword">case</span> <span class="string">&quot;COMPLETED&quot;</span>:</span><br><span class="line">		*s = Completed</span><br><span class="line">	<span class="keyword">case</span> <span class="string">&quot;FAILED&quot;</span>:</span><br><span class="line">		*s = Failed</span><br><span class="line">	<span class="keyword">default</span>:</span><br><span class="line">		<span class="keyword">return</span> errors.New(<span class="string">&quot;OrderStatus: unknown value &quot;</span> + str)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Order <span class="keyword">struct</span> &#123;</span><br><span class="line">	ID     <span class="type">int</span>         <span class="string">`json:&quot;id&quot;`</span></span><br><span class="line">	Status OrderStatus <span class="string">`json:&quot;status&quot;`</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">main</span><span class="params">()</span></span> &#123;</span><br><span class="line">	<span class="comment">// --- 序列化演示 ---</span></span><br><span class="line">	order := Order&#123;ID: <span class="number">123</span>, Status: InProgress&#125;</span><br><span class="line">	jsonData, _ := json.Marshal(order)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 输出: &#123;&quot;id&quot;:123,&quot;status&quot;:&quot;IN_PROGRESS&quot;&#125;</span></span><br><span class="line">	fmt.Println(<span class="type">string</span>(jsonData)) </span><br><span class="line"></span><br><span class="line">	<span class="comment">// --- 反序列化演示 ---</span></span><br><span class="line">	jsonInput := <span class="string">`&#123;&quot;id&quot;:456,&quot;status&quot;:&quot;COMPLETED&quot;&#125;`</span></span><br><span class="line">	<span class="keyword">var</span> newOrder Order</span><br><span class="line">	json.Unmarshal([]<span class="type">byte</span>(jsonInput), &amp;newOrder)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 输出: Received Order: &#123;ID:456 Status:COMPLETED&#125;</span></span><br><span class="line">	fmt.Printf(<span class="string">&quot;Received Order: &#123;ID:%d Status:%v&#125;\n&quot;</span>, newOrder.ID, newOrder.Status)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="总结与最终建议"><a href="#总结与最终建议" class="headerlink" title="总结与最终建议"></a>总结与最终建议</h3><table>
+<thead>
+<tr>
+<th align="left">特性</th>
+<th align="left">实现方法</th>
+<th align="left">优点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>基础枚举</strong></td>
+<td align="left"><code>const</code> 块 + <code>iota</code></td>
+<td align="left">简洁，自动递增</td>
+</tr>
+<tr>
+<td align="left"><strong>类型安全</strong></td>
+<td align="left"><code>type MyEnum int</code> + 将常量声明为该类型</td>
+<td align="left">编译器保证类型正确性，防止滥用</td>
+</tr>
+<tr>
+<td align="left"><strong>可读性</strong></td>
+<td align="left">实现 <code>func (e MyEnum) String() string</code> (即 <code>fmt.Stringer</code>)</td>
+<td align="left">日志和打印输出清晰</td>
+</tr>
+<tr>
+<td align="left"><strong>API友好性</strong></td>
+<td align="left">实现 <code>json.Marshaler</code> 和 <code>json.Unmarshaler</code> 接口</td>
+<td align="left">在 JSON 中以字符串形式交互，而非数字</td>
+</tr>
+</tbody></table>
+<p><strong>对于绝大多数后端应用，一个生产级的 Go 枚举应该包括以上所有四个步骤：</strong></p>
+<ol>
+<li><strong>使用 <code>type</code> 定义一个新类型。</strong></li>
+<li><strong>使用 <code>const</code> 和 <code>iota</code> 定义枚举值。</strong></li>
+<li><strong>实现 <code>String()</code> 方法以满足 <code>fmt.Stringer</code> 接口。</strong></li>
+<li><strong>根据需要实现 <code>json.Marshaler</code> &#x2F; <code>Unmarshaler</code> 接口以获得友好的 API 行为。</strong></li>
+</ol>
+<p>这套组合拳虽然比单一的 <code>enum</code> 关键字步骤多，但它提供了无与伦比的灵活性、类型安全和可扩展性，完全符合 Go 语言的设计哲学。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Go-%E6%9E%9A%E4%B8%BE%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95/" rel="tag"># Go 枚举实现方法</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Go%20%E7%A9%BA%E5%88%87%E7%89%87%E4%B8%8E%20nil%20%E5%88%87%E7%89%87%E7%9A%84%E5%8C%BA%E5%88%AB/" rel="prev" title="Go 空切片与 nil 切片的区别">
+      <i class="fa fa-chevron-left"></i> Go 空切片与 nil 切片的区别
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Go%20%E5%BA%94%E7%94%A8%E7%A8%8B%E5%BA%8F/" rel="next" title="Go 应用程序">
+      Go 应用程序 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9C%BA%E6%99%AF%E8%AE%BE%E5%AE%9A"><span class="nav-number">1.</span> <span class="nav-text">场景设定</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC-1-%E6%AD%A5%EF%BC%9A%E4%BD%BF%E7%94%A8%E5%B8%B8%E9%87%8F%EF%BC%88const%EF%BC%89%E5%92%8C-iota"><span class="nav-number">2.</span> <span class="nav-text">第 1 步：使用常量（const）和 iota</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC-2-%E6%AD%A5%EF%BC%9A%E5%BC%95%E5%85%A5%E8%87%AA%E5%AE%9A%E4%B9%89%E7%B1%BB%E5%9E%8B%EF%BC%88%E5%AE%9E%E7%8E%B0%E7%B1%BB%E5%9E%8B%E5%AE%89%E5%85%A8%EF%BC%89"><span class="nav-number">3.</span> <span class="nav-text">第 2 步：引入自定义类型（实现类型安全）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC-3-%E6%AD%A5%EF%BC%9A%E5%AE%9E%E7%8E%B0-String-%E6%96%B9%E6%B3%95%EF%BC%88%E6%8F%90%E5%8D%87%E5%8F%AF%E8%AF%BB%E6%80%A7%EF%BC%89"><span class="nav-number">4.</span> <span class="nav-text">第 3 步：实现 String() 方法（提升可读性）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC-4-%E6%AD%A5%EF%BC%9A%E7%94%9F%E4%BA%A7%E7%BA%A7%E8%80%83%E9%87%8F-JSON-%E5%BA%8F%E5%88%97%E5%8C%96"><span class="nav-number">5.</span> <span class="nav-text">第 4 步：生产级考量 (JSON 序列化)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%E4%B8%8E%E6%9C%80%E7%BB%88%E5%BB%BA%E8%AE%AE"><span class="nav-number">6.</span> <span class="nav-text">总结与最终建议</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

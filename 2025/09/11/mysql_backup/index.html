@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Python 脚本，用于备份 MySQL 数据库。设计思路 配置与代码分离: 不会将数据库密码、路径等敏感或易变信息硬编码在脚本里，而是使用一个单独的配置文件 config.ini。 安全第一: 使用 MySQL 的标准认证文件 .my.cnf 来存储数据库凭证，避免在命令行或配置文件中出现明文密码。这是 mysqldump 工具推荐的最佳实践。 日志记录: 详细记录脚本的每一次运行、成功、失败及">
+<meta property="og:type" content="article">
+<meta property="og:title" content="mysql_backup">
+<meta property="og:url" content="http://example.com/2025/09/11/mysql_backup/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="Python 脚本，用于备份 MySQL 数据库。设计思路 配置与代码分离: 不会将数据库密码、路径等敏感或易变信息硬编码在脚本里，而是使用一个单独的配置文件 config.ini。 安全第一: 使用 MySQL 的标准认证文件 .my.cnf 来存储数据库凭证，避免在命令行或配置文件中出现明文密码。这是 mysqldump 工具推荐的最佳实践。 日志记录: 详细记录脚本的每一次运行、成功、失败及">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:49:36.976Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Dadabase">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/mysql_backup/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>mysql_backup | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/mysql_backup/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          mysql_backup
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:49:36" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/scripts/" itemprop="url" rel="index"><span itemprop="name">scripts</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/scripts/MySQL/" itemprop="url" rel="index"><span itemprop="name">MySQL</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>6.5k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>6 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="Python-脚本，用于备份-MySQL-数据库。"><a href="#Python-脚本，用于备份-MySQL-数据库。" class="headerlink" title="Python 脚本，用于备份 MySQL 数据库。"></a>Python 脚本，用于备份 MySQL 数据库。</h3><h3 id="设计思路"><a href="#设计思路" class="headerlink" title="设计思路"></a>设计思路</h3><ol>
+<li><strong>配置与代码分离</strong>: 不会将数据库密码、路径等敏感或易变信息硬编码在脚本里，而是使用一个单独的配置文件 <code>config.ini</code>。</li>
+<li><strong>安全第一</strong>: 使用 MySQL 的标准认证文件 <code>.my.cnf</code> 来存储数据库凭证，避免在命令行或配置文件中出现明文密码。这是 <code>mysqldump</code> 工具推荐的最佳实践。</li>
+<li><strong>日志记录</strong>: 详细记录脚本的每一次运行、成功、失败及错误信息，便于审计和排查问题。</li>
+<li><strong>自动化压缩</strong>: 备份文件通常很大，脚本会自动使用 <code>gzip</code> 进行压缩，节省磁盘空间。</li>
+<li><strong>备份轮转 (Rotation)</strong>: 自动删除旧的备份，只保留最近的 N 份，防止备份文件无限增长占满磁盘。</li>
+<li><strong>健壮性</strong>: 脚本会检查必要的工具（如 <code>mysqldump</code>, <code>gzip</code>）是否存在，并提供清晰的错误处理。</li>
+</ol>
+<hr>
+<h3 id="文件结构"><a href="#文件结构" class="headerlink" title="文件结构"></a>文件结构</h3><p>建议采用以下文件结构来组织你的备份脚本和配置：</p>
+<figure class="highlight jboss-cli"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">/opt/mysql_backup/</span></span><br><span class="line">├── backup_mysql.py        <span class="comment"># 主程序脚本</span></span><br><span class="line">├── config.ini             <span class="comment"># 脚本的配置文件</span></span><br><span class="line">└── <span class="string">.my.cnf</span>                <span class="comment"># MySQL 认证文件 (权限需设为 600)</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="步骤-1-创建-MySQL-认证文件-my-cnf"><a href="#步骤-1-创建-MySQL-认证文件-my-cnf" class="headerlink" title="步骤 1: 创建 MySQL 认证文件 (.my.cnf)"></a>步骤 1: 创建 MySQL 认证文件 (<code>.my.cnf</code>)</h3><p>这个文件让 <code>mysqldump</code> 命令可以自动登录，无需在命令行中输入密码。</p>
+<p><strong><code>/opt/mysql_backup/.my.cnf</code></strong></p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[mysqldump]</span></span><br><span class="line"><span class="attr">user</span> = your_backup_user</span><br><span class="line"><span class="attr">password</span> = <span class="string">&quot;Your_Very_Secure_Password&quot;</span></span><br><span class="line"><span class="attr">host</span> = <span class="number">127.0</span>.<span class="number">0.1</span></span><br><span class="line"><span class="attr">port</span> = <span class="number">3306</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>极其重要</strong>: 设置严格的文件权限，只有运行脚本的用户可以读写。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">chmod</span> 600 /opt/mysql_backup/.my.cnf</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="步骤-2-创建脚本配置文件-config-ini"><a href="#步骤-2-创建脚本配置文件-config-ini" class="headerlink" title="步骤 2: 创建脚本配置文件 (config.ini)"></a>步骤 2: 创建脚本配置文件 (<code>config.ini</code>)</h3><p>这个文件控制脚本的行为。</p>
+<p><strong><code>/opt/mysql_backup/config.ini</code></strong></p>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">[mysql]</span></span><br><span class="line"><span class="comment"># 要备份的数据库名称，多个用逗号分隔</span></span><br><span class="line"><span class="comment"># 如果要备份所有数据库，使用 __ALL__</span></span><br><span class="line"><span class="attr">databases</span> = my_app_db,another_db</span><br><span class="line"></span><br><span class="line"><span class="section">[backup]</span></span><br><span class="line"><span class="comment"># 备份文件存储目录</span></span><br><span class="line"><span class="attr">backup_dir</span> = /data/backups/mysql</span><br><span class="line"></span><br><span class="line"><span class="comment"># 保留最近多少份备份</span></span><br><span class="line"><span class="attr">retention_days</span> = <span class="number">7</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 指定 MySQL 认证文件的路径</span></span><br><span class="line"><span class="comment"># 这是我们上一步创建的 .my.cnf 文件</span></span><br><span class="line"><span class="attr">defaults_file</span> = /opt/mysql_backup/.my.cnf</span><br><span class="line"></span><br><span class="line"><span class="section">[logging]</span></span><br><span class="line"><span class="comment"># 日志文件路径</span></span><br><span class="line"><span class="attr">log_file</span> = /var/log/mysql_backup.log</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="步骤-3-编写-Python-备份脚本-backup-mysql-py"><a href="#步骤-3-编写-Python-备份脚本-backup-mysql-py" class="headerlink" title="步骤 3: 编写 Python 备份脚本 (backup_mysql.py)"></a>步骤 3: 编写 Python 备份脚本 (<code>backup_mysql.py</code>)</h3><p>这是核心的执行脚本。</p>
+<p><strong><code>/opt/mysql_backup/backup_mysql.py</code></strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"><span class="keyword">import</span> logging</span><br><span class="line"><span class="keyword">import</span> subprocess</span><br><span class="line"><span class="keyword">import</span> shutil</span><br><span class="line"><span class="keyword">from</span> datetime <span class="keyword">import</span> datetime</span><br><span class="line"><span class="keyword">from</span> configparser <span class="keyword">import</span> ConfigParser</span><br><span class="line"></span><br><span class="line"><span class="comment"># --- 配置区 ---</span></span><br><span class="line">CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), <span class="string">&#x27;config.ini&#x27;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">setup_logging</span>(<span class="params">log_file</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;配置日志记录器&quot;&quot;&quot;</span></span><br><span class="line">    logging.basicConfig(</span><br><span class="line">        level=logging.INFO,</span><br><span class="line">        <span class="built_in">format</span>=<span class="string">&#x27;%(asctime)s - %(levelname)s - %(message)s&#x27;</span>,</span><br><span class="line">        handlers=[</span><br><span class="line">            logging.FileHandler(log_file),</span><br><span class="line">            logging.StreamHandler(sys.stdout) <span class="comment"># 同时输出到控制台和文件</span></span><br><span class="line">        ]</span><br><span class="line">    )</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">load_config</span>(<span class="params">config_path</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;加载配置文件&quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> os.path.exists(config_path):</span><br><span class="line">        logging.error(<span class="string">f&quot;配置文件未找到: <span class="subst">&#123;config_path&#125;</span>&quot;</span>)</span><br><span class="line">        sys.exit(<span class="number">1</span>)</span><br><span class="line">    parser = ConfigParser()</span><br><span class="line">    parser.read(config_path)</span><br><span class="line">    <span class="keyword">return</span> parser</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">check_tools</span>(<span class="params">*tools</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;检查必要的命令行工具是否存在&quot;&quot;&quot;</span></span><br><span class="line">    <span class="keyword">for</span> tool <span class="keyword">in</span> tools:</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> shutil.which(tool):</span><br><span class="line">            logging.error(<span class="string">f&quot;必需工具未找到: <span class="subst">&#123;tool&#125;</span>。请确保它已安装并在系统 PATH 中。&quot;</span>)</span><br><span class="line">            sys.exit(<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">rotate_backups</span>(<span class="params">backup_dir, retention_days</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;删除旧的备份文件&quot;&quot;&quot;</span></span><br><span class="line">    logging.info(<span class="string">f&quot;开始轮转备份，保留最近 <span class="subst">&#123;retention_days&#125;</span> 天的备份...&quot;</span>)</span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        now = datetime.now()</span><br><span class="line">        cutoff = now - datetime.timedelta(days=retention_days)</span><br><span class="line">      </span><br><span class="line">        <span class="keyword">for</span> filename <span class="keyword">in</span> os.listdir(backup_dir):</span><br><span class="line">            file_path = os.path.join(backup_dir, filename)</span><br><span class="line">            <span class="keyword">if</span> os.path.isfile(file_path):</span><br><span class="line">                file_mod_time = datetime.fromtimestamp(os.path.getmtime(file_path))</span><br><span class="line">                <span class="keyword">if</span> file_mod_time &lt; cutoff:</span><br><span class="line">                    logging.info(<span class="string">f&quot;删除旧备份: <span class="subst">&#123;filename&#125;</span>&quot;</span>)</span><br><span class="line">                    os.remove(file_path)</span><br><span class="line">    <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">        logging.error(<span class="string">f&quot;备份轮转失败: <span class="subst">&#123;e&#125;</span>&quot;</span>, exc_info=<span class="literal">True</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">backup_database</span>(<span class="params">db_name, backup_dir, defaults_file</span>):</span><br><span class="line">    <span class="string">&quot;&quot;&quot;执行单个数据库的备份和压缩&quot;&quot;&quot;</span></span><br><span class="line">    timestamp = datetime.now().strftime(<span class="string">&#x27;%Y-%m-%d_%H-%M-%S&#x27;</span>)</span><br><span class="line">  </span><br><span class="line">    <span class="comment"># 特殊处理备份所有数据库的情况</span></span><br><span class="line">    <span class="keyword">if</span> db_name == <span class="string">&#x27;__ALL__&#x27;</span>:</span><br><span class="line">        backup_filename_base = <span class="string">f&quot;all-databases_<span class="subst">&#123;timestamp&#125;</span>.sql&quot;</span></span><br><span class="line">        db_option = <span class="string">&quot;--all-databases&quot;</span></span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        backup_filename_base = <span class="string">f&quot;<span class="subst">&#123;db_name&#125;</span>_<span class="subst">&#123;timestamp&#125;</span>.sql&quot;</span></span><br><span class="line">        db_option = db_name</span><br><span class="line"></span><br><span class="line">    backup_filepath = os.path.join(backup_dir, <span class="string">f&quot;<span class="subst">&#123;backup_filename_base&#125;</span>.gz&quot;</span>)</span><br><span class="line"></span><br><span class="line">    logging.info(<span class="string">f&quot;开始备份数据库 &#x27;<span class="subst">&#123;db_option&#125;</span>&#x27; 到 <span class="subst">&#123;backup_filepath&#125;</span>&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 使用管道将 mysqldump 的输出直接传给 gzip，高效且不产生中间文件</span></span><br><span class="line">    mysqldump_cmd = [</span><br><span class="line">        <span class="string">&#x27;mysqldump&#x27;</span>,</span><br><span class="line">        <span class="string">f&#x27;--defaults-extra-file=<span class="subst">&#123;defaults_file&#125;</span>&#x27;</span>,</span><br><span class="line">        <span class="string">&#x27;--single-transaction&#x27;</span>,  <span class="comment"># 对InnoDB表进行一致性备份</span></span><br><span class="line">        <span class="string">&#x27;--routines&#x27;</span>,            <span class="comment"># 备份存储过程和函数</span></span><br><span class="line">        <span class="string">&#x27;--triggers&#x27;</span>,            <span class="comment"># 备份触发器</span></span><br><span class="line">        <span class="string">&#x27;--events&#x27;</span>,              <span class="comment"># 备份事件</span></span><br><span class="line">        db_option</span><br><span class="line">    ]</span><br><span class="line">    gzip_cmd = [<span class="string">&#x27;gzip&#x27;</span>, <span class="string">&#x27;-c&#x27;</span>]</span><br><span class="line"></span><br><span class="line">    <span class="keyword">try</span>:</span><br><span class="line">        <span class="comment"># 创建备份目录（如果不存在）</span></span><br><span class="line">        os.makedirs(backup_dir, exist_ok=<span class="literal">True</span>)</span><br><span class="line">      </span><br><span class="line">        <span class="keyword">with</span> <span class="built_in">open</span>(backup_filepath, <span class="string">&#x27;wb&#x27;</span>) <span class="keyword">as</span> f_out:</span><br><span class="line">            p_dump = subprocess.Popen(mysqldump_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)</span><br><span class="line">            p_gzip = subprocess.Popen(gzip_cmd, stdin=p_dump.stdout, stdout=f_out, stderr=subprocess.PIPE)</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 等待 mysqldump 完成并将输出传递给 gzip</span></span><br><span class="line">            p_dump.stdout.close()</span><br><span class="line">          </span><br><span class="line">            <span class="comment"># 获取错误输出</span></span><br><span class="line">            dump_stderr = p_dump.stderr.read().decode()</span><br><span class="line">            gzip_stderr = p_gzip.stderr.read().decode()</span><br><span class="line"></span><br><span class="line">            <span class="comment"># 等待进程结束并检查返回码</span></span><br><span class="line">            p_dump.wait()</span><br><span class="line">            p_gzip.wait()</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> p_dump.returncode != <span class="number">0</span>:</span><br><span class="line">                logging.error(<span class="string">f&quot;mysqldump 失败 (数据库: <span class="subst">&#123;db_option&#125;</span>). 返回码: <span class="subst">&#123;p_dump.returncode&#125;</span>&quot;</span>)</span><br><span class="line">                logging.error(<span class="string">f&quot;mysqldump 错误信息: <span class="subst">&#123;dump_stderr&#125;</span>&quot;</span>)</span><br><span class="line">                os.remove(backup_filepath) <span class="comment"># 删除不完整的备份文件</span></span><br><span class="line">                <span class="keyword">return</span> <span class="literal">False</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> p_gzip.returncode != <span class="number">0</span>:</span><br><span class="line">                logging.error(<span class="string">f&quot;gzip 失败 (数据库: <span class="subst">&#123;db_option&#125;</span>). 返回码: <span class="subst">&#123;p_gzip.returncode&#125;</span>&quot;</span>)</span><br><span class="line">                logging.error(<span class="string">f&quot;gzip 错误信息: <span class="subst">&#123;gzip_stderr&#125;</span>&quot;</span>)</span><br><span class="line">                os.remove(backup_filepath)</span><br><span class="line">                <span class="keyword">return</span> <span class="literal">False</span></span><br><span class="line"></span><br><span class="line">        logging.info(<span class="string">f&quot;数据库 &#x27;<span class="subst">&#123;db_option&#125;</span>&#x27; 成功备份并压缩到 <span class="subst">&#123;backup_filepath&#125;</span>&quot;</span>)</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">True</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">except</span> Exception <span class="keyword">as</span> e:</span><br><span class="line">        logging.error(<span class="string">f&quot;备份数据库 &#x27;<span class="subst">&#123;db_option&#125;</span>&#x27; 时发生意外错误: <span class="subst">&#123;e&#125;</span>&quot;</span>, exc_info=<span class="literal">True</span>)</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">False</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">main</span>():</span><br><span class="line">    <span class="string">&quot;&quot;&quot;主执行函数&quot;&quot;&quot;</span></span><br><span class="line">    config = load_config(CONFIG_FILE)</span><br><span class="line">  </span><br><span class="line">    <span class="comment"># 提取配置</span></span><br><span class="line">    log_file = config.get(<span class="string">&#x27;logging&#x27;</span>, <span class="string">&#x27;log_file&#x27;</span>, fallback=<span class="string">&#x27;/tmp/mysql_backup.log&#x27;</span>)</span><br><span class="line">    setup_logging(log_file)</span><br><span class="line">  </span><br><span class="line">    logging.info(<span class="string">&quot;=&quot;</span>*<span class="number">30</span>)</span><br><span class="line">    logging.info(<span class="string">&quot;MySQL 备份脚本启动&quot;</span>)</span><br><span class="line">    logging.info(<span class="string">&quot;=&quot;</span>*<span class="number">30</span>)</span><br><span class="line">  </span><br><span class="line">    check_tools(<span class="string">&#x27;mysqldump&#x27;</span>, <span class="string">&#x27;gzip&#x27;</span>)</span><br><span class="line"></span><br><span class="line">    databases_str = config.get(<span class="string">&#x27;mysql&#x27;</span>, <span class="string">&#x27;databases&#x27;</span>)</span><br><span class="line">    backup_dir = config.get(<span class="string">&#x27;backup&#x27;</span>, <span class="string">&#x27;backup_dir&#x27;</span>)</span><br><span class="line">    retention_days = config.getint(<span class="string">&#x27;backup&#x27;</span>, <span class="string">&#x27;retention_days&#x27;</span>)</span><br><span class="line">    defaults_file = config.get(<span class="string">&#x27;backup&#x27;</span>, <span class="string">&#x27;defaults_file&#x27;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> databases_str:</span><br><span class="line">        logging.error(<span class="string">&quot;配置文件中未指定要备份的数据库 [mysql] -&gt; databases。&quot;</span>)</span><br><span class="line">        sys.exit(<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">    databases_to_backup = [db.strip() <span class="keyword">for</span> db <span class="keyword">in</span> databases_str.split(<span class="string">&#x27;,&#x27;</span>)]</span><br><span class="line"></span><br><span class="line">    all_success = <span class="literal">True</span></span><br><span class="line">    <span class="keyword">for</span> db <span class="keyword">in</span> databases_to_backup:</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> backup_database(db, backup_dir, defaults_file):</span><br><span class="line">            all_success = <span class="literal">False</span></span><br><span class="line">  </span><br><span class="line">    <span class="keyword">if</span> all_success:</span><br><span class="line">        logging.info(<span class="string">&quot;所有指定的数据库备份任务成功完成。&quot;</span>)</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        logging.error(<span class="string">&quot;部分数据库备份任务失败，请检查日志。&quot;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 执行备份轮转</span></span><br><span class="line">    rotate_backups(backup_dir, retention_days)</span><br><span class="line">  </span><br><span class="line">    logging.info(<span class="string">&quot;MySQL 备份脚本执行完毕。&quot;</span>)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    main()</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="步骤-4-设置定时任务-Cron-Job"><a href="#步骤-4-设置定时任务-Cron-Job" class="headerlink" title="步骤 4: 设置定时任务 (Cron Job)"></a>步骤 4: 设置定时任务 (Cron Job)</h3><p>最后，使用 <code>cron</code> 来让这个脚本每天定时运行，例如在凌晨3点。</p>
+<ol>
+<li><p>打开 crontab 编辑器：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">crontab -e</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在文件末尾添加一行：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># 每天凌晨 3:00 执行 MySQL 数据库备份</span><br><span class="line">0 3 * * * /usr/bin/python3 /opt/mysql_backup/backup_mysql.py</span><br></pre></td></tr></table></figure></li>
+</ol>
+<ul>
+<li>请确保 <code>/usr/bin/python3</code> 是你系统中 Python 3 解释器的正确路径（可以通过 <code>which python3</code> 命令查找）。</li>
+<li><code>/opt/mysql_backup/backup_mysql.py</code> 是脚本的绝对路径。</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Dadabase/" rel="tag"># Dadabase</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/n9e/" rel="prev" title="n9e">
+      <i class="fa fa-chevron-left"></i> n9e
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/kube-vip/" rel="next" title="kube-vip">
+      kube-vip <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Python-%E8%84%9A%E6%9C%AC%EF%BC%8C%E7%94%A8%E4%BA%8E%E5%A4%87%E4%BB%BD-MySQL-%E6%95%B0%E6%8D%AE%E5%BA%93%E3%80%82"><span class="nav-number">1.</span> <span class="nav-text">Python 脚本，用于备份 MySQL 数据库。</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%BE%E8%AE%A1%E6%80%9D%E8%B7%AF"><span class="nav-number">2.</span> <span class="nav-text">设计思路</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84"><span class="nav-number">3.</span> <span class="nav-text">文件结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%AD%A5%E9%AA%A4-1-%E5%88%9B%E5%BB%BA-MySQL-%E8%AE%A4%E8%AF%81%E6%96%87%E4%BB%B6-my-cnf"><span class="nav-number">4.</span> <span class="nav-text">步骤 1: 创建 MySQL 认证文件 (.my.cnf)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%AD%A5%E9%AA%A4-2-%E5%88%9B%E5%BB%BA%E8%84%9A%E6%9C%AC%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6-config-ini"><span class="nav-number">5.</span> <span class="nav-text">步骤 2: 创建脚本配置文件 (config.ini)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%AD%A5%E9%AA%A4-3-%E7%BC%96%E5%86%99-Python-%E5%A4%87%E4%BB%BD%E8%84%9A%E6%9C%AC-backup-mysql-py"><span class="nav-number">6.</span> <span class="nav-text">步骤 3: 编写 Python 备份脚本 (backup_mysql.py)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%AD%A5%E9%AA%A4-4-%E8%AE%BE%E7%BD%AE%E5%AE%9A%E6%97%B6%E4%BB%BB%E5%8A%A1-Cron-Job"><span class="nav-number">7.</span> <span class="nav-text">步骤 4: 设置定时任务 (Cron Job)</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

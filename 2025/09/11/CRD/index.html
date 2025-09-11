@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="CRDCustom Resource Define 简称 CRD，是 Kubernetes（v1.7+）为提高可扩展性，让开发者去自定义资源的一种方式。CRD 资源可以动态注册到集群中，注册完毕后，用户可以通过 kubectl 来创建访问这个自定义的资源对象，类似于操作 Pod 一样。不过需要注意的是 CRD 仅仅是资源的定义而已，需要一个 Controller 去监听 CRD 的各种事件来添加自">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CRD">
+<meta property="og:url" content="http://example.com/2025/09/11/CRD/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="CRDCustom Resource Define 简称 CRD，是 Kubernetes（v1.7+）为提高可扩展性，让开发者去自定义资源的一种方式。CRD 资源可以动态注册到集群中，注册完毕后，用户可以通过 kubectl 来创建访问这个自定义的资源对象，类似于操作 Pod 一样。不过需要注意的是 CRD 仅仅是资源的定义而已，需要一个 Controller 去监听 CRD 的各种事件来添加自">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/sag677.jpg">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/mpficx.png">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:26:55.162Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://mudutestmenu.mudu.tv/upload/sag677.jpg">
+
+<link rel="canonical" href="http://example.com/2025/09/11/CRD/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>CRD | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/CRD/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          CRD
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:26:55" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E6%8E%A7%E5%88%B6%E5%99%A8/" itemprop="url" rel="index"><span itemprop="name">控制器</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>6.4k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>6 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="CRD"><a href="#CRD" class="headerlink" title="CRD"></a>CRD</h1><p><code>Custom Resource Define</code> 简称 CRD，是 Kubernetes（v1.7+）为提高可扩展性，让开发者去自定义资源的一种方式。CRD 资源可以动态注册到集群中，注册完毕后，用户可以通过 kubectl 来创建访问这个自定义的资源对象，类似于操作 Pod 一样。不过需要注意的是 CRD 仅仅是资源的定义而已，需要一个 Controller 去监听 CRD 的各种事件来添加自定义的业务逻辑。</p>
+<h2 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h2><p>如果说只是对 CRD 资源本身进行 CRUD 操作的话，不需要 Controller 也是可以实现的，相当于就是只有数据存入了 etcd 中，而没有对这个数据的相关操作而已。比如我们可以定义一个如下所示的 CRD 资源清单文件：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># crd-demo.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">apiextensions.k8s.io/v1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">CustomResourceDefinition</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="comment"># name 必须匹配下面的spec字段：&lt;plural&gt;.&lt;group&gt;</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">crontabs.stable.example.com</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="comment"># group 名用于 REST API 中的定义：/apis/&lt;group&gt;/&lt;version&gt;</span></span><br><span class="line">  <span class="attr">group:</span> <span class="string">stable.example.com</span></span><br><span class="line">  <span class="comment"># 列出自定义资源的所有 API 版本</span></span><br><span class="line">  <span class="attr">versions:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">v1beta1</span> <span class="comment"># 版本名称，比如 v1、v2beta1 等等</span></span><br><span class="line">      <span class="attr">served:</span> <span class="literal">true</span> <span class="comment"># 是否开启通过 REST APIs 访问 `/apis/&lt;group&gt;/&lt;version&gt;/...`</span></span><br><span class="line">      <span class="attr">storage:</span> <span class="literal">true</span> <span class="comment"># 必须将一个且只有一个版本标记为存储版本</span></span><br><span class="line">      <span class="attr">schema:</span> <span class="comment"># 定义自定义对象的声明规范</span></span><br><span class="line">        <span class="attr">openAPIV3Schema:</span></span><br><span class="line">          <span class="attr">description:</span> <span class="string">Define</span> <span class="string">CronTab</span> <span class="string">YAML</span> <span class="string">Spec</span></span><br><span class="line">          <span class="attr">type:</span> <span class="string">object</span></span><br><span class="line">          <span class="attr">properties:</span></span><br><span class="line">            <span class="attr">spec:</span></span><br><span class="line">              <span class="attr">type:</span> <span class="string">object</span></span><br><span class="line">              <span class="attr">properties:</span></span><br><span class="line">                <span class="attr">cronSpec:</span></span><br><span class="line">                  <span class="attr">type:</span> <span class="string">string</span></span><br><span class="line">                <span class="attr">image:</span></span><br><span class="line">                  <span class="attr">type:</span> <span class="string">string</span></span><br><span class="line">                <span class="attr">replicas:</span></span><br><span class="line">                  <span class="attr">type:</span> <span class="string">integer</span></span><br><span class="line">  <span class="comment"># 定义作用范围：Namespaced（命名空间级别）或者 Cluster（整个集群）</span></span><br><span class="line">  <span class="attr">scope:</span> <span class="string">Namespaced</span></span><br><span class="line">  <span class="attr">names:</span></span><br><span class="line">    <span class="comment"># kind 是 sigular 的一个驼峰形式定义，在资源清单中会使用</span></span><br><span class="line">    <span class="attr">kind:</span> <span class="string">CronTab</span></span><br><span class="line">    <span class="comment"># plural 名字用于 REST API 中的定义：/apis/&lt;group&gt;/&lt;version&gt;/&lt;plural&gt;</span></span><br><span class="line">    <span class="attr">plural:</span> <span class="string">crontabs</span></span><br><span class="line">    <span class="comment"># singular 名称用于 CLI 操作或显示的一个别名</span></span><br><span class="line">    <span class="attr">singular:</span> <span class="string">crontab</span></span><br><span class="line">    <span class="comment"># shortNames 相当于缩写形式</span></span><br><span class="line">    <span class="attr">shortNames:</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">ct</span></span><br></pre></td></tr></table></figure>
+
+
+
+<blockquote>
+<p>需要注意的是 v1.16 版本以后已经 GA 了，使用的是 v1 版本，之前都是 v1beta1，定义规范有部分变化，所以要注意版本变化。</p>
+</blockquote>
+<p>这个地方的定义和我们定义普通的资源对象比较类似，我们说我们可以随意定义一个自定义的资源对象，但是在创建资源的时候，肯定不是任由我们随意去编写 YAML 文件的，当我们把上面的 CRD 文件提交给 Kubernetes 之后，Kubernetes 会对我们提交的声明文件进行校验，从定义可以看出 CRD 是基于 <a target="_blank" rel="noopener" href="https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.0.md#schemaObject">OpenAPI v3 schem</a> 进行规范的。当然这种校验只是对于字段的类型进行校验，比较初级，如果想要更加复杂的校验，这个时候就需要通过 Kubernetes 的 admission webhook 来实现了。关于校验的更多用法，可以前往<a target="_blank" rel="noopener" href="https://kubernetes.io/docs/tasks/access-kubernetes-api/custom-resources/custom-resource-definitions/#validation">官方文档</a>查看。</p>
+<p>同样现在我们可以直接使用 kubectl 来创建这个 CRD 资源清单：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl apply -f crd-demo.yaml</span><br><span class="line">customresourcedefinition.apiextensions.k8s.io/crontabs.stable.example.com created</span><br></pre></td></tr></table></figure>
+
+
+
+<p>这个时候我们可以查看到集群中已经有我们定义的这个 CRD 资源对象了：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl get crd |grep example</span><br><span class="line">crontabs.stable.example.com                      2019-12-19T02:37:54Z</span><br></pre></td></tr></table></figure>
+
+
+
+<p>这个时候一个新的 namespace 级别的 RESTful API 就会被创建：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/apis/stable/example.com/v1beta1/namespaces/*/crontabs/...</span><br></pre></td></tr></table></figure>
+
+
+
+<p>然后我们就可以使用这个 API 端点来创建和管理自定义的对象，这些对象的类型就是上面创建的 CRD 对象规范中的 <code>CronTab</code>。</p>
+<p>现在在 Kubernetes 集群中我们就多了一种新的资源叫做 <code>crontabs.stable.example.com</code>，我们就可以使用它来定义一个 <code>CronTab</code> 资源对象了，这个自定义资源对象里面可以包含的字段我们在定义的时候通过 <code>schema</code> 进行了规范，比如现在我们来创建一个如下所示的资源清单：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># crd-crontab-demo.yaml</span></span><br><span class="line"><span class="attr">apiVersion:</span> <span class="string">stable.example.com/v1beta1</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">CronTab</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">my-new-cron-object</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">cronSpec:</span> <span class="string">&#x27;* * * * */5&#x27;</span></span><br><span class="line">  <span class="attr">image:</span> <span class="string">my-awesome-cron-image</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>我们可以直接创建这个对象：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl apply -f crd-crontab-demo.yaml</span><br><span class="line">crontab.stable.example.com/my-new-cron-object created</span><br></pre></td></tr></table></figure>
+
+
+
+<p>然后我们就可以用 kubectl 来管理我们这里创建 CronTab 对象了，比如：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl get ct  # 简写</span><br><span class="line">NAME                 AGE</span><br><span class="line">my-new-cron-object   42s</span><br><span class="line">➜  ~ kubectl get crontab</span><br><span class="line">NAME                 AGE</span><br><span class="line">my-new-cron-object   88s</span><br></pre></td></tr></table></figure>
+
+
+
+<p>在使用 kubectl 的时候，资源名称是不区分大小写的，我们可以使用 CRD 中定义的单数或者复数形式以及任何简写。我们也可以查看创建的这个对象的原始 YAML 数据：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl get ct -o yaml</span><br><span class="line">apiVersion: v1</span><br><span class="line">items:</span><br><span class="line">- apiVersion: stable.example.com/v1beta1</span><br><span class="line">  kind: CronTab</span><br><span class="line">  metadata:</span><br><span class="line">    annotations:</span><br><span class="line">      kubectl.kubernetes.io/last-applied-configuration: |</span><br><span class="line">        &#123;&quot;apiVersion&quot;:&quot;stable.example.com/v1beta1&quot;,&quot;kind&quot;:&quot;CronTab&quot;,&quot;metadata&quot;:&#123;&quot;annotations&quot;:&#123;&#125;,&quot;name&quot;:&quot;my-new-cron-object&quot;,&quot;namespace&quot;:&quot;default&quot;&#125;,&quot;spec&quot;:&#123;&quot;cronSpec&quot;:&quot;* * * * */5&quot;,&quot;image&quot;:&quot;my-awesome-cron-image&quot;&#125;&#125;</span><br><span class="line">    creationTimestamp: &quot;2019-12-19T02:52:55Z&quot;</span><br><span class="line">    generation: 1</span><br><span class="line">    name: my-new-cron-object</span><br><span class="line">    namespace: default</span><br><span class="line">    resourceVersion: &quot;12342275&quot;</span><br><span class="line">    selfLink: /apis/stable.example.com/v1beta1/namespaces/default/crontabs/my-new-cron-object</span><br><span class="line">    uid: dace308d-5f54-4232-9c7b-841adf6bab62</span><br><span class="line">  spec:</span><br><span class="line">    cronSpec: &#x27;* * * * */5&#x27;</span><br><span class="line">    image: my-awesome-cron-image</span><br><span class="line">kind: List</span><br><span class="line">metadata:</span><br><span class="line">  resourceVersion: &quot;&quot;</span><br><span class="line">  selfLink: &quot;&quot;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>我们可以看到它包含了上面我们定义的 <code>cronSpec</code> 和 <code>image</code> 字段。</p>
+<h2 id="Controller"><a href="#Controller" class="headerlink" title="Controller"></a>Controller</h2><p>就如上面我们说的，现在我们自定义的资源创建完成了，但是也只是单纯的把资源清单数据存入到了 etcd 中而已，并没有什么其他用处，因为我们没有定义一个对应的 Controller 来处理他。</p>
+<p>官方提供了一个自定义 Controller 的示例：<a target="_blank" rel="noopener" href="https://github.com/kubernetes/sample-controller%EF%BC%8C%E5%AE%9E%E7%8E%B0%E4%BA%86%EF%BC%9A">https://github.com/kubernetes/sample-controller，实现了：</a></p>
+<ul>
+<li>如何注册资源 Foo</li>
+<li>如何创建、删除和查询 Foo 对象</li>
+<li>如何监听 Foo 资源对象的变化情况</li>
+</ul>
+<p>要想了解 Controller 的实现原理和方式，我们就需要了解下 <a target="_blank" rel="noopener" href="https://github.com/kubernetes/client-go/">client-go</a> 这个库的实现，Kubernetes 部分代码也是基于这个库实现的，也包含了开发自定义控制器时可以使用的各种机制，这些机制在 client-go 源码的 <a target="_blank" rel="noopener" href="https://github.com/kubernetes/client-go/tree/master/tools/cache">tools&#x2F;cache</a> 目录下面有定义。</p>
+<p>下图显示了 client-go 中的各个组件是如何工作的以及与我们要编写的自定义控制器代码的交互入口：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/sag677.jpg" alt="client-go controller interaction"></p>
+<p><strong>client-go 组件</strong>：</p>
+<ul>
+<li>Reflector：通过 Kubernetes API 监控 Kubernetes 的资源类型 采用 List&#x2F;Watch 机制, 可以 Watch 任何资源包括 CRD 添加 object 对象到 FIFO 队列，然后 Informer 会从队列里面取数据</li>
+<li>Informer：controller 机制的基础，循环处理 object 对象 从 Reflector 取出数据，然后将数据给到 Indexer 去缓存，提供对象事件的 handler 接口，只要给 Informer 添加 <code>ResourceEventHandler</code> 实例的回调函数，去实现 <code>OnAdd(obj interface&#123;&#125;)</code>、 <code>OnUpdate(oldObj, newObj interface&#123;&#125;)</code> 和 <code>OnDelete(obj interface&#123;&#125;)</code> 这三个方法，就可以处理好资源的创建、更新和删除操作了。</li>
+<li>Indexer：提供 object 对象的索引，是线程安全的，缓存对象信息</li>
+</ul>
+<p><strong>controller 组件</strong>：</p>
+<ul>
+<li>Informer reference: controller 需要创建合适的 Informer 才能通过 Informer reference 操作资源对象</li>
+<li>Indexer reference: controller 创建 Indexer reference 然后去利用索引做相关处理</li>
+<li>Resource Event Handlers：Informer 会回调这些 handlers</li>
+<li>Work queue: Resource Event Handlers 被回调后将 key 写到工作队列，这里的 key 相当于事件通知，后面根据取出事件后，做后续的处理</li>
+<li>Process Item：从工作队列中取出 key 后进行后续处理，具体处理可以通过 Indexer reference controller 可以直接创建上述两个引用对象去处理，也可以采用工厂模式，官方都有相关示例</li>
+</ul>
+<p><code>client-go/tool/cache/</code> 和自定义 Controller 的控制流(<a target="_blank" rel="noopener" href="https://itnext.io/how-to-create-a-kubernetes-custom-controller-using-client-go-f36a7a7536cc">图片来源</a>)：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/mpficx.png" alt="client-go controller workflow"></p>
+<p>如上图所示主要有两个部分，一个是发生在 <code>SharedIndexInformer</code> 中，另外一个是在自定义控制器中。</p>
+<ol>
+<li><code>Reflector</code> 通过 Kubernetes APIServer 执行对象（比如 Pod）的 <code>ListAndWatch</code> 查询，记录和对象相关的三种事件类型<code>Added</code>、<code>Updated</code>、<code>Deleted</code>，然后将它们传递到 <code>DeltaFIFO</code> 中去。</li>
+<li><code>DeltaFIFO</code> 接收到事件和 watch 事件对应的对象，然后将他们转换为 <code>Delta</code> 对象，这些 <code>Delta</code> 对象被附加到队列中去等待处理，对于已经删除的，会检查线程安全的 store 中是否已经存在该文件，从而可以避免在不存在某些内容时排队执行删除操作。</li>
+<li>Cache 控制器（不要和自定义控制器混淆）调用 <code>Pop()</code> 方法从 <code>DeltaFIFO</code> 队列中出队列，<code>Delta</code> 对象将传递到 <code>SharedIndexInformer</code> 的 <code>HandleDelta()</code> 方法中以进行进一步处理。</li>
+<li>根据 <code>Delta</code> 对象的操作（事件）类型，首先在 <code>HandleDeltas</code> 方法中通过 <code>indexer</code> 的方法将对对象保存到线程安全的 Store 中，然后，通过 <code>SharedIndexInformer</code> 中的 <code>sharedProcessor</code> 的 <code>distribution()</code> 方法将这些对象发送到事件 handlers，这些事件处理器由自定义控制器通过 <code>SharedInformer</code> 的方法比如 <code>AddEventHandlerWithResyncPeriod()</code> 进行注册。</li>
+<li>已注册的事件处理器通过添加或更新时间的 <code>MetaNamespaceKeyFunc()</code> 或删除事件的 <code>DeletionHandingMetaNamespaceKeyFunc()</code> 将对象转换为格式为 <code>namespace/name</code> 或只是 <code>name</code> 的 key，然后将这个 key 添加到自定义控制器的 <code>workqueue</code> 中，<code>workqueues</code> 的实现可以在 <code>util/workqueue</code> 中找到。</li>
+<li>自定义的控制器通过调用定义的 handlers 处理器从 workqueue 中 pop 一个 key 出来进行处理，handlers 将调用 indexer 的 <code>GetByKey()</code> 从线程安全的 store 中获取对象，我们的业务逻辑就是在这个 handlers 里面实现。</li>
+</ol>
+<p><code>client-go</code> 中也有自定义 Controller 的样例代码，位于：<code>k8s.io/client-go/examples/workqueue/main.go</code>。</p>
+<h2 id="Operator"><a href="#Operator" class="headerlink" title="Operator"></a>Operator</h2><p><code>Operator</code> 就可以看成是 CRD 和 Controller 的一种组合特例，Operator 是一种思想，它结合了特定领域知识并通过 CRD 机制扩展了 Kubernetes API 资源，使用户管理 Kubernetes 的内置资源（Pod、Deployment 等）一样创建、配置和管理应用程序，Operator 是一个特定的应用程序的控制器，通过扩展 Kubernetes API 资源以代表 Kubernetes 用户创建、配置和管理复杂应用程序的实例，通常包含资源模型定义和控制器，通过 <code>Operator</code> 通常是为了实现某种特定软件（通常是有状态服务）的自动化运维。</p>
+<p>我们完全可以通过上面的方式编写一个 CRD 对象，然后去手动实现一个对应的 Controller 就可以实现一个 Operator，但是我们也发现从头开始去构建一个 CRD 控制器并不容易，需要对 Kubernetes 的 API 有深入了解，并且 RBAC 集成、镜像构建、持续集成和部署等都需要很大工作量。为了解决这个问题，社区就推出了对应的简单易用的 Operator 框架，比较主流的是 <a target="_blank" rel="noopener" href="https://github.com/kubernetes-sigs/kubebuilder">kubebuilder</a> 和 <a target="_blank" rel="noopener" href="https://coreos.com/operators">Operator Framework</a>，这两个框架的使用基本上差别不大，我们可以根据自己习惯选择一个即可。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Cache/" rel="prev" title="Nginx Cache">
+      <i class="fa fa-chevron-left"></i> Nginx Cache
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/CGroups%20%E4%B8%8E%20Namespaces/" rel="next" title="CGroups 与 Namespaces">
+      CGroups 与 Namespaces <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#CRD"><span class="nav-number">1.</span> <span class="nav-text">CRD</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9A%E4%B9%89"><span class="nav-number">1.1.</span> <span class="nav-text">定义</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Controller"><span class="nav-number">1.2.</span> <span class="nav-text">Controller</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Operator"><span class="nav-number">1.3.</span> <span class="nav-text">Operator</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

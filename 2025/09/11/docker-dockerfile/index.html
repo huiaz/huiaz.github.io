@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="一、Dockerfile 的作用Dockerfile 是一个文本文件，其核心作用是定义了构建一个 Docker 镜像所需的所有步骤和指令。它就像一份自动化的“安装说明书”或“烹饪菜谱”，Docker 根据这份说明书，就能一步不差地构建出一个标准、一致的镜像。 它的主要作用体现在：  **自动化构建 (Automation)**：将手动配置环境的繁琐步骤（安装依赖、复制文件、设置环境变量等）代码化，">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Dockerfile">
+<meta property="og:url" content="http://example.com/2025/09/11/docker-dockerfile/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="一、Dockerfile 的作用Dockerfile 是一个文本文件，其核心作用是定义了构建一个 Docker 镜像所需的所有步骤和指令。它就像一份自动化的“安装说明书”或“烹饪菜谱”，Docker 根据这份说明书，就能一步不差地构建出一个标准、一致的镜像。 它的主要作用体现在：  **自动化构建 (Automation)**：将手动配置环境的繁琐步骤（安装依赖、复制文件、设置环境变量等）代码化，">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:29:29.587Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/docker-dockerfile/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Dockerfile | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/docker-dockerfile/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Dockerfile
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:29:29" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/docker/" itemprop="url" rel="index"><span itemprop="name">docker</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.5k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>2 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="一、Dockerfile-的作用"><a href="#一、Dockerfile-的作用" class="headerlink" title="一、Dockerfile 的作用"></a>一、Dockerfile 的作用</h3><p><code>Dockerfile</code> 是一个<strong>文本文件</strong>，其核心作用是<strong>定义了构建一个 Docker 镜像所需的所有步骤和指令</strong>。它就像一份自动化的“安装说明书”或“烹饪菜谱”，Docker 根据这份说明书，就能一步不差地构建出一个标准、一致的镜像。</p>
+<p>它的主要作用体现在：</p>
+<ol>
+<li>**自动化构建 (Automation)**：将手动配置环境的繁琐步骤（安装依赖、复制文件、设置环境变量等）代码化，实现了构建过程的全自动。</li>
+<li>**可重复性 (Reproducibility)**：只要 <code>Dockerfile</code> 不变，无论在谁的机器上、在什么时间执行构建，最终得到的镜像内容都是完全一致的，这从根本上保证了环境的一致性。</li>
+<li>**版本控制 (Versioning)**：<code>Dockerfile</code> 可以像代码一样存放在 Git 等版本控制系统中进行管理。每一次对环境的变更，都可以通过修改 <code>Dockerfile</code> 并提交记录来追溯，使得环境演进有迹可循。</li>
+<li>**透明性与审查 (Transparency &amp; Auditing)**：任何团队成员都可以通过阅读 <code>Dockerfile</code>，清晰地了解到一个镜像是如何构成的，包含了哪些软件和配置，便于安全审查和问题排查。</li>
+</ol>
+<h3 id="二、Docker-镜像的构建过程"><a href="#二、Docker-镜像的构建过程" class="headerlink" title="二、Docker 镜像的构建过程"></a>二、Docker 镜像的构建过程</h3><p>Docker 镜像的构建过程，本质上是 Docker Daemon 严格按照 <code>Dockerfile</code> 中的指令，<strong>逐层构建和叠加</strong>的过程。这个过程可以分解为以下几个关键步骤：</p>
+<p><strong>前提</strong>：在你的项目目录下，你已经编写好了 <code>Dockerfile</code>，并准备好了需要添加到镜像中的应用程序代码和其他文件。然后你执行构建命令：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker build -t my-app:1.0 .</span><br></pre></td></tr></table></figure>
+
+<p>这个命令告诉 Docker：</p>
+<ul>
+<li><code>-t my-app:1.0</code>：为即将构建的镜像打上标签（Tag），名称为 <code>my-app</code>，版本为 <code>1.0</code>。</li>
+<li><code>.</code>：指定了构建上下文（Build Context）的路径为当前目录。Docker Daemon 会将这个目录下的所有文件（遵循 <code>.dockerignore</code> 规则）打包发送给自己，以便在构建过程中使用。</li>
+</ul>
+<p><strong>详细构建过程如下：</strong></p>
+<ol>
+<li><p><strong>步骤 1：解析 Dockerfile</strong><br>Docker Daemon 首先会读取并解析 <code>Dockerfile</code> 中的每一条指令，检查语法是否正确。</p>
+</li>
+<li><p><strong>步骤 2：逐条执行指令，创建分层</strong><br>Docker 会从 <code>Dockerfile</code> 的第一条指令（通常是 <code>FROM</code>）开始，按顺序逐一执行。<strong>每执行一条指令，就会在上一层的基础上创建一个新的镜像层（Layer）</strong>。</p>
+<ul>
+<li><strong><code>FROM</code> 指令</strong>：这是所有 <code>Dockerfile</code> 的第一条有效指令。它指定了一个<strong>基础镜像</strong>。Docker 会先拉取或使用本地的这个基础镜像，后续的所有层都将叠加在这个基础之上。</li>
+<li><strong>后续指令（如<code>RUN</code>, <code>COPY</code>, <code>ADD</code>）</strong>：<ul>
+<li>对于每条指令，Docker 都会启动一个临时的容器。</li>
+<li>在这个临时容器中执行该指令的操作（例如 <code>RUN apt-get update</code> 会执行包更新，<code>COPY app.py /app/</code> 会复制文件）。</li>
+<li>执行完成后，Docker 会将这个临时容器的文件系统变更（与上一层相比的差异）提交（commit）为一个<strong>新的镜像层</strong>。</li>
+<li>然后 Docker 会销毁这个临时容器。</li>
+<li>这个新的镜像层会堆叠在上一层的顶部。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>步骤 3：利用构建缓存</strong><br>这是 Docker 构建过程中的一个核心优化机制。在执行每一条指令之前，Docker 会检查其缓存中是否已经存在一个由完全相同的指令构建出的镜像层。</p>
+<ul>
+<li>**缓存命中 (Cache Hit)**：如果父镜像层和当前指令都与缓存中的某一层完全匹配，Docker 会直接复用这个缓存层，而不是重新执行该指令。这极大地加快了构建速度。</li>
+<li><strong>缓存失效 (Cache Miss)<strong>：如果指令发生了变化（例如 <code>COPY</code> 的源文件内容被修改），或者它之前的某条指令缓存失效，那么从这条指令开始以及之后的所有指令都无法使用缓存，必须重新执行。</strong>这也是我们优化 <code>Dockerfile</code> 写法的重要依据：将变化频率低的指令放在前面，变化频率高的指令（如 <code>COPY</code> 代码）放在后面</strong>。</li>
+</ul>
+</li>
+<li><p><strong>步骤 4：生成最终镜像</strong><br>当 <code>Dockerfile</code> 中的所有指令都执行完毕后，Docker 会将所有生成的镜像层叠加在一起，并将它们的元数据（比如启动命令 <code>CMD</code> 或 <code>ENTRYPOINT</code>）整合起来，形成一个最终的、完整的镜像。最后，它会根据 <code>-t</code> 参数为这个最终的镜像打上我们指定的标签 <code>my-app:1.0</code>。</p>
+</li>
+</ol>
+<h3 id="示例演示"><a href="#示例演示" class="headerlink" title="示例演示"></a>示例演示</h3><p>假设有如下 <code>Dockerfile</code>：</p>
+<figure class="highlight dockerfile"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 1. 指定基础镜像 (第 1 层)</span></span><br><span class="line"><span class="keyword">FROM</span> python:<span class="number">3.9</span>-slim</span><br><span class="line"></span><br><span class="line"><span class="comment"># 2. 设置工作目录 (这一层会记录元数据变更)</span></span><br><span class="line"><span class="keyword">WORKDIR</span><span class="language-bash"> /app</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 3. 复制依赖文件 (第 2 层)</span></span><br><span class="line"><span class="keyword">COPY</span><span class="language-bash"> requirements.txt .</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 4. 安装依赖 (第 3 层)</span></span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> pip install -r requirements.txt</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 5. 复制应用代码 (第 4 层)</span></span><br><span class="line"><span class="keyword">COPY</span><span class="language-bash"> . .</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 6. 指定容器启动命令 (这一层会记录元数据变更)</span></span><br><span class="line"><span class="keyword">CMD</span><span class="language-bash"> [<span class="string">&quot;python&quot;</span>, <span class="string">&quot;app.py&quot;</span>]</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>构建过程会是：</strong></p>
+<ol>
+<li>拉取或使用本地的 <code>python:3.9-slim</code> 基础镜像。</li>
+<li>执行 <code>WORKDIR</code>，元数据变更。</li>
+<li><strong>缓存检查</strong>：检查是否有基于 <code>python:3.9-slim</code> 且执行了 <code>WORKDIR /app</code> 之后、<code>COPY requirements.txt .</code>（且文件内容未变）的层？<ul>
+<li>如果有，直接使用缓存层，跳到下一步。</li>
+<li>如果没有，创建一个新层，包含 <code>requirements.txt</code> 文件。</li>
+</ul>
+</li>
+<li><strong>缓存检查</strong>：检查是否有基于上一层且执行了 <code>RUN pip install -r requirements.txt</code> 的层？<ul>
+<li>如果有，直接使用缓存。</li>
+<li>如果没有（比如 <code>requirements.txt</code> 文件变了导致上一步缓存失效），则启动一个临时容器，运行 <code>pip install</code>，然后将新安装的库提交为一个新层。</li>
+</ul>
+</li>
+<li><strong>缓存检查</strong>：检查是否有基于上一层且 <code>COPY . .</code>（且所有文件内容未变）的层？<ul>
+<li>由于代码文件 <code>app.py</code> 经常变化，这一步很可能会缓存失效，从而创建一个包含最新代码的新层。</li>
+<li>这一步之后的 <code>CMD</code> 指令也会重新执行。</li>
+</ul>
+</li>
+<li>所有指令执行完毕，生成最终镜像 <code>my-app:1.0</code>。</li>
+</ol>
+<p>通过这个过程，我们得到一个包含了 Python 环境、所有依赖库和我们应用程序代码的、可立即运行的标准化镜像。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/docker-network/" rel="prev" title="Docker Network">
+      <i class="fa fa-chevron-left"></i> Docker Network
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/docker-env/" rel="next" title="Docker ENV">
+      Docker ENV <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E3%80%81Dockerfile-%E7%9A%84%E4%BD%9C%E7%94%A8"><span class="nav-number">1.</span> <span class="nav-text">一、Dockerfile 的作用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E3%80%81Docker-%E9%95%9C%E5%83%8F%E7%9A%84%E6%9E%84%E5%BB%BA%E8%BF%87%E7%A8%8B"><span class="nav-number">2.</span> <span class="nav-text">二、Docker 镜像的构建过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B%E6%BC%94%E7%A4%BA"><span class="nav-number">3.</span> <span class="nav-text">示例演示</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

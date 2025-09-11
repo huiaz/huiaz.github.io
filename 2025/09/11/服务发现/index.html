@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="服务发现由于我们这里每个节点上面都运行了 node-exporter 程序，当然我们也可以手动的把所有节点用静态的方式配置到 Prometheus 中去，但是以后要新增或者去掉节点的时候就还得手动去配置，那么有没有一种方式可以让 Prometheus 去自动发现我们节点的 node-exporter 程序，并且按节点进行分组呢？这就是 Prometheus 里面非常重要的服务发现功能了。 节点发现">
+<meta property="og:type" content="article">
+<meta property="og:title" content="服务发现">
+<meta property="og:url" content="http://example.com/2025/09/11/%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="服务发现由于我们这里每个节点上面都运行了 node-exporter 程序，当然我们也可以手动的把所有节点用静态的方式配置到 Prometheus 中去，但是以后要新增或者去掉节点的时候就还得手动去配置，那么有没有一种方式可以让 Prometheus 去自动发现我们节点的 node-exporter 程序，并且按节点进行分组呢？这就是 Prometheus 里面非常重要的服务发现功能了。 节点发现">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/iyw0wf.png">
+<meta property="og:image" content="https://picdn.youdianzhishi.com/images/20211220155107.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/uf3ei6.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/apttah.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/fiicax.png">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/3sov2b.png">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:12:43.178Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta property="article:tag" content="Prometheus">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://mudutestmenu.mudu.tv/upload/iyw0wf.png">
+
+<link rel="canonical" href="http://example.com/2025/09/11/%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>服务发现 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          服务发现
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:12:43" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/" itemprop="url" rel="index"><span itemprop="name">k8s-monitor</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/Prometheus/" itemprop="url" rel="index"><span itemprop="name">Prometheus</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/Prometheus/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.9k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="服务发现"><a href="#服务发现" class="headerlink" title="服务发现"></a>服务发现</h1><p>由于我们这里每个节点上面都运行了 <code>node-exporter</code> 程序，当然我们也可以手动的把所有节点用静态的方式配置到 Prometheus 中去，但是以后要新增或者去掉节点的时候就还得手动去配置，那么有没有一种方式可以让 Prometheus 去自动发现我们节点的 <code>node-exporter</code> 程序，并且按节点进行分组呢？这就是 Prometheus 里面非常重要的<strong>服务发现</strong>功能了。</p>
+<h2 id="节点发现"><a href="#节点发现" class="headerlink" title="节点发现"></a>节点发现</h2><p>在 Kubernetes 下，Promethues 通过与 Kubernetes API 集成，主要支持 5 中服务发现模式，分别是：<code>Node</code>、<code>Service</code>、<code>Pod</code>、<code>Endpoints</code>、<code>Ingress</code>。</p>
+<p>我们通过 kubectl 命令可以很方便的获取到当前集群中的所有节点信息：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">☸ ➜ kubectl get nodes</span><br><span class="line">NAME      STATUS   ROLES                  AGE   VERSION</span><br><span class="line">master1   Ready    control-plane,master   55d   v1.22.2</span><br><span class="line">node1     Ready    &lt;none&gt;                 55d   v1.22.2</span><br><span class="line">node2     Ready    &lt;none&gt;                 55d   v1.22.2</span><br></pre></td></tr></table></figure>
+
+<p>但是要让 Prometheus 也能够获取到当前集群中的所有节点信息的话，我们就需要利用 Node 的服务发现模式，同样的，在 <code>prometheus.yml</code> 文件中配置如下的 job 任务即可：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">job_name:</span> <span class="string">&#x27;nodes&#x27;</span></span><br><span class="line">  <span class="attr">kubernetes_sd_configs:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">role:</span> <span class="string">node</span></span><br></pre></td></tr></table></figure>
+
+<p>通过指定 <code>kubernetes_sd_configs</code> 的模式为<code>node</code>，Prometheus 就会自动从 Kubernetes 中发现所有的 node 节点并作为当前 job 监控的目标实例，发现的节点 <code>/metrics</code> 接口是默认的 kubelet 的 HTTP 接口。</p>
+<p>prometheus 的 ConfigMap 更新完成后，同样的我们执行 reload 操作，让配置生效：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">☸ ➜ kubectl apply -f kubectl apply -f https://p8s.io/docs/k8s/manifests/prometheus/config-4.yaml</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">隔一会儿执行reload操作</span></span><br><span class="line">☸ ➜ curl -X POST &quot;http://10.244.2.46:9090/-/reload&quot;</span><br></pre></td></tr></table></figure>
+
+<p>配置生效后，我们再去 prometheus 的 dashboard 中查看 Targets 是否能够正常抓取数据：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/iyw0wf.png" alt="prometheus webui nodes"></p>
+<p>我们可以看到上面的 <code>nodes</code> 这个 job 任务已经自动发现了我们 3 个 node 节点，但是在获取数据的时候失败了，出现了类似于下面的错误信息：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">server returned HTTP status 400 Bad Request</span><br></pre></td></tr></table></figure>
+
+<p>这个是因为 prometheus 去发现 Node 模式的服务的时候，访问的端口默认是 10250，而默认是需要认证的 https 协议才有权访问的，但实际上我们并不是希望让去访问 10250 端口的 <code>/metrics</code> 接口，而是 <code>node-exporter</code> 绑定到节点的 9100 端口，所以我们应该将这里的 <code>10250</code> 替换成 <code>9100</code>，但是应该怎样替换呢？</p>
+<h2 id="relabel"><a href="#relabel" class="headerlink" title="relabel"></a>relabel</h2><p>这里我们就需要使用到 Prometheus 提供的 <code>relabel_configs</code> 中的 <code>replace</code> 能力了，<code>relabel</code> 可以在 Prometheus 采集数据之前，通过 Target 实例的 <code>Metadata</code> 信息，动态重新写入 Label 的值。除此之外，我们还能根据 Target 实例的 <code>Metadata</code> 信息选择是否采集或者忽略该 Target 实例。比如我们这里就可以去匹配 <code>__address__</code> 这个 Label 标签，然后替换掉其中的端口，如果你不知道有哪些 Label 标签可以操作的话，可以切换到 Service Discovery 页面找到 <code>nodes</code> 任务，下面的 <code>Discovered Labels</code> 就是我们可以操作的标签：</p>
+<p><img data-src="https://picdn.youdianzhishi.com/images/20211220155107.png" alt="prometheus webui relabel before"></p>
+<p>现在我们来替换掉端口，修改 ConfigMap：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">job_name:</span> <span class="string">&#x27;nodes&#x27;</span></span><br><span class="line">  <span class="attr">kubernetes_sd_configs:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">role:</span> <span class="string">node</span></span><br><span class="line">  <span class="attr">relabel_configs:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">source_labels:</span> [<span class="string">__address__</span>]</span><br><span class="line">      <span class="attr">regex:</span> <span class="string">&#x27;(.*):10250&#x27;</span></span><br><span class="line">      <span class="attr">replacement:</span> <span class="string">&#x27;$&#123;1&#125;:9100&#x27;</span></span><br><span class="line">      <span class="attr">target_label:</span> <span class="string">__address__</span></span><br><span class="line">      <span class="attr">action:</span> <span class="string">replace</span></span><br></pre></td></tr></table></figure>
+
+<p>这里就是一个正则表达式，去匹配 <code>__address__</code> 这个标签，然后将 host 部分保留下来，port 替换成了 9100，现在我们重新更新配置文件，执行 reload 操作，然后再去看 Prometheus 的 Dashboard 的 Targets 路径下面 nodes 这个 job 任务是否正常了：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/uf3ei6.png" alt="prometheus webui sd nodes"></p>
+<p>我们可以看到现在已经正常了，但是还有一个问题就是我们采集的指标数据 Label 标签就只有一个节点的 hostname，这对于我们在进行监控分组分类查询的时候带来了很多不方便的地方，要是我们能够将集群中 Node 节点的 Label 标签也能获取到就很好了。这里我们可以通过 <code>labelmap</code> 这个属性来将 Kubernetes 的 Label 标签添加为 Prometheus 的指标数据的标签：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">job_name:</span> <span class="string">&#x27;kubernetes-nodes&#x27;</span></span><br><span class="line">  <span class="attr">kubernetes_sd_configs:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">role:</span> <span class="string">node</span></span><br><span class="line">  <span class="attr">relabel_configs:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">source_labels:</span> [<span class="string">__address__</span>]</span><br><span class="line">      <span class="attr">regex:</span> <span class="string">&#x27;(.*):10250&#x27;</span></span><br><span class="line">      <span class="attr">replacement:</span> <span class="string">&#x27;$&#123;1&#125;:9100&#x27;</span></span><br><span class="line">      <span class="attr">target_label:</span> <span class="string">__address__</span></span><br><span class="line">      <span class="attr">action:</span> <span class="string">replace</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">action:</span> <span class="string">labelmap</span></span><br><span class="line">      <span class="attr">regex:</span> <span class="string">__meta_kubernetes_node_label_(.+)</span></span><br></pre></td></tr></table></figure>
+
+<p>添加了一个 action 为 <code>labelmap</code>，正则表达式是 <code>__meta_kubernetes_node_label_(.+)</code> 的配置，这里的意思就是表达式中匹配都的数据也添加到指标数据的 Label 标签中去。</p>
+<p>重新配置后的监控目标标签就多了很多了：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/apttah.png" alt="nodes labelmap"></p>
+<p>对于 <code>kubernetes_sd_configs</code> 下面可用的元信息标签如下：</p>
+<ul>
+<li><code>__meta_kubernetes_node_name</code>：节点对象的名称</li>
+<li><code>_meta_kubernetes_node_label</code>：节点对象中的每个标签</li>
+<li><code>_meta_kubernetes_node_annotation</code>：来自节点对象的每个注释</li>
+<li><code>_meta_kubernetes_node_address</code>：每个节点地址类型的第一个地址（如果存在）</li>
+</ul>
+<p>关于 kubernets_sd_configs 更多信息可以查看官方文档：<a target="_blank" rel="noopener" href="https://prometheus.io/docs/prometheus/latest/configuration/configuration/#">kubernetes_sd_config</a></p>
+<p>另外由于 kubelet 也自带了一些监控指标数据，就上面我们提到的 10250 端口，所以我们这里也把 kubelet 的监控任务也一并配置上：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">job_name:</span> <span class="string">&#x27;kubelet&#x27;</span></span><br><span class="line">  <span class="attr">kubernetes_sd_configs:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">role:</span> <span class="string">node</span></span><br><span class="line">  <span class="attr">scheme:</span> <span class="string">https</span></span><br><span class="line">  <span class="attr">tls_config:</span></span><br><span class="line">    <span class="attr">ca_file:</span> <span class="string">/var/run/secrets/kubernetes.io/serviceaccount/ca.crt</span></span><br><span class="line">    <span class="attr">insecure_skip_verify:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">bearer_token_file:</span> <span class="string">/var/run/secrets/kubernetes.io/serviceaccount/token</span></span><br><span class="line">  <span class="attr">relabel_configs:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">action:</span> <span class="string">labelmap</span></span><br><span class="line">      <span class="attr">regex:</span> <span class="string">__meta_kubernetes_node_label_(.+)</span></span><br></pre></td></tr></table></figure>
+
+<p>但是这里需要特别注意的是这里必须使用 <code>https</code> 协议访问，这样就必然需要提供证书，我们这里是通过配置 <code>insecure_skip_verify: true</code> 来跳过了证书校验，但是除此之外，要访问集群的资源，还必须要有对应的权限才可以，也就是对应的 ServiceAccount 棒的 权限允许才可以，我们这里部署的 prometheus 关联的 ServiceAccount 对象前面我们已经提到过了，这里我们只需要将 Pod 中自动注入的 <code>/var/run/secrets/kubernetes.io/serviceaccount/ca.crt</code> 和 <code>/var/run/secrets/kubernetes.io/serviceaccount/token</code> 文件配置上，就可以获取到对应的权限了。</p>
+<p>现在我们再去更新下配置文件，执行 reload 操作，让配置生效，然后访问 Prometheus 的 Dashboard 查看 Targets 路径：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/fiicax.png" alt="prometheus webui sd kubelet"></p>
+<p>现在可以看到我们上面添加的 <code>kubelet</code> 和 <code>nodes</code> 这两个 job 任务都已经配置成功了，而且二者的 Labels 标签都和集群的 node 节点标签保持一致了。</p>
+<p>现在我们就可以切换到 Graph 路径下面查看采集的一些指标数据了，比如查询 node_load1 指标：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/3sov2b.png" alt="prometheus webui node load1"></p>
+<p>我们可以看到将 3 个节点对应的 <code>node_load1</code> 指标数据都查询出来了，同样的，我们还可以使用 <code>PromQL</code> 语句来进行更复杂的一些聚合查询操作，还可以根据我们的 Labels 标签对指标数据进行聚合。</p>
+<p>到这里我们就把 Kubernetes 集群节点使用 Prometheus 监控起来了，接下来我们再来和大家学习下怎样监控 Pod 或者 Service 之类的资源对象。</p>
+<p><a target="_blank" rel="noopener" href="https://docs.youdianzhishi.com/prometheus/k8s/nodes/">
+</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+              <a href="/tags/Prometheus/" rel="tag"># Prometheus</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E6%9C%8D%E5%8A%A1%E7%AB%AF%E8%A7%A3%E6%9E%90%20HTTP%20%E8%AF%B7%E6%B1%82%E6%95%B0%E6%8D%AE/" rel="prev" title="服务端解析 HTTP 请求数据">
+      <i class="fa fa-chevron-left"></i> 服务端解析 HTTP 请求数据
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E6%96%B0%E4%B8%80%E4%BB%A3%E4%BA%91%E5%8E%9F%E7%94%9F%E5%AD%98%E5%82%A8%E7%B3%BB%E7%BB%9F%20CubeFS/" rel="next" title="新一代云原生存储系统 CubeFS">
+      新一代云原生存储系统 CubeFS <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0"><span class="nav-number">1.</span> <span class="nav-text">服务发现</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%8A%82%E7%82%B9%E5%8F%91%E7%8E%B0"><span class="nav-number">1.1.</span> <span class="nav-text">节点发现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#relabel"><span class="nav-number">1.2.</span> <span class="nav-text">relabel</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

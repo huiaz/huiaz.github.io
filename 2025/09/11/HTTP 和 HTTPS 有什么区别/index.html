@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="HTTP 和 HTTPS 有什么区别？HTTP (Hypertext Transfer Protocol) 和 HTTPS (Hypertext Transfer Protocol Secure) 的主要区别在于安全性。HTTPS 是 HTTP 的安全版本，通过在 HTTP 层和 TCP 层之间添加一个加密层（SSL&#x2F;TLS）来实现数据的加密和认证。 让我们详细分解它们的区别：  1.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HTTP 和 HTTPS 有什么区别">
+<meta property="og:url" content="http://example.com/2025/09/11/HTTP%20%E5%92%8C%20HTTPS%20%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="HTTP 和 HTTPS 有什么区别？HTTP (Hypertext Transfer Protocol) 和 HTTPS (Hypertext Transfer Protocol Secure) 的主要区别在于安全性。HTTPS 是 HTTP 的安全版本，通过在 HTTP 层和 TCP 层之间添加一个加密层（SSL&#x2F;TLS）来实现数据的加密和认证。 让我们详细分解它们的区别：  1.">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:39:20.965Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Network">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/HTTP%20%E5%92%8C%20HTTPS%20%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>HTTP 和 HTTPS 有什么区别 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/HTTP%20%E5%92%8C%20HTTPS%20%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          HTTP 和 HTTPS 有什么区别
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:39:20" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/" itemprop="url" rel="index"><span itemprop="name">WEB</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/Http/" itemprop="url" rel="index"><span itemprop="name">Http</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>1.8k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>2 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="HTTP-和-HTTPS-有什么区别？"><a href="#HTTP-和-HTTPS-有什么区别？" class="headerlink" title="HTTP 和 HTTPS 有什么区别？"></a>HTTP 和 HTTPS 有什么区别？</h3><p>HTTP (Hypertext Transfer Protocol) 和 HTTPS (Hypertext Transfer Protocol Secure) 的主要区别在于<strong>安全性</strong>。HTTPS 是 HTTP 的安全版本，通过在 HTTP 层和 TCP 层之间添加一个加密层（SSL&#x2F;TLS）来实现数据的加密和认证。</p>
+<p>让我们详细分解它们的区别：</p>
+<hr>
+<h3 id="1-安全性-Security"><a href="#1-安全性-Security" class="headerlink" title="1. 安全性 (Security)"></a>1. 安全性 (Security)</h3><ul>
+<li><p><strong>HTTP:</strong></p>
+<ul>
+<li><strong>不安全：</strong> HTTP 传输的数据是明文的。这意味着任何中间人（如网络运营商、ISP、恶意攻击者）都可以拦截、读取、甚至修改传输中的数据。</li>
+<li><strong>没有完整性：</strong> 无法验证数据在传输过程中是否被篡改。</li>
+<li><strong>没有认证：</strong> 无法验证你连接的服务器是否是你声称要连接的服务器。</li>
+</ul>
+</li>
+<li><p><strong>HTTPS:</strong></p>
+<ul>
+<li><strong>加密：</strong> HTTPS 对所有传输的数据进行加密。即使数据被拦截，攻击者也无法轻易理解其内容。这保护了用户隐私（如用户输入的密码、信用卡号、个人信息等）。</li>
+<li><strong>数据完整性：</strong> 传输的数据在到达目的地时会进行完整性校验。如果数据在传输过程中被篡改，客户端或服务器会检测到并拒绝该数据。</li>
+<li><strong>服务器认证：</strong> HTTPS 使用数字证书（通常由受信任的证书颁发机构 CA 颁发）来验证服务器的身份。这可以防止中间人攻击，确保用户连接到的是真正的网站，而不是一个假冒的站点。</li>
+<li><strong>客户端认证（可选）：</strong> 尽管不常用，但 HTTPS 也可以支持客户端认证，以验证连接的客户端身份。</li>
+</ul>
+</li>
+</ul>
+<h3 id="2-端口-Port"><a href="#2-端口-Port" class="headerlink" title="2. 端口 (Port)"></a>2. 端口 (Port)</h3><ul>
+<li><strong>HTTP:</strong> 默认使用 <strong>80</strong> 端口。</li>
+<li><strong>HTTPS:</strong> 默认使用 <strong>443</strong> 端口。</li>
+</ul>
+<h3 id="3-连接建立过程"><a href="#3-连接建立过程" class="headerlink" title="3. 连接建立过程"></a>3. 连接建立过程</h3><ul>
+<li><p><strong>HTTP:</strong></p>
+<ol>
+<li>客户端发起 TCP 连接到服务器的 80 端口。</li>
+<li>客户端发送 HTTP 请求。</li>
+<li>服务器返回 HTTP 响应。</li>
+<li>TCP 连接关闭（或保持“Keep-Alive”）。</li>
+</ol>
+</li>
+<li><p><strong>HTTPS:</strong></p>
+<ol>
+<li>客户端发起 TCP 连接到服务器的 443 端口。</li>
+<li><strong>SSL&#x2F;TLS 握手：</strong> 这是 HTTPS 独有的步骤。<ul>
+<li>客户端和服务器协商加密算法和密钥。</li>
+<li>服务器发送其数字证书给客户端。</li>
+<li>客户端验证服务器证书的有效性（检查 CA、有效期、域名匹配等）。</li>
+<li>如果证书有效，客户端和服务器生成用于加密通信的会话密钥。</li>
+</ul>
+</li>
+<li><strong>加密的 HTTP 通信：</strong> 一旦 SSL&#x2F;TLS 握手成功，所有后续的 HTTP 请求和响应都会使用协商好的密钥进行加密和解密。</li>
+<li>TCP 连接关闭。</li>
+</ol>
+</li>
+</ul>
+<h3 id="4-性能-Performance"><a href="#4-性能-Performance" class="headerlink" title="4. 性能 (Performance)"></a>4. 性能 (Performance)</h3><ul>
+<li><p><strong>HTTP:</strong></p>
+<ul>
+<li>性能开销较低，因为不需要加密和解密。</li>
+</ul>
+</li>
+<li><p><strong>HTTPS:</strong></p>
+<ul>
+<li>性能开销略高，因为：<ul>
+<li><strong>SSL&#x2F;TLS 握手：</strong> 增加了首次连接的延迟（通常是 1-2 个额外往返时间 RTT）。</li>
+<li><strong>加密&#x2F;解密：</strong> 数据的加密和解密需要额外的 CPU 资源。</li>
+</ul>
+</li>
+<li><strong>但请注意：</strong> 随着硬件性能的提升、TLS 协议的优化（如 TLS 1.3 的 1-RTT&#x2F;0-RTT 握手、会话恢复）以及服务器端的优化（如使用专用硬件加速器），HTTPS 的性能开销已经大大降低，对于大多数现代网站，用户几乎感受不到差异。</li>
+</ul>
+</li>
+</ul>
+<h3 id="5-SEO-Search-Engine-Optimization"><a href="#5-SEO-Search-Engine-Optimization" class="headerlink" title="5. SEO (Search Engine Optimization)"></a>5. SEO (Search Engine Optimization)</h3><ul>
+<li><p><strong>HTTP:</strong></p>
+<ul>
+<li>搜索引擎（尤其是 Google）会<strong>优先收录 HTTPS 网站</strong>，并可能给予其更高的排名。Google 明确表示 HTTPS 是一个排名信号。</li>
+</ul>
+</li>
+<li><p><strong>HTTPS:</strong></p>
+<ul>
+<li><strong>有利于 SEO。</strong></li>
+</ul>
+</li>
+</ul>
+<h3 id="6-可信度-用户体验-Trust-User-Experience"><a href="#6-可信度-用户体验-Trust-User-Experience" class="headerlink" title="6. 可信度&#x2F;用户体验 (Trust&#x2F;User Experience)"></a>6. 可信度&#x2F;用户体验 (Trust&#x2F;User Experience)</h3><ul>
+<li><p><strong>HTTP:</strong></p>
+<ul>
+<li>在浏览器地址栏中显示为 <code>http://</code>，通常会伴随一个“不安全”或“未加密”的警告图标。</li>
+<li>用户（尤其是对网络安全有意识的用户）可能会因为感到不安全而避免在这些网站上输入敏感信息。</li>
+</ul>
+</li>
+<li><p><strong>HTTPS:</strong></p>
+<ul>
+<li>在浏览器地址栏中显示为 <code>https://</code>，通常会显示一个<strong>挂锁图标</strong>，表明连接是安全的。</li>
+<li>增强了用户对网站的信任度。</li>
+</ul>
+</li>
+</ul>
+<h3 id="总结表格："><a href="#总结表格：" class="headerlink" title="总结表格："></a>总结表格：</h3><table>
+<thead>
+<tr>
+<th align="left">特性</th>
+<th align="left">HTTP</th>
+<th align="left">HTTPS</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong>安全性</strong></td>
+<td align="left">不安全 (明文传输)</td>
+<td align="left">安全 (SSL&#x2F;TLS 加密、完整性、认证)</td>
+</tr>
+<tr>
+<td align="left"><strong>端口</strong></td>
+<td align="left">80</td>
+<td align="left">443</td>
+</tr>
+<tr>
+<td align="left"><strong>握手</strong></td>
+<td align="left">只有 TCP 握手</td>
+<td align="left">TCP 握手 + SSL&#x2F;TLS 握手</td>
+</tr>
+<tr>
+<td align="left"><strong>数据</strong></td>
+<td align="left">可被监听、篡改</td>
+<td align="left">加密，不易被监听和篡改</td>
+</tr>
+<tr>
+<td align="left"><strong>证书</strong></td>
+<td align="left">不需要</td>
+<td align="left">需要数字证书 (由 CA 颁发)</td>
+</tr>
+<tr>
+<td align="left"><strong>性能</strong></td>
+<td align="left">理论上稍快，但如今差距微乎其微</td>
+<td align="left">理论上稍慢 (由于加密解密开销和握手延迟)</td>
+</tr>
+<tr>
+<td align="left"><strong>URL</strong></td>
+<td align="left">以 <code>http://</code> 开头</td>
+<td align="left">以 <code>https://</code> 开头</td>
+</tr>
+<tr>
+<td align="left"><strong>SEO</strong></td>
+<td align="left">不利于排名</td>
+<td align="left">有利于 SEO 排名</td>
+</tr>
+<tr>
+<td align="left"><strong>信任</strong></td>
+<td align="left">浏览器提示“不安全”</td>
+<td align="left">浏览器显示安全锁图标，增强用户信任</td>
+</tr>
+</tbody></table>
+<p><strong>结论：</strong><br>由于网络安全的重要性以及用户隐私保护的需求，<strong>HTTPS 已成为现代 Web 的标准</strong>。所有提供敏感信息交互（如登录、支付）的网站都必须使用 HTTPS。即使是纯内容网站，为了提升用户体验、SEO 和应对未来的浏览器警告，也强烈建议部署 HTTPS。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Network/" rel="tag"># Network</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/HTTP%20%E7%8A%B6%E6%80%81%E7%A0%81/" rel="prev" title="HTTP 状态码">
+      <i class="fa fa-chevron-left"></i> HTTP 状态码
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/HTTP%202.0%20%E5%92%8C%203.0%20%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB/" rel="next" title="HTTP 2.0 和 3.0 有什么区别">
+      HTTP 2.0 和 3.0 有什么区别 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#HTTP-%E5%92%8C-HTTPS-%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">HTTP 和 HTTPS 有什么区别？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E5%AE%89%E5%85%A8%E6%80%A7-Security"><span class="nav-number">2.</span> <span class="nav-text">1. 安全性 (Security)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E7%AB%AF%E5%8F%A3-Port"><span class="nav-number">3.</span> <span class="nav-text">2. 端口 (Port)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E8%BF%9E%E6%8E%A5%E5%BB%BA%E7%AB%8B%E8%BF%87%E7%A8%8B"><span class="nav-number">4.</span> <span class="nav-text">3. 连接建立过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E6%80%A7%E8%83%BD-Performance"><span class="nav-number">5.</span> <span class="nav-text">4. 性能 (Performance)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-SEO-Search-Engine-Optimization"><span class="nav-number">6.</span> <span class="nav-text">5. SEO (Search Engine Optimization)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-%E5%8F%AF%E4%BF%A1%E5%BA%A6-%E7%94%A8%E6%88%B7%E4%BD%93%E9%AA%8C-Trust-User-Experience"><span class="nav-number">7.</span> <span class="nav-text">6. 可信度&#x2F;用户体验 (Trust&#x2F;User Experience)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%E8%A1%A8%E6%A0%BC%EF%BC%9A"><span class="nav-number">8.</span> <span class="nav-text">总结表格：</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

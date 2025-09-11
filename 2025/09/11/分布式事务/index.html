@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="您好！RocketMQ 的事务消息机制确实非常强大，它解决了将本地事务与消息发送操作捆绑的原子性问题，避免了数据不一致。但正如任何技术方案一样，它也并非没有缺点。 作为后端开发专家，我来详细分析一下 RocketMQ 事务消息的优缺点，并探讨其他实现分布式事务消息的常见方案。  RocketMQ 事务消息的缺点RocketMQ 的事务消息机制（通常基于两阶段提交思想的变种）通过生产者发送半消息、执">
+<meta property="og:type" content="article">
+<meta property="og:title" content="分布式事务">
+<meta property="og:url" content="http://example.com/2025/09/11/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="您好！RocketMQ 的事务消息机制确实非常强大，它解决了将本地事务与消息发送操作捆绑的原子性问题，避免了数据不一致。但正如任何技术方案一样，它也并非没有缺点。 作为后端开发专家，我来详细分析一下 RocketMQ 事务消息的优缺点，并探讨其他实现分布式事务消息的常见方案。  RocketMQ 事务消息的缺点RocketMQ 的事务消息机制（通常基于两阶段提交思想的变种）通过生产者发送半消息、执">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:12:24.982Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="中间件">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>分布式事务 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          分布式事务
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:12:24" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/MQ/" itemprop="url" rel="index"><span itemprop="name">MQ</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.2k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>您好！RocketMQ 的事务消息机制确实非常强大，它解决了将本地事务与消息发送操作捆绑的原子性问题，避免了数据不一致。但正如任何技术方案一样，它也并非没有缺点。</p>
+<p>作为后端开发专家，我来详细分析一下 RocketMQ 事务消息的优缺点，并探讨其他实现分布式事务消息的常见方案。</p>
+<hr>
+<h3 id="RocketMQ-事务消息的缺点"><a href="#RocketMQ-事务消息的缺点" class="headerlink" title="RocketMQ 事务消息的缺点"></a>RocketMQ 事务消息的缺点</h3><p>RocketMQ 的事务消息机制（通常基于两阶段提交思想的变种）通过生产者发送半消息、执行本地事务、回调检查等步骤来确保原子性。尽管它功能强大，但存在以下缺点：</p>
+<ol>
+<li><p><strong>实现复杂度增加：</strong></p>
+<ul>
+<li><strong>生产者回调：</strong> 生产者需要实现 <code>TransactionListener</code> 接口，提供 <code>executeLocalTransaction</code>（执行本地事务）和 <code>checkLocalTransaction</code>（本地事务回查）方法。这增加了生产者侧的代码逻辑和复杂度。</li>
+<li><strong>消息状态管理：</strong> Broker 需要额外管理半消息（Half Message）的状态，包括半消息的存储、定时扫描回查、以及根据回查结果的提交或回滚操作。</li>
+<li><strong>调试难度：</strong> 链条变长，涉及到生产者、Broker、本地数据库之间的多次交互和状态流转，一旦出现问题，调试和排查难度会相应增加。</li>
+</ul>
+</li>
+<li><p><strong>性能开销与延迟：</strong></p>
+<ul>
+<li><strong>多一次网络交互：</strong> 相较于普通消息，事务消息多了一次半消息发送（Producer -&gt; Broker）和一次提交&#x2F;回滚指令（Producer -&gt; Broker）的网络交互。如果生产者宕机，还需要额外的回查请求（Broker -&gt; Producer）。这些额外的RPC调用会增加消息发送的整体延迟。</li>
+<li><strong>Broker 资源占用：</strong> Broker 需要为半消息维护额外的存储和管理，并定期执行回查任务，这会增加 Broker 的CPU和网络资源消耗。</li>
+<li><strong>阻塞风险：</strong> 当 Broker 回查生产者时，如果生产者处理回查的接口出现瓶颈或延迟，可能会影响半消息的最终确认，导致消息不能及时可见或被消费。</li>
+</ul>
+</li>
+<li><p><strong>对生产者服务可用性的依赖：</strong></p>
+<ul>
+<li><strong>回查机制：</strong> 回查是 RocketMQ 事务消息的核心保证机制。这意味着在事务消息整个生命周期内，生产者服务必须随时保持可用，以便 Broker 能够进行回查。如果生产者服务长时间不可用，或者无法响应回查请求，半消息将一直处于不确定状态，无法被提交或回滚，从而阻塞系统的整体进度，甚至导致消息堆积。</li>
+<li><strong>服务部署与伸缩：</strong> 生产者服务需要暴露一个回查接口，在容器化或微服务环境下，需要确保 Broker 能够正确地路由到可用的生产者实例。</li>
+</ul>
+</li>
+<li><p><strong>消息可见性延迟：</strong></p>
+<ul>
+<li>半消息在本地事务执行完毕并发出Commit指令之前，对于消费者是不可见的。这意味着消息的最终可见性和消费，取决于本地事务的执行速度和Commit指令的发送成功。对于某些对极致实时性有要求的场景，这种延迟可能不被接受。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3 id="其他事务消息实现方案"><a href="#其他事务消息实现方案" class="headerlink" title="其他事务消息实现方案"></a>其他事务消息实现方案</h3><p>除了 RocketMQ 的事务消息，业界还有多种方案来解决分布式事务场景下的“消息可靠发送”问题，其中最常见且成熟的是“本地消息表”方案，以及更宏观的“Saga 模式”：</p>
+<h4 id="1-本地消息表（Local-Message-Table-Outbox-Pattern）"><a href="#1-本地消息表（Local-Message-Table-Outbox-Pattern）" class="headerlink" title="1. 本地消息表（Local Message Table &#x2F; Outbox Pattern）"></a>1. 本地消息表（Local Message Table &#x2F; Outbox Pattern）</h4><p>这是一种<strong>最经典、最通用、最可靠</strong>的分布式事务消息实现方案，常被称为“发件箱模式”（Outbox Pattern）。</p>
+<ul>
+<li><p><strong>工作原理：</strong></p>
+<ol>
+<li><strong>本地事务：</strong> 生产者服务在执行业务逻辑的<strong>同一个本地事务</strong>中，将业务数据和要发送的消息（通常是消息内容和状态）一同写入本地数据库。</li>
+<li><strong>原子提交：</strong> 由于业务数据和消息都写入同一个本地事务，因此它们满足 ACID 特性，要么都成功，要么都失败。</li>
+<li><strong>消息发送服务：</strong> 部署一个独立的、可靠的调度服务（或使用Quartz、XXL-Job等任务调度框架）。<ul>
+<li>该服务会定期扫描本地消息表，查找状态为“待发送”的消息。</li>
+<li>将这些消息发送到消息队列。</li>
+<li>发送成功后，更新本地消息表中的消息状态为“已发送”。</li>
+<li>发送失败则进行重试，或将状态标记为“发送失败”供人工介入。</li>
+</ul>
+</li>
+<li><strong>消费者幂等性：</strong> 由于重试机制可能导致消息重复发送，消费者必须具备幂等性，即多次处理同一消息（通过消息ID或业务ID识别）的结果与处理一次相同。</li>
+</ol>
+</li>
+<li><p><strong>优点：</strong></p>
+<ul>
+<li><strong>强一致性：</strong> 借助本地数据库事务，严格保证业务数据和消息的最终一致性。</li>
+<li><strong>解耦：</strong> 消息发送逻辑从业务主流程中解耦，由一个独立的服务负责，不影响业务事务的性能。</li>
+<li><strong>通用性：</strong> 不依赖于任何特定消息队列的事务机制，适用于任何MQ产品。</li>
+<li><strong>可靠性高：</strong> 即使消息发送服务宕机，本地消息表中的消息也依然存在，重启后能继续发送。</li>
+</ul>
+</li>
+<li><p><strong>缺点：</strong></p>
+<ul>
+<li><strong>数据量和轮询：</strong> 本地消息表会积累消息数据，需要定期清理。频繁的扫描会给数据库带来一定的压力。</li>
+<li><strong>延迟：</strong> 消息的发送存在一定的延迟，取决于调度服务的扫描间隔。</li>
+<li><strong>额外服务：</strong> 需要额外开发和维护一个消息发送服务。</li>
+</ul>
+</li>
+</ul>
+<h4 id="2-Saga-模式"><a href="#2-Saga-模式" class="headerlink" title="2. Saga 模式"></a>2. Saga 模式</h4><p>Saga 模式是一种处理<strong>长寿命分布式事务</strong>的模式，它不是传统意义上的事务消息实现，而是利用消息队列进行服务间通讯，从而协调一系列局部事务来达到最终一致性。</p>
+<ul>
+<li><p><strong>工作原理：</strong></p>
+<ul>
+<li>一个分布式事务由一系列（通常是两阶段提交的）局部事务组成，每个局部事务都有对应的补偿操作。</li>
+<li>当一个局部事务完成时，它会发布一个事件来触发下一个局部事务。</li>
+<li>如果任何一个局部事务失败，则执行其前面的所有已完成局部事务的补偿操作，以回滚整个分布式事务。</li>
+<li>协调方式：通常有<strong>编排式（Orchestration）</strong>和<strong>协同式（Choreography）</strong>两种。<ul>
+<li><strong>编排式：</strong> 单个协调器（Coordinator）负责所有局部事务的执行和补偿逻辑。</li>
+<li><strong>协同式：</strong> 每个服务发布事件，其他服务监听事件并执行自己的局部事务。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>优点：</strong></p>
+<ul>
+<li><strong>高并发性：</strong> 局部事务可以独立执行，大大提高了系统的并发能力。</li>
+<li><strong>高度解耦：</strong> 服务之间通过事件进行通信，降低了耦合度。</li>
+<li><strong>适用于微服务架构：</strong> 能够很好地适应微服务架构的特性。</li>
+</ul>
+</li>
+<li><p><strong>缺点：</strong></p>
+<ul>
+<li><strong>复杂性高：</strong> 补偿逻辑的实现是一个非常大的挑战。故障恢复、幂等性、逆向流程等都需要仔细考虑。</li>
+<li><strong>最终一致性：</strong> 无法保证强一致性，只保证最终一致性。在事务中间阶段，数据可能处于不一致状态。</li>
+<li><strong>调试和监控困难：</strong> 跨多个服务的事务流转，调试和监控非常复杂。</li>
+</ul>
+</li>
+</ul>
+<h4 id="3-XA-JTA（分布式事务协议）"><a href="#3-XA-JTA（分布式事务协议）" class="headerlink" title="3. XA &#x2F; JTA（分布式事务协议）"></a>3. XA &#x2F; JTA（分布式事务协议）</h4><p>传统意义上的分布式事务，如 XA 规范和基于 Java 的 JTA。</p>
+<ul>
+<li><p><strong>工作原理：</strong> 依赖于一个全局事务管理器（Transaction Manager）来协调多个资源管理器（Resource Manager，如数据库、支持 XA 的消息队列）的事务提交和回滚。通常采用两阶段提交（2PC）协议。</p>
+</li>
+<li><p><strong>优点：</strong></p>
+<ul>
+<li><strong>强一致性（ACID）：</strong> 保证全局事务的原子性、一致性、隔离性和持久性。</li>
+</ul>
+</li>
+<li><p><strong>缺点：</strong></p>
+<ul>
+<li><strong>性能瓶颈：</strong> 2PC 是阻塞式的，所有参与者都必须等待协调器的指令才能提交或回滚，导致性能低下，不适合高并发场景。</li>
+<li><strong>高耦合：</strong> 各个参与者之间以及与事务管理器之间耦合度高。</li>
+<li><strong>资源锁定：</strong> 在提交阶段会长时间锁定资源。</li>
+<li><strong>死锁风险：</strong> 如果协调器或参与者在关键阶段宕机，可能会导致资源长期锁定。</li>
+<li><strong>兼容性差：</strong> 很多 NoSQL 数据库和现代消息队列不支持 XA 协议。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3 id="总结与选择"><a href="#总结与选择" class="headerlink" title="总结与选择"></a>总结与选择</h3><p>在实际后端开发中，对于“将本地业务操作与消息发送捆绑”的场景：</p>
+<ul>
+<li><strong>RocketMQ 事务消息：</strong> 如果你使用的是 RocketMQ，并且可以容忍上述其缺点（实现复杂、性能开销、回查依赖），它是一个直接且相对内置的方案。</li>
+<li><strong>本地消息表：</strong> 这是<strong>最推荐和最通用</strong>的方案。它提供了极高的可靠性，不依赖特定MQ产品，解耦性好，且在微服务实践中广泛应用。缺点是增加了额外的组件和一定的延迟。</li>
+<li><strong>XA&#x2F;JTA：</strong> 几乎不推荐用于高并发的互联网应用，其性能瓶颈和高耦合性是致命缺陷。</li>
+<li><strong>Saga 模式：</strong> 适用于更复杂的、跨多个服务的长流程分布式事务场景，它关注的是整个业务流程的最终一致性，而非单一的“本地事务+消息”的原子性。</li>
+</ul>
+<p>作为后端开发专家，我通常会根据业务的<strong>对一致性的要求、对延迟的容忍度、系统性能需求、团队技术栈以及架构复杂度</strong>来选择合适的方案。在绝大多数情况下，<strong>本地消息表方案提供了最佳的平衡点</strong>。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/%E4%B8%AD%E9%97%B4%E4%BB%B6/" rel="tag"># 中间件</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E5%88%87%E7%89%87%E4%BD%9C%E4%B8%BA%E5%87%BD%E6%95%B0/" rel="prev" title="切片作为函数">
+      <i class="fa fa-chevron-left"></i> 切片作为函数
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E5%86%85%E6%A0%B8%E5%9F%BA%E7%A1%80/" rel="next" title="内核基础">
+      内核基础 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#RocketMQ-%E4%BA%8B%E5%8A%A1%E6%B6%88%E6%81%AF%E7%9A%84%E7%BC%BA%E7%82%B9"><span class="nav-number">1.</span> <span class="nav-text">RocketMQ 事务消息的缺点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B6%E4%BB%96%E4%BA%8B%E5%8A%A1%E6%B6%88%E6%81%AF%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%A1%88"><span class="nav-number">2.</span> <span class="nav-text">其他事务消息实现方案</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E6%9C%AC%E5%9C%B0%E6%B6%88%E6%81%AF%E8%A1%A8%EF%BC%88Local-Message-Table-Outbox-Pattern%EF%BC%89"><span class="nav-number">2.1.</span> <span class="nav-text">1. 本地消息表（Local Message Table &#x2F; Outbox Pattern）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-Saga-%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.2.</span> <span class="nav-text">2. Saga 模式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-XA-JTA%EF%BC%88%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%8D%8F%E8%AE%AE%EF%BC%89"><span class="nav-number">2.3.</span> <span class="nav-text">3. XA &#x2F; JTA（分布式事务协议）</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%E4%B8%8E%E9%80%89%E6%8B%A9"><span class="nav-number">3.</span> <span class="nav-text">总结与选择</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

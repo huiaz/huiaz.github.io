@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Thanos 架构Thanos 是一个基于 Prometheus 实现的监控方案，其主要设计目的是解决原生 Prometheus 上的痛点，并且做进一步的提升，主要的特性有：全局查询，高可用，动态拓展，长期存储。 架构Thanos 主要由如下几个特定功能的组件组成：  边车组件（Sidecar）：连接到 Prometheus，并把 Prometheus 暴露给查询网关（Querier&#x2F;Q">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Thanos-架构">
+<meta property="og:url" content="http://example.com/2025/09/11/Thanos-%E6%9E%B6%E6%9E%84/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="Thanos 架构Thanos 是一个基于 Prometheus 实现的监控方案，其主要设计目的是解决原生 Prometheus 上的痛点，并且做进一步的提升，主要的特性有：全局查询，高可用，动态拓展，长期存储。 架构Thanos 主要由如下几个特定功能的组件组成：  边车组件（Sidecar）：连接到 Prometheus，并把 Prometheus 暴露给查询网关（Querier&#x2F;Q">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://picdn.youdianzhishi.com/images/20220318155719.png">
+<meta property="og:image" content="https://picdn.youdianzhishi.com/images/20220318160814.png">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:08:20.419Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta property="article:tag" content="Prometheus">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://picdn.youdianzhishi.com/images/20220318155719.png">
+
+<link rel="canonical" href="http://example.com/2025/09/11/Thanos-%E6%9E%B6%E6%9E%84/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Thanos-架构 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Thanos-%E6%9E%B6%E6%9E%84/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Thanos-架构
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:08:20" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/" itemprop="url" rel="index"><span itemprop="name">k8s-monitor</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s-monitor/Thanos/" itemprop="url" rel="index"><span itemprop="name">Thanos</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Thanos-架构"><a href="#Thanos-架构" class="headerlink" title="Thanos 架构"></a>Thanos 架构</h1><p><a target="_blank" rel="noopener" href="https://thanos.io/">Thanos</a> 是一个基于 Prometheus 实现的监控方案，其主要设计目的是解决原生 Prometheus 上的痛点，并且做进一步的提升，主要的特性有：<strong>全局查询，高可用，动态拓展，长期存储</strong>。</p>
+<h2 id="架构"><a href="#架构" class="headerlink" title="架构"></a>架构</h2><p>Thanos 主要由如下几个特定功能的组件组成：</p>
+<ul>
+<li>边车组件（Sidecar）：连接到 Prometheus，并把 Prometheus 暴露给查询网关（Querier&#x2F;Query），以供实时查询，并且可以上传 Prometheus 数据到云存储，以供长期保存</li>
+<li>查询网关（Querier）：实现 Prometheus API 以聚合来自底层组件（如边车组件 Sidecar，或是存储网关 Store Gateway）的数据</li>
+<li>存储网关（Store Gateway）：将云存储中的数据内容暴露出来</li>
+<li>压缩器（Compactor）：将云存储中的数据进行压缩和下采样和保留</li>
+<li>接收器（Receiver）：从 Prometheus 的远程写入 WAL 接收数据，将其暴露出去或者上传到云存储</li>
+<li>规则组件（Ruler）：根据 Thanos 中的数据评估记录和警报规则</li>
+<li>查询前端：实现 Prometheus 的 API，将其代理给 Query，同时缓存响应</li>
+</ul>
+<p>从使用角度来看有两种方式去使用 Thanos，sidecar 模式和 receiver 模式。</p>
+<p><strong>sidecar 架构模式</strong></p>
+<p>Thanos Sidecar 组件需要和 Pormetheus 实例一起部署，用于代理 Thanos Querier 组件对本地 Prometheus 的数据读取，允许 Querier 使用通用、高效的 StoreAPI 查询 Prometheus 数据。第二是将 Prometheus 本地监控数据通过对象存储接口上传到对象存储中，这个上传是实时的，只要发现有新的监控数据保存到磁盘，会将这些监控数据上传至对象存储。</p>
+<p><img data-src="https://picdn.youdianzhishi.com/images/20220318155719.png" alt="sidecar"></p>
+<p>Thanos Sidecar 组件在 Prometheus 的远程读 API 之上实现了 Thanos 的 Store API，这使得 Querier 可以将 Prometheus 服务器视为时间序列数据的另一个来源，而无需直接与它的 API 进行交互。</p>
+<p>因为 Prometheus 每 2 小时生成一个时序数据块，Thanos Sidecar 会每隔 2 小时将这个块上传到一个对象存储桶中。这样 Prometheus 服务器就可以以相对较低的存储空间运行，同时通过对象存储提供历史数据，使得监控数据具有持久性和可查询性。但是这样并不意味着 Prometheus 可以完全无状态，因为如果 Prometheus 崩溃并重新启动，我们将失去大约 2 个小时的指标数据，所以 Prometheus 在实际运行中还是需要持久性磁盘的。</p>
+<p><strong>receiver 架构模式</strong></p>
+<p>Thanos Receiver 实现了 Prometheus 远程写 API，它构建在现有的 Prometheus TSDB 之上，并保持其实用性，同时通过长期存储、水平可伸缩性和下采样扩展其功能。Prometheus 实例被配置为连续地向它写入指标，然后 Thanos Receiver 默认每 2 小时将时间序列格式的监控数据块上传到一个对象存储的桶中。Thanos Receiver 同样暴露了 Store API，以便 Thanos Querier 可以实时查询接收到的指标。</p>
+<p><img data-src="https://picdn.youdianzhishi.com/images/20220318160814.png" alt="receiver"></p>
+<p>这两种模式有各种的优缺点，具体使用哪种模式需要结合生产环境综合考虑。</p>
+<h2 id="工作流程"><a href="#工作流程" class="headerlink" title="工作流程"></a>工作流程</h2><p>Thanos 是同时支持 Prometheus 读和写的远程存储方案，首先我们先看下 sidecar 模式下指标写入的整个流程：</p>
+<ul>
+<li>首先 Prometheus 从所采集服务的 metrics 接口抓取指标数据，同时根据自身所配置的 <code>recording rules</code> 定期对抓取到的指标数据进行评估，将结果以 TSDB 格式分块存储到本地，每个数据块的存储时长为 2 小时，且默认禁用了压缩功能。</li>
+<li>然后 <code>sidecar</code> 嗅探到 Prometheus 的数据存储目录生成了新的只读数据块时，会将该数据块上传到对象存储桶中做为长期历史数据保存，在上传时会将数据块中的 <code>meta.json</code> 进行修改添加 thanos 相关的字段，如 <code>external_labels</code>。</li>
+<li><code>rule</code> 根据所配置的 <code>recording rules</code> 定期地向 <code>query</code> 发起查询获取评估所需的指标值，并将结果以 TSDB 格式分块存储到本地。每个数据块的存储时长为 2 小时，且默认禁用了压缩功能，每个数据块的 <code>meta.json</code> 也附带了 thanos 拓展的 <code>external_lables</code> 字段。当本地生成了新的只读数据块时，其自身会将该数据块上传到远端对象存储桶中做为长期历史数据保存。</li>
+<li><code>compact</code> 定期将对象存储中地数据块进行压缩和降准采样，进行压缩时数据块中的 truck 会进行合并，对应的 <code>meta.json</code> 中的 level 也会一同增长，每次压缩累加 1，初始值为 1。在进行降准采样时会创建新的数据块，根据采样步长从原有的数据块中抽取值存储到新的数据块中，在 <code>meta.json</code> 中记录 <code>resolution</code> 为采样步长。</li>
+</ul>
+<p>读取指标的流程为：</p>
+<ul>
+<li>首先客户端通过 <code>query API</code> 向 <code>query</code> 发起查询，<code>query</code> 将请求转换成 <code>StoreAPI</code> 发送到其他的 <code>query</code>、<code>sidecar</code>、<code>rule</code> 和 <code>store</code> 上。</li>
+<li><code>sidecar</code> 接收到来自于 <code>query</code> 发起的查询请求后将其转换成 <code>query API</code> 请求，发送给其绑定的 Prometheus，由 Prometheus 从本地读取数据并响应，返回短期的本地采集和评估数据。</li>
+<li><code>rule</code> 接收到来自于 <code>query</code> 发起的查询请求后直接从本地读取数据并响应，返回短期的本地评估数据。</li>
+<li><code>store</code> 接收到来自于 <code>query</code> 发起的查询请求后首先从对象存储桶中遍历数据块的 <code>meta.json</code>，根据其中记录的时间范围和标签先进行一次过滤。接下来从对象存储桶中读取数据块的 <code>index</code> 和 <code>chunks</code> 进行查询，部分查询频率较高的<code>index</code> 会被缓存下来，下次查询使用到时可以直接读取。最终返回长期的历史采集和评估指标。</li>
+</ul>
+<p>对于发送报警的流程如下所示：</p>
+<ul>
+<li>Prometheus 根据自身配置的 <code>alerting</code> 规则定期地对自身采集的指标进行评估，当告警条件满足的情况下发起告警到 Alertmanager 上。</li>
+<li><code>rule</code> 根据自身配置的 <code>alerting</code> 规则定期的向 <code>query</code> 发起查询请求获取评估所需的指标，当告警条件满足的情况下发起告警到 Alertmanager 上。</li>
+<li>Alertmanager 接收到来自于 Prometheus 和 <code>rule</code> 的告警消息后进行分组合并后发出告警通知。</li>
+</ul>
+<h2 id="特性"><a href="#特性" class="headerlink" title="特性"></a>特性</h2><p>Thanos 相比起原生的 Prometheus 具有以下的一些优势：</p>
+<ul>
+<li>统一查询入口——以 <code>Querier</code> 作为统一的查询入口，其自身实现了 Prometheus 的查询接口和 <code>StoreAPI</code>，可为其他的 <code>Querier</code> 提供查询服务，在查询时会从每个 Prometheus 实例的 <code>Sidecar</code> 和 <code>Store Gateway</code> 获取到指标数据。</li>
+<li>查询去重——每个数据块都会带有特定的集群标签， <code>Querier</code> 在做查询时会去除集群标签，将指标名称和标签一致的序列根据时间排序合并。虽然指标数据来自不同的采集源，但是只会响应一份结果而不是多份重复的结果。</li>
+<li>高空间利用率——每个 Prometheus 本身不存储长时间的数据，<code>Sidecar</code> 会将 Prometheus 已经持久化的数据块上传到对象存储中。<code>Compactor</code> 会定时将远端对象存储中的长期数据进行压缩，并且根据采样时长做清理，节约存储空间。</li>
+<li>高可用——<code>Querier</code> 是无状态服务，天生支持水平拓展和高可用。<code>Store</code>、<code>Rule</code> 和 <code>Sidecar</code> 是有状态服务，在多副本部署的情况下也支持高可用，不过会产生数据冗余，需要牺牲存储空间。</li>
+<li>存储长期数据——Prometheus 实例的 <code>Sidecar</code> 会将本地数据上传到远端对象存储中作为长期数据</li>
+<li>横向拓展——当 Prometheus 的指标采集压力过大时，可以创建新的 Prometheus 实例，将 <code>scrape job</code> 拆分给多个 Prometheus，<code>Querier</code> 从多个 Prometheus 查询汇聚结果，降低单个 Prometheus 的压力</li>
+<li>跨集群查询——需要合并多个集群的查询结果时，仅需要在每个集群的 <code>Querier</code> 之上再添加一层 <code>Querier</code> 即可，这样的层层嵌套，可以使得集群规模无限制拓展。</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+              <a href="/tags/Prometheus/" rel="tag"># Prometheus</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/WebSocket%20%E5%92%8C%20HTTP/" rel="prev" title="WebSocket 和 HTTP">
+      <i class="fa fa-chevron-left"></i> WebSocket 和 HTTP
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Thanos%20sidecar/" rel="next" title="Thanos sidecar">
+      Thanos sidecar <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Thanos-%E6%9E%B6%E6%9E%84"><span class="nav-number">1.</span> <span class="nav-text">Thanos 架构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%B6%E6%9E%84"><span class="nav-number">1.1.</span> <span class="nav-text">架构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B7%A5%E4%BD%9C%E6%B5%81%E7%A8%8B"><span class="nav-number">1.2.</span> <span class="nav-text">工作流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%89%B9%E6%80%A7"><span class="nav-number">1.3.</span> <span class="nav-text">特性</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

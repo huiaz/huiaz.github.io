@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="如何在 Kubernetes 中实现服务的自动伸缩（autoscaling）？Of course. Automating the scaling of services is one of Kubernetes’ most powerful features, enabling applications to be both resilient to traffic spikes and cost">
+<meta property="og:type" content="article">
+<meta property="og:title" content="k8s_12">
+<meta property="og:url" content="http://example.com/2025/09/11/k8s_12/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="如何在 Kubernetes 中实现服务的自动伸缩（autoscaling）？Of course. Automating the scaling of services is one of Kubernetes’ most powerful features, enabling applications to be both resilient to traffic spikes and cost">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:44:24.499Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/k8s_12/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>k8s_12 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/k8s_12/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          k8s_12
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:44:24" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E9%9D%A2%E8%AF%95%E9%A2%98/" itemprop="url" rel="index"><span itemprop="name">面试题</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.3k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="如何在-Kubernetes-中实现服务的自动伸缩（autoscaling）？"><a href="#如何在-Kubernetes-中实现服务的自动伸缩（autoscaling）？" class="headerlink" title="如何在 Kubernetes 中实现服务的自动伸缩（autoscaling）？"></a>如何在 Kubernetes 中实现服务的自动伸缩（autoscaling）？</h3><p>Of course. Automating the scaling of services is one of Kubernetes’ most powerful features, enabling applications to be both resilient to traffic spikes and cost-effective during quiet periods. This is achieved through a combination of several components.</p>
+<h3 id="🤔-分析过程："><a href="#🤔-分析过程：" class="headerlink" title="🤔 分析过程："></a>🤔 分析过程：</h3><p>该问题旨在考察对Kubernetes核心动态管理能力的理解。一个全面的回答不能只提及一种自动伸缩方式，而应结构化地介绍Kubernetes中三个主要层次的自动伸缩器：<strong>HPA (水平), VPA (垂直), 和 CA (集群)<strong>。回答的重点在于阐明每种伸缩器的</strong>触发机制、作用范围和典型用例</strong>，并解释它们如何协同工作，共同构建一个弹性的、资源高效的系统。</p>
+<h3 id="💡-答案生成："><a href="#💡-答案生成：" class="headerlink" title="💡 答案生成："></a>💡 答案生成：</h3><h4 id="1-概念或定义"><a href="#1-概念或定义" class="headerlink" title="1. 概念或定义"></a>1. 概念或定义</h4><p><strong>Kubernetes自动伸缩（Autoscaling）</strong> 是指系统根据预定义的指标（如CPU使用率、内存消耗或自定义业务指标）自动调整计算资源的过程。这个过程可以在三个不同维度上进行：</p>
+<ol>
+<li><strong>水平Pod伸缩 (Horizontal Pod Autoscaling - HPA):</strong> 改变一个工作负载（如Deployment）的<strong>Pod副本数量</strong>。</li>
+<li><strong>垂直Pod伸缩 (Vertical Pod Autoscaling - VPA):</strong> 调整单个Pod的<strong>资源请求和限制</strong>（CPU&#x2F;内存）。</li>
+<li><strong>集群伸缩 (Cluster Autoscaling - CA):</strong> 改变集群中的<strong>节点数量</strong>。</li>
+</ol>
+<p>这三者协同工作，确保应用在任何负载下都有足够的资源，同时最大限度地降低成本。</p>
+<hr>
+<h4 id="2-水平Pod自动伸缩-Horizontal-Pod-Autoscaler-HPA"><a href="#2-水平Pod自动伸缩-Horizontal-Pod-Autoscaler-HPA" class="headerlink" title="2. 水平Pod自动伸缩 (Horizontal Pod Autoscaler - HPA)"></a>2. 水平Pod自动伸缩 (Horizontal Pod Autoscaler - HPA)</h4><p>这是最常用也是最广为人知的自动伸缩方式。</p>
+<ul>
+<li><p><strong>作用与机制:</strong><br>HPA是一个控制器，它会周期性地检查特定工作负载（如Deployment或StatefulSet）的聚合指标，并将其与用户设定的目标值进行比较。如果当前指标超出或低于目标值，HPA会调整该工作负载的<code>replicas</code>字段，以增加或减少Pod的数量。</p>
+<ul>
+<li><strong>控制循环:</strong> HPA Controller → 访问Metrics Server获取指标 → 计算所需副本数 → 更新Deployment&#x2F;StatefulSet的<code>.spec.replicas</code>。</li>
+</ul>
+</li>
+<li><p><strong>伸缩依据（指标类型）:</strong></p>
+<ul>
+<li><strong>标准资源指标 (Resource Metrics):</strong> 最常见的，如<strong>CPU平均使用率</strong>或<strong>内存平均使用量</strong>。</li>
+<li><strong>自定义指标 (Custom Metrics):</strong> 基于Pod内部暴露的任何指标，例如“每秒处理的请求数”或“队列中的任务数量”。</li>
+<li><strong>外部指标 (External Metrics):</strong> 基于集群外部系统的指标，例如云消息队列的长度或来自外部监控系统的数据库延迟。</li>
+</ul>
+</li>
+<li><p><strong>如何实现:</strong></p>
+<ol>
+<li><strong>部署Metrics Server:</strong> HPA依赖Metrics Server从Kubelet收集资源使用数据。必须先在集群中部署它。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml</span><br></pre></td></tr></table></figure></li>
+<li><strong>创建HPA对象:</strong> 可以通过命令行或YAML文件创建HPA。<ul>
+<li><strong>命令行示例:</strong><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 为名为 &quot;my-app&quot; 的 deployment 创建一个HPA</span></span><br><span class="line"><span class="comment"># 目标CPU使用率为50%，副本数在1到10之间伸缩</span></span><br><span class="line">kubectl autoscale deployment my-app --cpu-percent=50 --min=1 --max=10</span><br></pre></td></tr></table></figure></li>
+<li><strong>YAML示例:</strong><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">autoscaling/v2</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">HorizontalPodAutoscaler</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">my-app-hpa</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">scaleTargetRef:</span></span><br><span class="line">    <span class="attr">apiVersion:</span> <span class="string">apps/v1</span></span><br><span class="line">    <span class="attr">kind:</span> <span class="string">Deployment</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">my-app</span></span><br><span class="line">  <span class="attr">minReplicas:</span> <span class="number">1</span></span><br><span class="line">  <span class="attr">maxReplicas:</span> <span class="number">10</span></span><br><span class="line">  <span class="attr">metrics:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">type:</span> <span class="string">Resource</span></span><br><span class="line">    <span class="attr">resource:</span></span><br><span class="line">      <span class="attr">name:</span> <span class="string">cpu</span></span><br><span class="line">      <span class="attr">target:</span></span><br><span class="line">        <span class="attr">type:</span> <span class="string">Utilization</span></span><br><span class="line">        <span class="attr">averageUtilization:</span> <span class="number">50</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+</ol>
+</li>
+</ul>
+<hr>
+<h4 id="3-垂直Pod自动伸缩-Vertical-Pod-Autoscaler-VPA"><a href="#3-垂直Pod自动伸缩-Vertical-Pod-Autoscaler-VPA" class="headerlink" title="3. 垂直Pod自动伸缩 (Vertical Pod Autoscaler - VPA)"></a>3. 垂直Pod自动伸缩 (Vertical Pod Autoscaler - VPA)</h4><p>VPA关注的是“质量”而非“数量”，它旨在为应用分配合理的资源。</p>
+<ul>
+<li><p><strong>作用与机制:</strong><br>VPA会监控Pod的历史资源使用情况，并根据这些数据推荐或自动应用最佳的CPU和内存<code>requests</code>。这有助于避免因资源请求过低导致的性能问题，或因请求过高造成的资源浪费。</p>
+<ul>
+<li><strong>重要提示:</strong> 在<code>Auto</code>模式下，要应用新的资源配置，<strong>VPA会驱逐并重建Pod</strong>。因此，应用必须能够容忍这种重启。</li>
+</ul>
+</li>
+<li><p><strong>工作模式 (<code>updateMode</code>):</strong></p>
+<ul>
+<li><code>Off</code>: VPA只计算并提供推荐值，不做任何更改。非常适合用于分析和获取优化建议。</li>
+<li><code>Initial</code>: VPA只在Pod创建时设置资源请求，之后不再变动。</li>
+<li><code>Auto</code>: VPA会在Pod的生命周期内持续调整资源请求，并在必要时重建Pod。</li>
+</ul>
+</li>
+<li><p><strong>如何实现:</strong><br>VPA不是Kubernetes核心组件，需要单独安装。安装后，创建一个VPA对象指向目标工作负载即可。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">apiVersion:</span> <span class="string">&quot;autoscaling.k8s.io/v1&quot;</span></span><br><span class="line"><span class="attr">kind:</span> <span class="string">VerticalPodAutoscaler</span></span><br><span class="line"><span class="attr">metadata:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">my-app-vpa</span></span><br><span class="line"><span class="attr">spec:</span></span><br><span class="line">  <span class="attr">targetRef:</span></span><br><span class="line">    <span class="attr">apiVersion:</span> <span class="string">&quot;apps/v1&quot;</span></span><br><span class="line">    <span class="attr">kind:</span> <span class="string">&quot;Deployment&quot;</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">&quot;my-app&quot;</span></span><br><span class="line">  <span class="attr">updatePolicy:</span></span><br><span class="line">    <span class="attr">updateMode:</span> <span class="string">&quot;Auto&quot;</span> <span class="comment"># or &quot;Off&quot;, &quot;Initial&quot;</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+<hr>
+<h4 id="4-集群自动伸缩-Cluster-Autoscaler-CA"><a href="#4-集群自动伸缩-Cluster-Autoscaler-CA" class="headerlink" title="4. 集群自动伸缩 (Cluster Autoscaler - CA)"></a>4. 集群自动伸缩 (Cluster Autoscaler - CA)</h4><p>CA负责基础设施层的伸缩。</p>
+<ul>
+<li><p><strong>作用与机制:</strong><br>CA通过与云提供商（AWS, GCP, Azure等）的API交互来调整集群的节点数量。</p>
+<ul>
+<li><strong>扩容 (Scale-Up):</strong> 当CA发现有Pod因为资源不足（如CPU、内存不足）而处于<code>Pending</code>状态时，它会自动向云平台申请创建新的节点，并将这些节点加入集群。</li>
+<li><strong>缩容 (Scale-Down):</strong> 当CA发现某些节点在一段时间内利用率很低，并且其上运行的所有Pod都可以被安全地重新调度到其他节点时，它会驱逐这些Pod，然后从云平台删除该节点以节省成本。</li>
+</ul>
+</li>
+<li><p><strong>如何实现:</strong><br>CA的部署方式因云提供商而异，通常需要在集群中部署一个特定的Deployment，并为其配置访问云平台API所需的IAM权限。</p>
+</li>
+</ul>
+<hr>
+<h4 id="5-最佳实践与协同工作"><a href="#5-最佳实践与协同工作" class="headerlink" title="5. 最佳实践与协同工作"></a>5. 最佳实践与协同工作</h4><ul>
+<li><strong>HPA + CA 是黄金组合:</strong> 这是最常见的模式。当应用负载增加时，HPA创建更多Pod。如果现有节点资源不足以容纳这些新Pod，它们会进入<code>Pending</code>状态，从而触发CA添加新节点。负载降低时，过程相反。</li>
+<li><strong>VPA 与 HPA 的关系:</strong> <strong>历史上，VPA不能与基于CPU或内存的HPA同时作用于同一个工作负载</strong>，因为它们可能会相互冲突。现在已有实验性支持，但通常的最佳实践是：<ul>
+<li>使用VPA的<code>Off</code>模式来找到应用的“最佳”资源请求值，并将这些值作为基线写入Deployment的YAML中。</li>
+<li>然后，为该Deployment配置HPA来处理流量波动。</li>
+</ul>
+</li>
+<li><strong>资源请求是关键:</strong> 自动伸缩工作的前提是为Pod设置了合理的**资源请求 (<code>requests</code>)**。HPA使用<code>requests</code>来计算利用率，调度器也使用<code>requests</code>来决定Pod可以被调度到哪个节点。</li>
+</ul>
+<p><strong>结论：</strong> Kubernetes自动伸缩是一个多层次的系统，结合了HPA用于应对工作负载波动，VPA用于优化资源效率，以及CA用于保障基础设施容量，三者共同实现了高度自动化、弹性和成本效益的应用管理。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/k8s_ConfigMap&Secret%20/" rel="prev" title="k8s_ConfigMap&Secret">
+      <i class="fa fa-chevron-left"></i> k8s_ConfigMap&Secret
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/k8s_11/" rel="next" title="k8s_11">
+      k8s_11 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%9C%A8-Kubernetes-%E4%B8%AD%E5%AE%9E%E7%8E%B0%E6%9C%8D%E5%8A%A1%E7%9A%84%E8%87%AA%E5%8A%A8%E4%BC%B8%E7%BC%A9%EF%BC%88autoscaling%EF%BC%89%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">如何在 Kubernetes 中实现服务的自动伸缩（autoscaling）？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%F0%9F%A4%94-%E5%88%86%E6%9E%90%E8%BF%87%E7%A8%8B%EF%BC%9A"><span class="nav-number">2.</span> <span class="nav-text">🤔 分析过程：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%F0%9F%92%A1-%E7%AD%94%E6%A1%88%E7%94%9F%E6%88%90%EF%BC%9A"><span class="nav-number">3.</span> <span class="nav-text">💡 答案生成：</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E6%A6%82%E5%BF%B5%E6%88%96%E5%AE%9A%E4%B9%89"><span class="nav-number">3.1.</span> <span class="nav-text">1. 概念或定义</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E6%B0%B4%E5%B9%B3Pod%E8%87%AA%E5%8A%A8%E4%BC%B8%E7%BC%A9-Horizontal-Pod-Autoscaler-HPA"><span class="nav-number">3.2.</span> <span class="nav-text">2. 水平Pod自动伸缩 (Horizontal Pod Autoscaler - HPA)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E5%9E%82%E7%9B%B4Pod%E8%87%AA%E5%8A%A8%E4%BC%B8%E7%BC%A9-Vertical-Pod-Autoscaler-VPA"><span class="nav-number">3.3.</span> <span class="nav-text">3. 垂直Pod自动伸缩 (Vertical Pod Autoscaler - VPA)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-%E9%9B%86%E7%BE%A4%E8%87%AA%E5%8A%A8%E4%BC%B8%E7%BC%A9-Cluster-Autoscaler-CA"><span class="nav-number">3.4.</span> <span class="nav-text">4. 集群自动伸缩 (Cluster Autoscaler - CA)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5%E4%B8%8E%E5%8D%8F%E5%90%8C%E5%B7%A5%E4%BD%9C"><span class="nav-number">3.5.</span> <span class="nav-text">5. 最佳实践与协同工作</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

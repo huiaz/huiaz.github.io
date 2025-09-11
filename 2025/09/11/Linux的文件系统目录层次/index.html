@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Linux 文件系统层次结构 一、Linux 文件系统层次结构 (FHS) 概述Linux 的文件系统是一个单一的、统一的目录树，所有文件和目录都从根目录 &#x2F; 开始。这与 Windows 系统中每个分区（如 C:, D:）都有自己的目录树不同。即使系统有多个硬盘或分区，它们也会被“挂载”到这个统一的目录树的某个点上，成为其中的一部分。 FHS 的主要目标是：  标准化： 确保不同 Linux 发行">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux的文件系统目录层次">
+<meta property="og:url" content="http://example.com/2025/09/11/Linux%E7%9A%84%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9B%AE%E5%BD%95%E5%B1%82%E6%AC%A1/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="Linux 文件系统层次结构 一、Linux 文件系统层次结构 (FHS) 概述Linux 的文件系统是一个单一的、统一的目录树，所有文件和目录都从根目录 &#x2F; 开始。这与 Windows 系统中每个分区（如 C:, D:）都有自己的目录树不同。即使系统有多个硬盘或分区，它们也会被“挂载”到这个统一的目录树的某个点上，成为其中的一部分。 FHS 的主要目标是：  标准化： 确保不同 Linux 发行">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:48:27.154Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/Linux%E7%9A%84%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9B%AE%E5%BD%95%E5%B1%82%E6%AC%A1/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Linux的文件系统目录层次 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Linux%E7%9A%84%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E7%9B%AE%E5%BD%95%E5%B1%82%E6%AC%A1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Linux的文件系统目录层次
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:48:27" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/Manage/" itemprop="url" rel="index"><span itemprop="name">Manage</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.5k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="Linux-文件系统层次结构"><a href="#Linux-文件系统层次结构" class="headerlink" title="Linux 文件系统层次结构"></a>Linux 文件系统层次结构</h3><hr>
+<h3 id="一、Linux-文件系统层次结构-FHS-概述"><a href="#一、Linux-文件系统层次结构-FHS-概述" class="headerlink" title="一、Linux 文件系统层次结构 (FHS) 概述"></a>一、Linux 文件系统层次结构 (FHS) 概述</h3><p>Linux 的文件系统是一个单一的、统一的目录树，所有文件和目录都从根目录 <code>/</code> 开始。这与 Windows 系统中每个分区（如 C:, D:）都有自己的目录树不同。即使系统有多个硬盘或分区，它们也会被“挂载”到这个统一的目录树的某个点上，成为其中的一部分。</p>
+<p>FHS 的主要目标是：</p>
+<ol>
+<li><strong>标准化：</strong> 确保不同 Linux 发行版的文件和目录位置保持一致，方便用户和开发人员。</li>
+<li><strong>可移植性：</strong> 简化软件在不同 Linux 系统间的移植。</li>
+<li><strong>层次性：</strong> 清晰地划分系统文件、程序、用户数据、可变数据等，方便管理和备份。</li>
+<li><strong>清晰性：</strong> 目录名称大多具有描述性，使其用途一目了然。</li>
+</ol>
+<h3 id="二、重要目录及其用途示例"><a href="#二、重要目录及其用途示例" class="headerlink" title="二、重要目录及其用途示例"></a>二、重要目录及其用途示例</h3><p>下面我们将详细介绍 Linux 系统中一些重要的目录及其常见用途。</p>
+<h4 id="1-根目录"><a href="#1-根目录" class="headerlink" title="1. / (根目录)"></a>1. <code>/</code> (根目录)</h4><ul>
+<li><strong>用途：</strong> 整个文件系统的最顶层，所有其他目录和文件都位于其下。系统启动所需的核心文件位于此目录，或者通过其下的子目录链接。</li>
+<li><strong>示例内容：</strong> 常见子目录如 <code>/bin</code>, <code>/etc</code>, <code>/home</code>, <code>/usr</code>, <code>/var</code> 等。</li>
+</ul>
+<h4 id="2-bin-二进制可执行文件"><a href="#2-bin-二进制可执行文件" class="headerlink" title="2. /bin (二进制可执行文件)"></a>2. <code>/bin</code> (二进制可执行文件)</h4><ul>
+<li><strong>用途：</strong> 存放系统启动和运行所需的基本用户命令（二进制可执行文件）。这些命令在单用户模式或系统修复模式下也可用。</li>
+<li><strong>示例内容：</strong> <code>ls</code>, <code>cp</code>, <code>mv</code>, <code>rm</code>, <code>cat</code>, <code>mkdir</code>, <code>echo</code>, <code>bash</code> 等。</li>
+</ul>
+<h4 id="3-sbin-系统二进制可执行文件"><a href="#3-sbin-系统二进制可执行文件" class="headerlink" title="3. /sbin (系统二进制可执行文件)"></a>3. <code>/sbin</code> (系统二进制可执行文件)</h4><ul>
+<li><strong>用途：</strong> 存放系统管理员使用的基本系统管理命令（二进制可执行文件）。这些命令通常用于系统维护和管理，例如启动&#x2F;停止服务、配置网络等。</li>
+<li><strong>示例内容：</strong> <code>fdisk</code>, <code>reboot</code>, <code>shutdown</code>, <code>ifconfig</code>, <code>ip</code>, <code>mount</code>, <code>fsck</code> 等。</li>
+</ul>
+<h4 id="4-etc-配置文件"><a href="#4-etc-配置文件" class="headerlink" title="4. /etc (配置文件)"></a>4. <code>/etc</code> (配置文件)</h4><ul>
+<li><strong>用途：</strong> 存放系统及大部分应用程序的配置文件。这些文件通常是文本文件，用于控制系统行为和应用程序设置。</li>
+<li><strong>示例内容：</strong> <code>/etc/passwd</code> (用户账户信息), <code>/etc/fstab</code> (文件系统挂载表), <code>/etc/hosts</code> (主机名解析), <code>/etc/resolv.conf</code> (DNS 配置), <code>/etc/ssh/sshd_config</code> (SSH 服务配置), <code>/etc/apt/sources.list</code> (软件包源配置), <code>/etc/nginx/nginx.conf</code> (Nginx 配置)等。</li>
+</ul>
+<h4 id="5-dev-设备文件"><a href="#5-dev-设备文件" class="headerlink" title="5. /dev (设备文件)"></a>5. <code>/dev</code> (设备文件)</h4><ul>
+<li><strong>用途：</strong> 存放设备文件（不占用磁盘空间，而是代表物理或虚拟设备）。通过这些文件，用户和程序可以与硬件设备交互。</li>
+<li><strong>示例内容：</strong> <code>/dev/sda</code> (第一块SCSI&#x2F;SATA硬盘), <code>/dev/sda1</code> (第一块硬盘的第一个分区), <code>/dev/null</code> (空设备，丢弃所有写入的数据), <code>/dev/zero</code> (零设备，提供无限的零), <code>/dev/tty</code>&#x2F;<code>/dev/pts/0</code> (终端设备)等。</li>
+</ul>
+<h4 id="6-proc-进程信息伪文件系统"><a href="#6-proc-进程信息伪文件系统" class="headerlink" title="6. /proc (进程信息伪文件系统)"></a>6. <code>/proc</code> (进程信息伪文件系统)</h4><ul>
+<li><strong>用途：</strong> 一个虚拟文件系统，不存储在硬盘上，而是由内核动态生成。它提供了关于系统进程、内核信息、内存使用等运行时的信息。</li>
+<li><strong>示例内容：</strong> <code>/proc/cpuinfo</code> (CPU 信息), <code>/proc/meminfo</code> (内存信息), <code>/proc/mounts</code> (已挂载的文件系统), <code>/proc/&lt;PID&gt;</code> (每个进程的详细信息目录)等。</li>
+</ul>
+<h4 id="7-sys-系统信息伪文件系统"><a href="#7-sys-系统信息伪文件系统" class="headerlink" title="7. /sys (系统信息伪文件系统)"></a>7. <code>/sys</code> (系统信息伪文件系统)</h4><ul>
+<li><strong>用途：</strong> 另一个虚拟文件系统，自2.6版内核引入。它提供了更结构化的设备信息和内核参数，允许用户通过文件系统接口来配置内核和硬件。</li>
+<li><strong>示例内容：</strong> <code>/sys/class/net/eth0/address</code> (eth0 网卡的MAC地址), <code>/sys/block/sda/size</code> (sda 设备的大小)等。</li>
+</ul>
+<h4 id="8-var-可变数据文件"><a href="#8-var-可变数据文件" class="headerlink" title="8. /var (可变数据文件)"></a>8. <code>/var</code> (可变数据文件)</h4><ul>
+<li><strong>用途：</strong> 存放系统运行时会不断变化的文件，例如日志文件、邮件队列、临时文件、网站数据等。</li>
+<li><strong>示例内容：</strong><ul>
+<li><code>/var/log</code>: 系统和应用程序日志文件（如 <code>/var/log/syslog</code>, <code>/var/log/messages</code>, <code>/var/log/auth.log</code>, <code>/var/log/httpd/access_log</code> 等）。</li>
+<li><code>/var/run</code> (或 <code>/run</code>): 运行时数据，如 PID 文件，系统重启后清空。</li>
+<li><code>/var/tmp</code>: 较大的临时文件，可以在重启后保留。</li>
+<li><code>/var/spool</code>: 打印队列、邮件队列等。</li>
+<li><code>/var/www</code>: Web 服务器的默认根目录（例如 Apache 或 Nginx）。</li>
+<li><code>/var/lib</code>: 系统和应用程序的状态信息，如数据库文件、包管理器的状态数据等。</li>
+</ul>
+</li>
+</ul>
+<h4 id="9-tmp-临时文件"><a href="#9-tmp-临时文件" class="headerlink" title="9. /tmp (临时文件)"></a>9. <code>/tmp</code> (临时文件)</h4><ul>
+<li><strong>用途：</strong> 存放临时文件。所有用户都可以在这里创建文件，通常在系统重启时或定期被清理。</li>
+<li><strong>示例内容：</strong> 临时下载文件、程序运行时生成的临时文件等。</li>
+</ul>
+<h4 id="10-usr-Unix-System-Resources"><a href="#10-usr-Unix-System-Resources" class="headerlink" title="10. /usr (Unix System Resources)"></a>10. <code>/usr</code> (Unix System Resources)</h4><ul>
+<li><strong>用途：</strong> 存放绝大多数用户命令和应用程序、库文件、文档等。这是一个非常重要的目录，其内容相对静态（不随系统运行而变化），因此可以被多个系统共享（在只读模式下挂载）。</li>
+<li><strong>示例内容：</strong><ul>
+<li><code>/usr/bin</code>: 非基本用户命令（数量远多于 <code>/bin</code>）。</li>
+<li><code>/usr/sbin</code>: 非基本系统管理命令。</li>
+<li><code>/usr/local</code>: 本地安装的软件（通常是用户从源码编译安装的）。</li>
+<li><code>/usr/lib</code>: 应用程序和程序的库文件。</li>
+<li><code>/usr/share</code>: 与体系结构无关的共享数据，如文档、man 页面、图标、默认配置文件模板等。</li>
+<li><code>/usr/include</code>: C&#x2F;C++ 编程的头文件。</li>
+</ul>
+</li>
+</ul>
+<h4 id="11-home-用户主目录"><a href="#11-home-用户主目录" class="headerlink" title="11. /home (用户主目录)"></a>11. <code>/home</code> (用户主目录)</h4><ul>
+<li><strong>用途：</strong> 存放普通用户的主目录。每个用户的个人文件、文档、配置都会存储在其各自的主目录中（如 <code>/home/username</code>）。</li>
+<li><strong>示例内容：</strong> <code>/home/user1/documents</code>, <code>/home/user2/pictures</code>, <code>/home/user1/.bashrc</code> (用户Shell配置), <code>/home/user1/.ssh</code> (SSH 密钥)等。</li>
+</ul>
+<h4 id="12-root-root-用户主目录"><a href="#12-root-root-用户主目录" class="headerlink" title="12. /root (root 用户主目录)"></a>12. <code>/root</code> (root 用户主目录)</h4><ul>
+<li><strong>用途：</strong> 系统管理员（root 用户）的主目录，与普通用户的主目录分开存放，以保护其配置和数据。</li>
+<li><strong>示例内容：</strong> root 用户的配置文件、脚本等。</li>
+</ul>
+<h4 id="13-opt-可选的应用程序软件包"><a href="#13-opt-可选的应用程序软件包" class="headerlink" title="13. /opt (可选的应用程序软件包)"></a>13. <code>/opt</code> (可选的应用程序软件包)</h4><ul>
+<li><strong>用途：</strong> 存放第三方独立软件包和附加应用程序。通常，每个软件包会有一个独立的子目录，方便管理和卸载。</li>
+<li><strong>示例内容：</strong> <code>/opt/google/chrome</code>, <code>/opt/splunk</code>, <code>/opt/jdk</code> 等。</li>
+</ul>
+<h4 id="14-mnt-临时文件系统挂载点"><a href="#14-mnt-临时文件系统挂载点" class="headerlink" title="14. /mnt (临时文件系统挂载点)"></a>14. <code>/mnt</code> (临时文件系统挂载点)</h4><ul>
+<li><strong>用途：</strong> 临时挂载文件系统的地方。例如，挂载一个 USB 驱动器、CD-ROM、网络文件共享或另一个硬盘分区时，通常会挂载到 <code>/mnt</code> 下的某个子目录。</li>
+<li><strong>示例内容：</strong> <code>/mnt/usbdisk</code>, <code>/mnt/cdrom</code>, <code>/mnt/nfs_share</code> 等。</li>
+</ul>
+<h4 id="15-media-可移动媒体设备挂载点"><a href="#15-media-可移动媒体设备挂载点" class="headerlink" title="15. /media (可移动媒体设备挂载点)"></a>15. <code>/media</code> (可移动媒体设备挂载点)</h4><ul>
+<li><strong>用途：</strong> 由系统自动管理的，用于挂载可移动媒体设备的目录，例如 USB 闪存驱动器、CD&#x2F;DVD 驱动器、SD 卡等。</li>
+<li><strong>示例内容：</strong> 当插入 USB 驱动器时，它可能自动挂载到 <code>/media/username/disk_label</code>。</li>
+</ul>
+<h4 id="16-boot-引导加载器文件"><a href="#16-boot-引导加载器文件" class="headerlink" title="16. /boot (引导加载器文件)"></a>16. <code>/boot</code> (引导加载器文件)</h4><ul>
+<li><strong>用途：</strong> 存放引导加载器（如 GRUB, LILO）所需的文件，以及 Linux 内核镜像文件和 <code>initramfs</code>（初始 ramdisk），这些都是系统启动所必需的。</li>
+<li><strong>示例内容：</strong> <code>/boot/grub</code>, <code>/boot/vmlinuz-5.15.0-86-generic</code>, <code>/boot/initrd.img-5.15.0-86-generic</code> 等。</li>
+</ul>
+<h4 id="17-srv-服务数据"><a href="#17-srv-服务数据" class="headerlink" title="17. /srv (服务数据)"></a>17. <code>/srv</code> (服务数据)</h4><ul>
+<li><strong>用途：</strong> 存放特定服务的数据。例如，FTP 服务器的数据目录，Web 服务器的根目录（除了 <code>/var/www</code>），版本控制系统的数据等。</li>
+<li><strong>示例内容：</strong> <code>/srv/ftp</code>, <code>/srv/www</code> 等。这个目录通常是空的，需要管理员根据服务需求创建子目录。</li>
+</ul>
+<hr>
+<h3 id="三、FHS-的重要性和运维实践"><a href="#三、FHS-的重要性和运维实践" class="headerlink" title="三、FHS 的重要性和运维实践"></a>三、FHS 的重要性和运维实践</h3><ul>
+<li><strong>故障排查：</strong> 当系统出现问题时，FHS 指引你快速定位相关的日志文件（<code>/var/log</code>）、配置文件（<code>/etc</code>）或核心程序（<code>/usr/bin</code>, <code>/sbin</code>）。</li>
+<li><strong>安全：</strong> 将静态文件和可变数据分开，更易于实现只读挂载，提高安全性。例如，<code>/usr</code> 可以挂载为只读，而 <code>/var</code> 必须是可写的。</li>
+<li><strong>备份与恢复：</strong> 根据 FHS，可以更容易地规划备份策略。例如，只备份用户数据 <code>/home</code> 和重要的配置文件 <code>/etc</code> 及 <code>/var/log</code> 等，而系统程序文件可以在系统重装后重新安装。</li>
+<li><strong>多盘管理：</strong> 如果系统有多个硬盘，可以将例如 <code>/home</code>, <code>/var</code>, <code>/opt</code> 等目录单独挂载到不同的分区或硬盘上，以优化性能、隔离数据或在系统盘空间不足时进行扩容。</li>
+<li><strong>标准化部署：</strong> 无论是手动部署还是自动化脚本，遵循 FHS 能够确保应用程序和服务的安装位置符合预期，便于管理和维护。</li>
+</ul>
+<p>理解并遵循 FHS 是每一位 Linux 运维工程师的基本功，它能帮助你更好地管理和维护 Linux 系统。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Local%20%E5%AD%98%E5%82%A8/" rel="prev" title="Local 存储">
+      <i class="fa fa-chevron-left"></i> Local 存储
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Linux%20%E7%BD%91%E7%BB%9C%E6%95%85%E9%9A%9C%E6%8E%92%E9%99%A4%E6%80%9D%E8%B7%AF/" rel="next" title="Linux 网络故障排除思路">
+      Linux 网络故障排除思路 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Linux-%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%B1%82%E6%AC%A1%E7%BB%93%E6%9E%84"><span class="nav-number">1.</span> <span class="nav-text">Linux 文件系统层次结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E3%80%81Linux-%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%B1%82%E6%AC%A1%E7%BB%93%E6%9E%84-FHS-%E6%A6%82%E8%BF%B0"><span class="nav-number">2.</span> <span class="nav-text">一、Linux 文件系统层次结构 (FHS) 概述</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E9%87%8D%E8%A6%81%E7%9B%AE%E5%BD%95%E5%8F%8A%E5%85%B6%E7%94%A8%E9%80%94%E7%A4%BA%E4%BE%8B"><span class="nav-number">3.</span> <span class="nav-text">二、重要目录及其用途示例</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E6%A0%B9%E7%9B%AE%E5%BD%95"><span class="nav-number">3.1.</span> <span class="nav-text">1. &#x2F; (根目录)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-bin-%E4%BA%8C%E8%BF%9B%E5%88%B6%E5%8F%AF%E6%89%A7%E8%A1%8C%E6%96%87%E4%BB%B6"><span class="nav-number">3.2.</span> <span class="nav-text">2. &#x2F;bin (二进制可执行文件)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-sbin-%E7%B3%BB%E7%BB%9F%E4%BA%8C%E8%BF%9B%E5%88%B6%E5%8F%AF%E6%89%A7%E8%A1%8C%E6%96%87%E4%BB%B6"><span class="nav-number">3.3.</span> <span class="nav-text">3. &#x2F;sbin (系统二进制可执行文件)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-etc-%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="nav-number">3.4.</span> <span class="nav-text">4. &#x2F;etc (配置文件)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-dev-%E8%AE%BE%E5%A4%87%E6%96%87%E4%BB%B6"><span class="nav-number">3.5.</span> <span class="nav-text">5. &#x2F;dev (设备文件)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#6-proc-%E8%BF%9B%E7%A8%8B%E4%BF%A1%E6%81%AF%E4%BC%AA%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F"><span class="nav-number">3.6.</span> <span class="nav-text">6. &#x2F;proc (进程信息伪文件系统)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#7-sys-%E7%B3%BB%E7%BB%9F%E4%BF%A1%E6%81%AF%E4%BC%AA%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F"><span class="nav-number">3.7.</span> <span class="nav-text">7. &#x2F;sys (系统信息伪文件系统)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#8-var-%E5%8F%AF%E5%8F%98%E6%95%B0%E6%8D%AE%E6%96%87%E4%BB%B6"><span class="nav-number">3.8.</span> <span class="nav-text">8. &#x2F;var (可变数据文件)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#9-tmp-%E4%B8%B4%E6%97%B6%E6%96%87%E4%BB%B6"><span class="nav-number">3.9.</span> <span class="nav-text">9. &#x2F;tmp (临时文件)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#10-usr-Unix-System-Resources"><span class="nav-number">3.10.</span> <span class="nav-text">10. &#x2F;usr (Unix System Resources)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#11-home-%E7%94%A8%E6%88%B7%E4%B8%BB%E7%9B%AE%E5%BD%95"><span class="nav-number">3.11.</span> <span class="nav-text">11. &#x2F;home (用户主目录)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#12-root-root-%E7%94%A8%E6%88%B7%E4%B8%BB%E7%9B%AE%E5%BD%95"><span class="nav-number">3.12.</span> <span class="nav-text">12. &#x2F;root (root 用户主目录)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#13-opt-%E5%8F%AF%E9%80%89%E7%9A%84%E5%BA%94%E7%94%A8%E7%A8%8B%E5%BA%8F%E8%BD%AF%E4%BB%B6%E5%8C%85"><span class="nav-number">3.13.</span> <span class="nav-text">13. &#x2F;opt (可选的应用程序软件包)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#14-mnt-%E4%B8%B4%E6%97%B6%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E6%8C%82%E8%BD%BD%E7%82%B9"><span class="nav-number">3.14.</span> <span class="nav-text">14. &#x2F;mnt (临时文件系统挂载点)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#15-media-%E5%8F%AF%E7%A7%BB%E5%8A%A8%E5%AA%92%E4%BD%93%E8%AE%BE%E5%A4%87%E6%8C%82%E8%BD%BD%E7%82%B9"><span class="nav-number">3.15.</span> <span class="nav-text">15. &#x2F;media (可移动媒体设备挂载点)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#16-boot-%E5%BC%95%E5%AF%BC%E5%8A%A0%E8%BD%BD%E5%99%A8%E6%96%87%E4%BB%B6"><span class="nav-number">3.16.</span> <span class="nav-text">16. &#x2F;boot (引导加载器文件)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#17-srv-%E6%9C%8D%E5%8A%A1%E6%95%B0%E6%8D%AE"><span class="nav-number">3.17.</span> <span class="nav-text">17. &#x2F;srv (服务数据)</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E3%80%81FHS-%E7%9A%84%E9%87%8D%E8%A6%81%E6%80%A7%E5%92%8C%E8%BF%90%E7%BB%B4%E5%AE%9E%E8%B7%B5"><span class="nav-number">4.</span> <span class="nav-text">三、FHS 的重要性和运维实践</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

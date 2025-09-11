@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Nginx 中如何实现请求的重定向请求重定向是 Nginx 中一项非常常用且重要的功能，主要用于：  URL 规范化： 例如，将 http:&#x2F;&#x2F;example.com 重定向到 https:&#x2F;&#x2F;example.com，或将 example.com 重定向到 www.example.com。 网站结构调整： 当你更改了网站某些页面的 URL 路径，需要将旧 URL 重定向到新 URL，以避免用户遇到">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Nginx重定向">
+<meta property="og:url" content="http://example.com/2025/09/11/%E9%87%8D%E5%AE%9A%E5%90%91/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="Nginx 中如何实现请求的重定向请求重定向是 Nginx 中一项非常常用且重要的功能，主要用于：  URL 规范化： 例如，将 http:&#x2F;&#x2F;example.com 重定向到 https:&#x2F;&#x2F;example.com，或将 example.com 重定向到 www.example.com。 网站结构调整： 当你更改了网站某些页面的 URL 路径，需要将旧 URL 重定向到新 URL，以避免用户遇到">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:20:58.780Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/%E9%87%8D%E5%AE%9A%E5%90%91/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Nginx重定向 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/%E9%87%8D%E5%AE%9A%E5%90%91/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Nginx重定向
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:20:58" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/" itemprop="url" rel="index"><span itemprop="name">WEB</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/Nginx/" itemprop="url" rel="index"><span itemprop="name">Nginx</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>7.5k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>7 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Nginx-中如何实现请求的重定向"><a href="#Nginx-中如何实现请求的重定向" class="headerlink" title="Nginx 中如何实现请求的重定向"></a>Nginx 中如何实现请求的重定向</h1><p>请求重定向是 Nginx 中一项非常常用且重要的功能，主要用于：</p>
+<ol>
+<li><strong>URL 规范化：</strong> 例如，将 <code>http://example.com</code> 重定向到 <code>https://example.com</code>，或将 <code>example.com</code> 重定向到 <code>www.example.com</code>。</li>
+<li><strong>网站结构调整：</strong> 当你更改了网站某些页面的 URL 路径，需要将旧 URL 重定向到新 URL，以避免用户遇到 <code>404 Not Found</code> 错误，并保持搜索引擎排名。</li>
+<li><strong>负载均衡或维护：</strong> 在特定情况下将所有请求重定向到另一个域名或一个维护页面。</li>
+<li><strong>强制添加&#x2F;移除斜杠：</strong> 规范 URL 格式。</li>
+</ol>
+<p>Nginx 中实现重定向主要通过以下两个指令：<code>return</code> 和 <code>rewrite</code>。</p>
+<hr>
+<h3 id="1-return-指令-简单重定向"><a href="#1-return-指令-简单重定向" class="headerlink" title="1. return 指令 (简单重定向)"></a>1. <code>return</code> 指令 (简单重定向)</h3><p><code>return</code> 指令是实现简单重定向最直接、最高效的方式。它会立即停止处理请求，并向客户端发送指定的 HTTP 状态码及其对应的 URL。</p>
+<p><strong>语法：</strong> <code>return code [text];</code><br>或 <code>return code URL;</code></p>
+<p><strong>常用状态码：</strong></p>
+<ul>
+<li><strong><code>301 Moved Permanently</code>：</strong> 永久重定向。最常用，告诉浏览器和搜索引擎这个资源已经永久移动到新的 URL。对 SEO 非常重要。</li>
+<li><strong><code>302 Found</code>：</strong> 临时重定向。告诉浏览器和搜索引擎这个资源暂时移动到新的 URL。不常用，因为搜索引擎可能不传递权重。</li>
+<li><strong><code>307 Temporary Redirect</code>：</strong> 临时重定向。与 <code>302</code> 类似，但更明确地指示客户端在重定向时不改变请求方法（POST 请求仍然是 POST）。</li>
+<li><strong><code>308 Permanent Redirect</code>：</strong> 永久重定向。与 <code>301</code> 类似，但更明确地指示客户端在重定向时不改变请求方法。</li>
+</ul>
+<p><strong>配置位置：</strong> <code>server</code>、<code>location</code> 块。</p>
+<hr>
+<h4 id="示例-1-1-HTTP-强制跳转-HTTPS-最常见场景"><a href="#示例-1-1-HTTP-强制跳转-HTTPS-最常见场景" class="headerlink" title="示例 1.1: HTTP 强制跳转 HTTPS (最常见场景)"></a>示例 1.1: HTTP 强制跳转 HTTPS (最常见场景)</h4><p>通常我们的网站都会强制使用 HTTPS。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>; <span class="comment"># 监听 HTTP 端口</span></span><br><span class="line">    <span class="attribute">server_name</span> example.com www.example.com; <span class="comment"># 监听的域名</span></span><br><span class="line"></span><br><span class="line">    <span class="attribute">return</span> <span class="number">301</span> https://<span class="variable">$host</span><span class="variable">$request_uri</span>; <span class="comment"># 强制跳转到 HTTPS，并保留原路径和查询参数</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">443</span> ssl; <span class="comment"># 监听 HTTPS 端口</span></span><br><span class="line">    <span class="attribute">server_name</span> example.com www.example.com;</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 配置 SSL 证书和密钥，省略...</span></span><br><span class="line">    <span class="attribute">ssl_certificate</span> /etc/nginx/certs/example.com.crt;</span><br><span class="line">    <span class="attribute">ssl_certificate_key</span> /etc/nginx/certs/example.com.key;</span><br><span class="line"></span><br><span class="line">    <span class="comment"># ... 其他 HTTPS 站点的配置 (如动静分离、API 代理等)</span></span><br><span class="line">    <span class="section">location</span> / &#123;</span><br><span class="line">        <span class="attribute">root</span> /var/www/html;</span><br><span class="line">        <span class="attribute">index</span> index.html;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>解释：</strong> 任何通过 HTTP (端口 80) 访问 <code>example.com</code> 或 <code>www.example.com</code> 的请求，都会被 <code>301</code> 永久重定向到对应的 HTTPS 地址。<code>$host</code> 变量会是请求中的 Host 头（<code>example.com</code> 或 <code>www.example.com</code>），<code>$request_uri</code> 包含完整的路径和查询参数。</p>
+<hr>
+<h4 id="示例-1-2-强制跳转到带-www-的域名"><a href="#示例-1-2-强制跳转到带-www-的域名" class="headerlink" title="示例 1.2: 强制跳转到带 www 的域名"></a>示例 1.2: 强制跳转到带 <code>www</code> 的域名</h4><p>许多网站习惯将非 <code>www</code> 域名重定向到 <code>www</code> 域名，或反之，以规范 URL。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> example.com; <span class="comment"># 监听没有 www 的域名</span></span><br><span class="line"></span><br><span class="line">    <span class="attribute">return</span> <span class="number">301</span> http://www.example.com<span class="variable">$request_uri</span>; <span class="comment"># 重定向到 www 域名</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> www.example.com; <span class="comment"># 监听带 www 的域名</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># ... www.example.com 网站的配置</span></span><br><span class="line">    <span class="section">location</span> / &#123;</span><br><span class="line">        <span class="attribute">root</span> /var/www/html;</span><br><span class="line">        <span class="attribute">index</span> index.html;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>解释：</strong> 当用户访问 <code>http://example.com/path</code> 时，会被 <code>301</code> 重定向到 <code>http://www.example.com/path</code>。这种配置通常与 HTTPS 跳转结合使用，形成以下组合：</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 1. HTTP -&gt; HTTPS (no-www -&gt; www)</span></span><br><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> example.com www.example.com;</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 优先处理 no-www 到 www 的跳转，通常先跳 HTTPS</span></span><br><span class="line">    <span class="attribute">if</span> (<span class="variable">$host</span> = <span class="string">&#x27;example.com&#x27;</span>) &#123;</span><br><span class="line">        <span class="attribute">return</span> <span class="number">301</span> https://www.example.com<span class="variable">$request_uri</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 已经带 www 的 HTTP 请求跳 HTTPS</span></span><br><span class="line">    <span class="attribute">return</span> <span class="number">301</span> https://www.example.com<span class="variable">$request_uri</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># 2. HTTPS (no-www -&gt; www)</span></span><br><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">443</span> ssl;</span><br><span class="line">    <span class="attribute">server_name</span> example.com; <span class="comment"># 监听没有 www 的 HTTPS 域名</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># SSL 配置...</span></span><br><span class="line">    <span class="attribute">ssl_certificate</span> /etc/nginx/certs/example.com.crt;</span><br><span class="line">    <span class="attribute">ssl_certificate_key</span> /etc/nginx/certs/example.com.key;</span><br><span class="line"></span><br><span class="line">    <span class="attribute">return</span> <span class="number">301</span> https://www.example.com<span class="variable">$request_uri</span>; <span class="comment"># 将 https://example.com 重定向到 https://www.example.com</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># 3. 目标 HTTPS 站点</span></span><br><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">443</span> ssl;</span><br><span class="line">    <span class="attribute">server_name</span> www.example.com;</span><br><span class="line"></span><br><span class="line">    <span class="comment"># SSL 配置...</span></span><br><span class="line">    <span class="attribute">ssl_certificate</span> /etc/nginx/certs/example.com.crt;</span><br><span class="line">    <span class="attribute">ssl_certificate_key</span> /etc/nginx/certs/example.com.key;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> / &#123;</span><br><span class="line">        <span class="attribute">root</span> /var/www/html;</span><br><span class="line">        <span class="attribute">index</span> index.html;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>注意：<code>if</code> 指令的滥用在 Nginx 中不被推荐，但对于简单的 <code>$host</code> 判断，其副作用有限。更健壮的做法是为 <code>example.com</code> 和 <code>www.example.com</code> 定义不同的 <code>server</code> 块。</strong></p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># server block for example.com (HTTP) redirects to www.example.com (HTTPS)</span></span><br><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> example.com;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">301</span> https://www.example.com<span class="variable">$request_uri</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># server block for www.example.com (HTTP) redirects to www.example.com (HTTPS)</span></span><br><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> www.example.com;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">301</span> https://www.example.com<span class="variable">$request_uri</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># server block for example.com (HTTPS) redirects to www.example.com (HTTPS)</span></span><br><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">443</span> ssl;</span><br><span class="line">    <span class="attribute">server_name</span> example.com;</span><br><span class="line">    <span class="attribute">ssl_certificate</span> /etc/nginx/certs/example.com.crt;</span><br><span class="line">    <span class="attribute">ssl_certificate_key</span> /etc/nginx/certs/example.com.key;</span><br><span class="line">    <span class="attribute">return</span> <span class="number">301</span> https://www.example.com<span class="variable">$request_uri</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment"># server block for official www.example.com (HTTPS)</span></span><br><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">443</span> ssl;</span><br><span class="line">    <span class="attribute">server_name</span> www.example.com;</span><br><span class="line">    <span class="attribute">ssl_certificate</span> /etc/nginx/certs/www.example.com.crt; <span class="comment"># 最好使用匹配 www 的证书</span></span><br><span class="line">    <span class="attribute">ssl_certificate_key</span> /etc/nginx/certs/www.example.com.key;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> / &#123;</span><br><span class="line">        <span class="attribute">root</span> /var/www/html;</span><br><span class="line">        <span class="attribute">index</span> index.html;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这种多 <code>server</code> 块的写法更清晰且符合 Nginx 的设计哲学。</p>
+<hr>
+<h3 id="2-rewrite-指令-高级重定向-URL-重写"><a href="#2-rewrite-指令-高级重定向-URL-重写" class="headerlink" title="2. rewrite 指令 (高级重定向&#x2F;URL 重写)"></a>2. <code>rewrite</code> 指令 (高级重定向&#x2F;URL 重写)</h3><p><code>rewrite</code> 指令更为强大和灵活，它可以使用正则表达式来匹配 URL，并根据匹配结果修改 URL。它不仅可以实现重定向，还可以进行 URL 重写（URL 内部跳转到代理）。</p>
+<p><strong>语法：</strong> <code>rewrite regex replacement [flag];</code></p>
+<p><strong>参数：</strong></p>
+<ul>
+<li><code>regex</code>：用于匹配 URL 的正则表达式。</li>
+<li><code>replacement</code>：重写后的 URL 或要重定向到的 URL。</li>
+<li><code>flag</code>：控制重写行为的标志。<ul>
+<li><code>last</code>：停止当前 <code>location</code> 块的 <code>rewrite</code> 指令，继续在新的 URI 下面进行其他 <code>location</code> 的匹配。</li>
+<li><code>break</code>：停止当前 <code>location</code> 块的所有 <code>rewrite</code> 指令，并停止处理当前 <code>location</code> 块的请求，但不会在新的 URI 下面进行其他 <code>location</code> 的匹配。</li>
+<li><code>redirect</code>：返回 <code>302 Temporary Redirect</code> 响应码。</li>
+<li><code>permanent</code>：返回 <code>301 Moved Permanently</code> 响应码。</li>
+</ul>
+</li>
+</ul>
+<p><strong>执行顺序：</strong></p>
+<ol>
+<li>首先在 <code>server</code> 块中按顺序执行 <code>rewrite</code> 指令。</li>
+<li>然后根据 <code>server</code> 块中重写后的 URI 寻找匹配的 <code>location</code> 块。</li>
+<li>如果在 <code>location</code> 块中还有 <code>rewrite</code> 指令，则按顺序执行。</li>
+</ol>
+<p><strong>配置位置：</strong> <code>server</code>、<code>location</code> 块。</p>
+<hr>
+<h4 id="示例-2-1-重定向旧-URL-到新-URL-使用-permanent-flag"><a href="#示例-2-1-重定向旧-URL-到新-URL-使用-permanent-flag" class="headerlink" title="示例 2.1: 重定向旧 URL 到新 URL (使用 permanent flag)"></a>示例 2.1: 重定向旧 URL 到新 URL (使用 <code>permanent</code> flag)</h4><p>假设你的网站结构调整，旧产品详情页的 URL 格式是 <code>/product?id=123</code>，现在变成了 <code>/products/item-123.html</code>。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> example.com;</span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> / &#123;</span><br><span class="line">        <span class="comment"># 重定向旧格式的 /product?id=N 到新格式 /products/item-N.html</span></span><br><span class="line">        <span class="comment"># (?&lt;id&gt;\d+) 是捕获组，名为 id，匹配一个或多个数字</span></span><br><span class="line">        <span class="comment"># $arg_id 获取 URL query string 中的 id 参数</span></span><br><span class="line">        <span class="attribute">if</span> (<span class="variable">$arg_id</span>) &#123;</span><br><span class="line">            <span class="attribute">rewrite</span><span class="regexp"> ^/product$</span> /products/item-<span class="variable">$arg_id</span>.html <span class="literal">permanent</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 另一种写法，更推荐在 location 块中使用</span></span><br><span class="line">        <span class="comment"># location = /product &#123; # 精确匹配 /product</span></span><br><span class="line">        <span class="comment">#     if ($arg_id) &#123;</span></span><br><span class="line">        <span class="comment">#         rewrite ^ /products/item-$arg_id.html permanent;</span></span><br><span class="line">        <span class="comment">#     &#125;</span></span><br><span class="line">        <span class="comment"># &#125;</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># 或者如果旧 URL 是 /old-product-page.html</span></span><br><span class="line">        <span class="attribute">rewrite</span><span class="regexp"> ^/old-product-page.html$</span> /new-product-page.html <span class="literal">permanent</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="comment"># ... 其他网站的配置</span></span><br><span class="line">        <span class="attribute">root</span> /var/www/html;</span><br><span class="line">        <span class="attribute">index</span> index.html;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>解释：</strong></p>
+<ul>
+<li>当请求 <code>http://example.com/product?id=123</code> 时，由于 <code>id</code> 参数存在，Nginx 会执行 <code>rewrite</code> 规则，将请求 <code>301</code> 重定向到 <code>http://example.com/products/item-123.html</code>。</li>
+<li>当请求 <code>http://example.com/old-product-page.html</code> 时，会被 <code>301</code> 重定向到 <code>http://example.com/new-product-page.html</code>。</li>
+</ul>
+<hr>
+<h4 id="示例-2-2-实现伪静态（URL-重写，内部跳转）"><a href="#示例-2-2-实现伪静态（URL-重写，内部跳转）" class="headerlink" title="示例 2.2: 实现伪静态（URL 重写，内部跳转）"></a>示例 2.2: 实现伪静态（URL 重写，内部跳转）</h4><p>许多 PHP 框架（如 WordPress、Laravel）会把所有请求都通过一个入口文件 <code>index.php</code> 来处理。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> example.com;</span><br><span class="line">    <span class="attribute">root</span> /var/www/html; <span class="comment"># 网站的根目录</span></span><br><span class="line"></span><br><span class="line">    <span class="section">location</span> / &#123;</span><br><span class="line">        <span class="comment"># 尝试查找对应的文件或目录</span></span><br><span class="line">        <span class="attribute">try_files</span> <span class="variable">$uri</span> <span class="variable">$uri</span>/ =<span class="number">404</span>; <span class="comment"># 如果找不到，返回 404</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># 对于所有不匹配现有文件或目录的请求（非静态文件），重写到 index.php</span></span><br><span class="line">        <span class="comment"># 如果你的应用要求所有请求都通过 index.php 处理，可以这样配置 (WordPress 常用)</span></span><br><span class="line">        <span class="comment"># rewrite ^/(.*)$ /index.php/$1 last; # 将 /abc/xyz 重写为 /index.php/abc/xyz</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># 更常见的单入口应用配置 (例如 Laravel, Symfony)</span></span><br><span class="line">        <span class="comment"># try_files $uri $uri/ /index.php?$query_string;</span></span><br><span class="line">        <span class="comment"># 这里的 try_files 如果找不到文件或目录，会尝试将请求内部转发给 /index.php，</span></span><br><span class="line">        <span class="comment"># 并带上原始的查询参数。</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment"># PHP-FPM 配置</span></span><br><span class="line">    <span class="section">location</span> <span class="regexp">~ \.php$</span> &#123;</span><br><span class="line">        <span class="comment"># root /var/www/html; # 与 server 块的 root 一致</span></span><br><span class="line">        <span class="attribute">fastcgi_pass</span> <span class="number">127.0.0.1:9000</span>; <span class="comment"># PHP-FPM 地址和端口</span></span><br><span class="line">        <span class="attribute">fastcgi_index</span> index.php;</span><br><span class="line">        <span class="attribute">fastcgi_param</span> SCRIPT_FILENAME <span class="variable">$document_root</span><span class="variable">$fastcgi_script_name</span>;</span><br><span class="line">        <span class="attribute">include</span> fastcgi_params;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>解释：</strong></p>
+<ul>
+<li>当请求 <code>http://example.com/posts/hello-world</code> 时，<code>try_files</code> 会先检查 <code>/var/www/html/posts/hello-world</code> 文件和 <code>/var/www/html/posts/hello-world/</code> 目录是否存在。</li>
+<li>如果都不存在，它会将请求内部转发到 <code>/index.php</code>，并把原始的 <code>$query_string</code>（如果有）传递过去。Nginx 不会向浏览器发送重定向响应，浏览器仍认为自己访问的是 <code>/posts/hello-world</code>。</li>
+<li>然后 <code>location ~ \.php$</code> 块会捕获 <code>/index.php</code> 的请求，并将其转发给 PHP-FPM 处理。</li>
+</ul>
+<hr>
+<h4 id="示例-2-3-添加或移除-URL-尾部斜杠"><a href="#示例-2-3-添加或移除-URL-尾部斜杠" class="headerlink" title="示例 2.3: 添加或移除 URL 尾部斜杠"></a>示例 2.3: 添加或移除 URL 尾部斜杠</h4><p>统一 URL 格式有时需要处理尾部斜杠。</p>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="section">server</span> &#123;</span><br><span class="line">    <span class="attribute">listen</span> <span class="number">80</span>;</span><br><span class="line">    <span class="attribute">server_name</span> example.com;</span><br><span class="line">    <span class="attribute">root</span> /var/www/html;</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 移除 URL 结尾的斜杠 (如果不是目录)</span></span><br><span class="line">    <span class="comment"># /path/ -&gt; /path</span></span><br><span class="line">    <span class="comment"># 但不移除根目录 / 的斜杠</span></span><br><span class="line">    <span class="comment"># 注意：这个通常适用于文件，对于目录，保留斜杠更好。</span></span><br><span class="line">    <span class="comment"># rewrite ^/(.*)/$ /$1 permanent; # 这会把 / 重定向到空，不建议这样用</span></span><br><span class="line"></span><br><span class="line">    <span class="comment"># 更安全的方式，只处理文件请求，确保没有斜杠</span></span><br><span class="line">    <span class="section">location</span> / &#123;</span><br><span class="line">        <span class="comment"># 确保所有以 .html 结尾的文件没有尾部斜杠</span></span><br><span class="line">        <span class="attribute">if</span> (<span class="variable">$uri</span> <span class="regexp">~ ^(.*)\.html/$)</span>&#123;</span><br><span class="line">            <span class="attribute">return</span> <span class="number">301</span> <span class="variable">$1</span>.html;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment"># 添加尾部斜杠到非文件、非根路径的目录，让搜索引擎识别为目录</span></span><br><span class="line">        <span class="comment"># 但是，try_files $uri $uri/ 已经能很好地处理这个问题，通常不需要此 rewrite</span></span><br><span class="line">        <span class="comment"># if (-d $request_filename) &#123; # 如果请求的是目录</span></span><br><span class="line">        <span class="comment">#    rewrite ^/(.*)([^/])$ /$1$2/ permanent;</span></span><br><span class="line">        <span class="comment">#&#125;</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># 常见的强制为目录添加尾部斜杠的写法</span></span><br><span class="line">        <span class="comment"># 如果不是文件，且 URI 不以 / 结尾，则添加斜杠</span></span><br><span class="line">        <span class="comment"># 需配合 try_files 确保文件不被误判</span></span><br><span class="line">        <span class="comment"># rewrite ^(/.*[^/])$ $1/ permanent; # 简单粗暴，但可能影响文件</span></span><br><span class="line"></span><br><span class="line">        <span class="comment"># 推荐使用 try_files 配合默认行为，更稳健</span></span><br><span class="line">        <span class="attribute">try_files</span> <span class="variable">$uri</span> <span class="variable">$uri</span>/ =<span class="number">404</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>注意：</strong> 尾部斜杠的处理比较复杂，因为文件的 URL 通常不带斜杠，而目录的 URL 通常带斜杠。滥用 <code>rewrite</code> 可能导致无限重定向或错误。通常 <code>try_files</code> 指令能更好地处理目录和文件的匹配逻辑。如果你需要强制规范，建议精细化匹配。</p>
+<hr>
+<h3 id="选择-return-还是-rewrite？"><a href="#选择-return-还是-rewrite？" class="headerlink" title="选择 return 还是 rewrite？"></a>选择 <code>return</code> 还是 <code>rewrite</code>？</h3><ul>
+<li><strong>使用 <code>return</code>：</strong><ul>
+<li><strong>首选！</strong> 当你只需要将请求从一个 URL <strong>重定向到另一个完整的 URL</strong>（包括协议、域名、路径）时。</li>
+<li>处理规则简单，不涉及复杂的正则表达式匹配或内部 URL 转换。</li>
+<li>性能更好，因为 Nginx 会立即停止处理，并发送响应。</li>
+</ul>
+</li>
+<li><strong>使用 <code>rewrite</code>：</strong><ul>
+<li>当你需要基于请求的 URL <strong>进行复杂的模式匹配和替换</strong>，以生成新的 URL 时。</li>
+<li>当你需要进行 <strong>URL 重写</strong>（即内部跳转到另一个文件或 URL，而不向客户端发送重定向响应）时，通常结合 <code>last</code> 或 <code>break</code> 标志，或者 <code>try_files</code> 指令。</li>
+<li>涉及到变量和正则表达式的捕获。</li>
+</ul>
+</li>
+</ul>
+<p><strong>一般原则：</strong> 优先使用 <code>return</code> 解决重定向问题。只有当 <code>return</code> 无法满足需求时，才考虑使用 <code>rewrite</code>，并谨慎使用 <code>last</code> 或 <code>break</code> 标志，因为它们的行为可能比较复杂，容易导致非预期的结果。</p>
+<p>通过这些示例，你应该能理解 Nginx 中重定向的工作原理和配置方法了。记住，每次修改 Nginx 配置后，都要进行语法检查 (<code>nginx -t</code>) 并重载服务 (<code>systemctl reload nginx</code>)。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E9%97%AD%E5%8C%85/" rel="prev" title="闭包">
+      <i class="fa fa-chevron-left"></i> 闭包
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/%E8%BF%90%E7%AE%97/" rel="next" title="运算">
+      运算 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Nginx-%E4%B8%AD%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E8%AF%B7%E6%B1%82%E7%9A%84%E9%87%8D%E5%AE%9A%E5%90%91"><span class="nav-number">1.</span> <span class="nav-text">Nginx 中如何实现请求的重定向</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-return-%E6%8C%87%E4%BB%A4-%E7%AE%80%E5%8D%95%E9%87%8D%E5%AE%9A%E5%90%91"><span class="nav-number">1.0.1.</span> <span class="nav-text">1. return 指令 (简单重定向)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B-1-1-HTTP-%E5%BC%BA%E5%88%B6%E8%B7%B3%E8%BD%AC-HTTPS-%E6%9C%80%E5%B8%B8%E8%A7%81%E5%9C%BA%E6%99%AF"><span class="nav-number">1.0.1.1.</span> <span class="nav-text">示例 1.1: HTTP 强制跳转 HTTPS (最常见场景)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B-1-2-%E5%BC%BA%E5%88%B6%E8%B7%B3%E8%BD%AC%E5%88%B0%E5%B8%A6-www-%E7%9A%84%E5%9F%9F%E5%90%8D"><span class="nav-number">1.0.1.2.</span> <span class="nav-text">示例 1.2: 强制跳转到带 www 的域名</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-rewrite-%E6%8C%87%E4%BB%A4-%E9%AB%98%E7%BA%A7%E9%87%8D%E5%AE%9A%E5%90%91-URL-%E9%87%8D%E5%86%99"><span class="nav-number">1.0.2.</span> <span class="nav-text">2. rewrite 指令 (高级重定向&#x2F;URL 重写)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B-2-1-%E9%87%8D%E5%AE%9A%E5%90%91%E6%97%A7-URL-%E5%88%B0%E6%96%B0-URL-%E4%BD%BF%E7%94%A8-permanent-flag"><span class="nav-number">1.0.2.1.</span> <span class="nav-text">示例 2.1: 重定向旧 URL 到新 URL (使用 permanent flag)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B-2-2-%E5%AE%9E%E7%8E%B0%E4%BC%AA%E9%9D%99%E6%80%81%EF%BC%88URL-%E9%87%8D%E5%86%99%EF%BC%8C%E5%86%85%E9%83%A8%E8%B7%B3%E8%BD%AC%EF%BC%89"><span class="nav-number">1.0.2.2.</span> <span class="nav-text">示例 2.2: 实现伪静态（URL 重写，内部跳转）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%A4%BA%E4%BE%8B-2-3-%E6%B7%BB%E5%8A%A0%E6%88%96%E7%A7%BB%E9%99%A4-URL-%E5%B0%BE%E9%83%A8%E6%96%9C%E6%9D%A0"><span class="nav-number">1.0.2.3.</span> <span class="nav-text">示例 2.3: 添加或移除 URL 尾部斜杠</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%89%E6%8B%A9-return-%E8%BF%98%E6%98%AF-rewrite%EF%BC%9F"><span class="nav-number">1.0.3.</span> <span class="nav-text">选择 return 还是 rewrite？</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

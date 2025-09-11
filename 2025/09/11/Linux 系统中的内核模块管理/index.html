@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Linux 内核模块的管理 一、Linux 内核模块的工作原理Linux 内核采用模块化的设计思想，其核心功能是模块化实现的。  模块化设计： 内核自身只包含最核心的功能，而将许多非核心但必要的功能（如：网卡驱动、显卡驱动、文件系统驱动、USB 支持、加密算法等）设计成可以随时加载和卸载的模块。 动态加载&#x2F;卸载： 当系统需要某个功能时（例如，插入了一个USB设备，或是需要访问某种特定的文">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux 系统中的内核模块管理">
+<meta property="og:url" content="http://example.com/2025/09/11/Linux%20%E7%B3%BB%E7%BB%9F%E4%B8%AD%E7%9A%84%E5%86%85%E6%A0%B8%E6%A8%A1%E5%9D%97%E7%AE%A1%E7%90%86/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="Linux 内核模块的管理 一、Linux 内核模块的工作原理Linux 内核采用模块化的设计思想，其核心功能是模块化实现的。  模块化设计： 内核自身只包含最核心的功能，而将许多非核心但必要的功能（如：网卡驱动、显卡驱动、文件系统驱动、USB 支持、加密算法等）设计成可以随时加载和卸载的模块。 动态加载&#x2F;卸载： 当系统需要某个功能时（例如，插入了一个USB设备，或是需要访问某种特定的文">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T13:47:35.520Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/Linux%20%E7%B3%BB%E7%BB%9F%E4%B8%AD%E7%9A%84%E5%86%85%E6%A0%B8%E6%A8%A1%E5%9D%97%E7%AE%A1%E7%90%86/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Linux 系统中的内核模块管理 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Linux%20%E7%B3%BB%E7%BB%9F%E4%B8%AD%E7%9A%84%E5%86%85%E6%A0%B8%E6%A8%A1%E5%9D%97%E7%AE%A1%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Linux 系统中的内核模块管理
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:47:35" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Linux/Command/" itemprop="url" rel="index"><span itemprop="name">Command</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4.2k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="Linux-内核模块的管理"><a href="#Linux-内核模块的管理" class="headerlink" title="Linux 内核模块的管理"></a>Linux 内核模块的管理</h3><hr>
+<h3 id="一、Linux-内核模块的工作原理"><a href="#一、Linux-内核模块的工作原理" class="headerlink" title="一、Linux 内核模块的工作原理"></a>一、Linux 内核模块的工作原理</h3><p>Linux 内核采用模块化的设计思想，其核心功能是模块化实现的。</p>
+<ol>
+<li><strong>模块化设计：</strong> 内核自身只包含最核心的功能，而将许多非核心但必要的功能（如：网卡驱动、显卡驱动、文件系统驱动、USB 支持、加密算法等）设计成可以随时加载和卸载的模块。</li>
+<li><strong>动态加载&#x2F;卸载：</strong> 当系统需要某个功能时（例如，插入了一个USB设备，或是需要访问某种特定的文件系统），对应的内核模块会被动态加载到内核空间中运行；当该功能不再需要时，模块可以被卸载，从而释放内存资源。</li>
+<li><strong>优点：</strong><ul>
+<li><strong>减小内核镜像大小：</strong> 核心内核保持精简，只需要加载必需的模块。</li>
+<li><strong>提高灵活性：</strong> 无需重新编译整个内核就能添加或更新驱动、文件系统等功能。</li>
+<li><strong>节省内存：</strong> 不使用的模块可以卸载，释放内存。</li>
+<li><strong>方便调试：</strong> 可以在运行时加载新的或修改过的模块进行测试。</li>
+</ul>
+</li>
+<li><strong>模块文件：</strong> 内核模块通常以 <code>.ko</code>（kernel object）为扩展名，存储在 <code>/lib/modules/&lt;kernel-version&gt;/</code> 目录下，按照类别（如 <code>kernel/drivers</code>、<code>kernel/fs</code>、<code>kernel/net</code> 等）组织。</li>
+<li><strong>依赖关系：</strong> 很多内核模块之间存在依赖关系，例如一个USB鼠标驱动可能依赖于通用的USB核心驱动。加载模块时，系统会自动处理这些依赖关系。</li>
+<li><strong>符号表：</strong> 内核维护一个符号表，记录了所有已加载模块提供的函数和变量，供其他模块或内核核心部分调用。</li>
+</ol>
+<hr>
+<h3 id="二、查看内核模块信息"><a href="#二、查看内核模块信息" class="headerlink" title="二、查看内核模块信息"></a>二、查看内核模块信息</h3><p>在管理内核模块之前，首先要了解当前系统中已加载的模块以及可用的模块。</p>
+<h4 id="1-lsmod：列出当前已加载的内核模块"><a href="#1-lsmod：列出当前已加载的内核模块" class="headerlink" title="1. lsmod：列出当前已加载的内核模块"></a>1. <code>lsmod</code>：列出当前已加载的内核模块</h4><p>该命令会显示已加载模块的名称、大小以及它们被哪些其他模块依赖（引用）。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsmod</span><br></pre></td></tr></table></figure>
+
+<p><strong>示例输出：</strong></p>
+<figure class="highlight tap"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">Module                  Size  Used by</span><br><span class="line">nf_conntrack_netlink  <span class="number"> 32768 </span> 0</span><br><span class="line">nf_conntrack         <span class="number"> 163840 </span><span class="number"> 1 </span>nf_conntrack_netlink</span><br><span class="line">xt_conntrack          <span class="number"> 16384 </span><span class="number"> 1 </span>(autoinstall)</span><br><span class="line">ip_tables             <span class="number"> 32768 </span><span class="number"> 1 </span>(autoinstall)</span><br><span class="line">x_tables              <span class="number"> 40960 </span><span class="number"> 2 </span>xt_conntrack,ip_tables</span><br><span class="line">...</span><br><span class="line">snd_hda_codec_hdmi    <span class="number"> 65536 </span> 1</span><br><span class="line">snd_hda_codec_realtek<span class="number"> 126976 </span> 1</span><br><span class="line">snd_hda_codec_generic <span class="number"> 86016 </span><span class="number"> 1 </span>snd_hda_codec_realtek</span><br><span class="line">snd_hda_intel         <span class="number"> 61440 </span> 3</span><br><span class="line">snd_intel_dspcfg      <span class="number"> 24576 </span><span class="number"> 1 </span>snd_hda_intel</span><br><span class="line">snd_hda_codec        <span class="number"> 147456 </span><span class="number"> 4 </span>snd_hda_codec_hdmi,snd_hda_codec_realtek,snd_hda_codec_generic,snd_hda_intel</span><br><span class="line">snd_hwdep             <span class="number"> 16384 </span><span class="number"> 1 </span>snd_hda_codec</span><br><span class="line">snd_pcm              <span class="number"> 135168 </span><span class="number"> 4 </span>snd_hda_codec_hdmi,snd_hda_intel,snd_hda_codec</span><br><span class="line">snd_seq_device        <span class="number"> 16384 </span><span class="number"> 1 </span>snd_seq</span><br><span class="line">snd_timer             <span class="number"> 40960 </span><span class="number"> 1 </span>snd_pcm</span><br><span class="line">snd                   <span class="number"> 106496 </span>11 snd_hda_codec_hdmi,snd_hda_codec_realtek,snd_hda_codec_generic,snd_hda_intel,snd_intel_dspcfg,snd_hda_codec,snd_hwdep,snd_pcm,snd_seq_device,snd_timer</span><br><span class="line">soundcore             <span class="number"> 16384 </span><span class="number"> 1 </span>snd</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong><code>Module</code></strong>: 模块名称。</li>
+<li><strong><code>Size</code></strong>: 模块加载到内存后的大小（字节）。</li>
+<li><strong><code>Used by</code></strong>: 引用此模块的其他模块数量和名称。如果一个模块被其他模块引用，则不能直接卸载它，必须先卸载依赖它的模块。</li>
+</ul>
+<h4 id="2-modinfo：显示模块的详细信息"><a href="#2-modinfo：显示模块的详细信息" class="headerlink" title="2. modinfo：显示模块的详细信息"></a>2. <code>modinfo</code>：显示模块的详细信息</h4><p>用于查看特定模块的详细信息，包括其作者、描述、依赖关系、参数等。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">modinfo &lt;module_name&gt;</span><br><span class="line"><span class="comment"># 例如：</span></span><br><span class="line">modinfo bonding</span><br></pre></td></tr></table></figure>
+
+<p><strong>示例输出：</strong></p>
+<figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">filename:</span>       <span class="keyword">/lib/</span>modules/<span class="number">5.15</span><span class="number">.0</span><span class="number">-86</span>-generic<span class="keyword">/kernel/</span>drivers<span class="keyword">/net/</span>bonding/bonding.ko</span><br><span class="line"><span class="symbol">license:</span>        GPL</span><br><span class="line"><span class="symbol">description:</span>    Ethernet Channel Bonding Driver</span><br><span class="line"><span class="symbol">author:</span>         Thomas Davis, tadavis@lbl.gov and many others</span><br><span class="line"><span class="symbol">srcversion:</span>     DB84F66C208B81BEF92A28B</span><br><span class="line"><span class="symbol">alias:</span>          rtnl-link-bond</span><br><span class="line"><span class="symbol">alias:</span>          net-pf<span class="number">-16</span>-proto<span class="number">-17</span>-family-AF_PACKET</span><br><span class="line"><span class="symbol">depends:</span>      </span><br><span class="line"><span class="symbol">retpoline:</span>      Y</span><br><span class="line"><span class="symbol">intree:</span>         Y</span><br><span class="line"><span class="symbol">name:</span>           bonding</span><br><span class="line"><span class="symbol">vermagic:</span>       <span class="number">5.15</span><span class="number">.0</span><span class="number">-86</span>-generic SMP mod_unload modversions </span><br><span class="line"><span class="symbol">parm:</span>           max_bonds:Max number of bonding devices (int)</span><br><span class="line"><span class="symbol">parm:</span>           miimon:Link check interval in milliseconds (int)</span><br><span class="line"><span class="symbol">parm:</span>           mode:Bonding mode (<span class="number">0</span><span class="number">-7</span>, default <span class="number">0</span>) (int)</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong><code>filename</code></strong>: 模块在文件系统中的路径。</li>
+<li><strong><code>depends</code></strong>: 该模块所依赖的其他模块。</li>
+<li><strong><code>parm</code></strong>: 模块可以接受的参数，这些参数在加载模块时可以指定。</li>
+</ul>
+<hr>
+<h3 id="三、加载内核模块-modprobe-insmod"><a href="#三、加载内核模块-modprobe-insmod" class="headerlink" title="三、加载内核模块 (modprobe&#x2F;insmod)"></a>三、加载内核模块 (<code>modprobe</code>&#x2F;<code>insmod</code>)</h3><p>加载内核模块是将 <code>.ko</code> 文件加载到内核内存中，使其功能生效。</p>
+<h4 id="1-modprobe：推荐的加载方式-处理依赖关系"><a href="#1-modprobe：推荐的加载方式-处理依赖关系" class="headerlink" title="1. modprobe：推荐的加载方式 (处理依赖关系)"></a>1. <code>modprobe</code>：推荐的加载方式 (处理依赖关系)</h4><p><code>modprobe</code> 是加载内核模块的首选命令，因为它会自动处理模块的依赖关系，即在加载一个模块之前，它会自动先加载该模块所依赖的所有其他模块。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> modprobe &lt;module_name&gt;</span><br><span class="line"><span class="comment"># 例如，加载 i915 显卡驱动模块：</span></span><br><span class="line"><span class="built_in">sudo</span> modprobe i915</span><br><span class="line"><span class="comment"># 加载带参数的模块：</span></span><br><span class="line"><span class="built_in">sudo</span> modprobe &lt;module_name&gt; &lt;parameter&gt;=&lt;value&gt; &lt;parameter2&gt;=&lt;value2&gt;</span><br><span class="line"><span class="comment"># 例如，加载 bonding 模块并设置 mode 为 1 (Active-Backup)</span></span><br><span class="line"><span class="built_in">sudo</span> modprobe bonding mode=1 miimon=100</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>modprobe</code> 会根据 <code>/lib/modules/&lt;kernel-version&gt;/modules.dep</code> 文件来解析依赖关系。</li>
+<li>它还会根据 <code>/etc/modprobe.d/</code> 目录下的配置文件来处理模块的别名、黑名单、参数等。</li>
+</ul>
+<h4 id="2-insmod：直接加载单个模块-不处理依赖"><a href="#2-insmod：直接加载单个模块-不处理依赖" class="headerlink" title="2. insmod：直接加载单个模块 (不处理依赖)"></a>2. <code>insmod</code>：直接加载单个模块 (不处理依赖)</h4><p><code>insmod</code> (install module) 是一个更底层的命令，它只负责将指定的 <code>.ko</code> 文件加载到内核。它<strong>不会检查和加载模块的依赖关系</strong>，如果依赖模块未加载，<code>insmod</code> 会失败。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> insmod /path/to/module.ko</span><br><span class="line"><span class="comment"># 例如：</span></span><br><span class="line"><span class="built_in">sudo</span> insmod /lib/modules/$(<span class="built_in">uname</span> -r)/kernel/drivers/net/bonding/bonding.ko</span><br></pre></td></tr></table></figure>
+
+<p><strong>运维建议：</strong></p>
+<ul>
+<li>在大多数情况下，使用 <code>modprobe</code> 而不是 <code>insmod</code>。</li>
+<li>只有当你知道目标模块没有任何未加载的依赖，或者你正在调试特定的 <code>.ko</code> 文件时，才考虑使用 <code>insmod</code>。</li>
+</ul>
+<hr>
+<h3 id="四、卸载内核模块-rmmod"><a href="#四、卸载内核模块-rmmod" class="headerlink" title="四、卸载内核模块 (rmmod)"></a>四、卸载内核模块 (<code>rmmod</code>)</h3><p><code>rmmod</code> 命令用于从内核中移除一个已加载的模块。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> rmmod &lt;module_name&gt;</span><br><span class="line"><span class="comment"># 例如，卸载 bonding 模块：</span></span><br><span class="line"><span class="built_in">sudo</span> rmmod bonding</span><br></pre></td></tr></table></figure>
+
+<p><strong>注意事项：</strong></p>
+<ol>
+<li><strong>依赖关系：</strong> 如果一个模块被其他模块引用（<code>lsmod</code> <code>Used by</code> 列显示非0），或者被正在运行的硬件或软件占用，<code>rmmod</code> 将无法卸载它，并会报错“Module is in use”或“Resource busy”。</li>
+<li><strong>强制卸载：</strong> 某些情况下，可以使用 <code>-f</code> 选项强制卸载模块，但这<strong>不推荐</strong>，因为可能导致系统不稳定甚至崩溃，除非你非常清楚你在做什么。<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> rmmod -f &lt;module_name&gt; <span class="comment"># 慎用！</span></span><br></pre></td></tr></table></figure></li>
+</ol>
+<hr>
+<h3 id="五、永久性地加载-禁用内核模块"><a href="#五、永久性地加载-禁用内核模块" class="headerlink" title="五、永久性地加载&#x2F;禁用内核模块"></a>五、永久性地加载&#x2F;禁用内核模块</h3><p>上面提到的 <code>modprobe</code> 和 <code>rmmod</code> 只是临时改变模块状态，系统重启后会恢复默认。要使更改永久生效，需要配置相关文件。</p>
+<h4 id="1-永久加载模块"><a href="#1-永久加载模块" class="headerlink" title="1. 永久加载模块"></a>1. 永久加载模块</h4><p>要在系统启动时自动加载模块，可以将模块名称添加到 <code>/etc/modules-load.d/</code> 目录下的文件中。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建一个新的配置文件 (例如，my_modules.conf)</span></span><br><span class="line"><span class="built_in">sudo</span> vim /etc/modules-load.d/my_modules.conf</span><br></pre></td></tr></table></figure>
+<p>在文件中添加模块名称，每行一个。</p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># /etc/modules-load.d/my_modules.conf</span></span><br><span class="line"><span class="keyword">bonding</span></span><br><span class="line"><span class="keyword"></span>vboxdrv</span><br></pre></td></tr></table></figure>
+<p>重启系统后，这些模块就会自动加载。</p>
+<h4 id="2-永久禁用（黑名单）模块"><a href="#2-永久禁用（黑名单）模块" class="headerlink" title="2. 永久禁用（黑名单）模块"></a>2. 永久禁用（黑名单）模块</h4><p>有时需要防止某个模块被自动加载（例如，有两个驱动为同一设备，需要禁用其中一个）。可以通过在 <code>/etc/modprobe.d/</code> 目录下创建配置文件来将模块列入黑名单。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 创建一个新的配置文件 (例如，blacklist-nouveau.conf)</span></span><br><span class="line"><span class="built_in">sudo</span> vim /etc/modprobe.d/blacklist-nouveau.conf</span><br></pre></td></tr></table></figure>
+<p>在文件中添加 <code>blacklist &lt;module_name&gt;</code>。</p>
+<figure class="highlight mipsasm"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># /etc/modprobe.d/blacklist-nouveau.conf</span></span><br><span class="line"><span class="keyword">blacklist </span>nouveau</span><br></pre></td></tr></table></figure>
+<p>保存文件后，可能需要更新 <code>initramfs</code> (启动镜像) 以确保更改生效：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">sudo</span> update-initramfs -u</span><br></pre></td></tr></table></figure>
+<p>然后重启系统，<code>nouveau</code> 模块就不会被加载了。</p>
+<hr>
+<h3 id="六、更新模块依赖和缓存"><a href="#六、更新模块依赖和缓存" class="headerlink" title="六、更新模块依赖和缓存"></a>六、更新模块依赖和缓存</h3><p>在对模块文件进行手动更改（不常见）、升级内核或安装新内核后，可能需要更新模块依赖缓存。</p>
+<ul>
+<li><code>depmod -a</code>: 扫描所有模块并重建 <code>modules.dep</code> 和其他相关的映射文件。<code>modprobe</code> 依赖这些文件来解析模块依赖。这个命令通常在安装新内核时由包管理器自动运行。</li>
+</ul>
+<hr>
+<p>通过以上解释和命令，您应该能够熟练地查看和管理 Linux 系统中的内核模块了。这对于维护一个稳定、高效且功能完备的 Linux 环境至关重要。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Linux%20%E7%B3%BB%E7%BB%9F%E4%B8%AD%E7%9A%84%E6%97%A5%E5%BF%97%E7%AE%A1%E7%90%86%E6%9C%BA%E5%88%B6/" rel="prev" title="Linux 系统中的日志管理机制">
+      <i class="fa fa-chevron-left"></i> Linux 系统中的日志管理机制
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Linux%20%E7%B3%BB%E7%BB%9F%E4%B8%AD%20crontab/" rel="next" title="Linux 系统中 crontab">
+      Linux 系统中 crontab <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Linux-%E5%86%85%E6%A0%B8%E6%A8%A1%E5%9D%97%E7%9A%84%E7%AE%A1%E7%90%86"><span class="nav-number">1.</span> <span class="nav-text">Linux 内核模块的管理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E3%80%81Linux-%E5%86%85%E6%A0%B8%E6%A8%A1%E5%9D%97%E7%9A%84%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86"><span class="nav-number">2.</span> <span class="nav-text">一、Linux 内核模块的工作原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E6%9F%A5%E7%9C%8B%E5%86%85%E6%A0%B8%E6%A8%A1%E5%9D%97%E4%BF%A1%E6%81%AF"><span class="nav-number">3.</span> <span class="nav-text">二、查看内核模块信息</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-lsmod%EF%BC%9A%E5%88%97%E5%87%BA%E5%BD%93%E5%89%8D%E5%B7%B2%E5%8A%A0%E8%BD%BD%E7%9A%84%E5%86%85%E6%A0%B8%E6%A8%A1%E5%9D%97"><span class="nav-number">3.1.</span> <span class="nav-text">1. lsmod：列出当前已加载的内核模块</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-modinfo%EF%BC%9A%E6%98%BE%E7%A4%BA%E6%A8%A1%E5%9D%97%E7%9A%84%E8%AF%A6%E7%BB%86%E4%BF%A1%E6%81%AF"><span class="nav-number">3.2.</span> <span class="nav-text">2. modinfo：显示模块的详细信息</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E3%80%81%E5%8A%A0%E8%BD%BD%E5%86%85%E6%A0%B8%E6%A8%A1%E5%9D%97-modprobe-insmod"><span class="nav-number">4.</span> <span class="nav-text">三、加载内核模块 (modprobe&#x2F;insmod)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-modprobe%EF%BC%9A%E6%8E%A8%E8%8D%90%E7%9A%84%E5%8A%A0%E8%BD%BD%E6%96%B9%E5%BC%8F-%E5%A4%84%E7%90%86%E4%BE%9D%E8%B5%96%E5%85%B3%E7%B3%BB"><span class="nav-number">4.1.</span> <span class="nav-text">1. modprobe：推荐的加载方式 (处理依赖关系)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-insmod%EF%BC%9A%E7%9B%B4%E6%8E%A5%E5%8A%A0%E8%BD%BD%E5%8D%95%E4%B8%AA%E6%A8%A1%E5%9D%97-%E4%B8%8D%E5%A4%84%E7%90%86%E4%BE%9D%E8%B5%96"><span class="nav-number">4.2.</span> <span class="nav-text">2. insmod：直接加载单个模块 (不处理依赖)</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%9B%E3%80%81%E5%8D%B8%E8%BD%BD%E5%86%85%E6%A0%B8%E6%A8%A1%E5%9D%97-rmmod"><span class="nav-number">5.</span> <span class="nav-text">四、卸载内核模块 (rmmod)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%94%E3%80%81%E6%B0%B8%E4%B9%85%E6%80%A7%E5%9C%B0%E5%8A%A0%E8%BD%BD-%E7%A6%81%E7%94%A8%E5%86%85%E6%A0%B8%E6%A8%A1%E5%9D%97"><span class="nav-number">6.</span> <span class="nav-text">五、永久性地加载&#x2F;禁用内核模块</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E6%B0%B8%E4%B9%85%E5%8A%A0%E8%BD%BD%E6%A8%A1%E5%9D%97"><span class="nav-number">6.1.</span> <span class="nav-text">1. 永久加载模块</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E6%B0%B8%E4%B9%85%E7%A6%81%E7%94%A8%EF%BC%88%E9%BB%91%E5%90%8D%E5%8D%95%EF%BC%89%E6%A8%A1%E5%9D%97"><span class="nav-number">6.2.</span> <span class="nav-text">2. 永久禁用（黑名单）模块</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%AD%E3%80%81%E6%9B%B4%E6%96%B0%E6%A8%A1%E5%9D%97%E4%BE%9D%E8%B5%96%E5%92%8C%E7%BC%93%E5%AD%98"><span class="nav-number">7.</span> <span class="nav-text">六、更新模块依赖和缓存</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="Containerd 命令行工具 nerdctl前面我们介绍了可以使用 ctr 操作管理 containerd 镜像容器，但是大家都习惯了使用 docker cli，ctr 使用起来可能还是不太顺手，为了能够让大家更好的转到 containerd 上面来，社区提供了一个新的命令行工具：nerdctl。nerdctl 是一个与 docker cli 风格兼容的 containerd 客户端工具，而且">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Containerd 命令行工具 nerdctl">
+<meta property="og:url" content="http://example.com/2025/09/11/Containerd%20%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%B7%A5%E5%85%B7%20nerdctl/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="Containerd 命令行工具 nerdctl前面我们介绍了可以使用 ctr 操作管理 containerd 镜像容器，但是大家都习惯了使用 docker cli，ctr 使用起来可能还是不太顺手，为了能够让大家更好的转到 containerd 上面来，社区提供了一个新的命令行工具：nerdctl。nerdctl 是一个与 docker cli 风格兼容的 containerd 客户端工具，而且">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/7oga7u.png">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:26:02.210Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://mudutestmenu.mudu.tv/upload/7oga7u.png">
+
+<link rel="canonical" href="http://example.com/2025/09/11/Containerd%20%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%B7%A5%E5%85%B7%20nerdctl/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Containerd 命令行工具 nerdctl | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Containerd%20%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%B7%A5%E5%85%B7%20nerdctl/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Containerd 命令行工具 nerdctl
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:26:02" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/k8s/%E5%AE%B9%E5%99%A8%E8%BF%90%E8%A1%8C%E6%97%B6/" itemprop="url" rel="index"><span itemprop="name">容器运行时</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>14k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>12 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Containerd-命令行工具-nerdctl"><a href="#Containerd-命令行工具-nerdctl" class="headerlink" title="Containerd 命令行工具 nerdctl"></a>Containerd 命令行工具 nerdctl</h1><p>前面我们介绍了可以使用 <code>ctr</code> 操作管理 containerd 镜像容器，但是大家都习惯了使用 docker cli，<code>ctr</code> 使用起来可能还是不太顺手，为了能够让大家更好的转到 containerd 上面来，社区提供了一个新的命令行工具：<a target="_blank" rel="noopener" href="https://github.com/containerd/nerdctl">nerdctl</a>。nerdctl 是一个与 docker cli 风格兼容的 containerd 客户端工具，而且直接兼容 docker compose 的语法的，这就大大提高了直接将 containerd 作为本地开发、测试或者单机容器部署使用的效率。</p>
+<h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><p>同样直接在 GitHub Release 页面下载对应的压缩包解压到 PATH 路径下即可：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">如果没有安装 containerd，则可以下载 nerdctl-full-&lt;VERSION&gt;-linux-amd64.tar.gz 包进行安装</span></span><br><span class="line">➜  ~ wget https://github.com/containerd/nerdctl/releases/download/v0.12.1/nerdctl-0.12.1-linux-amd64.tar.gz</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">如果有限制，也可以替换成下面的 URL 加速下载</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">wget https://download.fastgit.org/containerd/nerdctl/releases/download/v0.12.1/nerdctl-0.12.1-linux-amd64.tar.gz</span></span><br><span class="line">➜  ~ mkdir -p /usr/local/containerd/bin/ &amp;&amp; tar -zxvf nerdctl-0.12.1-linux-amd64.tar.gz nerdctl &amp;&amp; mv nerdctl /usr/local/containerd/bin/</span><br><span class="line">➜  ~ ln -s /usr/local/containerd/bin/nerdctl /usr/local/bin/nerdctl</span><br><span class="line">➜  ~ nerdctl version</span><br><span class="line">Client:</span><br><span class="line"> Version:       v0.12.1</span><br><span class="line"> Git commit:    c802f934791f83dacf20a041cd1c865f8fac954e</span><br><span class="line"></span><br><span class="line">Server:</span><br><span class="line"> containerd:</span><br><span class="line">  Version:      v1.5.5</span><br><span class="line">  Revision:     72cec4be58a9eb6b2910f5d10f1c01ca47d231c0</span><br></pre></td></tr></table></figure>
+
+<p>安装完成后接下来学习下 <code>nerdctl</code> 命令行工具的使用。</p>
+<h2 id="命令"><a href="#命令" class="headerlink" title="命令"></a>命令</h2><h3 id="Run-Exec"><a href="#Run-Exec" class="headerlink" title="Run&amp;Exec"></a>Run&amp;Exec</h3><p><strong>🐳nerdctl run</strong></p>
+<p>和 <code>docker run</code> 类似可以使用 <code>nerdctl run</code> 命令运行容器，例如：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ nerdctl run -d -p 80:80 --name=nginx --restart=always nginx:alpine</span><br><span class="line">docker.io/library/nginx:alpine:                                                   resolved       |++++++++++++++++++++++++++++++++++++++|</span><br><span class="line">index-sha256:bead42240255ae1485653a956ef41c9e458eb077fcb6dc664cbc3aa9701a05ce:    done           |++++++++++++++++++++++++++++++++++++++| manifest-sha256:ce6ca11a3fa7e0e6b44813901e3289212fc2f327ee8b1366176666e8fb470f24: done           |++++++++++++++++++++++++++++++++++++++| config-sha256:7ce0143dee376bfd2937b499a46fb110bda3c629c195b84b1cf6e19be1a9e23b:   done           |++++++++++++++++++++++++++++++++++++++| elapsed: 5.3 s                                                                    total:  3.1 Ki (606.0 B/s)                                       6e489777d2f73dda8a310cdf8da9df38353c1aa2021d3c2270b30eff1806bcf8</span><br></pre></td></tr></table></figure>
+
+<p>可选的参数使用和 <code>docker run</code> 基本一直，比如 <code>-i</code>、<code>-t</code>、<code>--cpus</code>、<code>--memory</code> 等选项，可以使用 <code>nerdctl run --help</code> 获取可使用的命令选项：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ nerdctl run --help</span><br><span class="line">NAME:</span><br><span class="line">   nerdctl run - Run a command in a new container</span><br><span class="line"></span><br><span class="line">USAGE:</span><br><span class="line">   nerdctl run [command options] [arguments...]</span><br><span class="line"></span><br><span class="line">OPTIONS:</span><br><span class="line">   --help                        show help (default: false)</span><br><span class="line">   --tty, -t                     (Currently -t needs to correspond to -i) (default: false)</span><br><span class="line">   --interactive, -i             Keep STDIN open even if not attached (default: false)</span><br><span class="line">   --detach, -d                  Run container in background and print container ID (default: false)</span><br><span class="line">   --restart value               Restart policy to apply when a container exits (implemented values: &quot;no&quot;|&quot;always&quot;) (default: &quot;no&quot;)</span><br><span class="line">   --rm                          Automatically remove the container when it exits (default: false)</span><br><span class="line">   --pull value                  Pull image before running (&quot;always&quot;|&quot;missing&quot;|&quot;never&quot;) (default: &quot;missing&quot;)</span><br><span class="line">   --network value, --net value  Connect a container to a network (&quot;bridge&quot;|&quot;host&quot;|&quot;none&quot;) (default: &quot;bridge&quot;)</span><br><span class="line">   --dns value                   Set custom DNS servers (default: &quot;8.8.8.8&quot;, &quot;1.1.1.1&quot;)</span><br><span class="line">   --publish value, -p value     Publish a container&#x27;s port(s) to the host</span><br><span class="line">   --hostname value, -h value    Container host name</span><br><span class="line">   --cpus value                  Number of CPUs (default: 0)</span><br><span class="line">   --memory value, -m value      Memory limit</span><br><span class="line">   --pid value                   PID namespace to use</span><br><span class="line">   --pids-limit value            Tune container pids limit (set -1 for unlimited) (default: -1)</span><br><span class="line">   --cgroupns value              Cgroup namespace to use, the default depends on the cgroup version (&quot;host&quot;|&quot;private&quot;) (default: &quot;host&quot;)</span><br><span class="line">   --cpuset-cpus value           CPUs in which to allow execution (0-3, 0,1)</span><br><span class="line">   --cpu-shares value            CPU shares (relative weight) (default: 0)</span><br><span class="line">   --device value                Add a host device to the container</span><br><span class="line">   --user value, -u value        Username or UID (format: &lt;name|uid&gt;[:&lt;group|gid&gt;])</span><br><span class="line">   --security-opt value          Security options</span><br><span class="line">   --cap-add value               Add Linux capabilities</span><br><span class="line">   --cap-drop value              Drop Linux capabilities</span><br><span class="line">   --privileged                  Give extended privileges to this container (default: false)</span><br><span class="line">   --runtime value               Runtime to use for this container, e.g. &quot;crun&quot;, or &quot;io.containerd.runsc.v1&quot; (default: &quot;io.containerd.runc.v2&quot;)</span><br><span class="line">   --sysctl value                Sysctl options</span><br><span class="line">   --gpus value                  GPU devices to add to the container (&#x27;all&#x27; to pass all GPUs)</span><br><span class="line">   --volume value, -v value      Bind mount a volume</span><br><span class="line">   --read-only                   Mount the container&#x27;s root filesystem as read only (default: false)</span><br><span class="line">   --rootfs                      The first argument is not an image but the rootfs to the exploded container (default: false)</span><br><span class="line">   --entrypoint value            Overwrite the default ENTRYPOINT of the image</span><br><span class="line">   --workdir value, -w value     Working directory inside the container</span><br><span class="line">   --env value, -e value         Set environment variables</span><br><span class="line">   --env-file value              Set environment variables from file</span><br><span class="line">   --name value                  Assign a name to the container</span><br><span class="line">   --label value, -l value       Set meta data on a container</span><br><span class="line">   --label-file value            Read in a line delimited file of labels</span><br><span class="line">   --cidfile value               Write the container ID to the file</span><br><span class="line">   --shm-size value              Size of /dev/shm</span><br></pre></td></tr></table></figure>
+
+<p><strong>🐳nerdctl exec</strong></p>
+<p>同样也可以使用 <code>exec</code> 命令执行容器相关命令，例如：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ nerdctl exec -it nginx /bin/sh</span><br><span class="line">/ # date</span><br><span class="line">Thu Aug 19 06:43:19 UTC 2021</span><br><span class="line">/ #</span><br></pre></td></tr></table></figure>
+
+<h3 id="容器管理"><a href="#容器管理" class="headerlink" title="容器管理"></a>容器管理</h3><p><strong>🐳nerdctl ps</strong>：列出容器</p>
+<p>使用 <code>nerdctl ps</code> 命令可以列出所有容器。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ nerdctl ps</span><br><span class="line">CONTAINER ID    IMAGE                             COMMAND                   CREATED           STATUS    PORTS                 NAMES</span><br><span class="line">6e489777d2f7    docker.io/library/nginx:alpine    &quot;/docker-entrypoint.…&quot;    10 minutes ago    Up        0.0.0.0:80-&gt;80/tcp    nginx</span><br></pre></td></tr></table></figure>
+
+<p>同样可以使用 <code>-a</code> 选项显示所有的容器列表，默认只显示正在运行的容器，不过需要注意的是 <code>nerdctl ps</code> 命令并没有实现 <code>docker ps</code> 下面的 <code>--filter</code>、<code>--format</code>、<code>--last</code>、<code>--size</code> 等选项。</p>
+<p><strong>🐳nerdctl inspect</strong>：获取容器的详细信息。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ nerdctl inspect nginx</span><br><span class="line">[</span><br><span class="line">    &#123;</span><br><span class="line">        &quot;Id&quot;: &quot;6e489777d2f73dda8a310cdf8da9df38353c1aa2021d3c2270b30eff1806bcf8&quot;,</span><br><span class="line">        &quot;Created&quot;: &quot;2021-08-19T06:35:46.403464674Z&quot;,</span><br><span class="line">        &quot;Path&quot;: &quot;/docker-entrypoint.sh&quot;,</span><br><span class="line">        &quot;Args&quot;: [</span><br><span class="line">            &quot;nginx&quot;,</span><br><span class="line">            &quot;-g&quot;,</span><br><span class="line">            &quot;daemon off;&quot;</span><br><span class="line">        ],</span><br><span class="line">        &quot;State&quot;: &#123;</span><br><span class="line">            &quot;Status&quot;: &quot;running&quot;,</span><br><span class="line">            &quot;Running&quot;: true,</span><br><span class="line">            &quot;Paused&quot;: false,</span><br><span class="line">            &quot;Pid&quot;: 2002,</span><br><span class="line">            &quot;ExitCode&quot;: 0,</span><br><span class="line">            &quot;FinishedAt&quot;: &quot;0001-01-01T00:00:00Z&quot;</span><br><span class="line">        &#125;,</span><br><span class="line">        &quot;Image&quot;: &quot;docker.io/library/nginx:alpine&quot;,</span><br><span class="line">        &quot;ResolvConfPath&quot;: &quot;/var/lib/nerdctl/1935db59/containers/default/6e489777d2f73dda8a310cdf8da9df38353c1aa2021d3c2270b30eff1806bcf8/resolv.conf&quot;,</span><br><span class="line">        &quot;LogPath&quot;: &quot;/var/lib/nerdctl/1935db59/containers/default/6e489777d2f73dda8a310cdf8da9df38353c1aa2021d3c2270b30eff1806bcf8/6e489777d2f73dda8a310cdf8da9df38353c1aa2021d3c2270b30eff1806bcf8-json.log&quot;,</span><br><span class="line">        &quot;Name&quot;: &quot;nginx&quot;,</span><br><span class="line">        &quot;Driver&quot;: &quot;overlayfs&quot;,</span><br><span class="line">        &quot;Platform&quot;: &quot;linux&quot;,</span><br><span class="line">        &quot;AppArmorProfile&quot;: &quot;nerdctl-default&quot;,</span><br><span class="line">        &quot;NetworkSettings&quot;: &#123;</span><br><span class="line">            &quot;Ports&quot;: &#123;</span><br><span class="line">                &quot;80/tcp&quot;: [</span><br><span class="line">                    &#123;</span><br><span class="line">                        &quot;HostIp&quot;: &quot;0.0.0.0&quot;,</span><br><span class="line">                        &quot;HostPort&quot;: &quot;80&quot;</span><br><span class="line">                    &#125;</span><br><span class="line">                ]</span><br><span class="line">            &#125;,</span><br><span class="line">            &quot;GlobalIPv6Address&quot;: &quot;&quot;,</span><br><span class="line">            &quot;GlobalIPv6PrefixLen&quot;: 0,</span><br><span class="line">            &quot;IPAddress&quot;: &quot;10.4.0.3&quot;,</span><br><span class="line">            &quot;IPPrefixLen&quot;: 24,</span><br><span class="line">            &quot;MacAddress&quot;: &quot;f2:b1:8e:a2:fe:18&quot;,</span><br><span class="line">            &quot;Networks&quot;: &#123;</span><br><span class="line">                &quot;unknown-eth0&quot;: &#123;</span><br><span class="line">                    &quot;IPAddress&quot;: &quot;10.4.0.3&quot;,</span><br><span class="line">                    &quot;IPPrefixLen&quot;: 24,</span><br><span class="line">                    &quot;GlobalIPv6Address&quot;: &quot;&quot;,</span><br><span class="line">                    &quot;GlobalIPv6PrefixLen&quot;: 0,</span><br><span class="line">                    &quot;MacAddress&quot;: &quot;f2:b1:8e:a2:fe:18&quot;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+
+<p>可以看到显示结果和 <code>docker inspect</code> 也基本一致的。</p>
+<p><strong>🐳nerdctl logs</strong>：获取容器日志</p>
+<p>查看容器日志是我们平时经常会使用到的一个功能，同样我们可以使用 <code>nerdctl logs</code> 来获取日志数据：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ nerdctl logs -f nginx</span><br><span class="line">......</span><br><span class="line">2021/08/19 06:35:46 [notice] 1#1: start worker processes</span><br><span class="line">2021/08/19 06:35:46 [notice] 1#1: start worker process 32</span><br><span class="line">2021/08/19 06:35:46 [notice] 1#1: start worker process 33</span><br></pre></td></tr></table></figure>
+
+<p>同样支持 <code>-f</code>、<code>-t</code>、<code>-n</code>、<code>--since</code>、<code>--until</code> 这些选项。</p>
+<p><strong>🐳nerdctl stop</strong>：停止容器</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ nerdctl stop nginx</span><br><span class="line">nginx</span><br><span class="line">➜  ~ nerdctl ps</span><br><span class="line">CONTAINER ID    IMAGE    COMMAND    CREATED    STATUS    PORTS    NAMES</span><br><span class="line">➜  ~ nerdctl ps -a</span><br><span class="line">CONTAINER ID    IMAGE                             COMMAND                   CREATED           STATUS    PORTS                 NAMES</span><br><span class="line">6e489777d2f7    docker.io/library/nginx:alpine    &quot;/docker-entrypoint.…&quot;    20 minutes ago    Up        0.0.0.0:80-&gt;80/tcp    nginx</span><br></pre></td></tr></table></figure>
+
+<p><strong>🐳nerdctl rm</strong>：删除容器</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ nerdctl rm nginx</span><br><span class="line">You cannot remove a running container f4ac170235595f28bf962bad68aa81b20fc83b741751e7f3355bd77d8016462d. Stop the container before attempting removal or force remove</span><br><span class="line">➜  ~ nerdctl rm -f ginx</span><br><span class="line">nginx</span><br><span class="line">➜  ~ nerdctl ps</span><br><span class="line">CONTAINER ID    IMAGE    COMMAND    CREATED    STATUS    PORTS    NAMES</span><br></pre></td></tr></table></figure>
+
+<p>要强制删除同样可以使用 <code>-f</code> 或 <code>--force</code> 选项来操作。</p>
+<h3 id="镜像管理"><a href="#镜像管理" class="headerlink" title="镜像管理"></a>镜像管理</h3><p><strong>🐳nerdctl images</strong>：镜像列表</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ nerdctl images</span><br><span class="line">REPOSITORY    TAG       IMAGE ID        CREATED           SIZE</span><br><span class="line">alpine        latest    eb3e4e175ba6    6 days ago        5.9 MiB</span><br><span class="line">nginx         alpine    bead42240255    29 minutes ago    16.0 KiB</span><br></pre></td></tr></table></figure>
+
+<p>也需要注意的是没有实现 <code>docker images</code> 的一些选项，比如 <code>--all</code>、<code>--digests</code>、<code>--filter</code>、<code>--format</code>。</p>
+<p><strong>🐳nerdctl pull</strong>：拉取镜像</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ docker.io/library/busybox:latest:</span><br><span class="line">resolved       |++++++++++++++++++++++++++++++++++++++|</span><br><span class="line">index-sha256:0f354ec1728d9ff32edcd7d1b8bbdfc798277ad36120dc3dc683be44524c8b60:    done           |++++++++++++++++++++++++++++++++++++++| manifest-sha256:dca71257cd2e72840a21f0323234bb2e33fea6d949fa0f21c5102146f583486b: done           |++++++++++++++++++++++++++++++++++++++| config-sha256:69593048aa3acfee0f75f20b77acb549de2472063053f6730c4091b53f2dfb02:   done           |++++++++++++++++++++++++++++++++++++++| layer-sha256:b71f96345d44b237decc0c2d6c2f9ad0d17fde83dad7579608f1f0764d9686f2:    done           |++++++++++++++++++++++++++++++++++++++| elapsed: 5.9 s                                                                    total:  752.8  (127.5 KiB/s)</span><br></pre></td></tr></table></figure>
+
+<p><strong>🐳nerdctl push</strong>：推送镜像</p>
+<p>当然在推送镜像之前也可以使用 <code>nerdctl login</code> 命令登录到镜像仓库，然后再执行 push 操作。</p>
+<p>可以使用 <code>nerdctl login --username xxx --password xxx</code> 进行登录，使用 <code>nerdctl logout</code> 可以注销退出登录。</p>
+<p><strong>🐳nerdctl tag</strong>：镜像标签</p>
+<p>使用 <code>tag</code> 命令可以为一个镜像创建一个别名镜像：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ nerdctl images</span><br><span class="line">REPOSITORY    TAG                  IMAGE ID        CREATED           SIZE</span><br><span class="line">busybox       latest               0f354ec1728d    6 minutes ago     1.3 MiB</span><br><span class="line">nginx         alpine               bead42240255    41 minutes ago    16.0 KiB</span><br><span class="line">➜  ~ nerdctl tag nginx:alpine harbor.k8s.local/course/nginx:alpine</span><br><span class="line">➜  ~ nerdctl images</span><br><span class="line">REPOSITORY                       TAG                  IMAGE ID        CREATED           SIZE</span><br><span class="line">busybox                          latest               0f354ec1728d    7 minutes ago     1.3 MiB</span><br><span class="line">nginx                            alpine               bead42240255    41 minutes ago    16.0 KiB</span><br><span class="line">harbor.k8s.local/course/nginx    alpine               bead42240255    2 seconds ago     16.0 KiB</span><br></pre></td></tr></table></figure>
+
+<p><strong>🐳nerdctl save</strong>：导出镜像</p>
+<p>使用 <code>save</code> 命令可以导出镜像为一个 <code>tar</code> 压缩包。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ nerdctl save -o busybox.tar.gz busybox:latest</span><br><span class="line">➜  ~ ls -lh busybox.tar.gz</span><br><span class="line">-rw-r--r-- 1 root root 761K Aug 19 15:19 busybox.tar.gz</span><br></pre></td></tr></table></figure>
+
+<p><strong>🐳nerdctl rmi</strong>：删除镜像</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ nerdctl rmi busybox</span><br><span class="line">Untagged: docker.io/library/busybox:latest@sha256:0f354ec1728d9ff32edcd7d1b8bbdfc798277ad36120dc3dc683be44524c8b60</span><br><span class="line">Deleted: sha256:5b8c72934dfc08c7d2bd707e93197550f06c0751023dabb3a045b723c5e7b373</span><br></pre></td></tr></table></figure>
+
+<p><strong>🐳nerdctl load</strong>：导入镜像</p>
+<p>使用 <code>load</code> 命令可以将上面导出的镜像再次导入：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ nerdctl load -i busybox.tar.gz</span><br><span class="line">unpacking docker.io/library/busybox:latest (sha256:0f354ec1728d9ff32edcd7d1b8bbdfc798277ad36120dc3dc683be44524c8b60)...done</span><br></pre></td></tr></table></figure>
+
+<p>使用 <code>-i</code> 或 <code>--input</code> 选项指定需要导入的压缩包。</p>
+<h3 id="镜像构建"><a href="#镜像构建" class="headerlink" title="镜像构建"></a>镜像构建</h3><p>镜像构建是平时我们非常重要的一个需求，我们知道 <code>ctr</code> 并没有构建镜像的命令，而现在我们又不使用 Docker 了，那么如何进行镜像构建了，幸运的是 <code>nerdctl</code> 就提供了 <code>nerdctl build</code> 这样的镜像构建命令。</p>
+<p><strong>🐳nerdctl build</strong>：从 Dockerfile 构建镜像</p>
+<p>比如现在我们定制一个 nginx 镜像，新建一个如下所示的 Dockerfile 文件：</p>
+<figure class="highlight docker"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">FROM</span> nginx</span><br><span class="line"><span class="keyword">RUN</span><span class="language-bash"> <span class="built_in">echo</span> <span class="string">&#x27;Hello Nerdctl From Containerd&#x27;</span> &gt; /usr/share/nginx/html/index.html</span></span><br></pre></td></tr></table></figure>
+
+<p>然后在文件所在目录执行镜像构建命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ nerdctl build -t nginx:nerdctl -f Dockerfile .</span><br><span class="line">FATA[0000] `buildctl` needs to be installed and `buildkitd` needs to be running, see https://github.com/moby/buildkit: exec: &quot;buildctl&quot;: executable file not found in $PATH</span><br></pre></td></tr></table></figure>
+
+<p>可以看到有一个错误提示，需要我们安装 <code>buildctl</code> 并运行 <code>buildkitd</code>，这是因为 <code>nerdctl build</code> 需要依赖 <code>buildkit</code> 工具。</p>
+<p><a target="_blank" rel="noopener" href="https://github.com/moby/buildkit">buildkit</a> 项目也是 Docker 公司开源的一个构建工具包，支持 OCI 标准的镜像构建。它主要包含以下部分:</p>
+<ul>
+<li>服务端 <code>buildkitd</code>：当前支持 runc 和 containerd 作为 worker，默认是 runc，我们这里使用 containerd</li>
+<li>客户端 <code>buildctl</code>：负责解析 Dockerfile，并向服务端 buildkitd 发出构建请求</li>
+</ul>
+<p>buildkit 是典型的 C&#x2F;S 架构，客户端和服务端是可以不在一台服务器上，而 <code>nerdctl</code> 在构建镜像的时候也作为 <code>buildkitd</code> 的客户端，所以需要我们安装并运行 <code>buildkitd</code>。</p>
+<p>所以接下来我们先来安装 <code>buildkit</code>：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ wget https://github.com/moby/buildkit/releases/download/v0.9.1/buildkit-v0.9.1.linux-amd64.tar.gz</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">如果有限制，也可以替换成下面的 URL 加速下载</span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">wget https://download.fastgit.org/moby/buildkit/releases/download/v0.9.1/buildkit-v0.9.1.linux-amd64.tar.gz</span></span><br><span class="line">➜  ~ tar -zxvf buildkit-v0.9.1.linux-amd64.tar.gz -C /usr/local/containerd/</span><br><span class="line">bin/</span><br><span class="line">bin/buildctl</span><br><span class="line">bin/buildkit-qemu-aarch64</span><br><span class="line">bin/buildkit-qemu-arm</span><br><span class="line">bin/buildkit-qemu-i386</span><br><span class="line">bin/buildkit-qemu-mips64</span><br><span class="line">bin/buildkit-qemu-mips64el</span><br><span class="line">bin/buildkit-qemu-ppc64le</span><br><span class="line">bin/buildkit-qemu-riscv64</span><br><span class="line">bin/buildkit-qemu-s390x</span><br><span class="line">bin/buildkit-runc</span><br><span class="line">bin/buildkitd</span><br><span class="line">➜  ~ ln -s /usr/local/containerd/bin/buildkitd /usr/local/bin/buildkitd</span><br><span class="line">➜  ~ ln -s /usr/local/containerd/bin/buildctl /usr/local/bin/buildctl</span><br></pre></td></tr></table></figure>
+
+<p>这里我们使用 Systemd 来管理 <code>buildkitd</code>，创建如下所示的 <code>systemd unit</code> 文件：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ cat /etc/systemd/system/buildkit.service</span><br><span class="line">[Unit]</span><br><span class="line">Description=BuildKit</span><br><span class="line">Documentation=https://github.com/moby/buildkit</span><br><span class="line"></span><br><span class="line">[Service]</span><br><span class="line">ExecStart=/usr/local/bin/buildkitd --oci-worker=false --containerd-worker=true</span><br><span class="line"></span><br><span class="line">[Install]</span><br><span class="line">WantedBy=multi-user.target</span><br></pre></td></tr></table></figure>
+
+<p>然后启动 <code>buildkitd</code>：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ systemctl daemon-reload</span><br><span class="line">➜  ~ systemctl enable buildkit --now</span><br><span class="line">Created symlink /etc/systemd/system/multi-user.target.wants/buildkit.service → /etc/systemd/system/buildkit.service.</span><br><span class="line">➜  ~ systemctl status buildkit</span><br><span class="line">● buildkit.service - BuildKit</span><br><span class="line">     Loaded: loaded (/etc/systemd/system/buildkit.service; enabled; vendor preset: enabled)</span><br><span class="line">     Memory: 8.6M</span><br><span class="line">     CGroup: /system.slice/buildkit.service</span><br><span class="line">             └─5779 /usr/local/bin/buildkitd --oci-worker=false --containerd-worker=true</span><br><span class="line"></span><br><span class="line">Aug 19 16:03:10 ydzsio systemd[1]: Started BuildKit.</span><br><span class="line">Aug 19 16:03:10 ydzsio buildkitd[5779]: time=&quot;2021-08-19T16:03:10+08:00&quot; level=warning msg=&quot;using host network as the default&quot;</span><br><span class="line">Aug 19 16:03:10 ydzsio buildkitd[5779]: time=&quot;2021-08-19T16:03:10+08:00&quot; level=info msg=&quot;found worker \&quot;euznuelxhxb689bc5of7pxmbc\&quot;, labels&gt;</span><br><span class="line">Aug 19 16:03:10 ydzsio buildkitd[5779]: time=&quot;2021-08-19T16:03:10+08:00&quot; level=info msg=&quot;found 1 workers, default=\&quot;euznuelxhxb689bc5of7pxm&gt;</span><br><span class="line">Aug 19 16:03:10 ydzsio buildkitd[5779]: time=&quot;2021-08-19T16:03:10+08:00&quot; level=warning msg=&quot;currently, only the default worker can be used.&quot;</span><br><span class="line">Aug 19 16:03:10 ydzsio buildkitd[5779]: time=&quot;2021-08-19T16:03:10+08:00&quot; level=info msg=&quot;running server on /run/buildkit/buildkitd.sock&quot;</span><br><span class="line">~</span><br></pre></td></tr></table></figure>
+
+<p>现在我们再来重新构建镜像：</p>
+<p><img data-src="https://mudutestmenu.mudu.tv/upload/7oga7u.png" alt="nerdctl 构建镜像"></p>
+<p>构建完成后查看镜像是否构建成功：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ nerdctl images</span><br><span class="line">WARN[0000] unparsable image name &quot;overlayfs@sha256:d5b9b9e4c930f30340650cb373f62f97c93ee3b92c83f01c6e00b7b87d62c624&quot;</span><br><span class="line">REPOSITORY    TAG        IMAGE ID        CREATED               SIZE</span><br><span class="line">nginx         latest     4d4d96ac750a    4 minutes ago         16.0 KiB</span><br><span class="line">nginx         nerdctl    d5b9b9e4c930    About a minute ago    24.0 KiB</span><br></pre></td></tr></table></figure>
+
+<p>我们可以看到已经有我们构建的 <code>nginx:nerdctl</code> 镜像了。接下来使用上面我们构建的镜像来启动一个容器进行测试：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ nerdctl run -d -p 80:80 --name=nginx --restart=always nginx:nerdctl</span><br><span class="line">f8f639cb667926023231b13584226b2c7b856847e0a25bd5f686b9a6e7e3cacd</span><br><span class="line">➜  ~ nerdctl ps</span><br><span class="line">CONTAINER ID    IMAGE                              COMMAND                   CREATED         STATUS    PORTS                 NAMES</span><br><span class="line">f8f639cb6679    docker.io/library/nginx:nerdctl    &quot;/docker-entrypoint.…&quot;    1 second ago    Up        0.0.0.0:80-&gt;80/tcp    nginx</span><br><span class="line">➜  ~ curl localhost</span><br><span class="line">This is a nerdctl build&#x27;s nginx image base on containerd</span><br></pre></td></tr></table></figure>
+
+<p>这样我们就使用 <code>nerdctl + buildkitd</code> 轻松完成了容器镜像的构建。</p>
+<p>当然如果你还想在单机环境下使用 Docker Compose，在 containerd 模式下，我们也可以使用 <code>nerdctl</code> 来兼容该功能。同样我们可以使用 <code>nerdctl compose</code>、<code>nerdctl compose up</code>、<code>nerdctl compose logs</code>、<code>nerdctl compose build</code>、<code>nerdctl compose down</code> 等命令来管理 Compose 服务。这样使用 containerd、nerdctl 结合 buildkit 等工具就完全可以替代 docker 在镜像构建、镜像容器方面的管理功能了。</p>
+<p><a target="_blank" rel="noopener" href="https://docs.youdianzhishi.com/k8s/runtime/usage/">
+</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Cookie%E3%80%81Session%20%E5%92%8C%20Token%20/" rel="prev" title="Cookie、Session 和 Token">
+      <i class="fa fa-chevron-left"></i> Cookie、Session 和 Token
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/Consule%20%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0/" rel="next" title="Consule 服务发现">
+      Consule 服务发现 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Containerd-%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%B7%A5%E5%85%B7-nerdctl"><span class="nav-number">1.</span> <span class="nav-text">Containerd 命令行工具 nerdctl</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85"><span class="nav-number">1.1.</span> <span class="nav-text">安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%91%BD%E4%BB%A4"><span class="nav-number">1.2.</span> <span class="nav-text">命令</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Run-Exec"><span class="nav-number">1.2.1.</span> <span class="nav-text">Run&amp;Exec</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%B9%E5%99%A8%E7%AE%A1%E7%90%86"><span class="nav-number">1.2.2.</span> <span class="nav-text">容器管理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%95%9C%E5%83%8F%E7%AE%A1%E7%90%86"><span class="nav-number">1.2.3.</span> <span class="nav-text">镜像管理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%95%9C%E5%83%8F%E6%9E%84%E5%BB%BA"><span class="nav-number">1.2.4.</span> <span class="nav-text">镜像构建</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

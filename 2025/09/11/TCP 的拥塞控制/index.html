@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 7.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="TCP 拥塞控制的目的在于防止过多的数据注入到网络中，避免或减轻网络的拥塞，从而提高网络利用率，同时保证主机间的有效通信。它不是为了防止发送方发送数据过快淹没接收方（那是流量控制），而是为了防止发送方发送数据过快淹没整个网络。 TCP 的拥塞控制主要包括以下四个核心算法（通常被称为拥塞控制的“四大家族”）：  慢启动 (Slow Start) 拥塞避免 (Congestion Avoidance)">
+<meta property="og:type" content="article">
+<meta property="og:title" content="TCP 的拥塞控制">
+<meta property="og:url" content="http://example.com/2025/09/11/TCP%20%E7%9A%84%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6/index.html">
+<meta property="og:site_name" content="Hui&#39;s Blog">
+<meta property="og:description" content="TCP 拥塞控制的目的在于防止过多的数据注入到网络中，避免或减轻网络的拥塞，从而提高网络利用率，同时保证主机间的有效通信。它不是为了防止发送方发送数据过快淹没接收方（那是流量控制），而是为了防止发送方发送数据过快淹没整个网络。 TCP 的拥塞控制主要包括以下四个核心算法（通常被称为拥塞控制的“四大家族”）：  慢启动 (Slow Start) 拥塞避免 (Congestion Avoidance)">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
+<meta property="article:modified_time" content="2025-09-11T14:07:02.504Z">
+<meta property="article:author" content="六一">
+<meta property="article:tag" content="运维">
+<meta property="article:tag" content="Network">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2025/09/11/TCP%20%E7%9A%84%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>TCP 的拥塞控制 | Hui's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hui's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">Code Life</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/TCP%20%E7%9A%84%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="六一">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hui's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          TCP 的拥塞控制
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:07:02" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/" itemprop="url" rel="index"><span itemprop="name">WEB</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/Http/" itemprop="url" rel="index"><span itemprop="name">Http</span></a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/WEB/Http/TCP/" itemprop="url" rel="index"><span itemprop="name">TCP</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>2.1k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>2 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>TCP 拥塞控制的目的在于<strong>防止过多的数据注入到网络中，避免或减轻网络的拥塞</strong>，从而提高网络利用率，同时保证主机间的有效通信。它不是为了防止发送方发送数据过快淹没接收方（那是流量控制），而是为了防止发送方发送数据过快淹没<strong>整个网络</strong>。</p>
+<p>TCP 的拥塞控制主要包括以下四个核心算法（通常被称为<strong>拥塞控制的“四大家族”</strong>）：</p>
+<ol>
+<li><strong>慢启动 (Slow Start)</strong></li>
+<li><strong>拥塞避免 (Congestion Avoidance)</strong></li>
+<li><strong>快速重传 (Fast Retransmit)</strong></li>
+<li><strong>快速恢复 (Fast Recovery)</strong></li>
+</ol>
+<p>这些算法协同工作，共同管理发送方的发送速率，即调整<strong>拥塞窗口 (cwnd)</strong> 的大小。</p>
+<hr>
+<h3 id="1-慢启动-Slow-Start"><a href="#1-慢启动-Slow-Start" class="headerlink" title="1. 慢启动 (Slow Start)"></a>1. 慢启动 (Slow Start)</h3><p><strong>目标：</strong> 在连接刚建立或长时间中断后，逐步探测网络的承载能力，快速找到一个合适的发送速率，避免一开始就对网络造成冲击。</p>
+<p><strong>过程：</strong></p>
+<ul>
+<li><strong>初始状态：</strong> 连接建立时，拥塞窗口 (cwnd) 被初始化为一个较小的值（通常是 1-10 MSS，具体取决于操作系统和TCP版本，RFC 2581 最初建议 1 MSS，现在通常是 10 MSS）。</li>
+<li><strong>指数增长：</strong> 发送方每收到一个**确认 (ACK)**，<code>cwnd</code> 的大小就增加一个 MSS（最大报文段大小）。这意味着在每个 RTT（往返时间）内，<code>cwnd</code> 会翻倍。</li>
+<li><strong>退出条件：</strong> 当 <code>cwnd</code> 达到<strong>慢启动门限 (ssthresh)</strong> 时，慢启动阶段结束，进入拥塞避免阶段。<code>ssthresh</code> 的初始值通常非常大，或者与接收窗口大小相同。</li>
+</ul>
+<p><strong>特点：</strong> 窗口增长速度快，呈指数级。</p>
+<hr>
+<h3 id="2-拥塞避免-Congestion-Avoidance"><a href="#2-拥塞避免-Congestion-Avoidance" class="headerlink" title="2. 拥塞避免 (Congestion Avoidance)"></a>2. 拥塞避免 (Congestion Avoidance)</h3><p><strong>目标：</strong> 在探测到网络承载能力后，以更谨慎的方式逐步增加发送速率，避免再次引起拥塞。</p>
+<p><strong>过程：</strong></p>
+<ul>
+<li><strong>线性增长：</strong> 当 <code>cwnd</code> 达到 <code>ssthresh</code> 后，<code>cwnd</code> 的增长方式从指数级变为线性级。发送方每收到<strong>一个 RTT 内的 ACK 集合</strong> (<code>cwnd</code> 个 ACK)，<code>cwnd</code> 才增加一个 MSS 大小。<ul>
+<li>更精确地说：<code>cwnd = cwnd + MSS * (MSS / cwnd)</code>，或者 <code>cwnd = cwnd + 1/cwnd</code> MSS。这意味着只有当收到足够多的 ACK 确认后，<code>cwnd</code> 才会增加一个 MSS。</li>
+</ul>
+</li>
+<li><strong>退出条件：</strong> 拥塞避免阶段会持续，直到发生丢包事件（无论是超时还是收到重复 ACK）。</li>
+</ul>
+<p><strong>特点：</strong> 窗口增长速度慢，呈线性级。这个阶段旨在平稳地利用网络带宽。</p>
+<hr>
+<h3 id="3-快速重传-Fast-Retransmit"><a href="#3-快速重传-Fast-Retransmit" class="headerlink" title="3. 快速重传 (Fast Retransmit)"></a>3. 快速重传 (Fast Retransmit)</h3><p><strong>目标：</strong> 在不等待超时的情况下，通过接收方发送的重复 ACK 提前发现丢包，并立即重传丢失的数据包，提高重传效率。</p>
+<p><strong>过程：</strong></p>
+<ul>
+<li><strong>信号：</strong> 当发送方收到<strong>三个或更多的对同一个数据包的重复 ACK</strong> 时，就认为这个数据包已经丢失。</li>
+<li><strong>操作：</strong><ol>
+<li><strong>立即重传：</strong> 不等待定时器超时，而是立即重传丢失的报文段。</li>
+<li><strong>调整 <code>ssthresh</code>：</strong> 将 <code>ssthresh</code> 设置为当前 <code>cwnd</code> 的一半。</li>
+<li><strong>调整 <code>cwnd</code>：</strong> 将 <code>cwnd</code> 设置为 <code>ssthresh</code> 加上 3 个 MSS（这 3 个 MSS 是为了弥补已经收到的 3 个重复 ACK 确认了后续数据）。这个 <code>cwnd</code> 的值会将连接带入快速恢复状态。</li>
+</ol>
+</li>
+</ul>
+<p><strong>特点：</strong> 是一种基于快速反馈的丢包发现机制，比超时重传更快。</p>
+<hr>
+<h3 id="4-快速恢复-Fast-Recovery"><a href="#4-快速恢复-Fast-Recovery" class="headerlink" title="4. 快速恢复 (Fast Recovery)"></a>4. 快速恢复 (Fast Recovery)</h3><p><strong>目标：</strong> 与快速重传配合，在检测到少量丢包时，保持较高的发送速率，避免将 <code>cwnd</code> 降到 1 MSS，从而更快地恢复到拥塞避免状态。</p>
+<p><strong>过程：</strong></p>
+<ul>
+<li><strong>进入条件：</strong> 当快速重传被触发后（即收到三个重复 ACK），TCP 会进入快速恢复阶段。</li>
+<li><strong>临时增加 <code>cwnd</code>：</strong> 发送方每收到一个额外的重复 ACK，<code>cwnd</code> 就会再增加一个 MSS。这是因为每个重复 ACK 都表明一个数据包离开了网络，从而释放了网络中的一个缓冲空间。</li>
+<li><strong>发送新数据：</strong> 在快速恢复期间，发送方可以发送新的数据（如果拥塞窗口和接收窗口允许）。</li>
+<li><strong>退出条件：</strong><ul>
+<li><strong>收到对丢失报文段的 ACK：</strong> 当发送方收到对最初触发快速重传的那个丢失报文段的 ACK 时，表明该数据已经成功重传并被接收方确认。此时，拥塞窗口 <code>cwnd</code> 会被设置回 <code>ssthresh</code> 的值，然后重新进入<strong>拥塞避免</strong>阶段。</li>
+<li><strong>超时：</strong> 如果在快速恢复阶段发生了超时（表明情况比之前想的更糟，可能有更多丢包），则 TCP 会回退到慢启动阶段，将 <code>ssthresh</code> 设置为当前 <code>cwnd</code> 的一半，<code>cwnd</code> 设置为 1 MSS。</li>
+</ul>
+</li>
+</ul>
+<p><strong>特点：</strong> 在丢包不严重的情况下，保持较高的 <code>cwnd</code>，避免剧烈地降低发送速率。</p>
+<hr>
+<h3 id="拥塞控制状态机概览："><a href="#拥塞控制状态机概览：" class="headerlink" title="拥塞控制状态机概览："></a>拥塞控制状态机概览：</h3><table>
+<thead>
+<tr>
+<th align="left">事件触发</th>
+<th align="left"><code>ssthresh</code></th>
+<th align="left"><code>cwnd</code></th>
+<th align="left">进入状态</th>
+<th align="left">备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">连接建立</td>
+<td align="left">大值&#x2F;Max</td>
+<td align="left">1 MSS</td>
+<td align="left">慢启动</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">收到 ACK</td>
+<td align="left"></td>
+<td align="left"><code>+1 MSS</code></td>
+<td align="left">慢启动</td>
+<td align="left">每次收到一个 ACK</td>
+</tr>
+<tr>
+<td align="left"><code>cwnd &gt;= ssthresh</code></td>
+<td align="left"></td>
+<td align="left"></td>
+<td align="left">拥塞避免</td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="left">收到 ACK</td>
+<td align="left"></td>
+<td align="left"><code>+1/cwnd MSS</code></td>
+<td align="left">拥塞避免</td>
+<td align="left">每个 RTT 增加 1 MSS</td>
+</tr>
+<tr>
+<td align="left"><strong>3个重复 ACK</strong></td>
+<td align="left"><code>cwnd / 2</code></td>
+<td align="left"><code>ssthresh + 3 MSS</code></td>
+<td align="left"><strong>快速恢复</strong></td>
+<td align="left"><em>重要</em>，表示轻微丢包</td>
+</tr>
+<tr>
+<td align="left"><strong>超时</strong></td>
+<td align="left"><code>cwnd / 2</code></td>
+<td align="left"><code>1 MSS</code></td>
+<td align="left"><strong>慢启动</strong></td>
+<td align="left"><em>重要</em>，表示严重丢包（网络状况恶化）</td>
+</tr>
+<tr>
+<td align="left">快速恢复中收到新 ACK</td>
+<td align="left"></td>
+<td align="left"><code>ssthresh</code></td>
+<td align="left">拥塞避免</td>
+<td align="left">恢复完成，继续线性增长</td>
+</tr>
+<tr>
+<td align="left">快速恢复中收到重复 ACK</td>
+<td align="left"></td>
+<td align="left"><code>+1 MSS</code></td>
+<td align="left">快速恢复</td>
+<td align="left">继续补偿在途的确认</td>
+</tr>
+</tbody></table>
+<h3 id="总结："><a href="#总结：" class="headerlink" title="总结："></a>总结：</h3><p>TCP 的拥塞控制是一个动态调整发送速率的过程，旨在高效利用网络资源的同时避免网络拥塞。它通过慢启动、拥塞避免、快速重传和快速恢复这四个核心算法，根据网络反馈（ACK、重复 ACK、超时）来实时调整拥塞窗口 <code>cwnd</code>，从而达到平衡的目标。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
+              <a href="/tags/Network/" rel="tag"># Network</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2025/09/11/TCP%20%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E7%9A%84%E4%BD%9C%E7%94%A8/" rel="prev" title="TCP 滑动窗口的作用">
+      <i class="fa fa-chevron-left"></i> TCP 滑动窗口的作用
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2025/09/11/TCP%20%E7%9A%84%20SACK/" rel="next" title="TCP 的 SACK">
+      TCP 的 SACK <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E6%85%A2%E5%90%AF%E5%8A%A8-Slow-Start"><span class="nav-number">1.</span> <span class="nav-text">1. 慢启动 (Slow Start)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E6%8B%A5%E5%A1%9E%E9%81%BF%E5%85%8D-Congestion-Avoidance"><span class="nav-number">2.</span> <span class="nav-text">2. 拥塞避免 (Congestion Avoidance)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E5%BF%AB%E9%80%9F%E9%87%8D%E4%BC%A0-Fast-Retransmit"><span class="nav-number">3.</span> <span class="nav-text">3. 快速重传 (Fast Retransmit)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-%E5%BF%AB%E9%80%9F%E6%81%A2%E5%A4%8D-Fast-Recovery"><span class="nav-number">4.</span> <span class="nav-text">4. 快速恢复 (Fast Recovery)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6%E7%8A%B6%E6%80%81%E6%9C%BA%E6%A6%82%E8%A7%88%EF%BC%9A"><span class="nav-number">5.</span> <span class="nav-text">拥塞控制状态机概览：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%EF%BC%9A"><span class="nav-number">6.</span> <span class="nav-text">总结：</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">六一</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">273</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">19</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2025</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">六一</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-area"></i>
+    </span>
+    <span title="站点总字数">1.7m</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">25:34</span>
+</div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>
