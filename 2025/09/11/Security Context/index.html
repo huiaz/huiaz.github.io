@@ -1,271 +1,166 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
-<meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 7.3.0">
-  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
-  <link rel="mask-icon" href="/images/logo.svg" color="#222">
-
-<link rel="stylesheet" href="/css/main.css">
-
-
-<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
-  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
-  <script src="/lib/pace/pace.min.js"></script>
-
-<script id="hexo-configurations">
-    var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
-  </script>
-
-  <meta name="description" content="Security Context 我们有时候在运行一个容器的时候，可能需要使用 sysctl 命令来修改内核参数，比如 net、vm、kernel 等参数，但是 systcl 需要容器拥有超级权限，才可以使用，在 Docker 容器启动的时候我们可以加上 --privileged 参数来使用特权模式。那么在 Kubernetes 中应该如何来使用呢？ 这个时候我们就需要使用到 Kubernetes">
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Security Context | Hui's Blog</title><meta name="author" content="六一"><meta name="copyright" content="六一"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="Security Context 我们有时候在运行一个容器的时候，可能需要使用 sysctl 命令来修改内核参数，比如 net、vm、kernel 等参数，但是 systcl 需要容器拥有超级权限，才可以使用，在 Docker 容器启动的时候我们可以加上 --privileged 参数来使用特权模式。那么在 Kubernetes 中应该如何来使用呢？ 这个时候我们就需要使用到 Kubernetes">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Security Context">
 <meta property="og:url" content="http://example.com/2025/09/11/Security%20Context/index.html">
 <meta property="og:site_name" content="Hui&#39;s Blog">
 <meta property="og:description" content="Security Context 我们有时候在运行一个容器的时候，可能需要使用 sysctl 命令来修改内核参数，比如 net、vm、kernel 等参数，但是 systcl 需要容器拥有超级权限，才可以使用，在 Docker 容器启动的时候我们可以加上 --privileged 参数来使用特权模式。那么在 Kubernetes 中应该如何来使用呢？ 这个时候我们就需要使用到 Kubernetes">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/yg32hq.jpg">
-<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1662431444209.jpg">
-<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/ymvrfw.jpg">
-<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/9bhohc.jpg">
-<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/vdjb4e.jpg">
+<meta property="og:image" content="http://example.com/img/butterfly-icon.png">
 <meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
 <meta property="article:modified_time" content="2025-09-11T13:54:59.336Z">
 <meta property="article:author" content="六一">
 <meta property="article:tag" content="运维">
 <meta property="article:tag" content="k8s">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://mudutestmenu.mudu.tv/upload/yg32hq.jpg">
-
-<link rel="canonical" href="http://example.com/2025/09/11/Security%20Context/">
-
-
-<script id="page-configurations">
-  // https://hexo.io/docs/variables.html
-  CONFIG.page = {
-    sidebar: "",
-    isHome : false,
-    isPost : true,
-    lang   : 'zh-CN'
-  };
-</script>
-
-  <title>Security Context | Hui's Blog</title>
-  
-
-
-
-
-
-
-  <noscript>
-  <style>
-  .use-motion .brand,
-  .use-motion .menu-item,
-  .sidebar-inner,
-  .use-motion .post-block,
-  .use-motion .pagination,
-  .use-motion .comments,
-  .use-motion .post-header,
-  .use-motion .post-body,
-  .use-motion .collection-header { opacity: initial; }
-
-  .use-motion .site-title,
-  .use-motion .site-subtitle {
-    opacity: initial;
-    top: initial;
-  }
-
-  .use-motion .logo-line-before i { left: initial; }
-  .use-motion .logo-line-after i { right: initial; }
-  </style>
-</noscript>
-
-</head>
-
-<body itemscope itemtype="http://schema.org/WebPage">
-  <div class="container use-motion">
-    <div class="headband"></div>
-
-    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
-      <div class="header-inner"><div class="site-brand-container">
-  <div class="site-nav-toggle">
-    <div class="toggle" aria-label="切换导航栏">
-      <span class="toggle-line toggle-line-first"></span>
-      <span class="toggle-line toggle-line-middle"></span>
-      <span class="toggle-line toggle-line-last"></span>
-    </div>
-  </div>
-
-  <div class="site-meta">
-
-    <a href="/" class="brand" rel="start">
-      <span class="logo-line-before"><i></i></span>
-      <h1 class="site-title">Hui's Blog</h1>
-      <span class="logo-line-after"><i></i></span>
-    </a>
-      <p class="site-subtitle" itemprop="description">Code Life</p>
-  </div>
-
-  <div class="site-nav-right">
-    <div class="toggle popup-trigger">
-        <i class="fa fa-search fa-fw fa-lg"></i>
-    </div>
-  </div>
-</div>
-
-
-
-
-<nav class="site-nav">
-  <ul id="menu" class="main-menu menu">
-        <li class="menu-item menu-item-home">
-
-    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
-
-  </li>
-        <li class="menu-item menu-item-about">
-
-    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
-
-  </li>
-        <li class="menu-item menu-item-tags">
-
-    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
-
-  </li>
-        <li class="menu-item menu-item-categories">
-
-    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
-
-  </li>
-        <li class="menu-item menu-item-archives">
-
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
-
-  </li>
-      <li class="menu-item menu-item-search">
-        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
-        </a>
-      </li>
-  </ul>
-</nav>
-
-
-
-  <div class="search-pop-overlay">
-    <div class="popup search-popup">
-        <div class="search-header">
-  <span class="search-icon">
-    <i class="fa fa-search"></i>
-  </span>
-  <div class="search-input-container">
-    <input autocomplete="off" autocapitalize="off"
-           placeholder="搜索..." spellcheck="false"
-           type="search" class="search-input">
-  </div>
-  <span class="popup-btn-close">
-    <i class="fa fa-times-circle"></i>
-  </span>
-</div>
-<div id="search-result">
-  <div id="no-result">
-    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
-  </div>
-</div>
-
-    </div>
-  </div>
-
-</div>
-    </header>
-
-    
-
-
-    <main class="main">
-      <div class="main-inner">
-        <div class="content-wrap">
-          
-
-          <div class="content post posts-expand">
-            
-
-    
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Security%20Context/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="六一">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hui's Blog">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          Security Context
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:54:59" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/k8s/%E9%85%8D%E7%BD%AE%E7%AE%A1%E7%90%86/" itemprop="url" rel="index"><span itemprop="name">配置管理</span></a>
-                </span>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>9.3k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>8 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
+<meta name="twitter:image" content="http://example.com/img/butterfly-icon.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Security Context",
+  "url": "http://example.com/2025/09/11/Security%20Context/",
+  "image": "http://example.com/img/butterfly-icon.png",
+  "datePublished": "2025-09-11T12:32:34.000Z",
+  "dateModified": "2025-09-11T13:54:59.336Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "六一",
+      "url": "http://example.com"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://example.com/2025/09/11/Security%20Context/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
       
-        <h1 id="Security-Context"><a href="#Security-Context" class="headerlink" title="Security Context"></a>Security Context</h1><p><img data-src="https://mudutestmenu.mudu.tv/upload/yg32hq.jpg" alt="Security Context"></p>
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Security Context',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/butterfly-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">274</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">22</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">45</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Hui's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Security Context</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user"></i><span> About</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Security Context</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-09-11T12:32:34.000Z" title="发表于 2025-09-11 20:32:34">2025-09-11</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-09-11T13:54:59.336Z" title="更新于 2025-09-11 21:54:59">2025-09-11</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/k8s/">k8s</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/k8s/%E9%85%8D%E7%BD%AE%E7%AE%A1%E7%90%86/">配置管理</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="Security-Context"><a href="#Security-Context" class="headerlink" title="Security Context"></a>Security Context</h1><p><img src="https://mudutestmenu.mudu.tv/upload/yg32hq.jpg" alt="Security Context"></p>
 <p>我们有时候在运行一个容器的时候，可能需要使用 <code>sysctl</code> 命令来修改内核参数，比如 <code>net</code>、<code>vm</code>、<code>kernel</code> 等参数，但是 <code>systcl</code> 需要容器拥有超级权限，才可以使用，在 Docker 容器启动的时候我们可以加上 <code>--privileged</code> 参数来使用特权模式。那么在 Kubernetes 中应该如何来使用呢？</p>
 <p>这个时候我们就需要使用到 Kubernetes 中的 <code>Security Context</code>，也就是常说的安全上下文，主要是来限制容器非法操作宿主节点的系统级别的内容，使得节点的系统或者节点上其他容器组受到影响。Kubernetes 提供了三种配置安全上下文级别的方法：</p>
 <ul>
@@ -306,7 +201,7 @@
 </li>
 </ul>
 <p>下表是我们常用的一些 <code>securityContext</code> 字段设置内容介绍：</p>
-<p><img data-src="https://picdn.youdianzhishi.com/images/1662431444209.jpg" alt="Security Context List"></p>
+<p><img src="https://picdn.youdianzhishi.com/images/1662431444209.jpg" alt="Security Context List"></p>
 <p>直接创建上面的 Pod 对象：</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ kubectl apply -f security-context-pod-demo-1.yaml</span><br><span class="line">➜  ~ kubectl get pods</span><br><span class="line">NAME                        READY   STATUS    RESTARTS   AGE</span><br><span class="line">security-context-pod-demo   1/1     Running   0          6m45s</span><br></pre></td></tr></table></figure>
 
@@ -355,7 +250,7 @@
 <p>但是使用 <code>SUID</code> 却带来了新的安全隐患，当我们运行设置了 <code>SUID</code> 的命令时，通常只是需要很小一部分的特权，但是 <code>SUID</code> 却给了它 root 具有的全部权限，一旦 被设置了 <code>SUID</code> 的命令出现漏洞，是不是就很容易被利用了。</p>
 <p>为此 Linux 引入了 <code>Capabilities</code> 机制来对 root 权限进行了更加细粒度的控制，实现按需进行授权，这样就大大减小了系统的安全隐患。</p>
 <h4 id="什么是-Capabilities"><a href="#什么是-Capabilities" class="headerlink" title="什么是 Capabilities"></a>什么是 Capabilities</h4><p>从内核 2.2 开始，Linux 将传统上与超级用户 root 关联的特权划分为不同的单元，称为 <code>capabilites</code>。<code>Capabilites</code> 每个单元都可以独立启用和禁用。这样当系统在作权限检查的时候就变成了：<strong>在执行特权操作时，如果进程的有效身份不是 root，就去检查是否具有该特权操作所对应的 capabilites，并以此决定是否可以进行该特权操作</strong>。比如如果我们要设置系统时间，就得具有 <code>CAP_SYS_TIME</code> 这个 capabilites。下面是从 <a target="_blank" rel="noopener" href="http://man7.org/linux/man-pages/man7/capabilities.7.html">capabilities man page</a> 中摘取的 capabilites 列表：</p>
-<p><img data-src="https://mudutestmenu.mudu.tv/upload/ymvrfw.jpg" alt="linux capabilities list"></p>
+<p><img src="https://mudutestmenu.mudu.tv/upload/ymvrfw.jpg" alt="linux capabilities list"></p>
 <h4 id="如何使用-Capabilities"><a href="#如何使用-Capabilities" class="headerlink" title="如何使用 Capabilities"></a>如何使用 Capabilities</h4><p>我们可以通过 <code>getcap</code> 和 <code>setcap</code> 两条命令来分别查看和设置程序文件的 <code>capabilities</code> 属性。比如当前我们是<code>test</code> 这个用户，使用 <code>getcap</code> 命令查看 <code>ping</code> 命令目前具有的 <code>capabilities</code>：</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ ll /bin/ping</span><br><span class="line">-rwxr-xr-x. 1 root root 66176 Aug  4  2017 /bin/ping</span><br><span class="line">➜  ~ getcap /bin/ping</span><br><span class="line">/bin/ping = cap_net_admin,cap_net_raw+p</span><br></pre></td></tr></table></figure>
 
@@ -402,9 +297,9 @@
 <h3 id="Container-Runtime-Capabilities"><a href="#Container-Runtime-Capabilities" class="headerlink" title="Container Runtime Capabilities"></a>Container Runtime Capabilities</h3><p>我们说容器本质上就是一个进程，所以理论上容器就会和进程一样会有一些默认的开放权限，默认情况下 Docker&#x2F;Containerd 会删除必须的 <code>capabilities</code> 之外的所有 <code>capabilities</code>，因为在容器中我们经常会以 root 用户来运行，使用 <code>capabilities</code> 现在后，容器中的使用的 root 用户权限就比我们平时在宿主机上使用的 root 用户权限要少很多了，这样即使出现了安全漏洞，也很难破坏或者获取宿主机的 root 权限，所以 Docker&#x2F;Containerd 支持 <code>Capabilities</code> 对于容器的安全性来说是非常有必要的。</p>
 <p>不过我们在运行容器的时候可以通过指定 <code>--privileded</code> 参数来开启容器的超级权限，这个参数一定要慎用，因为他会获取系统 root 用户所有能力赋值给容器，并且会扫描宿主机的所有设备文件挂载到容器内部，所以是非常危险的操作。</p>
 <p>但是如果你确实需要一些特殊的权限，我们可以通过 <code>--cap-add</code> 和 <code>--cap-drop</code> 这两个参数来动态调整，可以最大限度地保证容器的使用安全。下面表格中列出的 <code>Capabilities</code> 是 Docker 默认给容器添加的，我们可以通过 <code>--cap-drop</code> 去除其中一个或者多个：</p>
-<p><img data-src="https://mudutestmenu.mudu.tv/upload/9bhohc.jpg" alt="docker capabilities"></p>
+<p><img src="https://mudutestmenu.mudu.tv/upload/9bhohc.jpg" alt="docker capabilities"></p>
 <p>下面表格中列出的 <code>Capabilities</code> 是 Docker 默认删除的，我们可以通过<code>--cap-add</code>添加其中一个或者多个：</p>
-<p><img data-src="https://mudutestmenu.mudu.tv/upload/vdjb4e.jpg" alt="docker drop capabilities"></p>
+<p><img src="https://mudutestmenu.mudu.tv/upload/vdjb4e.jpg" alt="docker drop capabilities"></p>
 <blockquote>
 <figure class="highlight autohotkey"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">--cap-add`和`--cap-drop` 这两参数都支持`ALL`值，比如如果你想让某个容器拥有除了`MKNOD`之外的所有内核权限，那么可以执行下面的命令： `➜ ~ sudo docker run --cap-add=ALL --cap-drop=MKNOD ...</span><br></pre></td></tr></table></figure>
 </blockquote>
@@ -430,225 +325,4 @@
 
 
 <p>在 Kubernetes 中通过 <code>containers.securityContext.capabilities</code> 进行配置容器的 <code>Capabilities</code>，当然最终还是通过容器运行时的 <code>libcontainer</code> 去借助 <code>Linux kernel capabilities</code> 实现的权限管理。</p>
-
-    </div>
-
-    
-    
-    
-
-      <footer class="post-footer">
-          <div class="post-tags">
-              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
-              <a href="/tags/k8s/" rel="tag"># k8s</a>
-          </div>
-
-        
-
-
-        
-    <div class="post-nav">
-      <div class="post-nav-item">
-    <a href="/2025/09/11/Service/" rel="prev" title="Service">
-      <i class="fa fa-chevron-left"></i> Service
-    </a></div>
-      <div class="post-nav-item">
-    <a href="/2025/09/11/Secret/" rel="next" title="Secret">
-      Secret <i class="fa fa-chevron-right"></i>
-    </a></div>
-    </div>
-      </footer>
-    
-  </article>
-  
-  
-  
-
-
-
-          </div>
-          
-
-<script>
-  window.addEventListener('tabs:register', () => {
-    let { activeClass } = CONFIG.comments;
-    if (CONFIG.comments.storage) {
-      activeClass = localStorage.getItem('comments_active') || activeClass;
-    }
-    if (activeClass) {
-      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
-      if (activeTab) {
-        activeTab.click();
-      }
-    }
-  });
-  if (CONFIG.comments.storage) {
-    window.addEventListener('tabs:click', event => {
-      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
-      let commentClass = event.target.classList[1];
-      localStorage.setItem('comments_active', commentClass);
-    });
-  }
-</script>
-
-        </div>
-          
-  
-  <div class="toggle sidebar-toggle">
-    <span class="toggle-line toggle-line-first"></span>
-    <span class="toggle-line toggle-line-middle"></span>
-    <span class="toggle-line toggle-line-last"></span>
-  </div>
-
-  <aside class="sidebar">
-    <div class="sidebar-inner">
-
-      <ul class="sidebar-nav motion-element">
-        <li class="sidebar-nav-toc">
-          文章目录
-        </li>
-        <li class="sidebar-nav-overview">
-          站点概览
-        </li>
-      </ul>
-
-      <!--noindex-->
-      <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Security-Context"><span class="nav-number">1.</span> <span class="nav-text">Security Context</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA-Pod-%E8%AE%BE%E7%BD%AE-Security-Context"><span class="nav-number">1.1.</span> <span class="nav-text">为 Pod 设置 Security Context</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E5%AE%B9%E5%99%A8%E8%AE%BE%E7%BD%AE-Security-Context"><span class="nav-number">1.2.</span> <span class="nav-text">为容器设置 Security Context</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE-Linux-Capabilities"><span class="nav-number">1.3.</span> <span class="nav-text">设置 Linux Capabilities</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Linux-Capabilities"><span class="nav-number">1.3.1.</span> <span class="nav-text">Linux Capabilities</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF-Capabilities"><span class="nav-number">1.3.1.1.</span> <span class="nav-text">什么是 Capabilities</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8-Capabilities"><span class="nav-number">1.3.1.2.</span> <span class="nav-text">如何使用 Capabilities</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Container-Runtime-Capabilities"><span class="nav-number">1.3.2.</span> <span class="nav-text">Container Runtime Capabilities</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Kubernetes-%E9%85%8D%E7%BD%AE-Capabilities"><span class="nav-number">1.3.3.</span> <span class="nav-text">Kubernetes 配置 Capabilities</span></a></li></ol></li></ol></li></ol></div>
-      </div>
-      <!--/noindex-->
-
-      <div class="site-overview-wrap sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
-  <p class="site-author-name" itemprop="name">六一</p>
-  <div class="site-description" itemprop="description"></div>
-</div>
-<div class="site-state-wrap motion-element">
-  <nav class="site-state">
-      <div class="site-state-item site-state-posts">
-          <a href="/archives/">
-        
-          <span class="site-state-item-count">273</span>
-          <span class="site-state-item-name">日志</span>
-        </a>
-      </div>
-      <div class="site-state-item site-state-categories">
-            <a href="/categories/">
-          
-        <span class="site-state-item-count">44</span>
-        <span class="site-state-item-name">分类</span></a>
-      </div>
-      <div class="site-state-item site-state-tags">
-            <a href="/tags/">
-          
-        <span class="site-state-item-count">19</span>
-        <span class="site-state-item-name">标签</span></a>
-      </div>
-  </nav>
-</div>
-  <div class="links-of-author motion-element">
-      <span class="links-of-author-item">
-        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
-      </span>
-  </div>
-
-
-
-      </div>
-        <div class="back-to-top motion-element">
-          <i class="fa fa-arrow-up"></i>
-          <span>0%</span>
-        </div>
-
-    </div>
-  </aside>
-  <div id="sidebar-dimmer"></div>
-
-
-      </div>
-    </main>
-
-    <footer class="footer">
-      <div class="footer-inner">
-        
-
-        
-
-<div class="copyright">
-  
-  &copy; 
-  <span itemprop="copyrightYear">2025</span>
-  <span class="with-love">
-    <i class="fa fa-heart"></i>
-  </span>
-  <span class="author" itemprop="copyrightHolder">六一</span>
-    <span class="post-meta-divider">|</span>
-    <span class="post-meta-item-icon">
-      <i class="fa fa-chart-area"></i>
-    </span>
-    <span title="站点总字数">1.7m</span>
-    <span class="post-meta-divider">|</span>
-    <span class="post-meta-item-icon">
-      <i class="fa fa-coffee"></i>
-    </span>
-    <span title="站点阅读时长">25:34</span>
-</div>
-
-        
-
-
-
-
-
-
-
-
-      </div>
-    </footer>
-  </div>
-
-  
-  <script src="/lib/anime.min.js"></script>
-  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
-  <script src="/lib/velocity/velocity.min.js"></script>
-  <script src="/lib/velocity/velocity.ui.min.js"></script>
-
-<script src="/js/utils.js"></script>
-
-<script src="/js/motion.js"></script>
-
-
-<script src="/js/schemes/pisces.js"></script>
-
-
-<script src="/js/next-boot.js"></script>
-
-
-
-
-  
-
-
-
-
-  
-<script src="/js/local-search.js"></script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-  
-
-<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
-</html>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://example.com">六一</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://example.com/2025/09/11/Security%20Context/">http://example.com/2025/09/11/Security%20Context/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="http://example.com" target="_blank">Hui's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E8%BF%90%E7%BB%B4/">运维</a><a class="post-meta__tags" href="/tags/k8s/">k8s</a></div><div class="post-share"><div class="social-share" data-image="/img/butterfly-icon.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2025/09/11/T%20%E7%B1%BB%E5%9E%8B/" title="T 类型"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">T 类型</div></div><div class="info-2"><div class="info-item-1">您好，这是一个非常棒的问题，它触及了 Go 语言类型系统的核心。 核心答案是：是的，从语言语法的角度来看，对于任何一个已定义的类型 T，你都可以构造出其对应的指针类型 *T。 * 符号在 Go 中是一个类型构造器（Type Constructor）。它的作用就是，给定一个类型 T，它会创建一个新类型，这个新类型就是“指向 T 的指针”。这个规则是普适的，适用于几乎所有类型。  原理解析与示例让我们通过不同种类的 T 来验证这个规则： 1. 基本类型 (Basic Types)对于 int, float64, string, bool 等基础类型，都可以创建它们的指针类型。 1234567var i int       // 类型 T 是 intvar p_i *int    // 类型 *T 是 *intp_i = &amp;ivar s string    // 类型 T 是 stringvar p_s *string // 类型 *T 是 *stringp_s = &amp;s  用途： 主要用于在函数间共享或修改变量的值。 2. 复合类型 (Composite Types)...</div></div></div></a><a class="pagination-related" href="/2025/09/11/Secret/" title="Secret"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">Secret</div></div><div class="info-2"><div class="info-item-1">Secret前文我们学习 ConfigMap 的时候，我们说 ConfigMap 这个资源对象是 Kubernetes 当中非常重要的一个资源对象，一般情况下 ConfigMap 是用来存储一些非安全的配置信息，如果涉及到一些安全相关的数据的话用 ConfigMap 就非常不妥了，因为 ConfigMap 是明文存储的，这个时候我们就需要用到另外一个资源对象了：Secret，Secret用来保存敏感信息，例如密码、OAuth 令牌和 ssh key 等等，将这些信息放在 Secret 中比放在 Pod 的定义中或者 Docker 镜像中要更加安全和灵活。 Secret 主要使用的有以下三种类型：  Opaque：base64 编码格式的 Secret，用来存储密码、密钥等；但数据也可以通过 base64 –decode 解码得到原始数据，所有加密性很弱。 kubernetes.io/dockercfg: ~/.dockercfg 文件的序列化形式 kubernetes.io/dockerconfigjson：用来存储私有docker registry的认证信息，~/.docker...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2025/09/11/k8s_11/" title="k8s_11"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">k8s_11</div></div><div class="info-2"><div class="info-item-1">描述在 Kubernetes 中如何进行安全配置，并解释常用的方法。🤔 分析过程：该问题旨在考察对Kubernetes端到端安全体系的理解，这是一个综合性很强的话题。一个优秀的回答需要结构化地展示安全措施如何应用于从底层基础设施到应用代码的每一个层面。业界公认的“4C安全模型”（Cloud, Cluster, Container, Code）是阐述此问题的最佳框架。本回答将以此模型为骨架，逐层解释每一个层面需要关注的安全配置和常用方法，确保覆盖全面且逻辑清晰。 💡 答案生成：1. 概念或定义Kubernetes安全配置是指在Kubernetes集群的各个层面（基础设施、集群组件、容器、应用代码）实施的一系列策略、工具和实践，旨在保护集群及其上运行的应用免受未经授权的访问、数据泄露、恶意活动和其他安全威胁。其核心原则是纵深防御（Defense in Depth）和最小权限原则（Principle of Least Privilege）。 2. “4C”安全模型与常用方法层面一：Cloud&#x2F;Corporate Data Center (云&#x2F;基础设施层)这是最外...</div></div></div></a><a class="pagination-related" href="/2025/09/11/Containerd/" title="Containerd"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">Containerd</div></div><div class="info-2"><div class="info-item-1">Containerd 使用我们知道很早之前的 Docker Engine 中就有了 containerd，只不过现在是将 containerd 从 Docker Engine 里分离出来，作为一个独立的开源项目，目标是提供一个更加开放、稳定的容器运行基础设施。分离出来的 containerd 将具有更多的功能，涵盖整个容器运行时管理的所有需求，提供更强大的支持。 containerd 是一个工业级标准的容器运行时，它强调简单性、健壮性和可移植性，containerd 可以负责干下面这些事情：  管理容器的生命周期（从创建容器到销毁容器） 拉取&#x2F;推送容器镜像 存储管理（管理镜像及容器数据的存储） 调用 runc 运行容器（与 runc 等容器运行时交互） 管理容器网络接口及网络  架构containerd 可用作 Linux 和 Windows 的守护程序，它管理其主机系统完整的容器生命周期，从镜像传输和存储到容器执行和监测，再到底层存储到网络附件等等。  上图是 containerd 官方提供的架构图，可以看出 containerd 采用的也是 C&#x2F;S 架构，...</div></div></div></a><a class="pagination-related" href="/2025/09/11/k8s_12/" title="k8s_12"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">k8s_12</div></div><div class="info-2"><div class="info-item-1">如何在 Kubernetes 中实现服务的自动伸缩（autoscaling）？Of course. Automating the scaling of services is one of Kubernetes’ most powerful features, enabling applications to be both resilient to traffic spikes and cost-effective during quiet periods. This is achieved through a combination of several components. 🤔 分析过程：该问题旨在考察对Kubernetes核心动态管理能力的理解。一个全面的回答不能只提及一种自动伸缩方式，而应结构化地介绍Kubernetes中三个主要层次的自动伸缩器：HPA (水平), VPA (垂直), 和 CA (集群)。回答的重点在于阐明每种伸缩器的触发机制、作用范围和典型用例，并解释它们如何协同工作，共同构建一个弹性的、资源高效的系统。 💡 答案生成：1. 概念或定义Kube...</div></div></div></a><a class="pagination-related" href="/2025/09/11/HPA/" title="HPA"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">HPA</div></div><div class="info-2"><div class="info-item-1">HPA 控制器在前面的学习中我们使用了一个 kubectl scale 命令可以来实现 Pod 的扩缩容功能，但是这个是完全手动操作的，要应对线上的各种复杂情况，我们需要能够做到自动化去感知业务，来自动进行扩缩容。为此，Kubernetes 也为我们提供了这样的一个资源对象：Horizontal Pod Autoscaling（Pod 水平自动伸缩），简称 HPA，HPA 通过监控分析一些控制器控制的所有 Pod 的负载变化情况来确定是否需要调整 Pod 的副本数量，这是 HPA 最基本的原理：  我们可以简单的通过 kubectl autoscale 命令来创建一个 HPA 资源对象，HPA Controller 默认30s轮询一次（可通过 kube-controller-manager 的--horizontal-pod-autoscaler-sync-period 参数进行设置），查询指定的资源中的 Pod 资源使用率，并且与创建时设定的值和指标做对比，从而实现自动伸缩的功能。 Metrics Server在 HPA 的第一个版本中，我们需要 Heapster 提供 CPU...</div></div></div></a><a class="pagination-related" href="/2025/09/11/Thanos%20Querier/" title="Thanos Querier"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">Thanos Querier</div></div><div class="info-2"><div class="info-item-1">Querier 组件现在我们就创建成功了两个 Prometheus 实例，但是我们真正去使用的时候并不是像上面提到的在前面加一个负载均衡器去查询监控数据，而是使用 Thanos 的 Querier 组件来提供一个全局的统一查询入口。对于 Quierier 最重要的就是要配置上 Thanos 的 Sidecar 地址，我们这里完全可以直接使用 Headless Service 去自动发现： 1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677# thanos-querier.yamlapiVersion: apps/v1kind: Deploymentmetadata:  name: thanos-querier  namespace: kube-mon  labels:    app: thanos-querierspec:  replicas:...</div></div></div></a><a class="pagination-related" href="/2025/09/11/%E4%BA%91%E5%8E%9F%E7%94%9F%E5%8F%AF%E8%A7%82%E6%B5%8B%E5%B9%B3%E5%8F%B0%20OpenObserve/" title="云原生可观测平台 OpenObserve"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">云原生可观测平台 OpenObserve</div></div><div class="info-2"><div class="info-item-1">云原生可观测平台 OpenObserveOpenObserve（简称 O2）是一个用 Rust 开发的开源云原生可观测平台，专为日志、指标、追踪而构建，设计用于 PB 级工作。  与需要理解和调整大量配置置的 Elasticsearch 相比，它简单且易于操作。在 2 分钟内即可启动并运行 OpenObserve。对于使用 API 获取数据并执行搜索的用户来说，OpenObserve 可以无缝替代 Elasticsearch。OpenObserve 带有自己的用户界面，无需单独安装。与 Elasticsearch 相比，使用 OpenObserve 可以将日志存储成本降低约 140 倍。  相关概念在详细了解 O2 之前，我们需要了解一些相关概念，这些概念是 O2 的基础。 Organizations（组织） 组织是 OpenObserve 中对各种流、用户、功能进行分组的逻辑实体。组织可以代表一个企业、企业的一个部门或一个应用程序。所有流、用户、功能等都限定在一个组织范围内。 Streams（流） OpenObserve 中的流是共享相同源的事件序列（日志&#x2F;指标&#x...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/butterfly-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">六一</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">274</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">22</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">45</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Security-Context"><span class="toc-number">1.</span> <span class="toc-text">Security Context</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA-Pod-%E8%AE%BE%E7%BD%AE-Security-Context"><span class="toc-number">1.1.</span> <span class="toc-text">为 Pod 设置 Security Context</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E5%AE%B9%E5%99%A8%E8%AE%BE%E7%BD%AE-Security-Context"><span class="toc-number">1.2.</span> <span class="toc-text">为容器设置 Security Context</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AE%BE%E7%BD%AE-Linux-Capabilities"><span class="toc-number">1.3.</span> <span class="toc-text">设置 Linux Capabilities</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Linux-Capabilities"><span class="toc-number">1.3.1.</span> <span class="toc-text">Linux Capabilities</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF-Capabilities"><span class="toc-number">1.3.1.1.</span> <span class="toc-text">什么是 Capabilities</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8-Capabilities"><span class="toc-number">1.3.1.2.</span> <span class="toc-text">如何使用 Capabilities</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Container-Runtime-Capabilities"><span class="toc-number">1.3.2.</span> <span class="toc-text">Container Runtime Capabilities</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Kubernetes-%E9%85%8D%E7%BD%AE-Capabilities"><span class="toc-number">1.3.3.</span> <span class="toc-text">Kubernetes 配置 Capabilities</span></a></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/02/27/hexo-beautify/" title="Hexo 博客美化笔记：从零搭建高颜值技术博客">Hexo 博客美化笔记：从零搭建高颜值技术博客</a><time datetime="2026-02-27T04:00:00.000Z" title="发表于 2026-02-27 12:00:00">2026-02-27</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/09/11/Jenkens-Blue%20Ocean%20%E6%8F%92%E4%BB%B6/" title="Jenkins Blue Ocean">Jenkins Blue Ocean</a><time datetime="2025-09-11T12:42:57.000Z" title="发表于 2025-09-11 20:42:57">2025-09-11</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/09/11/jenkins-jenkinsfile/" title="Jenkins Jenkinsfile">Jenkins Jenkinsfile</a><time datetime="2025-09-11T12:40:44.000Z" title="发表于 2025-09-11 20:40:44">2025-09-11</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/09/11/shell-trap/" title="Linux-trap">Linux-trap</a><time datetime="2025-09-11T12:40:44.000Z" title="发表于 2025-09-11 20:40:44">2025-09-11</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/09/11/shell-%E6%95%B0%E7%BB%84/" title="Shell-数组">Shell-数组</a><time datetime="2025-09-11T12:40:44.000Z" title="发表于 2025-09-11 20:40:44">2025-09-11</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By 六一</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.4</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body></html>

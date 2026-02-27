@@ -1,261 +1,166 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
-<meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 7.3.0">
-  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
-  <link rel="mask-icon" href="/images/logo.svg" color="#222">
-
-<link rel="stylesheet" href="/css/main.css">
-
-
-<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
-  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
-  <script src="/lib/pace/pace.min.js"></script>
-
-<script id="hexo-configurations">
-    var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
-  </script>
-
-  <meta name="description" content="在 Go 语言中，由于标准库没有内置的 set 类型，我们需要通过其他数据结构来模拟实现。以下是几种常见的实现方式： 1. 基于 map[T]struct{} 的实现（推荐）这是最常用和高效的实现方式： 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051&#x2F;&#x2F; 定义">
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Go 语言中如何实现 set | Hui's Blog</title><meta name="author" content="六一"><meta name="copyright" content="六一"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="在 Go 语言中，由于标准库没有内置的 set 类型，我们需要通过其他数据结构来模拟实现。以下是几种常见的实现方式： 1. 基于 map[T]struct{} 的实现（推荐）这是最常用和高效的实现方式： 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051&#x2F;&#x2F; 定义">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Go 语言中如何实现 set">
 <meta property="og:url" content="http://example.com/2025/09/11/Go%20%E8%AF%AD%E8%A8%80%E4%B8%AD%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%20set/index.html">
 <meta property="og:site_name" content="Hui&#39;s Blog">
 <meta property="og:description" content="在 Go 语言中，由于标准库没有内置的 set 类型，我们需要通过其他数据结构来模拟实现。以下是几种常见的实现方式： 1. 基于 map[T]struct{} 的实现（推荐）这是最常用和高效的实现方式： 123456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051&#x2F;&#x2F; 定义">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/butterfly-icon.png">
 <meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
 <meta property="article:modified_time" content="2025-09-11T14:35:04.853Z">
 <meta property="article:author" content="六一">
 <meta property="article:tag" content="运维">
 <meta property="article:tag" content="Go">
 <meta name="twitter:card" content="summary">
-
-<link rel="canonical" href="http://example.com/2025/09/11/Go%20%E8%AF%AD%E8%A8%80%E4%B8%AD%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%20set/">
-
-
-<script id="page-configurations">
-  // https://hexo.io/docs/variables.html
-  CONFIG.page = {
-    sidebar: "",
-    isHome : false,
-    isPost : true,
-    lang   : 'zh-CN'
-  };
-</script>
-
-  <title>Go 语言中如何实现 set | Hui's Blog</title>
-  
-
-
-
-
-
-
-  <noscript>
-  <style>
-  .use-motion .brand,
-  .use-motion .menu-item,
-  .sidebar-inner,
-  .use-motion .post-block,
-  .use-motion .pagination,
-  .use-motion .comments,
-  .use-motion .post-header,
-  .use-motion .post-body,
-  .use-motion .collection-header { opacity: initial; }
-
-  .use-motion .site-title,
-  .use-motion .site-subtitle {
-    opacity: initial;
-    top: initial;
-  }
-
-  .use-motion .logo-line-before i { left: initial; }
-  .use-motion .logo-line-after i { right: initial; }
-  </style>
-</noscript>
-
-</head>
-
-<body itemscope itemtype="http://schema.org/WebPage">
-  <div class="container use-motion">
-    <div class="headband"></div>
-
-    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
-      <div class="header-inner"><div class="site-brand-container">
-  <div class="site-nav-toggle">
-    <div class="toggle" aria-label="切换导航栏">
-      <span class="toggle-line toggle-line-first"></span>
-      <span class="toggle-line toggle-line-middle"></span>
-      <span class="toggle-line toggle-line-last"></span>
-    </div>
-  </div>
-
-  <div class="site-meta">
-
-    <a href="/" class="brand" rel="start">
-      <span class="logo-line-before"><i></i></span>
-      <h1 class="site-title">Hui's Blog</h1>
-      <span class="logo-line-after"><i></i></span>
-    </a>
-      <p class="site-subtitle" itemprop="description">Code Life</p>
-  </div>
-
-  <div class="site-nav-right">
-    <div class="toggle popup-trigger">
-        <i class="fa fa-search fa-fw fa-lg"></i>
-    </div>
-  </div>
-</div>
-
-
-
-
-<nav class="site-nav">
-  <ul id="menu" class="main-menu menu">
-        <li class="menu-item menu-item-home">
-
-    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
-
-  </li>
-        <li class="menu-item menu-item-about">
-
-    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
-
-  </li>
-        <li class="menu-item menu-item-tags">
-
-    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
-
-  </li>
-        <li class="menu-item menu-item-categories">
-
-    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
-
-  </li>
-        <li class="menu-item menu-item-archives">
-
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
-
-  </li>
-      <li class="menu-item menu-item-search">
-        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
-        </a>
-      </li>
-  </ul>
-</nav>
-
-
-
-  <div class="search-pop-overlay">
-    <div class="popup search-popup">
-        <div class="search-header">
-  <span class="search-icon">
-    <i class="fa fa-search"></i>
-  </span>
-  <div class="search-input-container">
-    <input autocomplete="off" autocapitalize="off"
-           placeholder="搜索..." spellcheck="false"
-           type="search" class="search-input">
-  </div>
-  <span class="popup-btn-close">
-    <i class="fa fa-times-circle"></i>
-  </span>
-</div>
-<div id="search-result">
-  <div id="no-result">
-    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
-  </div>
-</div>
-
-    </div>
-  </div>
-
-</div>
-    </header>
-
-    
-
-
-    <main class="main">
-      <div class="main-inner">
-        <div class="content-wrap">
-          
-
-          <div class="content post posts-expand">
-            
-
-    
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Go%20%E8%AF%AD%E8%A8%80%E4%B8%AD%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%20set/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="六一">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hui's Blog">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          Go 语言中如何实现 set
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:35:04" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/go/" itemprop="url" rel="index"><span itemprop="name">go</span></a>
-                </span>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>3.5k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>3 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
+<meta name="twitter:image" content="http://example.com/img/butterfly-icon.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Go 语言中如何实现 set",
+  "url": "http://example.com/2025/09/11/Go%20%E8%AF%AD%E8%A8%80%E4%B8%AD%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%20set/",
+  "image": "http://example.com/img/butterfly-icon.png",
+  "datePublished": "2025-09-11T12:32:34.000Z",
+  "dateModified": "2025-09-11T14:35:04.853Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "六一",
+      "url": "http://example.com"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://example.com/2025/09/11/Go%20%E8%AF%AD%E8%A8%80%E4%B8%AD%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%20set/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
       
-        <p>在 Go 语言中，由于标准库没有内置的 <code>set</code> 类型，我们需要通过其他数据结构来模拟实现。以下是几种常见的实现方式：</p>
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Go 语言中如何实现 set',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/butterfly-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">274</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">22</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">45</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Hui's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Go 语言中如何实现 set</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user"></i><span> About</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Go 语言中如何实现 set</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-09-11T12:32:34.000Z" title="发表于 2025-09-11 20:32:34">2025-09-11</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-09-11T14:35:04.853Z" title="更新于 2025-09-11 22:35:04">2025-09-11</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/go/">go</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><p>在 Go 语言中，由于标准库没有内置的 <code>set</code> 类型，我们需要通过其他数据结构来模拟实现。以下是几种常见的实现方式：</p>
 <h2 id="1-基于-map-T-struct-的实现（推荐）"><a href="#1-基于-map-T-struct-的实现（推荐）" class="headerlink" title="1. 基于 map[T]struct{} 的实现（推荐）"></a>1. 基于 map[T]struct{} 的实现（推荐）</h2><p>这是最常用和高效的实现方式：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 定义 Set 类型</span></span><br><span class="line"><span class="keyword">type</span> Set[T comparable] <span class="keyword">map</span>[T]<span class="keyword">struct</span>&#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 创建新的 Set</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewSet</span>[<span class="title">T</span> <span class="title">comparable</span>]<span class="params">()</span></span> Set[T] &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">make</span>(Set[T])</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 从切片创建 Set</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">NewSetFromSlice</span>[<span class="title">T</span> <span class="title">comparable</span>]<span class="params">(slice []T)</span></span> Set[T] &#123;</span><br><span class="line">    s := <span class="built_in">make</span>(Set[T])</span><br><span class="line">    <span class="keyword">for</span> _, v := <span class="keyword">range</span> slice &#123;</span><br><span class="line">        s.Add(v)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> s</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 添加元素</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s Set[T])</span></span> Add(item T) &#123;</span><br><span class="line">    s[item] = <span class="keyword">struct</span>&#123;&#125;&#123;&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 删除元素</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s Set[T])</span></span> Remove(item T) &#123;</span><br><span class="line">    <span class="built_in">delete</span>(s, item)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 检查元素是否存在</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s Set[T])</span></span> Contains(item T) <span class="type">bool</span> &#123;</span><br><span class="line">    _, exists := s[item]</span><br><span class="line">    <span class="keyword">return</span> exists</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 获取 Set 大小</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s Set[T])</span></span> Size() <span class="type">int</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">len</span>(s)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 转换为切片</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s Set[T])</span></span> ToSlice() []T &#123;</span><br><span class="line">    slice := <span class="built_in">make</span>([]T, <span class="number">0</span>, <span class="built_in">len</span>(s))</span><br><span class="line">    <span class="keyword">for</span> item := <span class="keyword">range</span> s &#123;</span><br><span class="line">        slice = <span class="built_in">append</span>(slice, item)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> slice</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 检查 Set 是否为空</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(s Set[T])</span></span> IsEmpty() <span class="type">bool</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">len</span>(s) == <span class="number">0</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -276,225 +181,4 @@
 <li><strong>语义清晰</strong>：明确表达了 set 的概念</li>
 </ol>
 <p>这种实现方式在实际的后端开发中非常常见，特别适用于去重、成员检查、缓存管理等场景。</p>
-
-    </div>
-
-    
-    
-    
-
-      <footer class="post-footer">
-          <div class="post-tags">
-              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
-              <a href="/tags/Go/" rel="tag"># Go</a>
-          </div>
-
-        
-
-
-        
-    <div class="post-nav">
-      <div class="post-nav-item">
-    <a href="/2025/09/11/Go%20%E8%AF%AD%E8%A8%80%E4%B8%AD%E6%8C%87%E9%92%88%E8%BF%90%E7%AE%97/" rel="prev" title="Go 语言中指针运算">
-      <i class="fa fa-chevron-left"></i> Go 语言中指针运算
-    </a></div>
-      <div class="post-nav-item">
-    <a href="/2025/09/11/Go%20%E8%AF%AD%E8%A8%80%E4%B8%AD%E4%BC%A0%E5%8F%82%E4%BD%BF%E7%94%A8%E5%88%87%E7%89%87%E8%80%8C%E4%B8%8D%E6%98%AF%E6%95%B0%E7%BB%84/" rel="next" title="Go 语言中传参使用切片而不是数组">
-      Go 语言中传参使用切片而不是数组 <i class="fa fa-chevron-right"></i>
-    </a></div>
-    </div>
-      </footer>
-    
-  </article>
-  
-  
-  
-
-
-
-          </div>
-          
-
-<script>
-  window.addEventListener('tabs:register', () => {
-    let { activeClass } = CONFIG.comments;
-    if (CONFIG.comments.storage) {
-      activeClass = localStorage.getItem('comments_active') || activeClass;
-    }
-    if (activeClass) {
-      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
-      if (activeTab) {
-        activeTab.click();
-      }
-    }
-  });
-  if (CONFIG.comments.storage) {
-    window.addEventListener('tabs:click', event => {
-      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
-      let commentClass = event.target.classList[1];
-      localStorage.setItem('comments_active', commentClass);
-    });
-  }
-</script>
-
-        </div>
-          
-  
-  <div class="toggle sidebar-toggle">
-    <span class="toggle-line toggle-line-first"></span>
-    <span class="toggle-line toggle-line-middle"></span>
-    <span class="toggle-line toggle-line-last"></span>
-  </div>
-
-  <aside class="sidebar">
-    <div class="sidebar-inner">
-
-      <ul class="sidebar-nav motion-element">
-        <li class="sidebar-nav-toc">
-          文章目录
-        </li>
-        <li class="sidebar-nav-overview">
-          站点概览
-        </li>
-      </ul>
-
-      <!--noindex-->
-      <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E5%9F%BA%E4%BA%8E-map-T-struct-%E7%9A%84%E5%AE%9E%E7%8E%B0%EF%BC%88%E6%8E%A8%E8%8D%90%EF%BC%89"><span class="nav-number">1.</span> <span class="nav-text">1. 基于 map[T]struct{} 的实现（推荐）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E5%9F%BA%E4%BA%8E-map-T-bool-%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">2.</span> <span class="nav-text">2. 基于 map[T]bool 的实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E4%BD%BF%E7%94%A8%E7%AC%AC%E4%B8%89%E6%96%B9%E5%BA%93"><span class="nav-number">3.</span> <span class="nav-text">3. 使用第三方库</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8-golang-collections-%E5%BA%93"><span class="nav-number">3.1.</span> <span class="nav-text">使用 golang-collections 库</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%E5%AE%8C%E6%95%B4%E7%9A%84%E5%8A%9F%E8%83%BD%E5%AE%9E%E7%8E%B0"><span class="nav-number">4.</span> <span class="nav-text">4. 完整的功能实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-%E4%BD%BF%E7%94%A8%E7%A4%BA%E4%BE%8B"><span class="nav-number">5.</span> <span class="nav-text">5. 使用示例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8E%A8%E8%8D%90%E4%BD%BF%E7%94%A8%E6%96%B9%E6%A1%88"><span class="nav-number">6.</span> <span class="nav-text">推荐使用方案</span></a></li></ol></div>
-      </div>
-      <!--/noindex-->
-
-      <div class="site-overview-wrap sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
-  <p class="site-author-name" itemprop="name">六一</p>
-  <div class="site-description" itemprop="description"></div>
-</div>
-<div class="site-state-wrap motion-element">
-  <nav class="site-state">
-      <div class="site-state-item site-state-posts">
-          <a href="/archives/">
-        
-          <span class="site-state-item-count">273</span>
-          <span class="site-state-item-name">日志</span>
-        </a>
-      </div>
-      <div class="site-state-item site-state-categories">
-            <a href="/categories/">
-          
-        <span class="site-state-item-count">44</span>
-        <span class="site-state-item-name">分类</span></a>
-      </div>
-      <div class="site-state-item site-state-tags">
-            <a href="/tags/">
-          
-        <span class="site-state-item-count">19</span>
-        <span class="site-state-item-name">标签</span></a>
-      </div>
-  </nav>
-</div>
-  <div class="links-of-author motion-element">
-      <span class="links-of-author-item">
-        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
-      </span>
-  </div>
-
-
-
-      </div>
-        <div class="back-to-top motion-element">
-          <i class="fa fa-arrow-up"></i>
-          <span>0%</span>
-        </div>
-
-    </div>
-  </aside>
-  <div id="sidebar-dimmer"></div>
-
-
-      </div>
-    </main>
-
-    <footer class="footer">
-      <div class="footer-inner">
-        
-
-        
-
-<div class="copyright">
-  
-  &copy; 
-  <span itemprop="copyrightYear">2025</span>
-  <span class="with-love">
-    <i class="fa fa-heart"></i>
-  </span>
-  <span class="author" itemprop="copyrightHolder">六一</span>
-    <span class="post-meta-divider">|</span>
-    <span class="post-meta-item-icon">
-      <i class="fa fa-chart-area"></i>
-    </span>
-    <span title="站点总字数">1.7m</span>
-    <span class="post-meta-divider">|</span>
-    <span class="post-meta-item-icon">
-      <i class="fa fa-coffee"></i>
-    </span>
-    <span title="站点阅读时长">25:34</span>
-</div>
-
-        
-
-
-
-
-
-
-
-
-      </div>
-    </footer>
-  </div>
-
-  
-  <script src="/lib/anime.min.js"></script>
-  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
-  <script src="/lib/velocity/velocity.min.js"></script>
-  <script src="/lib/velocity/velocity.ui.min.js"></script>
-
-<script src="/js/utils.js"></script>
-
-<script src="/js/motion.js"></script>
-
-
-<script src="/js/schemes/pisces.js"></script>
-
-
-<script src="/js/next-boot.js"></script>
-
-
-
-
-  
-
-
-
-
-  
-<script src="/js/local-search.js"></script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-  
-
-<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
-</html>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://example.com">六一</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://example.com/2025/09/11/Go%20%E8%AF%AD%E8%A8%80%E4%B8%AD%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%20set/">http://example.com/2025/09/11/Go%20%E8%AF%AD%E8%A8%80%E4%B8%AD%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%20set/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="http://example.com" target="_blank">Hui's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E8%BF%90%E7%BB%B4/">运维</a><a class="post-meta__tags" href="/tags/Go/">Go</a></div><div class="post-share"><div class="social-share" data-image="/img/butterfly-icon.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2025/09/11/Go%20%E8%AF%AD%E8%A8%80%E4%B8%AD%E4%BC%A0%E5%8F%82%E4%BD%BF%E7%94%A8%E5%88%87%E7%89%87%E8%80%8C%E4%B8%8D%E6%98%AF%E6%95%B0%E7%BB%84/" title="Go 语言中传参使用切片而不是数组"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">Go 语言中传参使用切片而不是数组</div></div><div class="info-2"><div class="info-item-1"> 核心原因：Go 语言中数组和切片的本质区别要理解为何如此，首先要明确数组和切片的根本不同：  数组是值类型：  Go 语言中的数组是值类型。这意味着当你声明一个数组时，它的大小是固定且不可变的，并且数组的长度是其类型的一部分（例如，[3]int 和 [4]int 是完全不同的类型）。 当你将数组作为函数参数传递时，Go 会复制整个数组。   切片是引用类型（头部）：  切片是对底层数组的一个引用，它本身包含三个部分：指向底层数组的指针、长度 (length) 和容量 (capacity)。 当你将切片作为函数参数传递时，Go 会复制切片的头部（即那个包含指针、长度、容量的小结构体），而不是复制整个底层数组。     为什么在传参时会选择切片而不是数组？理解了上述本质区别后，我们可以深入探讨更倾向于使用切片的具体原因： 1. 灵活性与通用性 (Dynamic Size) 数组的问题： 当一个函数接受一个数组作为参数时，它只能接受特定长度的数组。例如，func processNumbers(arr [5]int) 只能处理长度为 5 的整数数组。如果你的业务需求变成处理 4 个或 ...</div></div></div></a><a class="pagination-related" href="/2025/09/11/Go%20%E8%AF%AD%E8%A8%80%E4%B8%AD%20defer%20%E7%9A%84%E6%89%A7%E8%A1%8C%E9%A1%BA%E5%BA%8F/" title="Go 语言中 defer 的执行顺序"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">Go 语言中 defer 的执行顺序</div></div><div class="info-2"><div class="info-item-1">defer 是 Go 语言中一个极具特色的、用于资源管理和流程控制的强大工具。理解其执行顺序是编写健壮、无误的 Go 代码的基石。  规则一：后进先出 (LIFO - Last-In, First-Out)当一个函数中有多个 defer 语句时，它们不会按代码出现的顺序执行，而是会被添加到一个栈（stack）中。当函数即将返回时，这些 defer 语句会按照后进先出（LIFO）的顺序被依次执行。 可以将其想象成一叠盘子：  你写的第一个 defer 语句是放在最下面的盘子。 第二个 defer 语句是放在它上面的盘子。 最后一个 defer 语句是放在最顶端的盘子。 当函数结束时，你会从最顶端的盘子开始，一个一个取走。  代码示例： 12345678910111213package mainimport &quot;fmt&quot;func main() &#123;	fmt.Println(&quot;函数开始&quot;)	defer fmt.Println(&quot;第一个 defer (最后执行)&quot;)	defer fmt.Println(&quot;第二个 ...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2025/09/11/%E7%B1%BB%E5%9E%8B%E6%96%AD%E8%A8%80/" title="类型断言"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">类型断言</div></div><div class="info-2"><div class="info-item-1">结论：Go语言在使用类型断言时，通常不会发生值的拷贝，而是基于接口类型底层的数据表示进行类型检查和值的提取。但需要注意的是，这取决于被断言的变量的实际类型和其在接口中的存储方式。 让我们分情况详细讨论： Go接口的底层结构首先，理解Go语言接口的底层结构是理解断言行为的关键。Go语言的接口有两种形式：  **空接口 (interface&#123;&#125;)**：可以存储任何类型的值。 **非空接口 (interface S)**：存储实现了接口 S 的任意类型的值。  无论哪种，接口变量在内存中通常由两部分组成：  类型（Type）信息：一个指向实际值类型的指针。 值（Value）信息：一个指向实际值的指针，或者如果值很小（如基本类型、小结构体、指针），它可能直接存储值本身。  类型断言的机制类型断言的语法是 value, ok := i.(Type) 或 value := i.(Type) (不检查 ok)。 当进行类型断言时，Go运行时会执行以下操作：  检查类型信息：比较接口变量中存储的类型信息是否与断言的 Type 匹配。 提取值：如果类型匹配，则从接口变量中提取出...</div></div></div></a><a class="pagination-related" href="/2025/09/11/new&make/" title="new&amp;make"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">new&amp;make</div></div><div class="info-2"><div class="info-item-1">make 和 new 是 Go 语言中两个非常重要但又容易混淆的内置函数，它们都与内存分配有关。深入理解它们的区别是掌握 Go 内存管理和数据结构使用的关键。 让我们来详细分解它们： 1. new() 函数 用途： new() 函数用于为指定类型分配内存，并返回一个指向该类型零值的指针。 语法： new(Type) Type 是你想要分配内存的类型（例如 int, string, struct, array 等）。   返回值： 返回类型 *Type，即一个指向 Type 类型零值的指针。 分配什么？ new 分配的是内存空间，用于存储该类型的一个实例。 分配的内存会被初始化为该类型的零值： 数值类型 (int, float): 0 布尔类型 (bool): false 字符串类型 (string): &quot;&quot; 指针类型 (*Type): nil 结构体类型 (struct): 其所有成员都会被初始化为各自的零值。 数组类型 (array): 其所有元素都会被初始化为各自的零值。      示例： 123456789101112131415161718192021...</div></div></div></a><a class="pagination-related" href="/2025/09/11/Go%20nil%20silce%20%E4%B8%8E%20nil%20map/" title="Go nil silce 与 nil map"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">Go nil silce 与 nil map</div></div><div class="info-2"><div class="info-item-1">您好！这是一个关于 Go 语言中 nil 值行为的非常重要且经典的问题，尤其对于后端开发人员来说，理解这些细节可以帮助我们避免运行时错误（panic）并编写更健壮的代码。Go 语言中 nil 的行为对于 slice 和 map 是不同的。  Go 语言中值为 nil 的 Slice 会发生什么？在 Go 语言中，slice 是一种引用类型，它的底层是一个结构体，包含三个字段：指向底层数组的指针、长度（len）和容量（cap）。 当一个 slice 变量被声明但未初始化时，它的值默认为 nil。 1var mySlice []int // mySlice 被声明，但没有初始化，其值为 nil  一个 nil slice 意味着：  它的底层数据指针是 nil。 它的长度 len 为 0。 它的容量 cap 为 0。  nil slice 的行为：  len(s) 和 cap(s): 对于 nil slice，len(s) 和 cap(s) 都会返回 0。这是安全的，不会引发 panic。 1234var s []intfmt.Println(s == nil)   // truef...</div></div></div></a><a class="pagination-related" href="/2025/09/11/%E9%97%AD%E5%8C%85/" title="闭包"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">闭包</div></div><div class="info-2"><div class="info-item-1">Go语言中闭包的实现在Go语言中，闭包（Closure）是指一个函数值，它引用了其函数体之外的变量。Go语言通过匿名函数（或称为函数字面量）结合对外层变量的引用来实现闭包。 让我们通过一个具体的例子来理解： 123456789101112131415161718192021222324252627package mainimport (	&quot;fmt&quot;)func createCounter() func() int &#123;	// 这是一个外部变量，被内部函数捕获	count := 0 		// 返回一个匿名函数，这个匿名函数就是闭包	return func() int &#123;		count++ // 内部函数引用并修改了外部变量 count		return count	&#125;&#125;func main() &#123;	// 每次调用 createCounter 都会创建一个独立的闭包实例	counter1 := createCounter() 	fmt.Println(&quot;Counter 1:&quot;, counter1()) ...</div></div></div></a><a class="pagination-related" href="/2025/09/11/panic/" title="panic"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">panic</div></div><div class="info-2"><div class="info-item-1">Go中的“异常”场景分为两类：预期错误（通过error处理） 和 非预期错误&#x2F;程序崩溃（通过panic）。 一、 预期错误（Errors）：通过 error 类型显式处理这是Go语言处理错误的核心机制。函数通过返回一个 error 类型的值来指示操作是否成功。 常见触发场景：  文件操作失败：  打开不存在的文件 (os.Open) 写入文件权限不足 (file.Write) 读取到文件末尾 (io.EOF)  123456f, err := os.Open(&quot;non_existent_file.txt&quot;)if err != nil &#123;    fmt.Println(&quot;Error opening file:&quot;, err) // 会打印错误    // log.Fatal(err) // 实际应用中可能直接终止或向上抛出&#125;defer f.Close()  网络操作失败：  无法连接到服务器 (net.Dial) HTTP请求超时或网络中断 (http.Get) DNS解析失败 (net.LookupHost)  ...</div></div></div></a><a class="pagination-related" href="/2025/09/11/Go%20%E8%AF%AD%E8%A8%80%E7%B1%BB%E5%9E%8B%E7%9A%84%E5%80%BC%E5%8F%AF%E4%BB%A5%E4%BF%AE%E6%94%B9%E5%90%97/" title="Go 语言类型的值可以修改吗"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">Go 语言类型的值可以修改吗</div></div><div class="info-2"><div class="info-item-1">Go 语言类型的值可以修改吗？ 您好！这是一个非常精确且深入的问题，它涉及到 Go 语言中类型行为的核心——可变性（Mutability）和值语义&#x2F;引用语义（Value Semantics &#x2F; Reference Semantics）。 答案是：取决于具体的类型。 Go 语言中的类型可以大致分为两类：不可修改值（Immutable）的类型和可以修改值（Mutable）的类型。同时，理解值传递和引用传递（通过指针）对理解可变性至关重要。  一、 值不可修改的类型 (Immutable Types)这些类型的变量一旦被创建并赋值，它们自身的值就不能被“原地”修改。如果你尝试修改它们，实际上是创建了一个新的值，然后将这个新值赋给了变量（这被称为“重赋值”），而不是修改了原始值所在的内存。  基本数据类型：  int, float32, float64, bool, complex64, complex128, byte, rune 等所有数值型和布尔型。 修改这些类型的变量意味着为其赋一个新值。  123456var x int = 10fmt.Printf(&qu...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/butterfly-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">六一</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">274</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">22</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">45</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E5%9F%BA%E4%BA%8E-map-T-struct-%E7%9A%84%E5%AE%9E%E7%8E%B0%EF%BC%88%E6%8E%A8%E8%8D%90%EF%BC%89"><span class="toc-number">1.</span> <span class="toc-text">1. 基于 map[T]struct{} 的实现（推荐）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E5%9F%BA%E4%BA%8E-map-T-bool-%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="toc-number">2.</span> <span class="toc-text">2. 基于 map[T]bool 的实现</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E4%BD%BF%E7%94%A8%E7%AC%AC%E4%B8%89%E6%96%B9%E5%BA%93"><span class="toc-number">3.</span> <span class="toc-text">3. 使用第三方库</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8-golang-collections-%E5%BA%93"><span class="toc-number">3.1.</span> <span class="toc-text">使用 golang-collections 库</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E5%AE%8C%E6%95%B4%E7%9A%84%E5%8A%9F%E8%83%BD%E5%AE%9E%E7%8E%B0"><span class="toc-number">4.</span> <span class="toc-text">4. 完整的功能实现</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E4%BD%BF%E7%94%A8%E7%A4%BA%E4%BE%8B"><span class="toc-number">5.</span> <span class="toc-text">5. 使用示例</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8E%A8%E8%8D%90%E4%BD%BF%E7%94%A8%E6%96%B9%E6%A1%88"><span class="toc-number">6.</span> <span class="toc-text">推荐使用方案</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/02/27/hexo-beautify/" title="Hexo 博客美化笔记：从零搭建高颜值技术博客">Hexo 博客美化笔记：从零搭建高颜值技术博客</a><time datetime="2026-02-27T04:00:00.000Z" title="发表于 2026-02-27 12:00:00">2026-02-27</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/09/11/Jenkens-Blue%20Ocean%20%E6%8F%92%E4%BB%B6/" title="Jenkins Blue Ocean">Jenkins Blue Ocean</a><time datetime="2025-09-11T12:42:57.000Z" title="发表于 2025-09-11 20:42:57">2025-09-11</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/09/11/jenkins-jenkinsfile/" title="Jenkins Jenkinsfile">Jenkins Jenkinsfile</a><time datetime="2025-09-11T12:40:44.000Z" title="发表于 2025-09-11 20:40:44">2025-09-11</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/09/11/shell-trap/" title="Linux-trap">Linux-trap</a><time datetime="2025-09-11T12:40:44.000Z" title="发表于 2025-09-11 20:40:44">2025-09-11</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/09/11/shell-%E6%95%B0%E7%BB%84/" title="Shell-数组">Shell-数组</a><time datetime="2025-09-11T12:40:44.000Z" title="发表于 2025-09-11 20:40:44">2025-09-11</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By 六一</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.4</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body></html>

@@ -1,265 +1,166 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
-<meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 7.3.0">
-  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
-  <link rel="mask-icon" href="/images/logo.svg" color="#222">
-
-<link rel="stylesheet" href="/css/main.css">
-
-
-<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
-  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
-  <script src="/lib/pace/pace.min.js"></script>
-
-<script id="hexo-configurations">
-    var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
-  </script>
-
-  <meta name="description" content="Blue Ocean 插件的主要功能 直观的流水线可视化 (Pipeline Visualization)：  图形化流水线显示： 将复杂的 Jenkins Declarative Pipeline 转换为清晰、易懂的图形界面，展示每个阶段 (Stage) 和步骤 (Step) 的执行顺序和状态。 实时进度更新： 流水线运行时，实时高亮显示当前正在执行的阶段和步骤，让用户一眼就能看出流水线进行到哪">
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Jenkins Blue Ocean | Hui's Blog</title><meta name="author" content="六一"><meta name="copyright" content="六一"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="Blue Ocean 插件的主要功能 直观的流水线可视化 (Pipeline Visualization)：  图形化流水线显示： 将复杂的 Jenkins Declarative Pipeline 转换为清晰、易懂的图形界面，展示每个阶段 (Stage) 和步骤 (Step) 的执行顺序和状态。 实时进度更新： 流水线运行时，实时高亮显示当前正在执行的阶段和步骤，让用户一眼就能看出流水线进行到哪">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Jenkins Blue Ocean">
 <meta property="og:url" content="http://example.com/2025/09/11/Jenkens-Blue%20Ocean%20%E6%8F%92%E4%BB%B6/index.html">
 <meta property="og:site_name" content="Hui&#39;s Blog">
 <meta property="og:description" content="Blue Ocean 插件的主要功能 直观的流水线可视化 (Pipeline Visualization)：  图形化流水线显示： 将复杂的 Jenkins Declarative Pipeline 转换为清晰、易懂的图形界面，展示每个阶段 (Stage) 和步骤 (Step) 的执行顺序和状态。 实时进度更新： 流水线运行时，实时高亮显示当前正在执行的阶段和步骤，让用户一眼就能看出流水线进行到哪">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/butterfly-icon.png">
 <meta property="article:published_time" content="2025-09-11T12:42:57.000Z">
 <meta property="article:modified_time" content="2025-09-11T13:42:02.775Z">
 <meta property="article:author" content="六一">
 <meta property="article:tag" content="运维">
 <meta property="article:tag" content="DevOps">
 <meta name="twitter:card" content="summary">
-
-<link rel="canonical" href="http://example.com/2025/09/11/Jenkens-Blue%20Ocean%20%E6%8F%92%E4%BB%B6/">
-
-
-<script id="page-configurations">
-  // https://hexo.io/docs/variables.html
-  CONFIG.page = {
-    sidebar: "",
-    isHome : false,
-    isPost : true,
-    lang   : 'zh-CN'
-  };
-</script>
-
-  <title>Jenkins Blue Ocean | Hui's Blog</title>
-  
-
-
-
-
-
-
-  <noscript>
-  <style>
-  .use-motion .brand,
-  .use-motion .menu-item,
-  .sidebar-inner,
-  .use-motion .post-block,
-  .use-motion .pagination,
-  .use-motion .comments,
-  .use-motion .post-header,
-  .use-motion .post-body,
-  .use-motion .collection-header { opacity: initial; }
-
-  .use-motion .site-title,
-  .use-motion .site-subtitle {
-    opacity: initial;
-    top: initial;
-  }
-
-  .use-motion .logo-line-before i { left: initial; }
-  .use-motion .logo-line-after i { right: initial; }
-  </style>
-</noscript>
-
-</head>
-
-<body itemscope itemtype="http://schema.org/WebPage">
-  <div class="container use-motion">
-    <div class="headband"></div>
-
-    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
-      <div class="header-inner"><div class="site-brand-container">
-  <div class="site-nav-toggle">
-    <div class="toggle" aria-label="切换导航栏">
-      <span class="toggle-line toggle-line-first"></span>
-      <span class="toggle-line toggle-line-middle"></span>
-      <span class="toggle-line toggle-line-last"></span>
-    </div>
-  </div>
-
-  <div class="site-meta">
-
-    <a href="/" class="brand" rel="start">
-      <span class="logo-line-before"><i></i></span>
-      <h1 class="site-title">Hui's Blog</h1>
-      <span class="logo-line-after"><i></i></span>
-    </a>
-      <p class="site-subtitle" itemprop="description">Code Life</p>
-  </div>
-
-  <div class="site-nav-right">
-    <div class="toggle popup-trigger">
-        <i class="fa fa-search fa-fw fa-lg"></i>
-    </div>
-  </div>
-</div>
-
-
-
-
-<nav class="site-nav">
-  <ul id="menu" class="main-menu menu">
-        <li class="menu-item menu-item-home">
-
-    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
-
-  </li>
-        <li class="menu-item menu-item-about">
-
-    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
-
-  </li>
-        <li class="menu-item menu-item-tags">
-
-    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
-
-  </li>
-        <li class="menu-item menu-item-categories">
-
-    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
-
-  </li>
-        <li class="menu-item menu-item-archives">
-
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
-
-  </li>
-      <li class="menu-item menu-item-search">
-        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
-        </a>
-      </li>
-  </ul>
-</nav>
-
-
-
-  <div class="search-pop-overlay">
-    <div class="popup search-popup">
-        <div class="search-header">
-  <span class="search-icon">
-    <i class="fa fa-search"></i>
-  </span>
-  <div class="search-input-container">
-    <input autocomplete="off" autocapitalize="off"
-           placeholder="搜索..." spellcheck="false"
-           type="search" class="search-input">
-  </div>
-  <span class="popup-btn-close">
-    <i class="fa fa-times-circle"></i>
-  </span>
-</div>
-<div id="search-result">
-  <div id="no-result">
-    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
-  </div>
-</div>
-
-    </div>
-  </div>
-
-</div>
-    </header>
-
-    
-
-
-    <main class="main">
-      <div class="main-inner">
-        <div class="content-wrap">
-          
-
-          <div class="content post posts-expand">
-            
-
-    
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Jenkens-Blue%20Ocean%20%E6%8F%92%E4%BB%B6/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="六一">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hui's Blog">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          Jenkins Blue Ocean
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2025-09-11 20:42:57 / 修改时间：21:42:02" itemprop="dateCreated datePublished" datetime="2025-09-11T20:42:57+08:00">2025-09-11</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/DevOps/" itemprop="url" rel="index"><span itemprop="name">DevOps</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/DevOps/Jenkins/" itemprop="url" rel="index"><span itemprop="name">Jenkins</span></a>
-                </span>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>2.1k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>2 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
+<meta name="twitter:image" content="http://example.com/img/butterfly-icon.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Jenkins Blue Ocean",
+  "url": "http://example.com/2025/09/11/Jenkens-Blue%20Ocean%20%E6%8F%92%E4%BB%B6/",
+  "image": "http://example.com/img/butterfly-icon.png",
+  "datePublished": "2025-09-11T12:42:57.000Z",
+  "dateModified": "2025-09-11T13:42:02.775Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "六一",
+      "url": "http://example.com"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://example.com/2025/09/11/Jenkens-Blue%20Ocean%20%E6%8F%92%E4%BB%B6/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
       
-        <h3 id="Blue-Ocean-插件的主要功能"><a href="#Blue-Ocean-插件的主要功能" class="headerlink" title="Blue Ocean 插件的主要功能"></a>Blue Ocean 插件的主要功能</h3><ol>
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Jenkins Blue Ocean',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/butterfly-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">274</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">22</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">45</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Hui's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Jenkins Blue Ocean</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user"></i><span> About</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Jenkins Blue Ocean</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-09-11T12:42:57.000Z" title="发表于 2025-09-11 20:42:57">2025-09-11</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-09-11T13:42:02.775Z" title="更新于 2025-09-11 21:42:02">2025-09-11</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/DevOps/">DevOps</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/DevOps/Jenkins/">Jenkins</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h3 id="Blue-Ocean-插件的主要功能"><a href="#Blue-Ocean-插件的主要功能" class="headerlink" title="Blue Ocean 插件的主要功能"></a>Blue Ocean 插件的主要功能</h3><ol>
 <li><p><strong>直观的流水线可视化 (Pipeline Visualization)：</strong></p>
 <ul>
 <li><strong>图形化流水线显示：</strong> 将复杂的 Jenkins Declarative Pipeline 转换为清晰、易懂的图形界面，展示每个阶段 (Stage) 和步骤 (Step) 的执行顺序和状态。</li>
@@ -339,222 +240,4 @@
 </ol>
 <hr>
 <h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>尽管 Jenkins 本身提供了强大的 CI&#x2F;CD 功能，但其经典 UI 在视觉呈现和用户体验上有所欠缺。<strong>Blue Ocean 插件的核心价值在于它将 Jenkins Pipeine 的复杂性抽象化，以一种直观、易于理解的方式呈现给用户。</strong>它不仅提升了开发和运维团队的工作效率，也使得整个组织对 CI&#x2F;CD 流程的健康状况有了更清晰的感知。对于任何积极采用 Jenkins Pipeline 进行软件开发的团队来说，Blue Ocean 几乎是一个必不可少的插件。</p>
-
-    </div>
-
-    
-    
-    
-
-      <footer class="post-footer">
-          <div class="post-tags">
-              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
-              <a href="/tags/DevOps/" rel="tag"># DevOps</a>
-          </div>
-
-        
-
-
-        
-    <div class="post-nav">
-      <div class="post-nav-item">
-    <a href="/2025/09/11/jenkins-jenkinsfile/" rel="prev" title="Jenkins Jenkinsfile">
-      <i class="fa fa-chevron-left"></i> Jenkins Jenkinsfile
-    </a></div>
-      <div class="post-nav-item"></div>
-    </div>
-      </footer>
-    
-  </article>
-  
-  
-  
-
-
-
-          </div>
-          
-
-<script>
-  window.addEventListener('tabs:register', () => {
-    let { activeClass } = CONFIG.comments;
-    if (CONFIG.comments.storage) {
-      activeClass = localStorage.getItem('comments_active') || activeClass;
-    }
-    if (activeClass) {
-      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
-      if (activeTab) {
-        activeTab.click();
-      }
-    }
-  });
-  if (CONFIG.comments.storage) {
-    window.addEventListener('tabs:click', event => {
-      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
-      let commentClass = event.target.classList[1];
-      localStorage.setItem('comments_active', commentClass);
-    });
-  }
-</script>
-
-        </div>
-          
-  
-  <div class="toggle sidebar-toggle">
-    <span class="toggle-line toggle-line-first"></span>
-    <span class="toggle-line toggle-line-middle"></span>
-    <span class="toggle-line toggle-line-last"></span>
-  </div>
-
-  <aside class="sidebar">
-    <div class="sidebar-inner">
-
-      <ul class="sidebar-nav motion-element">
-        <li class="sidebar-nav-toc">
-          文章目录
-        </li>
-        <li class="sidebar-nav-overview">
-          站点概览
-        </li>
-      </ul>
-
-      <!--noindex-->
-      <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Blue-Ocean-%E6%8F%92%E4%BB%B6%E7%9A%84%E4%B8%BB%E8%A6%81%E5%8A%9F%E8%83%BD"><span class="nav-number">1.</span> <span class="nav-text">Blue Ocean 插件的主要功能</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Blue-Ocean-%E6%8F%92%E4%BB%B6%E7%9A%84%E5%85%B8%E5%9E%8B%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">2.</span> <span class="nav-text">Blue Ocean 插件的典型使用场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li></ol></div>
-      </div>
-      <!--/noindex-->
-
-      <div class="site-overview-wrap sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
-  <p class="site-author-name" itemprop="name">六一</p>
-  <div class="site-description" itemprop="description"></div>
-</div>
-<div class="site-state-wrap motion-element">
-  <nav class="site-state">
-      <div class="site-state-item site-state-posts">
-          <a href="/archives/">
-        
-          <span class="site-state-item-count">273</span>
-          <span class="site-state-item-name">日志</span>
-        </a>
-      </div>
-      <div class="site-state-item site-state-categories">
-            <a href="/categories/">
-          
-        <span class="site-state-item-count">44</span>
-        <span class="site-state-item-name">分类</span></a>
-      </div>
-      <div class="site-state-item site-state-tags">
-            <a href="/tags/">
-          
-        <span class="site-state-item-count">19</span>
-        <span class="site-state-item-name">标签</span></a>
-      </div>
-  </nav>
-</div>
-  <div class="links-of-author motion-element">
-      <span class="links-of-author-item">
-        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
-      </span>
-  </div>
-
-
-
-      </div>
-        <div class="back-to-top motion-element">
-          <i class="fa fa-arrow-up"></i>
-          <span>0%</span>
-        </div>
-
-    </div>
-  </aside>
-  <div id="sidebar-dimmer"></div>
-
-
-      </div>
-    </main>
-
-    <footer class="footer">
-      <div class="footer-inner">
-        
-
-        
-
-<div class="copyright">
-  
-  &copy; 
-  <span itemprop="copyrightYear">2025</span>
-  <span class="with-love">
-    <i class="fa fa-heart"></i>
-  </span>
-  <span class="author" itemprop="copyrightHolder">六一</span>
-    <span class="post-meta-divider">|</span>
-    <span class="post-meta-item-icon">
-      <i class="fa fa-chart-area"></i>
-    </span>
-    <span title="站点总字数">1.7m</span>
-    <span class="post-meta-divider">|</span>
-    <span class="post-meta-item-icon">
-      <i class="fa fa-coffee"></i>
-    </span>
-    <span title="站点阅读时长">25:34</span>
-</div>
-
-        
-
-
-
-
-
-
-
-
-      </div>
-    </footer>
-  </div>
-
-  
-  <script src="/lib/anime.min.js"></script>
-  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
-  <script src="/lib/velocity/velocity.min.js"></script>
-  <script src="/lib/velocity/velocity.ui.min.js"></script>
-
-<script src="/js/utils.js"></script>
-
-<script src="/js/motion.js"></script>
-
-
-<script src="/js/schemes/pisces.js"></script>
-
-
-<script src="/js/next-boot.js"></script>
-
-
-
-
-  
-
-
-
-
-  
-<script src="/js/local-search.js"></script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-  
-
-<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
-</html>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://example.com">六一</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://example.com/2025/09/11/Jenkens-Blue%20Ocean%20%E6%8F%92%E4%BB%B6/">http://example.com/2025/09/11/Jenkens-Blue%20Ocean%20%E6%8F%92%E4%BB%B6/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="http://example.com" target="_blank">Hui's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E8%BF%90%E7%BB%B4/">运维</a><a class="post-meta__tags" href="/tags/DevOps/">DevOps</a></div><div class="post-share"><div class="social-share" data-image="/img/butterfly-icon.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2026/02/27/hexo-beautify/" title="Hexo 博客美化笔记：从零搭建高颜值技术博客"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">Hexo 博客美化笔记：从零搭建高颜值技术博客</div></div><div class="info-2"><div class="info-item-1">Hexo 博客美化笔记：从零搭建高颜值技术博客前言之前博客主题比较朴素，最近参考 OpenClaw 官网风格进行了全面美化，记录一下完整过程。 环境说明 博客路径：~/Documents/git/huazi-blog Hexo 版本：7.3.0 目标：简洁大气、极致可读、响应式适配好、支持暗黑模式  一、安装 butterfly 主题butterfly 是目前 Hexo 最热门的主题之一，功能强大、主题美观、暗黑模式内置。 1234567891011# 进入博客目录cd ~/Documents/git/huazi-blog# 克隆 butterfly 主题git clone https://github.com/jerryc127/hexo-theme-butterfly.git themes/butterfly --depth 1# 复制主题配置cp themes/butterfly/_config.yml _config.butterfly.yml# 修改主配置sed -i &#x27;&#x27; &#x27;s/^theme:.*/theme: butterfly/&#x...</div></div></div></a><a class="pagination-related" href="/2025/09/11/shell-%E6%AD%A3%E5%88%99/" title="Shell-正则"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">Shell-正则</div></div><div class="info-2"><div class="info-item-1">———- | :——————————- | :———————————————– || grep     | 过滤行、提取匹配部分         | 从大量日志或文本中快速筛选出包含特定模式的行。   || sed      | 查找与替换                   | 修改配置文件、格式化文本输出。                   || awk      | 基于字段的复杂处理和报告生成 | 解析结构化文本（如日志），进行计算和格式化报告。 || [[ =~ ]] | 脚本内部的逻辑判断和变量解析 | 在 Shell 脚本中验证输入格式、分解字符串。        | 作为运维工程师，这四种方法都是我们工具箱里的必备利器。通常 grep 用于快速定位，sed 和 awk 用于深度加工，而 [[ =~ ]] 则嵌入在我们的自动化脚本中，增强其智能和健壮性。 </div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2025/09/11/jenkins-jenkinsfile/" title="Jenkins Jenkinsfile"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">Jenkins Jenkinsfile</div></div><div class="info-2"><div class="info-item-1">Jenkinsfile 的基本类型Jenkins Pipeline 目前支持两种语法类型：  Declarative Pipeline (声明式流水线) - 推荐：  结构化、更容易阅读和编写。 强制遵循特定语法，限制了某些 Groovy 结构的使用，但通常更不易出错。 适合大多数 CI&#x2F;CD 场景。 以 pipeline &#123; ... &#125; 块开始。   Scripted Pipeline (脚本式流水线) - 更灵活，但复杂：  基于传统的 Groovy 脚本。 提供了 Groovy 语言的完整能力，允许更复杂的逻辑和自定义行为。 学习曲线陡峭，调试难度大，更易出错。 以 node &#123; ... &#125; 块开始（或直接是 Groovy 脚本）。 通常用于声明式流水线无法满足的非常特定和高级的场景，或者作为共享库的一部分。    除非有特殊需求，强烈推荐使用 Declarative Pipeline。以下结构将主要围绕 Declarative Pipeline 展开。  Jenkinsfile (Declarative Pipeline)...</div></div></div></a><a class="pagination-related" href="/2025/09/11/jenkins-k8s/" title="jenkins-k8s"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">jenkins-k8s</div></div><div class="info-2"><div class="info-item-1">Jenkins 与 Kubernetes 集成的核心价值 弹性伸缩的构建环境： Jenkins 可以根据构建需求动态创建 Kubernetes Pod 作为 Jenkins Agent，构建完成后自动销毁，节省资源。 构建环境隔离与一致性： 每个构建都在独立的、预定义的 Pod 中运行，确保环境的纯净和一致性，避免“污染”和冲突。 资源利用率最大化： Kubernetes 负责调度 Agent Pod 到可用节点，优化集群资源利用。 云原生部署： 将应用程序打包成 Docker 镜像后，通过 Jenkins Pipeline 直接部署到 Kubernetes 集群。 自动化且可靠的部署： 利用 Kubernetes 的原生部署（Deployment）、服务发现（Service）、配置管理（ConfigMap&#x2F;Secret）等能力，实现声明式、不可变的基础设施部署。 可观测性与回滚： 结合 Kubernetes 的滚动更新和回滚机制，Jenkins Pipeline 可以轻松实现零停机部署和快速回滚。  Jenkins 与 Kubernetes 集成方式Jenkins 与...</div></div></div></a><a class="pagination-related" href="/2025/09/11/Linux%20%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E4%B8%AD%E7%9A%84%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%8C%BA%E5%88%AB/" title="Linux 操作系统中的进程与线程的区别"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">Linux 操作系统中的进程与线程的区别</div></div><div class="info-2"><div class="info-item-1">Linux 操作系统中的进程与线程的区别 进程 (Process)在 Linux 中，进程 是操作系统进行资源分配的最小单位。它是一个程序的执行实例，拥有独立的内存空间、文件描述符、打开的文件、信号处理、堆栈、程序计数器等资源。每个进程都是相互独立的。 核心特点：  独立性： 每个进程都有自己独立的地址空间，这意味着一个进程的内存崩溃不会直接影响到另一个进程。这提供了强大的隔离性。 资源拥有者： 进程是系统资源的分配单位，它拥有代码段、数据段、堆、栈、文件描述符、信号、权限等。 上下文切换开销大： 进程之间的切换需要保存和恢复完整的上下文（包括所有寄存器、内存映射、打开的文件等），开销相对较大。 通信复杂： 进程间通信（IPC，Inter-Process Communication）需要通过特定的机制（如管道、消息队列、共享内存、信号量、套接字等）进行，相对复杂且通常涉及内核介入。   线程 (Thread)线程 是操作系统进行调度的最小单位。一个进程可以包含一个或多个线程。线程是在进程内部执行的独立序列，它们共享进程的地址空间和大部分资源，但拥有独立的程序计数器、栈、寄存器集合...</div></div></div></a><a class="pagination-related" href="/2025/09/11/Go%20%E8%AF%AD%E8%A8%80%E4%B8%AD%E7%9A%84%E5%AF%B9%E8%B1%A1%E9%80%89%E6%8B%A9%E5%99%A8%E8%87%AA%E5%8A%A8%E8%A7%A3%E5%BC%95%E7%94%A8/" title="Go 语言中的对象选择器自动解引用"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">Go 语言中的对象选择器自动解引用</div></div><div class="info-2"><div class="info-item-1">Go 语言中的选择器自动解引用（Automatic Dereferencing with Selectors）是一个强大且便利的语言特性，它简化了通过指针访问结构体字段的操作。这在处理结构体指针时尤为重要，因为它让代码更加简洁和易读。  核心机制在 Go 中，访问一个变量的字段或方法通常使用“选择器”操作符 .。  对于一个结构体变量 s，访问其字段 Field 的语法是 s.Field。 对于一个指向结构体的指针 sp，理论上应该先解引用得到结构体，再访问字段，即 (*sp).Field。  然而，Go 语言提供了一个语法糖：自动解引用。 规则总结：当你在指针类型变量上使用选择器 (.) 访问字段或方法时，Go 编译器会自动为你进行解引用操作。  语法与示例1. 访问结构体指针的字段123456789101112131415161718192021222324252627282930package mainimport &quot;fmt&quot;type Person struct &#123;	Name string	Age  int&#125;func main() &...</div></div></div></a><a class="pagination-related" href="/2025/09/11/k8s%20ResourceQuota/" title="k8s ResourceQuota"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">k8s ResourceQuota</div></div><div class="info-2"><div class="info-item-1">描述在 Kubernetes 中如何配置资源配额，并解释其作用。	 🤔 分析过程：此问题旨在考察对Kubernetes资源治理和多租户管理的理解。核心是ResourceQuota对象。一个高质量的回答不仅要说明如何创建ResourceQuota，更要阐明其核心目的：为命名空间（Namespace）设置资源“预算”。这包括计算资源（CPU&#x2F;Memory）、存储资源和对象数量的限制。此外，还应提及它与LimitRange对象的关系，这能体现出对资源管理体系的深入理解。 💡 答案生成：1. 概念或定义ResourceQuota（资源配额）是Kubernetes中的一个策略对象，它为命名空间（Namespace）提供了资源消耗的总量限制。它允许集群管理员为每个命名空间分配一个“预算”，确保单个团队或应用不会消耗掉超出其分配额度的资源，从而影响到集群中的其他用户。 核心要点： 资源配额是作用于命名空间级别的，不是作用于单个Pod或节点的。 2. 作用与目的配置资源配额的主要作用是实现集群的治理和公平性，具体目标包括：  防止“邻居吵闹”问题 (Noisy Neighbor):...</div></div></div></a><a class="pagination-related" href="/2025/09/11/RIP%20(Routing%20Information%20Protocol)%20%E5%8D%8F%E8%AE%AE/" title="RIP (Routing Information Protocol) 协议"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">RIP (Routing Information Protocol) 协议</div></div><div class="info-2"><div class="info-item-1">RIP (Routing Information Protocol) 协议的工作原理及特点RIP (Routing Information Protocol) 是一种经典的**距离向量路由协议 (Distance-Vector Routing Protocol)**，用于在内部网关 (Interior Gateway Protocol, IGP) 环境中交换路由信息。它历史悠久，简单易用，但存在一些固有的局限性。  RIP 的工作原理：RIP 的工作原理基于 Bellman-Ford 算法的变体，其核心思想是每个路由器维护一个到所有已知目的地的距离向量，并定期与邻居交换此信息。  里程 (Metric) - 跳数 (Hop Count)：  RIP 使用跳数 (Hop Count) 作为唯一的路由度量（metric）。 每经过一个路由器，跳数就增加 1。 最大跳数限制： RIP 的最大跳数限制为 15 跳。这意味着任何超过 15 跳的目的地都被认为是不可达的（即距离为无穷大）。这是 RIP 最大的局限性之一，使其不适合大型网络。   距离向量的维护：  每个 RIP 路由器维护一...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/butterfly-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">六一</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">274</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">22</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">45</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#Blue-Ocean-%E6%8F%92%E4%BB%B6%E7%9A%84%E4%B8%BB%E8%A6%81%E5%8A%9F%E8%83%BD"><span class="toc-number">1.</span> <span class="toc-text">Blue Ocean 插件的主要功能</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Blue-Ocean-%E6%8F%92%E4%BB%B6%E7%9A%84%E5%85%B8%E5%9E%8B%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="toc-number">2.</span> <span class="toc-text">Blue Ocean 插件的典型使用场景</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">3.</span> <span class="toc-text">总结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/02/27/hexo-beautify/" title="Hexo 博客美化笔记：从零搭建高颜值技术博客">Hexo 博客美化笔记：从零搭建高颜值技术博客</a><time datetime="2026-02-27T04:00:00.000Z" title="发表于 2026-02-27 12:00:00">2026-02-27</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/09/11/Jenkens-Blue%20Ocean%20%E6%8F%92%E4%BB%B6/" title="Jenkins Blue Ocean">Jenkins Blue Ocean</a><time datetime="2025-09-11T12:42:57.000Z" title="发表于 2025-09-11 20:42:57">2025-09-11</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/09/11/jenkins-jenkinsfile/" title="Jenkins Jenkinsfile">Jenkins Jenkinsfile</a><time datetime="2025-09-11T12:40:44.000Z" title="发表于 2025-09-11 20:40:44">2025-09-11</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/09/11/shell-trap/" title="Linux-trap">Linux-trap</a><time datetime="2025-09-11T12:40:44.000Z" title="发表于 2025-09-11 20:40:44">2025-09-11</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/09/11/shell-%E6%95%B0%E7%BB%84/" title="Shell-数组">Shell-数组</a><time datetime="2025-09-11T12:40:44.000Z" title="发表于 2025-09-11 20:40:44">2025-09-11</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By 六一</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.4</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body></html>

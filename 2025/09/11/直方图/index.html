@@ -1,39 +1,11 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
-<meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 7.3.0">
-  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
-  <link rel="mask-icon" href="/images/logo.svg" color="#222">
-
-<link rel="stylesheet" href="/css/main.css">
-
-
-<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
-  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
-  <script src="/lib/pace/pace.min.js"></script>
-
-<script id="hexo-configurations">
-    var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
-  </script>
-
-  <meta name="description" content="直方图在这一节中，我们将学习直方图指标，了解如何根据这些指标来计算分位数。Prometheus 中的直方图指标允许一个服务记录一系列数值的分布。直方图通常用于跟踪请求的延迟或响应大小等指标值，当然理论上它是可以跟踪任何根据某种分布而产生波动数值的大小。Prometheus 直方图是在客户端对数据进行的采样，它们使用的一些可配置的（例如延迟）bucket 桶对观察到的值进行计数，然后将这些 buck">
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>直方图 | Hui's Blog</title><meta name="author" content="六一"><meta name="copyright" content="六一"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="直方图在这一节中，我们将学习直方图指标，了解如何根据这些指标来计算分位数。Prometheus 中的直方图指标允许一个服务记录一系列数值的分布。直方图通常用于跟踪请求的延迟或响应大小等指标值，当然理论上它是可以跟踪任何根据某种分布而产生波动数值的大小。Prometheus 直方图是在客户端对数据进行的采样，它们使用的一些可配置的（例如延迟）bucket 桶对观察到的值进行计数，然后将这些 buck">
 <meta property="og:type" content="article">
 <meta property="og:title" content="直方图">
 <meta property="og:url" content="http://example.com/2025/09/11/%E7%9B%B4%E6%96%B9%E5%9B%BE/index.html">
 <meta property="og:site_name" content="Hui&#39;s Blog">
 <meta property="og:description" content="直方图在这一节中，我们将学习直方图指标，了解如何根据这些指标来计算分位数。Prometheus 中的直方图指标允许一个服务记录一系列数值的分布。直方图通常用于跟踪请求的延迟或响应大小等指标值，当然理论上它是可以跟踪任何根据某种分布而产生波动数值的大小。Prometheus 直方图是在客户端对数据进行的采样，它们使用的一些可配置的（例如延迟）bucket 桶对观察到的值进行计数，然后将这些 buck">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/xcsmp6.png">
-<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/ii580b.png">
-<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/gctpxj.png">
-<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/gh5npf.png">
-<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/dem2vz.png">
+<meta property="og:image" content="http://example.com/img/butterfly-icon.png">
 <meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
 <meta property="article:modified_time" content="2025-09-11T14:20:23.850Z">
 <meta property="article:author" content="六一">
@@ -41,241 +13,160 @@
 <meta property="article:tag" content="k8s">
 <meta property="article:tag" content="Prometheus">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://mudutestmenu.mudu.tv/upload/xcsmp6.png">
-
-<link rel="canonical" href="http://example.com/2025/09/11/%E7%9B%B4%E6%96%B9%E5%9B%BE/">
-
-
-<script id="page-configurations">
-  // https://hexo.io/docs/variables.html
-  CONFIG.page = {
-    sidebar: "",
-    isHome : false,
-    isPost : true,
-    lang   : 'zh-CN'
-  };
-</script>
-
-  <title>直方图 | Hui's Blog</title>
-  
-
-
-
-
-
-
-  <noscript>
-  <style>
-  .use-motion .brand,
-  .use-motion .menu-item,
-  .sidebar-inner,
-  .use-motion .post-block,
-  .use-motion .pagination,
-  .use-motion .comments,
-  .use-motion .post-header,
-  .use-motion .post-body,
-  .use-motion .collection-header { opacity: initial; }
-
-  .use-motion .site-title,
-  .use-motion .site-subtitle {
-    opacity: initial;
-    top: initial;
-  }
-
-  .use-motion .logo-line-before i { left: initial; }
-  .use-motion .logo-line-after i { right: initial; }
-  </style>
-</noscript>
-
-</head>
-
-<body itemscope itemtype="http://schema.org/WebPage">
-  <div class="container use-motion">
-    <div class="headband"></div>
-
-    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
-      <div class="header-inner"><div class="site-brand-container">
-  <div class="site-nav-toggle">
-    <div class="toggle" aria-label="切换导航栏">
-      <span class="toggle-line toggle-line-first"></span>
-      <span class="toggle-line toggle-line-middle"></span>
-      <span class="toggle-line toggle-line-last"></span>
-    </div>
-  </div>
-
-  <div class="site-meta">
-
-    <a href="/" class="brand" rel="start">
-      <span class="logo-line-before"><i></i></span>
-      <h1 class="site-title">Hui's Blog</h1>
-      <span class="logo-line-after"><i></i></span>
-    </a>
-      <p class="site-subtitle" itemprop="description">Code Life</p>
-  </div>
-
-  <div class="site-nav-right">
-    <div class="toggle popup-trigger">
-        <i class="fa fa-search fa-fw fa-lg"></i>
-    </div>
-  </div>
-</div>
-
-
-
-
-<nav class="site-nav">
-  <ul id="menu" class="main-menu menu">
-        <li class="menu-item menu-item-home">
-
-    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
-
-  </li>
-        <li class="menu-item menu-item-about">
-
-    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
-
-  </li>
-        <li class="menu-item menu-item-tags">
-
-    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
-
-  </li>
-        <li class="menu-item menu-item-categories">
-
-    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
-
-  </li>
-        <li class="menu-item menu-item-archives">
-
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
-
-  </li>
-      <li class="menu-item menu-item-search">
-        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
-        </a>
-      </li>
-  </ul>
-</nav>
-
-
-
-  <div class="search-pop-overlay">
-    <div class="popup search-popup">
-        <div class="search-header">
-  <span class="search-icon">
-    <i class="fa fa-search"></i>
-  </span>
-  <div class="search-input-container">
-    <input autocomplete="off" autocapitalize="off"
-           placeholder="搜索..." spellcheck="false"
-           type="search" class="search-input">
-  </div>
-  <span class="popup-btn-close">
-    <i class="fa fa-times-circle"></i>
-  </span>
-</div>
-<div id="search-result">
-  <div id="no-result">
-    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
-  </div>
-</div>
-
-    </div>
-  </div>
-
-</div>
-    </header>
-
-    
-
-
-    <main class="main">
-      <div class="main-inner">
-        <div class="content-wrap">
-          
-
-          <div class="content post posts-expand">
-            
-
-    
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/%E7%9B%B4%E6%96%B9%E5%9B%BE/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="六一">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hui's Blog">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          直方图
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:20:23" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/k8s-monitor/" itemprop="url" rel="index"><span itemprop="name">k8s-monitor</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/k8s-monitor/Prometheus/" itemprop="url" rel="index"><span itemprop="name">Prometheus</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/k8s-monitor/Prometheus/Query-PromQL/" itemprop="url" rel="index"><span itemprop="name">Query PromQL</span></a>
-                </span>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>3.1k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>3 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
+<meta name="twitter:image" content="http://example.com/img/butterfly-icon.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "直方图",
+  "url": "http://example.com/2025/09/11/%E7%9B%B4%E6%96%B9%E5%9B%BE/",
+  "image": "http://example.com/img/butterfly-icon.png",
+  "datePublished": "2025-09-11T12:32:34.000Z",
+  "dateModified": "2025-09-11T14:20:23.850Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "六一",
+      "url": "http://example.com"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://example.com/2025/09/11/%E7%9B%B4%E6%96%B9%E5%9B%BE/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
       
-        <h1 id="直方图"><a href="#直方图" class="headerlink" title="直方图"></a>直方图</h1><p>在这一节中，我们将学习直方图指标，了解如何根据这些指标来计算分位数。Prometheus 中的直方图指标允许一个服务记录一系列数值的分布。直方图通常用于跟踪<strong>请求的延迟或响应大小</strong>等指标值，当然理论上它是可以跟踪任何根据某种分布而产生波动数值的大小。Prometheus 直方图是在客户端对数据进行的采样，它们使用的一些可配置的（例如延迟）bucket 桶对观察到的值进行计数，然后将这些 bucket 作为单独的时间序列暴露出来。</p>
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '直方图',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/butterfly-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">274</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">22</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">45</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Hui's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">直方图</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user"></i><span> About</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">直方图</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-09-11T12:32:34.000Z" title="发表于 2025-09-11 20:32:34">2025-09-11</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-09-11T14:20:23.850Z" title="更新于 2025-09-11 22:20:23">2025-09-11</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/k8s-monitor/">k8s-monitor</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/k8s-monitor/Prometheus/">Prometheus</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/k8s-monitor/Prometheus/Query-PromQL/">Query PromQL</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="直方图"><a href="#直方图" class="headerlink" title="直方图"></a>直方图</h1><p>在这一节中，我们将学习直方图指标，了解如何根据这些指标来计算分位数。Prometheus 中的直方图指标允许一个服务记录一系列数值的分布。直方图通常用于跟踪<strong>请求的延迟或响应大小</strong>等指标值，当然理论上它是可以跟踪任何根据某种分布而产生波动数值的大小。Prometheus 直方图是在客户端对数据进行的采样，它们使用的一些可配置的（例如延迟）bucket 桶对观察到的值进行计数，然后将这些 bucket 作为单独的时间序列暴露出来。</p>
 <p>下图是一个非累积直方图的例子：</p>
-<p><img data-src="https://mudutestmenu.mudu.tv/upload/xcsmp6.png" alt="非累积直方图"></p>
+<p><img src="https://mudutestmenu.mudu.tv/upload/xcsmp6.png" alt="非累积直方图"></p>
 <p>在 Prometheus 内部，直方图被实现为一组时间序列，每个序列代表指定桶的计数（例如<code>10ms以下的请求数</code>、<code>25ms以下的请求数</code>、<code>50ms以下的请求数</code>等）。 在 Prometheus 中每个 bucket 桶的计数器是累加的，这意味着较大值的桶也包括所有低数值的桶的计数。在作为直方图一部分的每个时间序列上，相应的桶由特殊的 <code>le</code> 标签表示。<code>le</code> 代表的是<strong>小于或等于</strong>。</p>
 <p>与上面相同的直方图在 Prometheus 中的累积直方图如下所示：</p>
-<p><img data-src="https://mudutestmenu.mudu.tv/upload/ii580b.png" alt="Prometheus 直方图"></p>
+<p><img src="https://mudutestmenu.mudu.tv/upload/ii580b.png" alt="Prometheus 直方图"></p>
 <p>可以看到在 Prometheus 中直方图的计数是累计的，这是很奇怪的，因为通常情况下非累积的直方图更容易理解。Prometheus 为什么要这么做呢？想象一下，如果直方图指标中加入了额外的标签，或者划分了更多的 bucket，那么样本数据的分析就会变得越来越复杂，如果直方图是累积的，在抓取指标时就可以根据需要丢弃某些 bucket，这样可以在降低 Prometheus 维护成本的同时，还可以粗略计算样本值的分位数。通过这种方法，用户不需要修改应用代码，便可以动态减少抓取到的样本数量。另外直方图还提供了 <code>_sum</code> 指标和 <code>_count</code> 指标，所以即使你丢弃了所有的 bucket，仍然可以通过这两个指标值来计算请求的平均响应时间。通过累积直方图的方式，还可以很轻松地计算某个 bucket 的样本数占所有样本数的比例。</p>
 <p>我们在演示的 demo 服务中暴露了一个直方图指标 <code>demo_api_request_duration_seconds_bucket</code>，用于跟踪 API 请求时长的分布，由于这个直方图为每个跟踪的维度导出了 26 个 bucket，因此这个指标有很多时间序列。我们可以先来看下来自一个服务实例的一个请求维度组合的直方图，查询语句如下所示：</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">demo_api_request_duration_seconds_bucket&#123;instance=&quot;demo-service-0:10000&quot;, method=&quot;POST&quot;, path=&quot;/api/bar&quot;, status=&quot;200&quot;, job=&quot;demo&quot;&#125;</span><br></pre></td></tr></table></figure>
@@ -283,7 +174,7 @@
 
 
 <p>正常我们可以看到 26 个序列，每个序列代表一个 bucket，由 <code>le</code> 标签标识：</p>
-<p><img data-src="https://mudutestmenu.mudu.tv/upload/gctpxj.png" alt="26个序列"></p>
+<p><img src="https://mudutestmenu.mudu.tv/upload/gctpxj.png" alt="26个序列"></p>
 <p>直方图可以帮助我们了解这样的问题，比如<code>&quot;我有多少个请求超过了100ms的时间？&quot;</code> (当然需要直方图中配置了一个以 100ms 为边界的桶)，又比如<code>&quot;我99%的请求是在多少延迟下完成的？&quot;</code>，这类数值被称为<strong>百分位数</strong>或<strong>分位数</strong>。在 Prometheus 中这两个术语几乎是可以通用，只是百分位数指定在 0-100 范围内，而分位数表示在 0 和 1 之间，所以第 99 个百分位数相当于目标分位数 0.99。</p>
 <p>如果你的直方图桶粒度足够小，那么我们可以使用 <code>histogram_quantile(φ scalar, b instant-vector)</code> 函数用于计算历史数据指标一段时间内的分位数。该函数将目标分位数 (<code>0 ≤ φ ≤ 1</code>) 和直方图指标作为输入，就是大家平时讲的 <code>pxx</code>，<code>p50</code> 就是中位数，参数 <code>b</code> 一定是包含 <code>le</code> 这个标签的瞬时向量，不包含就无从计算分位数了，但是计算的分位数是一个预估值，并不完全准确，因为这个函数是假定每个区间内的样本分布是线性分布来计算结果值的，预估的准确度取决于 bucket 区间划分的粒度，粒度越大，准确度越低。</p>
 <p>回到我们的演示服务，我们可以尝试计算所有维度在所有时间内的第 90 个百分位数，也就是 90% 的请求的持续时间。</p>
@@ -294,13 +185,13 @@
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># GOOD!</span><br><span class="line">histogram_quantile(0.9, rate(demo_api_request_duration_seconds_bucket&#123;job=&quot;demo&quot;&#125;[5m]))</span><br></pre></td></tr></table></figure>
 
 <p>这个查询就好很多了。</p>
-<p><img data-src="https://mudutestmenu.mudu.tv/upload/gh5npf.png" alt="API 延迟"></p>
+<p><img src="https://mudutestmenu.mudu.tv/upload/gh5npf.png" alt="API 延迟"></p>
 <p>这个查询会显示每个维度（job、instance、path、method 和 status）的第 90 个百分点，但是我们可能对单独的这些维度并不感兴趣，想把他们中的一些指标聚合起来，这个时候我们可以在查询的时候使用 Prometheus 的 <code>sum</code> 运算符与 <code>histogram_quantile()</code> 函数结合起来，计算出聚合的百分位，假设在我们想要聚合的维度之间，直方图桶的配置方式相同（桶的数量相同，上限相同），我们可以将不同维度之间具有相同 <code>le</code> 标签值的桶加在一起，得到一个聚合直方图。然后，我们可以使用该聚合直方图作为 <code>histogram_quantile()</code> 函数的输入。</p>
 <blockquote>
 <p>注意：这是假设直方图的桶在你要聚合的所有维度之间的配置是相同的，桶的配置也应该是相对静态的配置，不会一直变化，因为这会破坏你使用 <code>histogram_quantile()</code> 查看的时间范围内的结果。</p>
 </blockquote>
 <p>下面的查询计算了第 90 个百分位数的延迟，但只按 job、instance 和 path 维度进行聚合结果：</p>
-<p><img data-src="https://mudutestmenu.mudu.tv/upload/dem2vz.png" alt="90百分位数"></p>
+<p><img src="https://mudutestmenu.mudu.tv/upload/dem2vz.png" alt="90百分位数"></p>
 <h2 id="练习"><a href="#练习" class="headerlink" title="练习"></a>练习</h2><p>1.构建一个查询，计算在 0.0001 秒内完成的 demo 服务 API 请求的总百分比，与过去 5 分钟内所有请求总数的平均值。</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sum(rate(demo_api_request_duration_seconds_bucket&#123;le=&quot;0.0001&quot;&#125;[5m]))</span><br><span class="line">/</span><br><span class="line">sum(rate(demo_api_request_duration_seconds_bucket&#123;le=&quot;+Inf&quot;&#125;[5m])) * 100</span><br></pre></td></tr></table></figure>
 
@@ -309,226 +200,4 @@
 
 <p>2.构建一个查询，计算 demo 服务 API 请求的第 50 个百分位延迟，按 status code 和 method 进行划分，在过去一分钟的平均值。</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">histogram_quantile(0.5, sum by(status, method, le) (rate(demo_api_request_duration_seconds_bucket[1m])))</span><br></pre></td></tr></table></figure>
-
-    </div>
-
-    
-    
-    
-
-      <footer class="post-footer">
-          <div class="post-tags">
-              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
-              <a href="/tags/k8s/" rel="tag"># k8s</a>
-              <a href="/tags/Prometheus/" rel="tag"># Prometheus</a>
-          </div>
-
-        
-
-
-        
-    <div class="post-nav">
-      <div class="post-nav-item">
-    <a href="/2025/09/11/%E7%A3%81%E7%9B%98%E7%AE%A1%E7%90%86/" rel="prev" title="磁盘管理">
-      <i class="fa fa-chevron-left"></i> 磁盘管理
-    </a></div>
-      <div class="post-nav-item">
-    <a href="/2025/09/11/%E7%9B%91%E6%8E%A7%20Pod/" rel="next" title="监控 Pod">
-      监控 Pod <i class="fa fa-chevron-right"></i>
-    </a></div>
-    </div>
-      </footer>
-    
-  </article>
-  
-  
-  
-
-
-
-          </div>
-          
-
-<script>
-  window.addEventListener('tabs:register', () => {
-    let { activeClass } = CONFIG.comments;
-    if (CONFIG.comments.storage) {
-      activeClass = localStorage.getItem('comments_active') || activeClass;
-    }
-    if (activeClass) {
-      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
-      if (activeTab) {
-        activeTab.click();
-      }
-    }
-  });
-  if (CONFIG.comments.storage) {
-    window.addEventListener('tabs:click', event => {
-      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
-      let commentClass = event.target.classList[1];
-      localStorage.setItem('comments_active', commentClass);
-    });
-  }
-</script>
-
-        </div>
-          
-  
-  <div class="toggle sidebar-toggle">
-    <span class="toggle-line toggle-line-first"></span>
-    <span class="toggle-line toggle-line-middle"></span>
-    <span class="toggle-line toggle-line-last"></span>
-  </div>
-
-  <aside class="sidebar">
-    <div class="sidebar-inner">
-
-      <ul class="sidebar-nav motion-element">
-        <li class="sidebar-nav-toc">
-          文章目录
-        </li>
-        <li class="sidebar-nav-overview">
-          站点概览
-        </li>
-      </ul>
-
-      <!--noindex-->
-      <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%9B%B4%E6%96%B9%E5%9B%BE"><span class="nav-number">1.</span> <span class="nav-text">直方图</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%83%E4%B9%A0"><span class="nav-number">1.1.</span> <span class="nav-text">练习</span></a></li></ol></li></ol></div>
-      </div>
-      <!--/noindex-->
-
-      <div class="site-overview-wrap sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
-  <p class="site-author-name" itemprop="name">六一</p>
-  <div class="site-description" itemprop="description"></div>
-</div>
-<div class="site-state-wrap motion-element">
-  <nav class="site-state">
-      <div class="site-state-item site-state-posts">
-          <a href="/archives/">
-        
-          <span class="site-state-item-count">273</span>
-          <span class="site-state-item-name">日志</span>
-        </a>
-      </div>
-      <div class="site-state-item site-state-categories">
-            <a href="/categories/">
-          
-        <span class="site-state-item-count">44</span>
-        <span class="site-state-item-name">分类</span></a>
-      </div>
-      <div class="site-state-item site-state-tags">
-            <a href="/tags/">
-          
-        <span class="site-state-item-count">19</span>
-        <span class="site-state-item-name">标签</span></a>
-      </div>
-  </nav>
-</div>
-  <div class="links-of-author motion-element">
-      <span class="links-of-author-item">
-        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
-      </span>
-  </div>
-
-
-
-      </div>
-        <div class="back-to-top motion-element">
-          <i class="fa fa-arrow-up"></i>
-          <span>0%</span>
-        </div>
-
-    </div>
-  </aside>
-  <div id="sidebar-dimmer"></div>
-
-
-      </div>
-    </main>
-
-    <footer class="footer">
-      <div class="footer-inner">
-        
-
-        
-
-<div class="copyright">
-  
-  &copy; 
-  <span itemprop="copyrightYear">2025</span>
-  <span class="with-love">
-    <i class="fa fa-heart"></i>
-  </span>
-  <span class="author" itemprop="copyrightHolder">六一</span>
-    <span class="post-meta-divider">|</span>
-    <span class="post-meta-item-icon">
-      <i class="fa fa-chart-area"></i>
-    </span>
-    <span title="站点总字数">1.7m</span>
-    <span class="post-meta-divider">|</span>
-    <span class="post-meta-item-icon">
-      <i class="fa fa-coffee"></i>
-    </span>
-    <span title="站点阅读时长">25:34</span>
-</div>
-
-        
-
-
-
-
-
-
-
-
-      </div>
-    </footer>
-  </div>
-
-  
-  <script src="/lib/anime.min.js"></script>
-  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
-  <script src="/lib/velocity/velocity.min.js"></script>
-  <script src="/lib/velocity/velocity.ui.min.js"></script>
-
-<script src="/js/utils.js"></script>
-
-<script src="/js/motion.js"></script>
-
-
-<script src="/js/schemes/pisces.js"></script>
-
-
-<script src="/js/next-boot.js"></script>
-
-
-
-
-  
-
-
-
-
-  
-<script src="/js/local-search.js"></script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-  
-
-<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
-</html>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://example.com">六一</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://example.com/2025/09/11/%E7%9B%B4%E6%96%B9%E5%9B%BE/">http://example.com/2025/09/11/%E7%9B%B4%E6%96%B9%E5%9B%BE/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="http://example.com" target="_blank">Hui's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E8%BF%90%E7%BB%B4/">运维</a><a class="post-meta__tags" href="/tags/k8s/">k8s</a><a class="post-meta__tags" href="/tags/Prometheus/">Prometheus</a></div><div class="post-share"><div class="social-share" data-image="/img/butterfly-icon.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2025/09/11/%E8%8A%82%E7%82%B9%E7%9B%91%E6%8E%A7/" title="节点监控"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">节点监控</div></div><div class="info-2"><div class="info-item-1">节点监控前面我们和大家学习了怎样用 Promethues 来监控 Kubernetes 集群中的应用，但是对于 Kubernetes 集群本身的监控也是非常重要的，我们需要时时刻刻了解集群的运行状态。 监控方案对于集群的监控一般我们需要考虑以下几个方面：  Kubernetes 节点的监控：比如节点的 cpu、load、disk、memory 等指标 内部系统组件的状态：比如 kube-scheduler、kube-controller-manager、kubedns&#x2F;coredns 等组件的详细运行状态 编排级的 metrics：比如 Deployment 的状态、资源请求、调度和 API 延迟等数据指标  Kubernetes 集群的监控方案目前主要有以下几种方案：  cAdvisor：cAdvisor 是 Google 开源的容器资源监控和性能分析工具，它是专门为容器而生，本身也支持 Docker 容器。 kube-state-metrics：kube-state-metrics 通过监听 API Server 生成有关资源对象的状态指标，比如 Deploymen...</div></div></div></a><a class="pagination-related" href="/2025/09/11/%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="网络模型"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">网络模型</div></div><div class="info-2"><div class="info-item-1">1. Kubernetes CNI 网络模型简介K8s 的网络模型核心要求：  Pod-to-Pod 互通：每个 Pod 都有唯一 IP，Pod 之间不需要 NAT 就能通信。 Pod-to-Service 互通：通过 Service ClusterIP 或者 kube-proxy&#x2F;ipvs 实现。 跨节点通信：不同 Node 上的 Pod 必须能直接通信。  CNI（Container Network Interface）是一套标准，K8s 通过调用不同的 CNI 插件来实现具体的网络。  2. Flannel🔹 定位：最早、最简单的 CNI，主要实现 Pod-to-Pod 的三层网络连通性。 🔹 特点：  提供 Overlay 网络（VXLAN、UDP、Host-GW 等模式）。 只管连通性，不提供 NetworkPolicy（安全策略）。 架构简单、易于部署，适合小规模或对网络安全需求不高的场景。  ✅ 优点：  部署简单，稳定成熟。 占用资源少。  ❌ 缺点：  功能单一，无安全策略支持。 性能一般（Overlay 会带来额外开销）。   3. Calico...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2025/09/11/Thanos%20Querier/" title="Thanos Querier"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">Thanos Querier</div></div><div class="info-2"><div class="info-item-1">Querier 组件现在我们就创建成功了两个 Prometheus 实例，但是我们真正去使用的时候并不是像上面提到的在前面加一个负载均衡器去查询监控数据，而是使用 Thanos 的 Querier 组件来提供一个全局的统一查询入口。对于 Quierier 最重要的就是要配置上 Thanos 的 Sidecar 地址，我们这里完全可以直接使用 Headless Service 去自动发现： 1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556575859606162636465666768697071727374757677# thanos-querier.yamlapiVersion: apps/v1kind: Deploymentmetadata:  name: thanos-querier  namespace: kube-mon  labels:    app: thanos-querierspec:  replicas:...</div></div></div></a><a class="pagination-related" href="/2025/09/11/%E8%81%9A%E5%90%88/" title="聚合"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">聚合</div></div><div class="info-2"><div class="info-item-1">聚合我们知道 Prometheus 的时间序列数据是多维数据模型，我们经常就有根据各个维度进行汇总的需求。 基于标签聚合例如我们想知道我们的 demo 服务每秒处理的请求数，那么可以将单个的速率相加就可以。 1sum(rate(demo_api_request_duration_seconds_count&#123;job=&quot;demo&quot;&#125;[5m]))    可以得到如下所示的结果：  但是我们可以看到绘制出来的图形没有保留任何标签维度，一般来说可能我们希望保留一些维度，例如，我们可能更希望计算每个 instance 和 path 的变化率，但并不关心单个 method 或者 status 的结果，这个时候我们可以在 sum() 聚合器中添加一个 without() 的修饰符： 1sum without(method, status) (rate(demo_api_request_duration_seconds_count&#123;job=&quot;demo&quot;&#125;[5m]))    上面的查询语句相当于用 by() 修饰符来保留...</div></div></div></a><a class="pagination-related" href="/2025/09/11/%E7%9B%91%E6%8E%A7%20Pod/" title="监控 Pod"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">监控 Pod</div></div><div class="info-2"><div class="info-item-1">监控 Pod前面的 apiserver 实际上就是一种特殊的 Endpoints，现在我们同样来配置一个任务用来专门发现普通类型的 Endpoint，其实就是 Service 关联的 Pod 列表，由于并不是所有的 Endpoints 都会提供 metrics 接口，所以需要我们主动告诉 Prometheus 去发现哪些 Endpoints，当然告诉的方式有很多，不过约定俗成的一种方式是通过 annotations 注解进行通知，如下所示： 12345678910111213141516171819202122232425262728293031323334353637383940- job_name: &#x27;endpoints&#x27;  kubernetes_sd_configs:    - role: endpoints  relabel_configs:    # 保留 Service 的注解为 prometheus.io/scrape: true 的 Endpoints    - source_labels: [__meta_kubernetes_service...</div></div></div></a><a class="pagination-related" href="/2025/09/11/vmagent/" title="vmagent"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">vmagent</div></div><div class="info-2"><div class="info-item-1">vmagentvmagent 可以帮助我们从各种来源收集指标并将它们存储这 VM 或者任何其他支持 remote write 协议的 Prometheus 兼容的存储系统中。 特性vmagent 相比于 Prometheus 抓取指标来说具有更多的灵活性，比如除了拉取（pull）指标还可以推送（push）指标，此外还有很多其他特性：  可以替换 prometheus 的 scraping target 支持从 Kafka 读写数据 支持基于 prometheus relabeling 的模式添加、移除、修改 labels，可以在数据发送到远端存储之前进行数据的过滤 支持多种数据协议，influx line 协议，graphite 文本协议，opentsdb 协议，prometheus remote write 协议，json lines 协议，csv 数据等 支持收集数据的同时，并复制到多种远端存储系统 支持不可靠远端存储，如果远程存储不可用，收集的指标会在 -remoteWrite.tmpDataPath 缓冲，一旦与远程存储的连接被修复，缓冲的指标就会被发送到远程存储，缓冲区...</div></div></div></a><a class="pagination-related" href="/2025/09/11/%E5%BA%94%E7%94%A8%E7%9B%91%E6%8E%A7/" title="应用监控"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">应用监控</div></div><div class="info-2"><div class="info-item-1">应用监控前面我们和大家介绍了 Prometheus 的数据指标是通过一个公开的 HTTP(S) 数据接口获取到的，我们不需要单独安装监控的 agent，只需要暴露一个 metrics 接口，Prometheus 就会定期去拉取数据；对于一些普通的 HTTP 服务，我们完全可以直接重用这个服务，添加一个 /metrics 接口暴露给 Prometheus；而且获取到的指标数据格式是非常易懂的，不需要太高的学习成本。 现在很多服务从一开始就内置了一个 /metrics 接口，比如 Kubernetes 的各个组件都直接提供了数据指标接口，有一些服务即使没有原生集成该接口，也完全可以使用一些 exporter 来获取到指标数据，比如 mysqld_exporter、node_exporter，这些 exporter 就有点类似于传统监控服务中的 agent，作为服务一直存在，用来收集目标服务的指标数据然后直接暴露给 Prometheus。 普通应用对于普通应用只需要能够提供一个满足 Prometheus 格式要求的 /metrics 接口就可以让 Prometheus 来接管监控，比如...</div></div></div></a><a class="pagination-related" href="/2025/09/11/%E6%8E%92%E5%BA%8F/" title="排序"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">排序</div></div><div class="info-2"><div class="info-item-1">排序本节我们将学习如何对查询结果进行排序，或者只选择一组序列中最大或最小的值。 我们可以使用 sort()（升序） 或者 sort_desc()（降序）函数来实现对输出结果进行排序，例如，要显示按值排序的每个路径请求率，从最高到最低，我们可以用下面的语句进行查询： 1sort_desc(sum by(path) (rate(demo_api_request_duration_seconds_count&#123;job=&quot;demo&quot;&#125;[5m])))   有的时候我们并不是对所有的时间序列感兴趣，只对最大或最小的几个序列感兴趣，我们可以使用 topk() 和 bottomk() 这两个运算符来操作，可以返回 K 个最大或最小的序列，比如只显示每个 path 和 method 的前三的请求率，我们可以使用下面的语句来查询。 1topk(3, sum by(path, method) (rate(demo_api_request_duration_seconds_count&#123;job=&quot;demo&quot;&#125;[5m])))   ...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/butterfly-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">六一</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">274</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">22</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">45</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%9B%B4%E6%96%B9%E5%9B%BE"><span class="toc-number">1.</span> <span class="toc-text">直方图</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%83%E4%B9%A0"><span class="toc-number">1.1.</span> <span class="toc-text">练习</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/02/27/hexo-beautify/" title="Hexo 博客美化笔记：从零搭建高颜值技术博客">Hexo 博客美化笔记：从零搭建高颜值技术博客</a><time datetime="2026-02-27T04:00:00.000Z" title="发表于 2026-02-27 12:00:00">2026-02-27</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/09/11/Jenkens-Blue%20Ocean%20%E6%8F%92%E4%BB%B6/" title="Jenkins Blue Ocean">Jenkins Blue Ocean</a><time datetime="2025-09-11T12:42:57.000Z" title="发表于 2025-09-11 20:42:57">2025-09-11</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/09/11/jenkins-jenkinsfile/" title="Jenkins Jenkinsfile">Jenkins Jenkinsfile</a><time datetime="2025-09-11T12:40:44.000Z" title="发表于 2025-09-11 20:40:44">2025-09-11</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/09/11/shell-trap/" title="Linux-trap">Linux-trap</a><time datetime="2025-09-11T12:40:44.000Z" title="发表于 2025-09-11 20:40:44">2025-09-11</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/09/11/shell-%E6%95%B0%E7%BB%84/" title="Shell-数组">Shell-数组</a><time datetime="2025-09-11T12:40:44.000Z" title="发表于 2025-09-11 20:40:44">2025-09-11</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By 六一</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.4</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body></html>

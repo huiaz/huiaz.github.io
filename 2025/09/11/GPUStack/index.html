@@ -1,277 +1,167 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
-<meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 7.3.0">
-  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
-  <link rel="mask-icon" href="/images/logo.svg" color="#222">
-
-<link rel="stylesheet" href="/css/main.css">
-
-
-<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
-  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
-  <script src="/lib/pace/pace.min.js"></script>
-
-<script id="hexo-configurations">
-    var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
-  </script>
-
-  <meta name="description" content="GPUStack：打造企业级私有大模型服务的开源利器最近，一个国产开源项目凭借高质量的代码、飞快的迭代速度和简洁友好的操作体验正在悄然崛起。短短半年内，这个项目已经在国内外开源社区获得了众多的拥趸和生产用户。它就是今天要介绍的开源项目 - GPUStack。  GPUStack 是一个 100% 开源的大模型服务平台，用户只需要简单的设置，就可以高效整合包括 NVIDIA、Apple Metal、">
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>GPUStack | Hui's Blog</title><meta name="author" content="六一"><meta name="copyright" content="六一"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="GPUStack：打造企业级私有大模型服务的开源利器最近，一个国产开源项目凭借高质量的代码、飞快的迭代速度和简洁友好的操作体验正在悄然崛起。短短半年内，这个项目已经在国内外开源社区获得了众多的拥趸和生产用户。它就是今天要介绍的开源项目 - GPUStack。  GPUStack 是一个 100% 开源的大模型服务平台，用户只需要简单的设置，就可以高效整合包括 NVIDIA、Apple Metal、">
 <meta property="og:type" content="article">
 <meta property="og:title" content="GPUStack">
 <meta property="og:url" content="http://example.com/2025/09/11/GPUStack/index.html">
 <meta property="og:site_name" content="Hui&#39;s Blog">
 <meta property="og:description" content="GPUStack：打造企业级私有大模型服务的开源利器最近，一个国产开源项目凭借高质量的代码、飞快的迭代速度和简洁友好的操作体验正在悄然崛起。短短半年内，这个项目已经在国内外开源社区获得了众多的拥趸和生产用户。它就是今天要介绍的开源项目 - GPUStack。  GPUStack 是一个 100% 开源的大模型服务平台，用户只需要简单的设置，就可以高效整合包括 NVIDIA、Apple Metal、">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/jwaj7c.png">
-<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/jg4kme.png">
-<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/7tod66.png">
-<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/viof4w.png">
-<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/qqvxmg.png">
-<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/wly3px.png">
-<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/r7ed69.jpg">
-<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/ckxpr1.png">
-<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/vihhpo.png">
-<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/y8w2qv.png">
+<meta property="og:image" content="http://example.com/img/butterfly-icon.png">
 <meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
 <meta property="article:modified_time" content="2025-09-11T13:38:18.490Z">
 <meta property="article:author" content="六一">
 <meta property="article:tag" content="运维">
 <meta property="article:tag" content="AI">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://mudutestmenu.mudu.tv/upload/jwaj7c.png">
-
-<link rel="canonical" href="http://example.com/2025/09/11/GPUStack/">
-
-
-<script id="page-configurations">
-  // https://hexo.io/docs/variables.html
-  CONFIG.page = {
-    sidebar: "",
-    isHome : false,
-    isPost : true,
-    lang   : 'zh-CN'
-  };
-</script>
-
-  <title>GPUStack | Hui's Blog</title>
-  
-
-
-
-
-
-
-  <noscript>
-  <style>
-  .use-motion .brand,
-  .use-motion .menu-item,
-  .sidebar-inner,
-  .use-motion .post-block,
-  .use-motion .pagination,
-  .use-motion .comments,
-  .use-motion .post-header,
-  .use-motion .post-body,
-  .use-motion .collection-header { opacity: initial; }
-
-  .use-motion .site-title,
-  .use-motion .site-subtitle {
-    opacity: initial;
-    top: initial;
-  }
-
-  .use-motion .logo-line-before i { left: initial; }
-  .use-motion .logo-line-after i { right: initial; }
-  </style>
-</noscript>
-
-</head>
-
-<body itemscope itemtype="http://schema.org/WebPage">
-  <div class="container use-motion">
-    <div class="headband"></div>
-
-    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
-      <div class="header-inner"><div class="site-brand-container">
-  <div class="site-nav-toggle">
-    <div class="toggle" aria-label="切换导航栏">
-      <span class="toggle-line toggle-line-first"></span>
-      <span class="toggle-line toggle-line-middle"></span>
-      <span class="toggle-line toggle-line-last"></span>
-    </div>
-  </div>
-
-  <div class="site-meta">
-
-    <a href="/" class="brand" rel="start">
-      <span class="logo-line-before"><i></i></span>
-      <h1 class="site-title">Hui's Blog</h1>
-      <span class="logo-line-after"><i></i></span>
-    </a>
-      <p class="site-subtitle" itemprop="description">Code Life</p>
-  </div>
-
-  <div class="site-nav-right">
-    <div class="toggle popup-trigger">
-        <i class="fa fa-search fa-fw fa-lg"></i>
-    </div>
-  </div>
-</div>
-
-
-
-
-<nav class="site-nav">
-  <ul id="menu" class="main-menu menu">
-        <li class="menu-item menu-item-home">
-
-    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
-
-  </li>
-        <li class="menu-item menu-item-about">
-
-    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
-
-  </li>
-        <li class="menu-item menu-item-tags">
-
-    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
-
-  </li>
-        <li class="menu-item menu-item-categories">
-
-    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
-
-  </li>
-        <li class="menu-item menu-item-archives">
-
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
-
-  </li>
-      <li class="menu-item menu-item-search">
-        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
-        </a>
-      </li>
-  </ul>
-</nav>
-
-
-
-  <div class="search-pop-overlay">
-    <div class="popup search-popup">
-        <div class="search-header">
-  <span class="search-icon">
-    <i class="fa fa-search"></i>
-  </span>
-  <div class="search-input-container">
-    <input autocomplete="off" autocapitalize="off"
-           placeholder="搜索..." spellcheck="false"
-           type="search" class="search-input">
-  </div>
-  <span class="popup-btn-close">
-    <i class="fa fa-times-circle"></i>
-  </span>
-</div>
-<div id="search-result">
-  <div id="no-result">
-    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
-  </div>
-</div>
-
-    </div>
-  </div>
-
-</div>
-    </header>
-
-    
-
-
-    <main class="main">
-      <div class="main-inner">
-        <div class="content-wrap">
-          
-
-          <div class="content post posts-expand">
-            
-
-    
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/GPUStack/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="六一">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hui's Blog">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          GPUStack
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:38:18" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/k8s/%E5%A4%A7%E6%A8%A1%E5%9E%8B/" itemprop="url" rel="index"><span itemprop="name">大模型</span></a>
-                </span>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>5.9k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>5 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
+<meta name="twitter:image" content="http://example.com/img/butterfly-icon.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "GPUStack",
+  "url": "http://example.com/2025/09/11/GPUStack/",
+  "image": "http://example.com/img/butterfly-icon.png",
+  "datePublished": "2025-09-11T12:32:34.000Z",
+  "dateModified": "2025-09-11T13:38:18.490Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "六一",
+      "url": "http://example.com"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://example.com/2025/09/11/GPUStack/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
       
-        <h1 id="GPUStack：打造企业级私有大模型服务的开源利器"><a href="#GPUStack：打造企业级私有大模型服务的开源利器" class="headerlink" title="GPUStack：打造企业级私有大模型服务的开源利器"></a>GPUStack：打造企业级私有大模型服务的开源利器</h1><p>最近，一个国产开源项目凭借高质量的代码、飞快的迭代速度和简洁友好的操作体验正在悄然崛起。短短半年内，这个项目已经在国内外开源社区获得了众多的拥趸和生产用户。它就是今天要介绍的开源项目 - <strong>GPUStack</strong>。</p>
-<p><img data-src="https://mudutestmenu.mudu.tv/upload/jwaj7c.png" alt="GPUStack"></p>
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'GPUStack',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/butterfly-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">274</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">22</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">45</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Hui's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">GPUStack</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user"></i><span> About</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">GPUStack</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-09-11T12:32:34.000Z" title="发表于 2025-09-11 20:32:34">2025-09-11</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-09-11T13:38:18.490Z" title="更新于 2025-09-11 21:38:18">2025-09-11</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/k8s/">k8s</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/k8s/%E5%A4%A7%E6%A8%A1%E5%9E%8B/">大模型</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="GPUStack：打造企业级私有大模型服务的开源利器"><a href="#GPUStack：打造企业级私有大模型服务的开源利器" class="headerlink" title="GPUStack：打造企业级私有大模型服务的开源利器"></a>GPUStack：打造企业级私有大模型服务的开源利器</h1><p>最近，一个国产开源项目凭借高质量的代码、飞快的迭代速度和简洁友好的操作体验正在悄然崛起。短短半年内，这个项目已经在国内外开源社区获得了众多的拥趸和生产用户。它就是今天要介绍的开源项目 - <strong>GPUStack</strong>。</p>
+<p><img src="https://mudutestmenu.mudu.tv/upload/jwaj7c.png" alt="GPUStack"></p>
 <p><code>GPUStack</code> 是一个 100% 开源的大模型服务平台，用户只需要简单的设置，就可以高效整合包括 NVIDIA、Apple Metal、华为昇腾和摩尔线程在内的各种异构 GPU&#x2F;NPU 资源，构建异构 GPU 集群，在私有环境提供企业级的大模型部署解决方案。</p>
 <p><code>GPUStack</code> 支持私有化部署 RAG 系统和 AI Agent 系统所需的各种关键模型，包括 LLM 大语言模型、VLM 多模态模型、Embedding 文本嵌入模型、Rerank 重排序模型、Text-to-Image 文生图模型，以及 Speech-to-Text（STT）和 Text-to-Speech（TTS）语音模型等。并提供统一认证和高可用负载均衡的 OpenAI 兼容 API，供用户从各类大模型云服务无缝迁移到本地部署的私有大模型服务。</p>
 <blockquote>
@@ -303,40 +193,40 @@
 <p><strong>GPUStack</strong> 可以在 <strong>NVIDIA</strong>、<strong>Apple Metal</strong>、<strong>华为昇腾</strong>和<strong>摩尔线程</strong>等各种 GPU &#x2F; NPU 上运行 LLM。同时支持 vLLM 和 llama-box 后端使得 GPUStack 可以全面地覆盖从实验室研发测试场景到生产应用落地场景，从数据中心、云到桌面、边缘的各种环境。</p>
 <p>GPUStack 在 Playground 中提供了模型调测的能力，还支持多模型对比视图，可以同时对比多个模型的问答内容和性能数据，以评估不同模型、不同权重、不同 Prompt 参数、不同量化、不同 GPU、不同推理后端的模型推理表现。</p>
 <p>如果需要跟 RAG 系统或 AI Agent 系统集成，GPUStack 提供了 OpenAI 兼容的 API，可以通过 <code>View Code</code> 查看动态生成的 API 调用代码示例。</p>
-<p><img data-src="https://mudutestmenu.mudu.tv/upload/jg4kme.png" alt="img"></p>
-<p><img data-src="https://mudutestmenu.mudu.tv/upload/7tod66.png" alt="img"></p>
+<p><img src="https://mudutestmenu.mudu.tv/upload/jg4kme.png" alt="img"></p>
+<p><img src="https://mudutestmenu.mudu.tv/upload/7tod66.png" alt="img"></p>
 <ul>
 <li><strong>多模态模型</strong></li>
 </ul>
 <p>GPUStack 可以部署各种多模态模型，例如 Llama3.2-Vision、Pixtral、Qwen2-VL、LLaVA、InternVL2 等等，用于图像识别等任务，在 Playground 试验场中可以调测模型验证效果。</p>
-<p><img data-src="https://mudutestmenu.mudu.tv/upload/viof4w.png" alt="img"></p>
+<p><img src="https://mudutestmenu.mudu.tv/upload/viof4w.png" alt="img"></p>
 <ul>
 <li><strong>Embedding 文本嵌入模型</strong></li>
 </ul>
 <p>在 RAG 系统中，<strong>Embedding 模型</strong>用于将知识库中的文本转化为向量，存储到向量数据库。当用户提问时，问题同样会经过 Embedding 模型的向量化处理，通过计算向量距离在向量数据库中检索出最相关的上下文，并将其与用户问题一起传递给大模型。GPUStack <strong>支持在 Linux、Windows 和 macOS 平台的各种 GPU&#x2F;NPU 上</strong>部署 Embedding 模型。</p>
 <p>Playground 还可以对 <strong>Embedding 模型</strong>进行调测，提供直观的可视化分析。通过对嵌入向量进行 PCA（主成分分析）降维，用户能够在降维坐标空间中对比多段文本的距离，直观判断向量距离和文本相似度。</p>
-<p><img data-src="https://mudutestmenu.mudu.tv/upload/qqvxmg.png" alt="img"></p>
+<p><img src="https://mudutestmenu.mudu.tv/upload/qqvxmg.png" alt="img"></p>
 <ul>
 <li><strong>Rerank 重排模型</strong></li>
 </ul>
 <p>在 RAG 系统中，<strong>Rerank 模型</strong>用于对向量检索召回的多个上下文进行重排序，确保将最相关的上下文传递给大模型，从而提高回答的准确性。GPUStack <strong>支持在 Linux、Windows 和 macOS 平台的各种 GPU&#x2F;NPU 上</strong>部署 Rerank 模型。</p>
 <p>Playground 还可以对 <strong>Rerank 模型</strong>进行调测，提供直观的重排结果展示。用户可以输入 <strong>Query</strong> 和一组 <strong>Documents</strong>，模型会根据 Query 的内容对 Documents 进行排序，并返回每个文档的相关性得分。用户可以通过结果判断模型对输入的理解和排序的准确性。</p>
-<p><img data-src="https://mudutestmenu.mudu.tv/upload/wly3px.png" alt="img"></p>
+<p><img src="https://mudutestmenu.mudu.tv/upload/wly3px.png" alt="img"></p>
 <ul>
 <li><strong>文生图模型</strong></li>
 </ul>
 <p><strong>GPUStack</strong> 可以开箱即用地部署 <strong>Stable Diffusion</strong> 和 <strong>FLUX</strong> 等文生图模型，支持在 <strong>NVIDIA</strong>、<strong>Apple Metal</strong>、<strong>华为昇腾</strong>和<strong>摩尔线程</strong>等各种 GPU &#x2F; NPU 上运行文生图模型。并提供了 Playground 试验场供开发者调测图像生成的效果，从而试验不同模型的最佳实践参数配置。</p>
-<p><img data-src="https://mudutestmenu.mudu.tv/upload/r7ed69.jpg" alt="img"></p>
+<p><img src="https://mudutestmenu.mudu.tv/upload/r7ed69.jpg" alt="img"></p>
 <ul>
 <li><strong>Text-to-Speech（TTS）文本转语音模型</strong></li>
 </ul>
 <p><strong>GPUStack</strong> 可以在 NVIDIA GPU 或 CPU 上部署 Text-to-Speech（TTS）文本转语音模型，并提供了 Playground 试验场供开发者调测文本转语音的效果。</p>
-<p><img data-src="https://mudutestmenu.mudu.tv/upload/ckxpr1.png" alt="img"></p>
+<p><img src="https://mudutestmenu.mudu.tv/upload/ckxpr1.png" alt="img"></p>
 <ul>
 <li><strong>Speech-to-Text（STT）语音转文本模型</strong></li>
 </ul>
 <p><strong>GPUStack</strong> 可以在 NVIDIA GPU 或 CPU 上部署 Speech-to-Text（STT）语音转文本模型，并提供了 Playground 试验场供开发者调测语音转文本的效果。</p>
-<p><img data-src="https://mudutestmenu.mudu.tv/upload/vihhpo.png" alt="img"></p>
+<p><img src="https://mudutestmenu.mudu.tv/upload/vihhpo.png" alt="img"></p>
 <ul>
 <li><strong>集成对接能力</strong></li>
 </ul>
@@ -366,7 +256,7 @@
 
 <p>在浏览器访问 GPUStack UI，用户名 <strong>admin</strong>，密码为上面获得的初始密码。</p>
 <p>重新设置密码后，进入 GPUStack：</p>
-<p><img data-src="https://mudutestmenu.mudu.tv/upload/y8w2qv.png" alt="img"></p>
+<p><img src="https://mudutestmenu.mudu.tv/upload/y8w2qv.png" alt="img"></p>
 <h2 id="纳管-GPU-资源"><a href="#纳管-GPU-资源" class="headerlink" title="纳管 GPU 资源"></a>纳管 GPU 资源</h2><p><strong>GPUStack</strong> 可以纳管 Linux、Windows 和 macOS 设备的 GPU 资源，通过以下步骤来纳管这些 GPU 资源。</p>
 <p>其他节点需要通过认证 Token 加入 GPUStack 集群，在 GPUStack Server 节点执行以下命令获取 Token：</p>
 <p>在 <strong>Linux</strong> 或 <strong>macOS</strong> 上：</p>
@@ -383,225 +273,4 @@
 <figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$env:INSTALL_INDEX_URL</span> = <span class="string">&quot;https://pypi.tuna.tsinghua.edu.cn/simple&quot;</span></span><br><span class="line"><span class="built_in">Invoke-Expression</span> <span class="string">&quot;&amp; &#123; <span class="variable">$</span>((Invoke-WebRequest -Uri &quot;</span>https://get.gpustack.ai<span class="string">&quot; -UseBasicParsing).Content) &#125; -- --server-url http://YOUR_IP_ADDRESS --token YOUR_TOKEN --tools-download-base-url &#x27;https://gpustack-1303613262.cos.ap-guangzhou.myqcloud.com&#x27;&quot;</span></span><br></pre></td></tr></table></figure>
 
 <p>通过以上操作步骤，我们创建了一个 GPUStack 环境并纳管了多个 GPU 节点，后面就可以使用 GPUStack 来体验上面提及的各种功能了。</p>
-
-    </div>
-
-    
-    
-    
-
-      <footer class="post-footer">
-          <div class="post-tags">
-              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
-              <a href="/tags/AI/" rel="tag"># AI</a>
-          </div>
-
-        
-
-
-        
-    <div class="post-nav">
-      <div class="post-nav-item">
-    <a href="/2025/09/11/Gateway%20API/" rel="prev" title="Gateway API">
-      <i class="fa fa-chevron-left"></i> Gateway API
-    </a></div>
-      <div class="post-nav-item">
-    <a href="/2025/09/11/Dockerfile%20%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5/" rel="next" title="Dockerfile 最佳实践">
-      Dockerfile 最佳实践 <i class="fa fa-chevron-right"></i>
-    </a></div>
-    </div>
-      </footer>
-    
-  </article>
-  
-  
-  
-
-
-
-          </div>
-          
-
-<script>
-  window.addEventListener('tabs:register', () => {
-    let { activeClass } = CONFIG.comments;
-    if (CONFIG.comments.storage) {
-      activeClass = localStorage.getItem('comments_active') || activeClass;
-    }
-    if (activeClass) {
-      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
-      if (activeTab) {
-        activeTab.click();
-      }
-    }
-  });
-  if (CONFIG.comments.storage) {
-    window.addEventListener('tabs:click', event => {
-      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
-      let commentClass = event.target.classList[1];
-      localStorage.setItem('comments_active', commentClass);
-    });
-  }
-</script>
-
-        </div>
-          
-  
-  <div class="toggle sidebar-toggle">
-    <span class="toggle-line toggle-line-first"></span>
-    <span class="toggle-line toggle-line-middle"></span>
-    <span class="toggle-line toggle-line-last"></span>
-  </div>
-
-  <aside class="sidebar">
-    <div class="sidebar-inner">
-
-      <ul class="sidebar-nav motion-element">
-        <li class="sidebar-nav-toc">
-          文章目录
-        </li>
-        <li class="sidebar-nav-overview">
-          站点概览
-        </li>
-      </ul>
-
-      <!--noindex-->
-      <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#GPUStack%EF%BC%9A%E6%89%93%E9%80%A0%E4%BC%81%E4%B8%9A%E7%BA%A7%E7%A7%81%E6%9C%89%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%9C%8D%E5%8A%A1%E7%9A%84%E5%BC%80%E6%BA%90%E5%88%A9%E5%99%A8"><span class="nav-number">1.</span> <span class="nav-text">GPUStack：打造企业级私有大模型服务的开源利器</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#GPUStack-%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.1.</span> <span class="nav-text">GPUStack 介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85-GPUStack"><span class="nav-number">1.2.</span> <span class="nav-text">安装 GPUStack</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BA%B3%E7%AE%A1-GPU-%E8%B5%84%E6%BA%90"><span class="nav-number">1.3.</span> <span class="nav-text">纳管 GPU 资源</span></a></li></ol></li></ol></div>
-      </div>
-      <!--/noindex-->
-
-      <div class="site-overview-wrap sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
-  <p class="site-author-name" itemprop="name">六一</p>
-  <div class="site-description" itemprop="description"></div>
-</div>
-<div class="site-state-wrap motion-element">
-  <nav class="site-state">
-      <div class="site-state-item site-state-posts">
-          <a href="/archives/">
-        
-          <span class="site-state-item-count">273</span>
-          <span class="site-state-item-name">日志</span>
-        </a>
-      </div>
-      <div class="site-state-item site-state-categories">
-            <a href="/categories/">
-          
-        <span class="site-state-item-count">44</span>
-        <span class="site-state-item-name">分类</span></a>
-      </div>
-      <div class="site-state-item site-state-tags">
-            <a href="/tags/">
-          
-        <span class="site-state-item-count">19</span>
-        <span class="site-state-item-name">标签</span></a>
-      </div>
-  </nav>
-</div>
-  <div class="links-of-author motion-element">
-      <span class="links-of-author-item">
-        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
-      </span>
-  </div>
-
-
-
-      </div>
-        <div class="back-to-top motion-element">
-          <i class="fa fa-arrow-up"></i>
-          <span>0%</span>
-        </div>
-
-    </div>
-  </aside>
-  <div id="sidebar-dimmer"></div>
-
-
-      </div>
-    </main>
-
-    <footer class="footer">
-      <div class="footer-inner">
-        
-
-        
-
-<div class="copyright">
-  
-  &copy; 
-  <span itemprop="copyrightYear">2025</span>
-  <span class="with-love">
-    <i class="fa fa-heart"></i>
-  </span>
-  <span class="author" itemprop="copyrightHolder">六一</span>
-    <span class="post-meta-divider">|</span>
-    <span class="post-meta-item-icon">
-      <i class="fa fa-chart-area"></i>
-    </span>
-    <span title="站点总字数">1.7m</span>
-    <span class="post-meta-divider">|</span>
-    <span class="post-meta-item-icon">
-      <i class="fa fa-coffee"></i>
-    </span>
-    <span title="站点阅读时长">25:34</span>
-</div>
-
-        
-
-
-
-
-
-
-
-
-      </div>
-    </footer>
-  </div>
-
-  
-  <script src="/lib/anime.min.js"></script>
-  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
-  <script src="/lib/velocity/velocity.min.js"></script>
-  <script src="/lib/velocity/velocity.ui.min.js"></script>
-
-<script src="/js/utils.js"></script>
-
-<script src="/js/motion.js"></script>
-
-
-<script src="/js/schemes/pisces.js"></script>
-
-
-<script src="/js/next-boot.js"></script>
-
-
-
-
-  
-
-
-
-
-  
-<script src="/js/local-search.js"></script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-  
-
-<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
-</html>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://example.com">六一</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://example.com/2025/09/11/GPUStack/">http://example.com/2025/09/11/GPUStack/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="http://example.com" target="_blank">Hui's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E8%BF%90%E7%BB%B4/">运维</a><a class="post-meta__tags" href="/tags/AI/">AI</a></div><div class="post-share"><div class="social-share" data-image="/img/butterfly-icon.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2025/09/11/Go%20%E6%9E%9A%E4%B8%BE%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95/" title="Go 枚举实现方法"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">Go 枚举实现方法</div></div><div class="info-2"><div class="info-item-1">其核心思想是：使用常量（const）和自定义类型（type）。  场景设定假设我们正在开发一个订单处理系统，订单有以下几种状态：  待处理 (Pending) 处理中 (InProgress) 已完成 (Completed) 已失败 (Failed)  第 1 步：使用常量（const）和 iota这是实现枚举的基础。iota 是一个特殊的常量，可以被编译器自动修改。在每个 const 声明中，iota 从 0 开始，每行递增 1。 12345678910111213141516171819package mainimport &quot;fmt&quot;const (    // iota 在这里是 0	StatusPending = iota     // iota 在这里是 1	StatusInProgress    // iota 在这里是 2	StatusCompleted    // iota 在这里是 3	StatusFailed)func main() &#123;    // 输出: 0 1 2 3	fmt.Println(StatusPending, Sta...</div></div></div></a><a class="pagination-related" href="/2025/09/11/Go%20%E5%BA%94%E7%94%A8%E7%A8%8B%E5%BA%8F/" title="Go 应用程序"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">Go 应用程序</div></div><div class="info-2"><div class="info-item-1">仪表化 Go 应用程序接下来我们将学习使用 Prometheus 的 Go 客户端库来为一个 Go 应用程序添加和暴露监控指标。 创建应用我们首先从一个最简单的 Go 应用程序开始，在端口 8080 的 /metrics 端点上暴露客户端库的默认指标。 先创建一个名为 instrument-demo 的目录，在该目录下面初始化项目： 12☸ ➜ mkdir instrument-demo &amp;&amp; cd instrument-demo☸ ➜ go mod init github.com/cnych/instrument-demo    上面的命令会在 instrument-demo 目录下面生成一个 go.mod 文件，在同目录下面新建一个 main.go 的入口文件，内容如下所示： 12345678910111213package mainimport (    &quot;net/http&quot;    &quot;github.com/prometheus/client_golang/prometheus/promhttp&quot;)func main()...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2025/09/11/%E5%9C%A8%20Kubernetes%20%E4%B8%8A%E9%83%A8%E7%BD%B2%20LLM%20%E5%A4%A7%E8%AF%AD%E8%A8%80%E6%A8%A1%E5%9E%8B/" title="在 Kubernetes 上部署 LLM 大语言模型"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">在 Kubernetes 上部署 LLM 大语言模型</div></div><div class="info-2"><div class="info-item-1">在 Kubernetes 上部署 LLM 大语言模型从今年开始，人们对大型语言模型 (LLM) 及其在 GPU 基础设施上的部署的兴趣显着增加。这种不断增长的热情是由人工智能和机器学习的进步推动的，这需要 GPU 能够有效提供大量的计算能力。GPU 领先制造商 Nvidia 的股价也因这一趋势而飙升。同样诞生了大量的大模型，对于这些模型的部署和管理也变得越来越重要，在这方面 Ollama 和 OpenUI 是一个不错的选择。 Ollama 是一个开源的机器学习模型部署工具，它可以帮助您将模型部署到生产环境中，简化大型语言模型 (LLM) 的管理和交互。Ollama 拥有各种一流的开源模型，例如 Llama 3、Phi 3、Mistral 等等，我们可以将 Ollama 看成是 Docker，但是专注于机器学习模型。  使用 Ollama 部署模型非常简单，就类似于使用 Docker 部署应用程序一样。但是，如果你对 CLI 不熟悉，那么使用 Ollama 会有点痛苦。为了解决这个问题，我们可以使用一个 open-webui 的项目，它提供了一个漂亮的界面，可以让您更轻松地部署模型...</div></div></div></a><a class="pagination-related" href="/2025/09/11/Linux%20%E6%8E%92%E6%9F%A5%E5%91%BD%E4%BB%A4/" title="Linux 排查命令"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">Linux 排查命令</div></div><div class="info-2"><div class="info-item-1">(1) 如何在 Linux 中查看系统资源使用情况？比如内存、CPU、网络端口。  一、 CPU 使用情况1. top 命令 (实时交互式)top 命令是最常用的 CPU 监控工具，它提供了一个实时更新的进程列表，并显示 CPU 使用率、内存使用率、进程 ID (PID)、用户、运行时间等信息。 1top  关键信息解读：  第一行（top line）： load average 显示了过去 1、5、15 分钟的系统平均负载。这是衡量系统忙碌程度的重要指标，数值大于 CPU 核心数时通常表示系统存在瓶颈。 第二行（Tasks）： 显示进程总数，以及运行、睡眠、停止和僵尸进程的数量。 第三行（Cpu(s)）： 显示 CPU 的使用率，各项指标含义如下： us (user): 用户空间程序的 CPU 使用率。 sy (system): 内核空间程序的 CPU 使用率。 ni (nice): 改变过优先级的用户进程的 CPU 使用率。 id (idle): 空闲 CPU 百分比。 wa (iowait): CPU 等待 I&#x2F;O 操作完成的百分比。 hi (hardware i...</div></div></div></a><a class="pagination-related" href="/2025/09/11/%E6%8C%87%E9%92%88%E6%8E%A5%E6%94%B6%E4%B8%8E%E5%80%BC%E6%8E%A5%E6%94%B6/" title="指针接收与值接收"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">指针接收与值接收</div></div><div class="info-2"><div class="info-item-1">您好，这是一个关于 Go 语言中方法集（Method Set）和接收器（Receiver）的重要问题，对于理解 Go 语言的面向对象特性至关重要。 核心答案让我们直接给出结论，然后进行详细解释：  非接口的任意类型 T 能调用 *T 的方法吗？  取决于 T 的“可寻址性 (addressability)”。如果 T 是一个可寻址的值（例如，一个变量），那么是的，它可以调用 *T 的方法，Go 会自动取其地址。如果 T 是一个不可寻址的值（例如，一个字面量或临时值），那么不能直接调用 *T 的方法。   反过来，*T 能调用 T 的方法吗？  是的，非接口的任意类型 *T 总是可以调用 T 的方法。 Go 会自动解引用。     详细解释：Go 语言的方法集规则Go 语言的方法集定义了给定类型可以调用的所有方法。理解这个概念是关键。 方法接收器的两种形式：  值接收器 (Value Receiver): func (t T) MethodName() &#123; ... &#125;  使用值接收器的方法，其作用在类型 T 的一个副本上。 如果方法内部修改了 t，这些修改不会影...</div></div></div></a><a class="pagination-related" href="/2025/09/11/jenkins-jenkinsfile/" title="Jenkins Jenkinsfile"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">Jenkins Jenkinsfile</div></div><div class="info-2"><div class="info-item-1">Jenkinsfile 的基本类型Jenkins Pipeline 目前支持两种语法类型：  Declarative Pipeline (声明式流水线) - 推荐：  结构化、更容易阅读和编写。 强制遵循特定语法，限制了某些 Groovy 结构的使用，但通常更不易出错。 适合大多数 CI&#x2F;CD 场景。 以 pipeline &#123; ... &#125; 块开始。   Scripted Pipeline (脚本式流水线) - 更灵活，但复杂：  基于传统的 Groovy 脚本。 提供了 Groovy 语言的完整能力，允许更复杂的逻辑和自定义行为。 学习曲线陡峭，调试难度大，更易出错。 以 node &#123; ... &#125; 块开始（或直接是 Groovy 脚本）。 通常用于声明式流水线无法满足的非常特定和高级的场景，或者作为共享库的一部分。    除非有特殊需求，强烈推荐使用 Declarative Pipeline。以下结构将主要围绕 Declarative Pipeline 展开。  Jenkinsfile (Declarative Pipeline)...</div></div></div></a><a class="pagination-related" href="/2025/09/11/%E5%9F%BA%E4%BA%8E%E6%96%87%E4%BB%B6%E7%9A%84%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0/" title="基于文件的服务发现"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">基于文件的服务发现</div></div><div class="info-2"><div class="info-item-1">基于文件的服务发现除了基于 Consul 的服务发现之外，Prometheus 也允许我们进行自定义的发现集成，可以通过 watch 一组本地文件来获取抓取目标以及标签信息，也就是我们常说的基于文件的服务发现方式。  基于文件的服务发现提供了一种更通用的方式来配置静态目标，并作为一个接口插入自定义服务发现机制。 它读取一组包含零个或多个 &lt;static_config&gt; 列表的文件，对所有定义的文件的变更通过磁盘监视被检测到并立即应用，文件可以以 YAML 或 JSON 格式提供。文件必须包含一个静态配置的列表: 123JSON json [ &#123; &quot;targets&quot;: [ &quot;&lt;host&gt;&quot;, ... ], &quot;labels&quot;: &#123; &quot;&lt;labelname&gt;&quot;: &quot;&lt;labelvalue&gt;&quot;, ... &#125; &#125;, ... ]YAML yaml - targets: [ - &#x27;&lt;host&...</div></div></div></a><a class="pagination-related" href="/2025/09/11/Kafka%20%E4%B8%AD%E5%85%B3%E4%BA%8E%E4%BA%8B%E5%8A%A1%E6%B6%88%E6%81%AF%E7%9A%84%E5%AE%9E%E7%8E%B0/" title="Kafka 中关于事务消息的实现"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">Kafka 中关于事务消息的实现</div></div><div class="info-2"><div class="info-item-1">Kafka 自 0.11.0 版本引入了事务（Transactions）功能，旨在提供端到端（End-to-End）的“精确一次（Exactly-Once）”语义。这与 RocketMQ 的事务消息（主要解决本地事务与消息发送的原子性）在设计目标和实现机制上有所不同。 Kafka 的事务功能主要解决以下两个问题：  原子写入： 保证生产者（Producer）向多个 Topic 的多个分区写入的一组消息是原子性的，要么全部写入成功并对消费者可见，要么全部失败并不可见。 原子读写： 结合消费者（Consumer）的偏移量提交，可以在一个事务中原子地处理“消费消息 -&gt; 处理逻辑 -&gt; 生产新消息 -&gt; 提交消费偏移量”这整个流程，从而实现“读取-处理-写入”的精确一次语义。   Kafka 事务消息的实现核心Kafka 的事务机制基于 两阶段提交（Two-Phase Commit, 2PC）的变种，但它是针对 Kafka 内部消息处理的 2PC，不直接涵盖外部数据库事务。 1. 前提：幂等生产者（Idempotent Producer）这是实现事务的基础。在 Kaf...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/butterfly-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">六一</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">274</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">22</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">45</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#GPUStack%EF%BC%9A%E6%89%93%E9%80%A0%E4%BC%81%E4%B8%9A%E7%BA%A7%E7%A7%81%E6%9C%89%E5%A4%A7%E6%A8%A1%E5%9E%8B%E6%9C%8D%E5%8A%A1%E7%9A%84%E5%BC%80%E6%BA%90%E5%88%A9%E5%99%A8"><span class="toc-number">1.</span> <span class="toc-text">GPUStack：打造企业级私有大模型服务的开源利器</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#GPUStack-%E4%BB%8B%E7%BB%8D"><span class="toc-number">1.1.</span> <span class="toc-text">GPUStack 介绍</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%89%E8%A3%85-GPUStack"><span class="toc-number">1.2.</span> <span class="toc-text">安装 GPUStack</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BA%B3%E7%AE%A1-GPU-%E8%B5%84%E6%BA%90"><span class="toc-number">1.3.</span> <span class="toc-text">纳管 GPU 资源</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/02/27/hexo-beautify/" title="Hexo 博客美化笔记：从零搭建高颜值技术博客">Hexo 博客美化笔记：从零搭建高颜值技术博客</a><time datetime="2026-02-27T04:00:00.000Z" title="发表于 2026-02-27 12:00:00">2026-02-27</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/09/11/Jenkens-Blue%20Ocean%20%E6%8F%92%E4%BB%B6/" title="Jenkins Blue Ocean">Jenkins Blue Ocean</a><time datetime="2025-09-11T12:42:57.000Z" title="发表于 2025-09-11 20:42:57">2025-09-11</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/09/11/jenkins-jenkinsfile/" title="Jenkins Jenkinsfile">Jenkins Jenkinsfile</a><time datetime="2025-09-11T12:40:44.000Z" title="发表于 2025-09-11 20:40:44">2025-09-11</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/09/11/shell-trap/" title="Linux-trap">Linux-trap</a><time datetime="2025-09-11T12:40:44.000Z" title="发表于 2025-09-11 20:40:44">2025-09-11</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/09/11/shell-%E6%95%B0%E7%BB%84/" title="Shell-数组">Shell-数组</a><time datetime="2025-09-11T12:40:44.000Z" title="发表于 2025-09-11 20:40:44">2025-09-11</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By 六一</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.4</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body></html>

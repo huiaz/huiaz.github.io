@@ -1,271 +1,169 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
-<meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 7.3.0">
-  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
-  <link rel="mask-icon" href="/images/logo.svg" color="#222">
-
-<link rel="stylesheet" href="/css/main.css">
-
-
-<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
-  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
-  <script src="/lib/pace/pace.min.js"></script>
-
-<script id="hexo-configurations">
-    var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
-  </script>
-
-  <meta name="description" content="彻底搞懂 K8S Pod Pending 故障原因及解决方案即使在高成熟度级别 Kubernetes 集群中 pod pending 也是无处不在。 如果您随机询问任何使用 Kubernetes DevOps 工程师来确定折磨他们噩梦的最常见错误，pod pending 可能是非常常见的问题（可能仅次于 CrashLoopBackOff）。 尝试推送更新并看到它卡住会使 DevOps 紧张。即使解">
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>POD Pending | Hui's Blog</title><meta name="author" content="六一"><meta name="copyright" content="六一"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="彻底搞懂 K8S Pod Pending 故障原因及解决方案即使在高成熟度级别 Kubernetes 集群中 pod pending 也是无处不在。 如果您随机询问任何使用 Kubernetes DevOps 工程师来确定折磨他们噩梦的最常见错误，pod pending 可能是非常常见的问题（可能仅次于 CrashLoopBackOff）。 尝试推送更新并看到它卡住会使 DevOps 紧张。即使解">
 <meta property="og:type" content="article">
 <meta property="og:title" content="POD Pending">
 <meta property="og:url" content="http://example.com/2025/09/11/POD%20Pending/index.html">
 <meta property="og:site_name" content="Hui&#39;s Blog">
 <meta property="og:description" content="彻底搞懂 K8S Pod Pending 故障原因及解决方案即使在高成熟度级别 Kubernetes 集群中 pod pending 也是无处不在。 如果您随机询问任何使用 Kubernetes DevOps 工程师来确定折磨他们噩梦的最常见错误，pod pending 可能是非常常见的问题（可能仅次于 CrashLoopBackOff）。 尝试推送更新并看到它卡住会使 DevOps 紧张。即使解">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/sw044c.jpg">
-<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/hswjd7.jpg">
+<meta property="og:image" content="http://example.com/img/butterfly-icon.png">
 <meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
 <meta property="article:modified_time" content="2025-09-11T13:51:55.329Z">
 <meta property="article:author" content="六一">
 <meta property="article:tag" content="运维">
 <meta property="article:tag" content="k8s">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://mudutestmenu.mudu.tv/upload/sw044c.jpg">
-
-<link rel="canonical" href="http://example.com/2025/09/11/POD%20Pending/">
-
-
-<script id="page-configurations">
-  // https://hexo.io/docs/variables.html
-  CONFIG.page = {
-    sidebar: "",
-    isHome : false,
-    isPost : true,
-    lang   : 'zh-CN'
-  };
-</script>
-
-  <title>POD Pending | Hui's Blog</title>
-  
-
-
-
-
-
-
-  <noscript>
-  <style>
-  .use-motion .brand,
-  .use-motion .menu-item,
-  .sidebar-inner,
-  .use-motion .post-block,
-  .use-motion .pagination,
-  .use-motion .comments,
-  .use-motion .post-header,
-  .use-motion .post-body,
-  .use-motion .collection-header { opacity: initial; }
-
-  .use-motion .site-title,
-  .use-motion .site-subtitle {
-    opacity: initial;
-    top: initial;
-  }
-
-  .use-motion .logo-line-before i { left: initial; }
-  .use-motion .logo-line-after i { right: initial; }
-  </style>
-</noscript>
-
-</head>
-
-<body itemscope itemtype="http://schema.org/WebPage">
-  <div class="container use-motion">
-    <div class="headband"></div>
-
-    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
-      <div class="header-inner"><div class="site-brand-container">
-  <div class="site-nav-toggle">
-    <div class="toggle" aria-label="切换导航栏">
-      <span class="toggle-line toggle-line-first"></span>
-      <span class="toggle-line toggle-line-middle"></span>
-      <span class="toggle-line toggle-line-last"></span>
-    </div>
-  </div>
-
-  <div class="site-meta">
-
-    <a href="/" class="brand" rel="start">
-      <span class="logo-line-before"><i></i></span>
-      <h1 class="site-title">Hui's Blog</h1>
-      <span class="logo-line-after"><i></i></span>
-    </a>
-      <p class="site-subtitle" itemprop="description">Code Life</p>
-  </div>
-
-  <div class="site-nav-right">
-    <div class="toggle popup-trigger">
-        <i class="fa fa-search fa-fw fa-lg"></i>
-    </div>
-  </div>
-</div>
-
-
-
-
-<nav class="site-nav">
-  <ul id="menu" class="main-menu menu">
-        <li class="menu-item menu-item-home">
-
-    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
-
-  </li>
-        <li class="menu-item menu-item-about">
-
-    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
-
-  </li>
-        <li class="menu-item menu-item-tags">
-
-    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
-
-  </li>
-        <li class="menu-item menu-item-categories">
-
-    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
-
-  </li>
-        <li class="menu-item menu-item-archives">
-
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
-
-  </li>
-      <li class="menu-item menu-item-search">
-        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
-        </a>
-      </li>
-  </ul>
-</nav>
-
-
-
-  <div class="search-pop-overlay">
-    <div class="popup search-popup">
-        <div class="search-header">
-  <span class="search-icon">
-    <i class="fa fa-search"></i>
-  </span>
-  <div class="search-input-container">
-    <input autocomplete="off" autocapitalize="off"
-           placeholder="搜索..." spellcheck="false"
-           type="search" class="search-input">
-  </div>
-  <span class="popup-btn-close">
-    <i class="fa fa-times-circle"></i>
-  </span>
-</div>
-<div id="search-result">
-  <div id="no-result">
-    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
-  </div>
-</div>
-
-    </div>
-  </div>
-
-</div>
-    </header>
-
-    
-
-
-    <main class="main">
-      <div class="main-inner">
-        <div class="content-wrap">
-          
-
-          <div class="content post posts-expand">
-            
-
-    
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/POD%20Pending/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="六一">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hui's Blog">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          POD Pending
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：21:51:55" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/k8s/%E9%9D%A2%E8%AF%95%E9%A2%98/" itemprop="url" rel="index"><span itemprop="name">面试题</span></a>
-                </span>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>8.5k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>8 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
+<meta name="twitter:image" content="http://example.com/img/butterfly-icon.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "POD Pending",
+  "url": "http://example.com/2025/09/11/POD%20Pending/",
+  "image": "http://example.com/img/butterfly-icon.png",
+  "datePublished": "2025-09-11T12:32:34.000Z",
+  "dateModified": "2025-09-11T13:51:55.329Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "六一",
+      "url": "http://example.com"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://example.com/2025/09/11/POD%20Pending/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
       
-        <h1 id="彻底搞懂-K8S-Pod-Pending-故障原因及解决方案"><a href="#彻底搞懂-K8S-Pod-Pending-故障原因及解决方案" class="headerlink" title="彻底搞懂 K8S Pod Pending 故障原因及解决方案"></a>彻底搞懂 K8S Pod Pending 故障原因及解决方案</h1><p>即使在高成熟度级别 Kubernetes 集群中 pod pending 也是无处不在。</p>
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'POD Pending',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/butterfly-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">274</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">22</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">45</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Hui's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">POD Pending</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user"></i><span> About</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">POD Pending</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-09-11T12:32:34.000Z" title="发表于 2025-09-11 20:32:34">2025-09-11</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-09-11T13:51:55.329Z" title="更新于 2025-09-11 21:51:55">2025-09-11</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/k8s/">k8s</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/k8s/%E9%9D%A2%E8%AF%95%E9%A2%98/">面试题</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="彻底搞懂-K8S-Pod-Pending-故障原因及解决方案"><a href="#彻底搞懂-K8S-Pod-Pending-故障原因及解决方案" class="headerlink" title="彻底搞懂 K8S Pod Pending 故障原因及解决方案"></a>彻底搞懂 K8S Pod Pending 故障原因及解决方案</h1><p>即使在高成熟度级别 Kubernetes 集群中 pod pending 也是无处不在。</p>
 <p>如果您随机询问任何使用 Kubernetes DevOps 工程师来确定折磨他们噩梦的最常见错误，pod pending 可能是非常常见的问题（可能仅次于 CrashLoopBackOff）。</p>
 <p>尝试推送更新并看到它卡住会使 DevOps 紧张。即使解决方案相当简单，找到 pod 挂起的原因并了解您需要应用的更改也很重要（Kubernetes 故障排除很少是微不足道的）。</p>
-<p><img data-src="https://mudutestmenu.mudu.tv/upload/sw044c.jpg" alt="图片"></p>
+<p><img src="https://mudutestmenu.mudu.tv/upload/sw044c.jpg" alt="图片"></p>
 <p>在本文中，我们将阐明导致此问题的不同情况，让 DevOps 团队能够快速找到解决方案，最重要的是，尽可能避免它。</p>
 <h3 id="Kubernetes-Pod-pending-是什么意思？"><a href="#Kubernetes-Pod-pending-是什么意思？" class="headerlink" title="Kubernetes Pod pending 是什么意思？"></a>Kubernetes Pod pending 是什么意思？</h3><p>Kubernetes 中的 Pod 的生命周期由几个不同的阶段组成：</p>
 <ul>
@@ -273,7 +171,7 @@
 <li>一旦 pod 被调度并且容器已经启动，pod 就会进入Running阶段。</li>
 </ul>
 <p>大多数 pod 只需要几秒钟就可以从 Pending 到 Running 并在该状态下度过大部分时间。</p>
-<p><img data-src="https://mudutestmenu.mudu.tv/upload/hswjd7.jpg" alt="图片"></p>
+<p><img src="https://mudutestmenu.mudu.tv/upload/hswjd7.jpg" alt="图片"></p>
 <p>至此，Pod 已被 Kubernetes 集群接受。但是一个或多个容器尚未准备好对外提供服务。这包括 Pod 等待调度所花费的时间以及通过网络下载容器镜像所花费的时间。</p>
 <p>当 pod 无法从 PendingtoRunning 阶段前进时，生命周期将停止并保留 pod，直到阻止它前进的问题得到修复。</p>
 <p>如果我们使用 kubectl 列出 pod，我们将看到显示 Kubernetes pod 挂起情况的输出：</p>
@@ -343,225 +241,4 @@
 <li>无法在节点中挂载卷，因为它尚未被另一个节点释放。这尤其发生在更新 statefulset 的过程中，挂载的卷必须与旧 pod 相同。</li>
 </ul>
 <h3 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h3><p>了解 pod 保持在该 Pending 阶段的原因是在 Kubernetes 中安全部署和更新工作负载的关键。能够快速定位问题并加快部署进度将为您省去一些麻烦并减少停机时间。</p>
-
-    </div>
-
-    
-    
-    
-
-      <footer class="post-footer">
-          <div class="post-tags">
-              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
-              <a href="/tags/k8s/" rel="tag"># k8s</a>
-          </div>
-
-        
-
-
-        
-    <div class="post-nav">
-      <div class="post-nav-item">
-    <a href="/2025/09/11/PPP%20%E5%8D%8F%E8%AE%AE/" rel="prev" title="PPP 协议">
-      <i class="fa fa-chevron-left"></i> PPP 协议
-    </a></div>
-      <div class="post-nav-item">
-    <a href="/2025/09/11/OPA/" rel="next" title="OPA">
-      OPA <i class="fa fa-chevron-right"></i>
-    </a></div>
-    </div>
-      </footer>
-    
-  </article>
-  
-  
-  
-
-
-
-          </div>
-          
-
-<script>
-  window.addEventListener('tabs:register', () => {
-    let { activeClass } = CONFIG.comments;
-    if (CONFIG.comments.storage) {
-      activeClass = localStorage.getItem('comments_active') || activeClass;
-    }
-    if (activeClass) {
-      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
-      if (activeTab) {
-        activeTab.click();
-      }
-    }
-  });
-  if (CONFIG.comments.storage) {
-    window.addEventListener('tabs:click', event => {
-      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
-      let commentClass = event.target.classList[1];
-      localStorage.setItem('comments_active', commentClass);
-    });
-  }
-</script>
-
-        </div>
-          
-  
-  <div class="toggle sidebar-toggle">
-    <span class="toggle-line toggle-line-first"></span>
-    <span class="toggle-line toggle-line-middle"></span>
-    <span class="toggle-line toggle-line-last"></span>
-  </div>
-
-  <aside class="sidebar">
-    <div class="sidebar-inner">
-
-      <ul class="sidebar-nav motion-element">
-        <li class="sidebar-nav-toc">
-          文章目录
-        </li>
-        <li class="sidebar-nav-overview">
-          站点概览
-        </li>
-      </ul>
-
-      <!--noindex-->
-      <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%BD%BB%E5%BA%95%E6%90%9E%E6%87%82-K8S-Pod-Pending-%E6%95%85%E9%9A%9C%E5%8E%9F%E5%9B%A0%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="nav-number">1.</span> <span class="nav-text">彻底搞懂 K8S Pod Pending 故障原因及解决方案</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Kubernetes-Pod-pending-%E6%98%AF%E4%BB%80%E4%B9%88%E6%84%8F%E6%80%9D%EF%BC%9F"><span class="nav-number">1.0.1.</span> <span class="nav-text">Kubernetes Pod pending 是什么意思？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8E%92%E6%9F%A5-Kubernetes-pod-Pending-%E7%9A%84%E5%B8%B8%E8%A7%81%E5%8E%9F%E5%9B%A0"><span class="nav-number">1.0.2.</span> <span class="nav-text">排查 Kubernetes pod Pending 的常见原因</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%B0%83%E5%BA%A6%E9%97%AE%E9%A2%98%E5%AF%BC%E8%87%B4-Kubernetes-Pod-Pending"><span class="nav-number">1.0.2.1.</span> <span class="nav-text">调度问题导致 Kubernetes Pod Pending</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BB%BB%E4%BD%95%E8%8A%82%E7%82%B9%E4%B8%AD%E9%83%BD%E6%B2%A1%E6%9C%89%E8%B6%B3%E5%A4%9F%E7%9A%84%E8%B5%84%E6%BA%90%E6%9D%A5%E5%88%86%E9%85%8D-pod"><span class="nav-number">1.0.2.1.1.</span> <span class="nav-text">任何节点中都没有足够的资源来分配 pod</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%B8%8D%E5%8F%AF%E8%B0%83%E5%BA%A6%E7%9A%84%E8%8A%82%E7%82%B9"><span class="nav-number">1.0.2.1.2.</span> <span class="nav-text">不可调度的节点</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%B1%A1%E7%82%B9%E5%92%8C%E5%AE%B9%E5%BF%8D%E5%BA%A6"><span class="nav-number">1.0.2.1.3.</span> <span class="nav-text">污点和容忍度</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%94%B1%E4%BA%8E%E9%95%9C%E5%83%8F%E9%97%AE%E9%A2%98%EF%BC%8CPod-Pending"><span class="nav-number">1.0.2.2.</span> <span class="nav-text">由于镜像问题，Pod Pending</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Kubernetes-Pod-%E7%94%B1%E4%BA%8E%E4%BE%9D%E8%B5%96%E9%97%AE%E9%A2%98%E8%80%8C%E6%8C%82%E8%B5%B7"><span class="nav-number">1.0.2.3.</span> <span class="nav-text">Kubernetes Pod 由于依赖问题而挂起</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%93%E8%AE%BA"><span class="nav-number">1.0.3.</span> <span class="nav-text">结论</span></a></li></ol></li></ol></li></ol></div>
-      </div>
-      <!--/noindex-->
-
-      <div class="site-overview-wrap sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
-  <p class="site-author-name" itemprop="name">六一</p>
-  <div class="site-description" itemprop="description"></div>
-</div>
-<div class="site-state-wrap motion-element">
-  <nav class="site-state">
-      <div class="site-state-item site-state-posts">
-          <a href="/archives/">
-        
-          <span class="site-state-item-count">273</span>
-          <span class="site-state-item-name">日志</span>
-        </a>
-      </div>
-      <div class="site-state-item site-state-categories">
-            <a href="/categories/">
-          
-        <span class="site-state-item-count">44</span>
-        <span class="site-state-item-name">分类</span></a>
-      </div>
-      <div class="site-state-item site-state-tags">
-            <a href="/tags/">
-          
-        <span class="site-state-item-count">19</span>
-        <span class="site-state-item-name">标签</span></a>
-      </div>
-  </nav>
-</div>
-  <div class="links-of-author motion-element">
-      <span class="links-of-author-item">
-        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
-      </span>
-  </div>
-
-
-
-      </div>
-        <div class="back-to-top motion-element">
-          <i class="fa fa-arrow-up"></i>
-          <span>0%</span>
-        </div>
-
-    </div>
-  </aside>
-  <div id="sidebar-dimmer"></div>
-
-
-      </div>
-    </main>
-
-    <footer class="footer">
-      <div class="footer-inner">
-        
-
-        
-
-<div class="copyright">
-  
-  &copy; 
-  <span itemprop="copyrightYear">2025</span>
-  <span class="with-love">
-    <i class="fa fa-heart"></i>
-  </span>
-  <span class="author" itemprop="copyrightHolder">六一</span>
-    <span class="post-meta-divider">|</span>
-    <span class="post-meta-item-icon">
-      <i class="fa fa-chart-area"></i>
-    </span>
-    <span title="站点总字数">1.7m</span>
-    <span class="post-meta-divider">|</span>
-    <span class="post-meta-item-icon">
-      <i class="fa fa-coffee"></i>
-    </span>
-    <span title="站点阅读时长">25:34</span>
-</div>
-
-        
-
-
-
-
-
-
-
-
-      </div>
-    </footer>
-  </div>
-
-  
-  <script src="/lib/anime.min.js"></script>
-  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
-  <script src="/lib/velocity/velocity.min.js"></script>
-  <script src="/lib/velocity/velocity.ui.min.js"></script>
-
-<script src="/js/utils.js"></script>
-
-<script src="/js/motion.js"></script>
-
-
-<script src="/js/schemes/pisces.js"></script>
-
-
-<script src="/js/next-boot.js"></script>
-
-
-
-
-  
-
-
-
-
-  
-<script src="/js/local-search.js"></script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-  
-
-<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
-</html>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://example.com">六一</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://example.com/2025/09/11/POD%20Pending/">http://example.com/2025/09/11/POD%20Pending/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="http://example.com" target="_blank">Hui's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E8%BF%90%E7%BB%B4/">运维</a><a class="post-meta__tags" href="/tags/k8s/">k8s</a></div><div class="post-share"><div class="social-share" data-image="/img/butterfly-icon.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2025/09/11/PPP%20%E5%8D%8F%E8%AE%AE/" title="PPP 协议"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">PPP 协议</div></div><div class="info-2"><div class="info-item-1">PPP 协议（点对点协议 &#x2F; Point-to-Point Protocol）PPP (Point-to-Point Protocol) 是一种用于在两个网络节点之间建立直接连接的数据链路层协议。它主要用于通过串行线缆（如电话线、ISDN、DSL、光纤）连接计算机到互联网，或者在路由器之间建立点对点连接。它是替代早期的 SLIP (Serial Line Internet Protocol) 协议而生的，并解决了 SLIP 的许多限制。 核心作用： PPP 提供了一种标准的方法来：  封装网络层数据包（如 IP 数据包），以便在点对点链路上传输。 建立、配置和测试数据链路连接的可靠性。 提供网络层地址协商（例如，分配 IP 地址）。 提供身份验证机制（可选）。  简而言之，PPP 就是在两点之间架起一座数据传输的桥梁，并确保桥梁能正常工作和通信。  PPP 协议的基本工作流程PPP 的工作流程分为几个阶段，通过使用不同的子协议来完成：  **链路控制协议 (LCP - Link Control Protocol)**：负责建立、配置和测试数据链路。 **网络控制协议 (...</div></div></div></a><a class="pagination-related" href="/2025/09/11/OPA/" title="OPA"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">OPA</div></div><div class="info-2"><div class="info-item-1">OPA 策略引擎Open Policy Agent 简称 OPA，是一种开源的通用策略代理引擎，是 CNCF 毕业的项目。OPA 提供了一种高级声明式语言 Rego，简化了策略规则的定义，以减轻程序中策略的决策负担。在微服务、Kubernetes、CI&#x2F;CD、API 网关等场景中均可以使用 OPA 来定义策略。  我们这里主要讲解在 Kubernetes 中如何集成 OPA，在 Kubernetes 中 OPA 是通过 Admission Controllers 来实现安全策略的。事实上使用 Pod 安全策略（要废弃了）来执行我们的安全策略并没有什么问题，然而，根据定义，PSP 只能应用于 pods。它们不能处理其他 Kubernetes 资源，如 Ingresses、Deployments、Services 等，OPA 的强大之处在于它可以应用于任何 Kubernetes 资源。OPA 作为一个准入控制器部署到 Kubernetes，它拦截发送到 APIServer 的 API 调用，并验证和&#x2F;或修改它们。你可以有一个统一的 OPA 策略，适用于系统的不同组...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2025/09/11/OPA/" title="OPA"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">OPA</div></div><div class="info-2"><div class="info-item-1">OPA 策略引擎Open Policy Agent 简称 OPA，是一种开源的通用策略代理引擎，是 CNCF 毕业的项目。OPA 提供了一种高级声明式语言 Rego，简化了策略规则的定义，以减轻程序中策略的决策负担。在微服务、Kubernetes、CI&#x2F;CD、API 网关等场景中均可以使用 OPA 来定义策略。  我们这里主要讲解在 Kubernetes 中如何集成 OPA，在 Kubernetes 中 OPA 是通过 Admission Controllers 来实现安全策略的。事实上使用 Pod 安全策略（要废弃了）来执行我们的安全策略并没有什么问题，然而，根据定义，PSP 只能应用于 pods。它们不能处理其他 Kubernetes 资源，如 Ingresses、Deployments、Services 等，OPA 的强大之处在于它可以应用于任何 Kubernetes 资源。OPA 作为一个准入控制器部署到 Kubernetes，它拦截发送到 APIServer 的 API 调用，并验证和&#x2F;或修改它们。你可以有一个统一的 OPA 策略，适用于系统的不同组...</div></div></div></a><a class="pagination-related" href="/2025/09/11/HPA/" title="HPA"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">HPA</div></div><div class="info-2"><div class="info-item-1">HPA 控制器在前面的学习中我们使用了一个 kubectl scale 命令可以来实现 Pod 的扩缩容功能，但是这个是完全手动操作的，要应对线上的各种复杂情况，我们需要能够做到自动化去感知业务，来自动进行扩缩容。为此，Kubernetes 也为我们提供了这样的一个资源对象：Horizontal Pod Autoscaling（Pod 水平自动伸缩），简称 HPA，HPA 通过监控分析一些控制器控制的所有 Pod 的负载变化情况来确定是否需要调整 Pod 的副本数量，这是 HPA 最基本的原理：  我们可以简单的通过 kubectl autoscale 命令来创建一个 HPA 资源对象，HPA Controller 默认30s轮询一次（可通过 kube-controller-manager 的--horizontal-pod-autoscaler-sync-period 参数进行设置），查询指定的资源中的 Pod 资源使用率，并且与创建时设定的值和指标做对比，从而实现自动伸缩的功能。 Metrics Server在 HPA 的第一个版本中，我们需要 Heapster 提供 CPU...</div></div></div></a><a class="pagination-related" href="/2025/09/11/Gitlab%20CI%20%E5%9C%A8%20Kubernetes%20%E4%B8%AD%E7%9A%84%20Docker%20%E7%BC%93%E5%AD%98/" title="Gitlab CI 在 Kubernetes 中的 Docker 缓存"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">Gitlab CI 在 Kubernetes 中的 Docker 缓存</div></div><div class="info-2"><div class="info-item-1">Gitlab CI 在 Kubernetes 中的 Docker 缓存前面我们有文章介绍过如何在 Kubernetes 集群中使用 GitLab CI 来实现 CI&#x2F;CD，在构建镜像的环节我们基本上都是使用的 Docker On Docker 的模式，这是因为 Kubernetes 集群使用的是 Docker 这种容器运行时，所以我们可以将宿主机的 docker.sock 文件挂载到容器中构建镜像，而最近我们在使用 Kubernetes 1.22.X 版本后将容器运行时更改为了 Containerd，这样节点上没有可用的 Docker 服务了，这个时候就需要更改构建镜像的模式了，当然要实现构建镜像的方式有很多，我们这里还是选择使用 Docker 来构建我们的 Docker 镜像，也就是使用 Docker IN Docker 的模式。 在每次构建镜像的时候，GitLab Runner 都会启动一个包含 3 个容器的 Pod，其中一个就是运行 Docker 守护进程的 Docker DIND 容器，构建的容器会去连接到运行在同一个 Pod 上的 Docker 守护进程，由于...</div></div></div></a><a class="pagination-related" href="/2025/09/11/k8s%20Deployment/" title="k8s Deployment"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">k8s Deployment</div></div><div class="info-2"><div class="info-item-1">Kubernetes 中的 Deployment 和 StatefulSet 有什么区别？🤔 分析过程：该问题旨在考察对Kubernetes中两种核心工作负载控制器（Workload Controllers）的理解和区分能力。一个优秀的回答不仅要罗列出功能上的差异，更要阐明这两种控制器在设计哲学上的根本不同，即它们分别是为了解决无状态应用（Stateless）和有状态应用（Stateful）这两大类问题的。本回答将通过一个清晰的对比表格来突出核心区别，并结合应用场景和选型指南，帮助面试者建立深刻的理解。 💡 答案生成：1. 核心概念定义 Deployment: 是Kubernetes中用于管理无状态应用的控制器。它确保指定数量的、完全相同的Pod副本（Replicas）处于运行状态。这些Pod是可互换的（Interchangeable&#x2F;Fungible），可以被随意地创建和销毁，而不会影响应用的整体状态。  StatefulSet: 是用于管理有状态应用的控制器。它为每个Pod提供唯一的、稳定的身份标识，并保证Pod的部署、伸缩和更新是有序的。这些Pod不是可互换的...</div></div></div></a><a class="pagination-related" href="/2025/09/11/Thanos%20sidecar/" title="Thanos sidecar"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">Thanos sidecar</div></div><div class="info-2"><div class="info-item-1">Thanos Sidecar 组件首先将前面章节中的 Prometheus 相关的资源对象全部删除，然后我们需要在 Prometheus 中去自动发现集群的一些资源对象，所以依然需要对应的 RBAC 权限声明： 1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253545556# prometheus-rbac.yamlapiVersion: v1kind: ServiceAccountmetadata:  name: prometheus  namespace: kube-mon---apiVersion: rbac.authorization.k8s.io/v1kind: ClusterRolemetadata:  name: prometheusrules:  - apiGroups:      - &quot;&quot;    resources:      - nodes      - services      - endpoi...</div></div></div></a><a class="pagination-related" href="/2025/09/11/%E8%81%9A%E5%90%88/" title="聚合"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">聚合</div></div><div class="info-2"><div class="info-item-1">聚合我们知道 Prometheus 的时间序列数据是多维数据模型，我们经常就有根据各个维度进行汇总的需求。 基于标签聚合例如我们想知道我们的 demo 服务每秒处理的请求数，那么可以将单个的速率相加就可以。 1sum(rate(demo_api_request_duration_seconds_count&#123;job=&quot;demo&quot;&#125;[5m]))    可以得到如下所示的结果：  但是我们可以看到绘制出来的图形没有保留任何标签维度，一般来说可能我们希望保留一些维度，例如，我们可能更希望计算每个 instance 和 path 的变化率，但并不关心单个 method 或者 status 的结果，这个时候我们可以在 sum() 聚合器中添加一个 without() 的修饰符： 1sum without(method, status) (rate(demo_api_request_duration_seconds_count&#123;job=&quot;demo&quot;&#125;[5m]))    上面的查询语句相当于用 by() 修饰符来保留...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/butterfly-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">六一</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">274</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">22</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">45</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%BD%BB%E5%BA%95%E6%90%9E%E6%87%82-K8S-Pod-Pending-%E6%95%85%E9%9A%9C%E5%8E%9F%E5%9B%A0%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="toc-number">1.</span> <span class="toc-text">彻底搞懂 K8S Pod Pending 故障原因及解决方案</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Kubernetes-Pod-pending-%E6%98%AF%E4%BB%80%E4%B9%88%E6%84%8F%E6%80%9D%EF%BC%9F"><span class="toc-number">1.0.1.</span> <span class="toc-text">Kubernetes Pod pending 是什么意思？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8E%92%E6%9F%A5-Kubernetes-pod-Pending-%E7%9A%84%E5%B8%B8%E8%A7%81%E5%8E%9F%E5%9B%A0"><span class="toc-number">1.0.2.</span> <span class="toc-text">排查 Kubernetes pod Pending 的常见原因</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%B0%83%E5%BA%A6%E9%97%AE%E9%A2%98%E5%AF%BC%E8%87%B4-Kubernetes-Pod-Pending"><span class="toc-number">1.0.2.1.</span> <span class="toc-text">调度问题导致 Kubernetes Pod Pending</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#%E4%BB%BB%E4%BD%95%E8%8A%82%E7%82%B9%E4%B8%AD%E9%83%BD%E6%B2%A1%E6%9C%89%E8%B6%B3%E5%A4%9F%E7%9A%84%E8%B5%84%E6%BA%90%E6%9D%A5%E5%88%86%E9%85%8D-pod"><span class="toc-number">1.0.2.1.1.</span> <span class="toc-text">任何节点中都没有足够的资源来分配 pod</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E4%B8%8D%E5%8F%AF%E8%B0%83%E5%BA%A6%E7%9A%84%E8%8A%82%E7%82%B9"><span class="toc-number">1.0.2.1.2.</span> <span class="toc-text">不可调度的节点</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E6%B1%A1%E7%82%B9%E5%92%8C%E5%AE%B9%E5%BF%8D%E5%BA%A6"><span class="toc-number">1.0.2.1.3.</span> <span class="toc-text">污点和容忍度</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%94%B1%E4%BA%8E%E9%95%9C%E5%83%8F%E9%97%AE%E9%A2%98%EF%BC%8CPod-Pending"><span class="toc-number">1.0.2.2.</span> <span class="toc-text">由于镜像问题，Pod Pending</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Kubernetes-Pod-%E7%94%B1%E4%BA%8E%E4%BE%9D%E8%B5%96%E9%97%AE%E9%A2%98%E8%80%8C%E6%8C%82%E8%B5%B7"><span class="toc-number">1.0.2.3.</span> <span class="toc-text">Kubernetes Pod 由于依赖问题而挂起</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BB%93%E8%AE%BA"><span class="toc-number">1.0.3.</span> <span class="toc-text">结论</span></a></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/02/27/hexo-beautify/" title="Hexo 博客美化笔记：从零搭建高颜值技术博客">Hexo 博客美化笔记：从零搭建高颜值技术博客</a><time datetime="2026-02-27T04:00:00.000Z" title="发表于 2026-02-27 12:00:00">2026-02-27</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/09/11/Jenkens-Blue%20Ocean%20%E6%8F%92%E4%BB%B6/" title="Jenkins Blue Ocean">Jenkins Blue Ocean</a><time datetime="2025-09-11T12:42:57.000Z" title="发表于 2025-09-11 20:42:57">2025-09-11</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/09/11/jenkins-jenkinsfile/" title="Jenkins Jenkinsfile">Jenkins Jenkinsfile</a><time datetime="2025-09-11T12:40:44.000Z" title="发表于 2025-09-11 20:40:44">2025-09-11</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/09/11/shell-trap/" title="Linux-trap">Linux-trap</a><time datetime="2025-09-11T12:40:44.000Z" title="发表于 2025-09-11 20:40:44">2025-09-11</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/09/11/shell-%E6%95%B0%E7%BB%84/" title="Shell-数组">Shell-数组</a><time datetime="2025-09-11T12:40:44.000Z" title="发表于 2025-09-11 20:40:44">2025-09-11</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By 六一</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.4</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body></html>

@@ -1,51 +1,11 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
-<meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 7.3.0">
-  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
-  <link rel="mask-icon" href="/images/logo.svg" color="#222">
-
-<link rel="stylesheet" href="/css/main.css">
-
-
-<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
-  <link rel="stylesheet" href="/lib/pace/pace-theme-bounce.min.css">
-  <script src="/lib/pace/pace.min.js"></script>
-
-<script id="hexo-configurations">
-    var NexT = window.NexT || {};
-    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":false,"style":"mac"},"back2top":{"enable":true,"sidebar":true,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
-  </script>
-
-  <meta name="description" content="CraneCrane 是一个基于 FinOps 的云资源分析与成本优化平台，它的愿景是在保证客户应用运行质量的前提下实现极致的降本。Crane 已经在腾讯内部自研业务实现了大规模落地，部署数百个 Kubernetes 集群、管控 CPU 核数达百万，在降本增效方面取得了阶段性成果。以腾讯某部门集群优化为例，通过使用 FinOps Crane，该部门在保障业务稳定的情况下，资源利用率提升了 3 倍；">
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Crane | Hui's Blog</title><meta name="author" content="六一"><meta name="copyright" content="六一"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="CraneCrane 是一个基于 FinOps 的云资源分析与成本优化平台，它的愿景是在保证客户应用运行质量的前提下实现极致的降本。Crane 已经在腾讯内部自研业务实现了大规模落地，部署数百个 Kubernetes 集群、管控 CPU 核数达百万，在降本增效方面取得了阶段性成果。以腾讯某部门集群优化为例，通过使用 FinOps Crane，该部门在保障业务稳定的情况下，资源利用率提升了 3 倍；">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Crane">
 <meta property="og:url" content="http://example.com/2025/09/11/Crane/index.html">
 <meta property="og:site_name" content="Hui&#39;s Blog">
 <meta property="og:description" content="CraneCrane 是一个基于 FinOps 的云资源分析与成本优化平台，它的愿景是在保证客户应用运行质量的前提下实现极致的降本。Crane 已经在腾讯内部自研业务实现了大规模落地，部署数百个 Kubernetes 集群、管控 CPU 核数达百万，在降本增效方面取得了阶段性成果。以腾讯某部门集群优化为例，通过使用 FinOps Crane，该部门在保障业务稳定的情况下，资源利用率提升了 3 倍；">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1666249414588.png">
-<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1666249357026.jpg">
-<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1666249962271.jpg">
-<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1666251698513.png">
-<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1666251839866.png">
-<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1666256619382.png">
-<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1666260576817.jpg">
-<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1666252873850.jpg">
-<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1666253982497.jpg">
-<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1666254060338.png">
-<meta property="og:image" content="https://mudutestmenu.mudu.tv/upload/2um5u9.jpg">
-<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1666261847798.jpg">
-<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1666938840993.jpg">
-<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1666422933054.png">
-<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1666921205654.jpg">
-<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1666938915729.jpg">
-<meta property="og:image" content="https://picdn.youdianzhishi.com/images/1666922649467.png">
+<meta property="og:image" content="http://example.com/img/butterfly-icon.png">
 <meta property="article:published_time" content="2025-09-11T12:32:34.000Z">
 <meta property="article:modified_time" content="2025-09-11T14:26:45.063Z">
 <meta property="article:author" content="六一">
@@ -53,233 +13,156 @@
 <meta property="article:tag" content="k8s">
 <meta property="article:tag" content="FinOps">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://picdn.youdianzhishi.com/images/1666249414588.png">
-
-<link rel="canonical" href="http://example.com/2025/09/11/Crane/">
-
-
-<script id="page-configurations">
-  // https://hexo.io/docs/variables.html
-  CONFIG.page = {
-    sidebar: "",
-    isHome : false,
-    isPost : true,
-    lang   : 'zh-CN'
-  };
-</script>
-
-  <title>Crane | Hui's Blog</title>
-  
-
-
-
-
-
-
-  <noscript>
-  <style>
-  .use-motion .brand,
-  .use-motion .menu-item,
-  .sidebar-inner,
-  .use-motion .post-block,
-  .use-motion .pagination,
-  .use-motion .comments,
-  .use-motion .post-header,
-  .use-motion .post-body,
-  .use-motion .collection-header { opacity: initial; }
-
-  .use-motion .site-title,
-  .use-motion .site-subtitle {
-    opacity: initial;
-    top: initial;
-  }
-
-  .use-motion .logo-line-before i { left: initial; }
-  .use-motion .logo-line-after i { right: initial; }
-  </style>
-</noscript>
-
-</head>
-
-<body itemscope itemtype="http://schema.org/WebPage">
-  <div class="container use-motion">
-    <div class="headband"></div>
-
-    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
-      <div class="header-inner"><div class="site-brand-container">
-  <div class="site-nav-toggle">
-    <div class="toggle" aria-label="切换导航栏">
-      <span class="toggle-line toggle-line-first"></span>
-      <span class="toggle-line toggle-line-middle"></span>
-      <span class="toggle-line toggle-line-last"></span>
-    </div>
-  </div>
-
-  <div class="site-meta">
-
-    <a href="/" class="brand" rel="start">
-      <span class="logo-line-before"><i></i></span>
-      <h1 class="site-title">Hui's Blog</h1>
-      <span class="logo-line-after"><i></i></span>
-    </a>
-      <p class="site-subtitle" itemprop="description">Code Life</p>
-  </div>
-
-  <div class="site-nav-right">
-    <div class="toggle popup-trigger">
-        <i class="fa fa-search fa-fw fa-lg"></i>
-    </div>
-  </div>
-</div>
-
-
-
-
-<nav class="site-nav">
-  <ul id="menu" class="main-menu menu">
-        <li class="menu-item menu-item-home">
-
-    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
-
-  </li>
-        <li class="menu-item menu-item-about">
-
-    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>关于</a>
-
-  </li>
-        <li class="menu-item menu-item-tags">
-
-    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
-
-  </li>
-        <li class="menu-item menu-item-categories">
-
-    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
-
-  </li>
-        <li class="menu-item menu-item-archives">
-
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
-
-  </li>
-      <li class="menu-item menu-item-search">
-        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
-        </a>
-      </li>
-  </ul>
-</nav>
-
-
-
-  <div class="search-pop-overlay">
-    <div class="popup search-popup">
-        <div class="search-header">
-  <span class="search-icon">
-    <i class="fa fa-search"></i>
-  </span>
-  <div class="search-input-container">
-    <input autocomplete="off" autocapitalize="off"
-           placeholder="搜索..." spellcheck="false"
-           type="search" class="search-input">
-  </div>
-  <span class="popup-btn-close">
-    <i class="fa fa-times-circle"></i>
-  </span>
-</div>
-<div id="search-result">
-  <div id="no-result">
-    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
-  </div>
-</div>
-
-    </div>
-  </div>
-
-</div>
-    </header>
-
-    
-
-
-    <main class="main">
-      <div class="main-inner">
-        <div class="content-wrap">
-          
-
-          <div class="content post posts-expand">
-            
-
-    
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2025/09/11/Crane/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="六一">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Hui's Blog">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          Crane
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2025-09-11 20:32:34 / 修改时间：22:26:45" itemprop="dateCreated datePublished" datetime="2025-09-11T20:32:34+08:00">2025-09-11</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/k8s/" itemprop="url" rel="index"><span itemprop="name">k8s</span></a>
-                </span>
-                  ，
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/k8s/%E5%85%B6%E4%BB%96/" itemprop="url" rel="index"><span itemprop="name">其他</span></a>
-                </span>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>49k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>45 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
+<meta name="twitter:image" content="http://example.com/img/butterfly-icon.png"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Crane",
+  "url": "http://example.com/2025/09/11/Crane/",
+  "image": "http://example.com/img/butterfly-icon.png",
+  "datePublished": "2025-09-11T12:32:34.000Z",
+  "dateModified": "2025-09-11T14:26:45.063Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "六一",
+      "url": "http://example.com"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://example.com/2025/09/11/Crane/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.4"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.1.0/css/all.min.css"><script>
+    (() => {
       
-        <h1 id="Crane"><a href="#Crane" class="headerlink" title="Crane"></a>Crane</h1><p><a target="_blank" rel="noopener" href="https://gocrane.io/">Crane</a> 是一个基于 FinOps 的云资源分析与成本优化平台，它的愿景是在保证客户应用运行质量的前提下实现极致的降本。Crane 已经在腾讯内部自研业务实现了大规模落地，部署数百个 Kubernetes 集群、管控 CPU 核数达百万，在降本增效方面取得了阶段性成果。以腾讯某部门集群优化为例，通过使用 FinOps Crane，该部门在保障业务稳定的情况下，资源利用率提升了 3 倍；腾讯另一自研业务落地 Crane 后，在一个月内实现了总 CPU 规模 40 万核的节省量，相当于成本节约超 1000 万元&#x2F;月。</p>
-<p><img data-src="https://picdn.youdianzhishi.com/images/1666249414588.png" alt="FinOps"></p>
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Crane',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/butterfly-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">274</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">22</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">45</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Hui's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Crane</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-user"></i><span> About</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Crane</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-09-11T12:32:34.000Z" title="发表于 2025-09-11 20:32:34">2025-09-11</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-09-11T14:26:45.063Z" title="更新于 2025-09-11 22:26:45">2025-09-11</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/k8s/">k8s</a><i class="fas fa-angle-right post-meta-separator"></i><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/k8s/%E5%85%B6%E4%BB%96/">其他</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="Crane"><a href="#Crane" class="headerlink" title="Crane"></a>Crane</h1><p><a target="_blank" rel="noopener" href="https://gocrane.io/">Crane</a> 是一个基于 FinOps 的云资源分析与成本优化平台，它的愿景是在保证客户应用运行质量的前提下实现极致的降本。Crane 已经在腾讯内部自研业务实现了大规模落地，部署数百个 Kubernetes 集群、管控 CPU 核数达百万，在降本增效方面取得了阶段性成果。以腾讯某部门集群优化为例，通过使用 FinOps Crane，该部门在保障业务稳定的情况下，资源利用率提升了 3 倍；腾讯另一自研业务落地 Crane 后，在一个月内实现了总 CPU 规模 40 万核的节省量，相当于成本节约超 1000 万元&#x2F;月。</p>
+<p><img src="https://picdn.youdianzhishi.com/images/1666249414588.png" alt="FinOps"></p>
 <blockquote>
 <p>FinOps 是将 DevOps、财务和业务整合在一起的变革，其目标在于优化一个组织在云计算上的支出的财务规范和技术解决方案，即根据支出的历史记录和来自预期负载的信息，FinOps 可以在需要时预分配资源或估算成本。FinOps 可以称为“财务运维” ，或者更直白地称为“成本优化”，是将财务问责制引入云的 IT 支持，进行调整以优化质量和支出。</p>
 </blockquote>
@@ -289,7 +172,7 @@
 <li>成本分析: 周期性的分析集群资源的状态并提供优化建议。</li>
 <li>成本优化: 通过丰富的优化工具更新配置达成降本的目标。</li>
 </ul>
-<p><img data-src="https://picdn.youdianzhishi.com/images/1666249357026.jpg" alt="Crane整体架构"></p>
+<p><img src="https://picdn.youdianzhishi.com/images/1666249357026.jpg" alt="Crane整体架构"></p>
 <p><strong>成本可视化和优化评估</strong></p>
 <ul>
 <li>提供一组 Exporter 计算集群云资源的计费和账单数据并存储到你的监控系统，比如 Prometheus。</li>
@@ -312,7 +195,7 @@
 <li><code>QOS</code> 相关能力保证了运行在 Kubernetes 上的 Pod 的稳定性。具有多维指标条件下的干扰检测和主动回避能力，支持精确操作和自定义指标接入；具有预测算法增强的弹性资源超卖能力，复用和限制集群内的空闲资源；具备增强的旁路 cpuset 管理能力，在绑核的同时提升资源利用效率。</li>
 </ul>
 <h2 id="架构"><a href="#架构" class="headerlink" title="架构"></a>架构</h2><p>Crane 的整体架构如下图所示：</p>
-<p><img data-src="https://picdn.youdianzhishi.com/images/1666249962271.jpg" alt="架构"></p>
+<p><img src="https://picdn.youdianzhishi.com/images/1666249962271.jpg" alt="架构"></p>
 <p><strong>Craned</strong>：Craned 是 Crane 的最核心组件，它管理了 CRDs 的生命周期以及 API，Craned 通过 Deployment 方式部署且由两个容器组成：</p>
 <ul>
 <li>Craned: 运行了 Operators 用来管理 CRDs，向 Dashboard 提供 WebApi，Predictors 提供了 TimeSeries API</li>
@@ -364,17 +247,17 @@
 
 
 <p>将 <code>crane.k8s.local</code> 映射到 <code>192.168.0.52</code> 后就可以访问 crane 的 dashboard 了：</p>
-<p><img data-src="https://picdn.youdianzhishi.com/images/1666251698513.png" alt="crane dashboard"></p>
+<p><img src="https://picdn.youdianzhishi.com/images/1666251698513.png" alt="crane dashboard"></p>
 <p>第一次访问 dashboard 的时候需要添加一个 K8s 集群，添加<code>添加集群</code>按钮开始添加，填入正确的 <code>CRNE Endpoint</code> 地址即可。</p>
-<p><img data-src="https://picdn.youdianzhishi.com/images/1666251839866.png" alt="添加集群"></p>
+<p><img src="https://picdn.youdianzhishi.com/images/1666251839866.png" alt="添加集群"></p>
 <p>然后切换到<code>集群总览</code>可以查看到当前集群的一些成本相关数据，由于目前数据还不足，所以会有一些空的图表。</p>
-<p><img data-src="https://picdn.youdianzhishi.com/images/1666256619382.png" alt="集群总览"></p>
+<p><img src="https://picdn.youdianzhishi.com/images/1666256619382.png" alt="集群总览"></p>
 <p>在成本分布页面可以按照维度成本、集群成本和利用率指标以及命名空间成本来展示成本的分布情况。</p>
-<p><img data-src="https://picdn.youdianzhishi.com/images/1666260576817.jpg" alt="成本分布"></p>
+<p><img src="https://picdn.youdianzhishi.com/images/1666260576817.jpg" alt="成本分布"></p>
 <h2 id="智能推荐"><a href="#智能推荐" class="headerlink" title="智能推荐"></a>智能推荐</h2><p>在 dasbhoard 中开箱后就可以看到相关的成本数据，是因为在添加集群的时候我们安装了推荐的规则。</p>
 <p>推荐框架会自动分析集群的各种资源的运行情况并给出优化建议。<code>Crane</code> 的推荐模块会定期检测发现集群资源配置的问题，并给出优化建议。智能推荐提供了多种 Recommender 来实现面向不同资源的优化推荐。</p>
 <p>在<code>成本分析&gt;推荐规则</code>页面可以看到我们安装的两个推荐规则。</p>
-<p><img data-src="https://picdn.youdianzhishi.com/images/1666252873850.jpg" alt="推荐规则"></p>
+<p><img src="https://picdn.youdianzhishi.com/images/1666252873850.jpg" alt="推荐规则"></p>
 <p>这些推荐规则实际上是安装在 K8s 集群上的 <code>RecommendationRule CRD</code> 对象：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl get RecommendationRule</span><br><span class="line">NAME             RUNINTERVAL   AGE</span><br><span class="line">idlenodes-rule   24h           16m</span><br><span class="line">workloads-rule   24h           16m</span><br></pre></td></tr></table></figure>
 
@@ -428,9 +311,9 @@
 
 
 <p>在 dashboard 的<code>资源推荐</code>页面也能查看到优化建议列表。</p>
-<p><img data-src="https://picdn.youdianzhishi.com/images/1666253982497.jpg" alt="资源推荐"></p>
+<p><img src="https://picdn.youdianzhishi.com/images/1666253982497.jpg" alt="资源推荐"></p>
 <p>在页面中可以看到当前资源(容器&#x2F;CPU&#x2F;Memory)与推荐的资源数据，点击<code>采纳建议</code>即可获取优化的执行命令。</p>
-<p><img data-src="https://picdn.youdianzhishi.com/images/1666254060338.png" alt="查看优化命令"></p>
+<p><img src="https://picdn.youdianzhishi.com/images/1666254060338.png" alt="查看优化命令"></p>
 <p>执行命令即可完成优化，其实就是修改资源对象的 <code>resources</code> 资源数据。</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">patchData=`kubectl get recommend workloads-rule-resource-g7nwp -n crane-system -o jsonpath=<span class="string">&#x27;&#123;.status.recommendedInfo&#125;&#x27;</span>`;kubectl patch Deployment fadvisor -n crane-system --patch <span class="string">&quot;<span class="variable">$&#123;patchData&#125;</span>&quot;</span></span><br></pre></td></tr></table></figure>
 
@@ -440,7 +323,7 @@
 <p>应用在监控系统（比如 Prometheus）中的历史数据越久，推荐结果就越准确，建议生产上超过两周时间。对新建应用的预测往往不准。</p>
 <h3 id="自定义推荐"><a href="#自定义推荐" class="headerlink" title="自定义推荐"></a>自定义推荐</h3><p>Recommendation Framework 提供了一套可扩展的 Recommender 框架并支持了内置的 Recommender，用户可以实现一个自定义的 Recommender，或者修改一个已有的 Recommender。</p>
 <p>和 K8s 调度框架类似，Recommender 接口定义了一次推荐需要实现的<strong>四个阶段和八个扩展点</strong>，这些扩展点会在推荐过程中按顺序被调用。这些扩展点中的一些可以改变推荐决策，而另一些仅用来提供信息。</p>
-<p><img data-src="https://mudutestmenu.mudu.tv/upload/2um5u9.jpg" alt="推荐框架架构"></p>
+<p><img src="https://mudutestmenu.mudu.tv/upload/2um5u9.jpg" alt="推荐框架架构"></p>
 <p>Recommender 接口定义如下所示：</p>
 <figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">type</span> Recommender <span class="keyword">interface</span> &#123;</span><br><span class="line">    Name() <span class="type">string</span></span><br><span class="line">    framework.Filter</span><br><span class="line">    framework.PrePrepare</span><br><span class="line">    framework.Prepare</span><br><span class="line">    framework.PostPrepare</span><br><span class="line">    framework.PreRecommend</span><br><span class="line">    framework.Recommend</span><br><span class="line">    framework.PostRecommend</span><br><span class="line">    framework.Observe</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Phase: Filter</span></span><br><span class="line"><span class="keyword">type</span> Filter <span class="keyword">interface</span> &#123;</span><br><span class="line">    <span class="comment">// Filter 将过滤无法通过目标推荐器推荐的资源</span></span><br><span class="line">    Filter(ctx *RecommendationContext) <span class="type">error</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Phase: Prepare</span></span><br><span class="line"><span class="keyword">type</span> PrePrepare <span class="keyword">interface</span> &#123;</span><br><span class="line">    CheckDataProviders(ctx *RecommendationContext) <span class="type">error</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Prepare <span class="keyword">interface</span> &#123;</span><br><span class="line">    CollectData(ctx *RecommendationContext) <span class="type">error</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> PostPrepare <span class="keyword">interface</span> &#123;</span><br><span class="line">    PostProcessing(ctx *RecommendationContext) <span class="type">error</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> PreRecommend <span class="keyword">interface</span> &#123;</span><br><span class="line">    PreRecommend(ctx *RecommendationContext) <span class="type">error</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Phase: Recommend</span></span><br><span class="line"><span class="keyword">type</span> Recommend <span class="keyword">interface</span> &#123;</span><br><span class="line">    Recommend(ctx *RecommendationContext) <span class="type">error</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> PostRecommend <span class="keyword">interface</span> &#123;</span><br><span class="line">    Policy(ctx *RecommendationContext) <span class="type">error</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Phase: Observe</span></span><br><span class="line"><span class="keyword">type</span> Observe <span class="keyword">interface</span> &#123;</span><br><span class="line">    Observe(ctx *RecommendationContext) <span class="type">error</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -476,7 +359,7 @@
 <li>对于其他节点来说，实际负载远小于资源请求，这将导致资源的巨大浪费。</li>
 </ul>
 <p>为了解决这些问题，动态调度器根据实际的节点利用率构建了一个简单但高效的模型，并过滤掉那些负载高的节点来平衡集群。</p>
-<p><img data-src="https://picdn.youdianzhishi.com/images/1666261847798.jpg" alt="动态调度器架构"></p>
+<p><img src="https://picdn.youdianzhishi.com/images/1666261847798.jpg" alt="动态调度器架构"></p>
 <p>动态调度器依赖于 prometheus 和 node-exporter 收集汇总指标数据，它由两个组件组成：</p>
 <ul>
 <li><code>Node-annotator</code> 定期从 Prometheus 拉取数据，并以 annotations 的形式在节点上用时间戳标记它们。</li>
@@ -525,7 +408,7 @@
 
 <p>如果想默认使用该动态调度器，则可以使用该调度器去替换掉默认的调度器即可。</p>
 <h3 id="使用拓扑感知调度对-Pod-进行精细化调度"><a href="#使用拓扑感知调度对-Pod-进行精细化调度" class="headerlink" title="使用拓扑感知调度对 Pod 进行精细化调度"></a>使用拓扑感知调度对 Pod 进行精细化调度</h3><p>Crane-Scheduler 和 Crane-Agent 配合工作可以完成拓扑感知调度与资源分配的工作。Crane-Agent 从节点采集资源拓扑，包括 NUMA、Socket、设备等信息，汇总到 <code>NodeResourceTopology</code> 这个自定义资源对象中。</p>
-<p><img data-src="https://picdn.youdianzhishi.com/images/1666938840993.jpg" alt="CPU 拓扑感知"></p>
+<p><img src="https://picdn.youdianzhishi.com/images/1666938840993.jpg" alt="CPU 拓扑感知"></p>
 <p>Crane-Scheduler 在调度时会参考节点的 <code>NodeResourceTopology</code> 对象获取到节点详细的资源拓扑结构，在调度到节点的同时还会为 Pod 分配拓扑资源，并将结果写到 Pod 的 annotations 中。Crane-Agent 在节点上 Watch 到 Pod 被调度后，从 Pod 的 annotations 中获取到拓扑分配结果，并按照用户给定的 CPU 绑定策略进行 CPUSet 的细粒度分配。</p>
 <p>Crane 中提供了四种 CPU 分配策略，分别如下：</p>
 <ul>
@@ -630,7 +513,7 @@
 
 
 <p>配置生效后我们可以在 Prometheus Dashboard 中查询对应的指标：</p>
-<p><img data-src="https://picdn.youdianzhishi.com/images/1666422933054.png" alt="查询指标"></p>
+<p><img src="https://picdn.youdianzhishi.com/images/1666422933054.png" alt="查询指标"></p>
 <p>为了让 HPA 能够用到 Prometheus 采集到的指标，<code>prometheus-adapter</code> 通过使用 promql 语句来获取指标，然后修改数据格式，并把重新组装的指标和值通过自己的接口暴露。而 HPA 会通过 <code>/apis/custom.metrics.k8s.io/</code> 代理到 <code>prometheus-adapter</code> 的 service 上来获取这些指标。</p>
 <p>如果把 Prometheus 的所有指标到获取一遍并重新组装，那 adapter 的效率必然十分低下，因此 adapter 将需要读取的指标设计成可配置，让用户通过 ConfigMap 来决定读取 Prometheus 的哪些监控指标。</p>
 <p>我们这里使用 Helm Chart 方式安装的 <code>prometheus-adapter</code>，其默认的 Rule 配置如下所示：</p>
@@ -741,7 +624,7 @@
 <li><code>HPAController</code> 调用 scale API 对目标应用扩&#x2F;缩容。</li>
 </ul>
 <p>整体流程如下所示：</p>
-<p><img data-src="https://picdn.youdianzhishi.com/images/1666921205654.jpg" alt="ehpa 流程"></p>
+<p><img src="https://picdn.youdianzhishi.com/images/1666921205654.jpg" alt="ehpa 流程"></p>
 <p>直接应用上面的 EPHA 对象即可：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ kubectl apply -f sample-app-ehpa.yaml</span><br><span class="line">effectivehorizontalpodautoscaler.autoscaling.crane.io/sample-app-ehpa created</span><br><span class="line">$ kubectl get ehpa</span><br><span class="line">NAME              STRATEGY   MINPODS   MAXPODS   SPECIFICPODS   REPLICAS   AGE</span><br><span class="line">sample-app-ehpa   Auto       1         10                       1          17s</span><br></pre></td></tr></table></figure>
 
@@ -770,7 +653,7 @@
 <p>可以观测到已经创建出基于自定义指标预测的 Metric: <code>http_requests</code>，由于生产环境的复杂性，基于多指标的弹性（CPU&#x2F;Memory&#x2F;自定义指标）往往是生产应用的常见选择，因此 Effective HPA 通过预测算法覆盖了多指标的弹性，达到了帮助更多业务在生产环境落地水平弹性的成效。</p>
 <p>除此之外 EHPA 对象还支持基于 cron 的自动缩放，除了基于监控指标，有时节假日和工作日的工作负载流量存在差异，简单的预测算法可能效果不佳。然后可以通过设置周末 cron 来支持更大数量的副本来弥补预测的不足。对于一些非 web 流量的应用，比如一些应用不需要在周末使用，可以把工作负载的副本数减少到 1，也可以配置 cron 来降低你的服务成本。</p>
 <h2 id="QOS-增强与混部"><a href="#QOS-增强与混部" class="headerlink" title="QOS 增强与混部"></a>QOS 增强与混部</h2><p>除了上面介绍的主要功能之外，crane 还具有很多 QOS 增强功能，QOS 相关能力保证了运行在 Kubernetes 上的 Pod 的稳定性。</p>
-<h3 id="干扰检测和主动回避"><a href="#干扰检测和主动回避" class="headerlink" title="干扰检测和主动回避"></a>干扰检测和主动回避</h3><p><img data-src="https://picdn.youdianzhishi.com/images/1666938915729.jpg" alt="干扰检测和主动回避"></p>
+<h3 id="干扰检测和主动回避"><a href="#干扰检测和主动回避" class="headerlink" title="干扰检测和主动回避"></a>干扰检测和主动回避</h3><p><img src="https://picdn.youdianzhishi.com/images/1666938915729.jpg" alt="干扰检测和主动回避"></p>
 <p>干扰检测和主动回避功能主要涉及到以下几个 CRD 对象：</p>
 <ul>
 <li><code>AvoidanceAction</code>：定义了检测到干扰后需要执行的操作，包含了 <code>Disable Scheduling</code>、<code>throttle</code>、<code>eviction</code> 等操作，并且定义了其相关的一些参数。</li>
@@ -891,229 +774,7 @@
 <p><strong>适配场景</strong></p>
 <p>为了提升节点的负载，可以将一些离线作业或者重要性较低的作业通过使用弹性资源的方式调度部署到集群中，这类作业会使用空闲的弹性资源，搭配 QOS 的水位线保障，在节点出现负载较高的时候，也会优先被驱逐和压制，在保证高优先级业务稳定的前提下提升节点利用率。</p>
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>2022 年，腾讯云原生 FinOps Crane 项目组，结合行业及产业的发展趋势，联动中国产业互联网发展联盟、中国信通院、中国电子节能技术协会、FinOps 基金会及中国内外众多生态合作伙伴，开展及推动技术标准、国内联盟、国际开源、双碳升级等多维度的成果落地，输出了系列白皮书和标准指南，旨在助力企业和生态更良性发展和应用先进技术，达成降本增效，节能减排目标方向。</p>
-<p><img data-src="https://picdn.youdianzhishi.com/images/1666922649467.png" alt="Crane 能力全景图"></p>
+<p><img src="https://picdn.youdianzhishi.com/images/1666922649467.png" alt="Crane 能力全景图"></p>
 <p>我们可以自己在 Kubernetes 集群中安装 crane 来获取这些相关功能，此外这些能力也都会在腾讯云 TKE 的原生节点产品 <code>Housekeeper</code> 中提供，新推出的 TKE Housekeeper 是腾讯云推出的全新 K8s 运维范式，可以帮助企业像管理 Workload 一样声明式管理 Node 节点，高效解决节点维护、资源规划等各种各样的运维问题。</p>
 <p>毫无疑问，Crane 已经是 Kubernetes 集群中用于云资源分析和经济的最佳 FinOps 平台了。目前，腾讯云 Crane 已进入 CNCF LandScape，这意味着 Crane 已成为云原生领域的重要项目。面向未来，腾讯云还将持续反馈开源社区、共建开源生态，帮助更多企业通过云原生全面释放生产力，加速实现数字化和绿色化双转型。</p>
-
-    </div>
-
-    
-    
-    
-
-      <footer class="post-footer">
-          <div class="post-tags">
-              <a href="/tags/%E8%BF%90%E7%BB%B4/" rel="tag"># 运维</a>
-              <a href="/tags/k8s/" rel="tag"># k8s</a>
-              <a href="/tags/FinOps/" rel="tag"># FinOps</a>
-          </div>
-
-        
-
-
-        
-    <div class="post-nav">
-      <div class="post-nav-item">
-    <a href="/2025/09/11/DaemonSet/" rel="prev" title="DaemonSet">
-      <i class="fa fa-chevron-left"></i> DaemonSet
-    </a></div>
-      <div class="post-nav-item">
-    <a href="/2025/09/11/DHCP%20%E5%8D%8F%E8%AE%AE/" rel="next" title="DHCP 协议">
-      DHCP 协议 <i class="fa fa-chevron-right"></i>
-    </a></div>
-    </div>
-      </footer>
-    
-  </article>
-  
-  
-  
-
-
-
-          </div>
-          
-
-<script>
-  window.addEventListener('tabs:register', () => {
-    let { activeClass } = CONFIG.comments;
-    if (CONFIG.comments.storage) {
-      activeClass = localStorage.getItem('comments_active') || activeClass;
-    }
-    if (activeClass) {
-      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
-      if (activeTab) {
-        activeTab.click();
-      }
-    }
-  });
-  if (CONFIG.comments.storage) {
-    window.addEventListener('tabs:click', event => {
-      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
-      let commentClass = event.target.classList[1];
-      localStorage.setItem('comments_active', commentClass);
-    });
-  }
-</script>
-
-        </div>
-          
-  
-  <div class="toggle sidebar-toggle">
-    <span class="toggle-line toggle-line-first"></span>
-    <span class="toggle-line toggle-line-middle"></span>
-    <span class="toggle-line toggle-line-last"></span>
-  </div>
-
-  <aside class="sidebar">
-    <div class="sidebar-inner">
-
-      <ul class="sidebar-nav motion-element">
-        <li class="sidebar-nav-toc">
-          文章目录
-        </li>
-        <li class="sidebar-nav-overview">
-          站点概览
-        </li>
-      </ul>
-
-      <!--noindex-->
-      <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Crane"><span class="nav-number">1.</span> <span class="nav-text">Crane</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%B6%E6%9E%84"><span class="nav-number">1.1.</span> <span class="nav-text">架构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85"><span class="nav-number">1.2.</span> <span class="nav-text">安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%99%BA%E8%83%BD%E6%8E%A8%E8%8D%90"><span class="nav-number">1.3.</span> <span class="nav-text">智能推荐</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89%E6%8E%A8%E8%8D%90"><span class="nav-number">1.3.1.</span> <span class="nav-text">自定义推荐</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%99%BA%E8%83%BD%E8%B0%83%E5%BA%A6%E5%99%A8"><span class="nav-number">1.4.</span> <span class="nav-text">智能调度器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8A%A8%E6%80%81%E8%B0%83%E5%BA%A6%E5%99%A8"><span class="nav-number">1.4.1.</span> <span class="nav-text">动态调度器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E6%8B%93%E6%89%91%E6%84%9F%E7%9F%A5%E8%B0%83%E5%BA%A6%E5%AF%B9-Pod-%E8%BF%9B%E8%A1%8C%E7%B2%BE%E7%BB%86%E5%8C%96%E8%B0%83%E5%BA%A6"><span class="nav-number">1.4.2.</span> <span class="nav-text">使用拓扑感知调度对 Pod 进行精细化调度</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0%E5%9F%BA%E4%BA%8E%E6%B5%81%E9%87%8F%E9%A2%84%E6%B5%8B%E7%9A%84%E5%BC%B9%E6%80%A7"><span class="nav-number">1.5.</span> <span class="nav-text">实现基于流量预测的弹性</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9F%BA%E4%BA%8E%E8%87%AA%E5%AE%9A%E4%B9%89%E6%8C%87%E6%A0%87%E7%9A%84%E5%AE%B9%E5%99%A8%E5%BC%B9%E6%80%A7%E4%BC%B8%E7%BC%A9"><span class="nav-number">1.5.1.</span> <span class="nav-text">基于自定义指标的容器弹性伸缩</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9F%BA%E4%BA%8E%E6%B5%81%E9%87%8F%E9%A2%84%E6%B5%8B%E7%9A%84%E5%AE%B9%E5%99%A8%E5%BC%B9%E6%80%A7%E4%BC%B8%E7%BC%A9"><span class="nav-number">1.5.2.</span> <span class="nav-text">基于流量预测的容器弹性伸缩</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#QOS-%E5%A2%9E%E5%BC%BA%E4%B8%8E%E6%B7%B7%E9%83%A8"><span class="nav-number">1.6.</span> <span class="nav-text">QOS 增强与混部</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B9%B2%E6%89%B0%E6%A3%80%E6%B5%8B%E5%92%8C%E4%B8%BB%E5%8A%A8%E5%9B%9E%E9%81%BF"><span class="nav-number">1.6.1.</span> <span class="nav-text">干扰检测和主动回避</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%A2%84%E6%B5%8B%E7%AE%97%E6%B3%95%E5%A2%9E%E5%BC%BA%E7%9A%84%E5%8A%A8%E6%80%81%E8%B5%84%E6%BA%90%E8%B6%85%E5%8D%96"><span class="nav-number">1.6.2.</span> <span class="nav-text">预测算法增强的动态资源超卖</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">1.7.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></div>
-      </div>
-      <!--/noindex-->
-
-      <div class="site-overview-wrap sidebar-panel">
-        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
-  <p class="site-author-name" itemprop="name">六一</p>
-  <div class="site-description" itemprop="description"></div>
-</div>
-<div class="site-state-wrap motion-element">
-  <nav class="site-state">
-      <div class="site-state-item site-state-posts">
-          <a href="/archives/">
-        
-          <span class="site-state-item-count">273</span>
-          <span class="site-state-item-name">日志</span>
-        </a>
-      </div>
-      <div class="site-state-item site-state-categories">
-            <a href="/categories/">
-          
-        <span class="site-state-item-count">44</span>
-        <span class="site-state-item-name">分类</span></a>
-      </div>
-      <div class="site-state-item site-state-tags">
-            <a href="/tags/">
-          
-        <span class="site-state-item-count">19</span>
-        <span class="site-state-item-name">标签</span></a>
-      </div>
-  </nav>
-</div>
-  <div class="links-of-author motion-element">
-      <span class="links-of-author-item">
-        <a href="https://github.com/huiaz" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;huiaz" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i></a>
-      </span>
-  </div>
-
-
-
-      </div>
-        <div class="back-to-top motion-element">
-          <i class="fa fa-arrow-up"></i>
-          <span>0%</span>
-        </div>
-
-    </div>
-  </aside>
-  <div id="sidebar-dimmer"></div>
-
-
-      </div>
-    </main>
-
-    <footer class="footer">
-      <div class="footer-inner">
-        
-
-        
-
-<div class="copyright">
-  
-  &copy; 
-  <span itemprop="copyrightYear">2025</span>
-  <span class="with-love">
-    <i class="fa fa-heart"></i>
-  </span>
-  <span class="author" itemprop="copyrightHolder">六一</span>
-    <span class="post-meta-divider">|</span>
-    <span class="post-meta-item-icon">
-      <i class="fa fa-chart-area"></i>
-    </span>
-    <span title="站点总字数">1.7m</span>
-    <span class="post-meta-divider">|</span>
-    <span class="post-meta-item-icon">
-      <i class="fa fa-coffee"></i>
-    </span>
-    <span title="站点阅读时长">25:34</span>
-</div>
-
-        
-
-
-
-
-
-
-
-
-      </div>
-    </footer>
-  </div>
-
-  
-  <script src="/lib/anime.min.js"></script>
-  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
-  <script src="/lib/velocity/velocity.min.js"></script>
-  <script src="/lib/velocity/velocity.ui.min.js"></script>
-
-<script src="/js/utils.js"></script>
-
-<script src="/js/motion.js"></script>
-
-
-<script src="/js/schemes/pisces.js"></script>
-
-
-<script src="/js/next-boot.js"></script>
-
-
-
-
-  
-
-
-
-
-  
-<script src="/js/local-search.js"></script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-
-  
-
-<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
-</html>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://example.com">六一</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://example.com/2025/09/11/Crane/">http://example.com/2025/09/11/Crane/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="http://example.com" target="_blank">Hui's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E8%BF%90%E7%BB%B4/">运维</a><a class="post-meta__tags" href="/tags/k8s/">k8s</a><a class="post-meta__tags" href="/tags/FinOps/">FinOps</a></div><div class="post-share"><div class="social-share" data-image="/img/butterfly-icon.png" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/2025/09/11/DHCP%20%E5%8D%8F%E8%AE%AE/" title="DHCP 协议"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">DHCP 协议</div></div><div class="info-2"><div class="info-item-1">DHCP 协议的工作原理及应用场景什么是 DHCP 协议？DHCP (Dynamic Host Configuration Protocol，动态主机配置协议) 是一种网络协议，用于自动化管理和分配网络中的 IP 地址以及其他相关配置信息（如子网掩码、默认网关、DNS 服务器地址等）。它的核心思想是取代手动配置每台设备的网络参数，实现即插即用，大大简化了大型网络的管理。 DHCP 协议的工作原理 (DORA 过程)DHCP 协议通常通过四步过程（称为 DORA 过程）来完成 IP 地址分配：  Discover (发现)  客户端行为： 当一台新设备（或一台没有配置 IP 地址的设备）连接到网络时，它不知道网络中是否有 DHCP 服务器，也不知道自己的 IP 地址。因此，它会广播一个 DHCP Discover 消息到局域网内的所有设备（使用目的 IP 地址 255.255.255.255，源 IP 地址 0.0.0.0）。 目的： 寻找网络中的 DHCP 服务器。   Offer (提供)  服务器行为： 网络中的 DHCP 服务器收到 DHCP Discover 消息后，会从...</div></div></div></a><a class="pagination-related" href="/2025/09/11/CoreDNS/" title="CoreDNS"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">CoreDNS</div></div><div class="info-2"><div class="info-item-1">服务发现上面我们讲解了 Service 的用法，我们可以通过 Service 生成的 ClusterIP(VIP) 来访问 Pod 提供的服务，但是在使用的时候还有一个问题：我们怎么知道某个应用的 VIP 呢？比如我们有两个应用，一个是 api 应用，一个是 db 应用，两个应用都是通过 Deployment 进行管理的，并且都通过 Service 暴露出了端口提供服务。api 需要连接到 db 这个应用，我们只知道 db 应用的名称和 db 对应的 Service 的名称，但是并不知道它的 VIP 地址，我们前面的 Service 课程中是不是学习到我们通过 ClusterIP 就可以访问到后面的 Pod 服务，如果我们知道了 VIP 的地址是不是就行了？ 环境变量为了解决上面的问题，在之前的版本中，Kubernetes 采用了环境变量的方法，每个 Pod 启动的时候，会通过环境变量设置所有服务的 IP 和 port 信息，这样 Pod 中的应用可以通过读取环境变量来获取依赖服务的地址信息，这种方法使用起来相对简单，但是有一个很大的问题就是依赖的服务必须在 Pod 启动之前就存...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2025/09/11/%E6%8C%87%E6%A0%87%E7%B1%BB%E5%9E%8B/" title="指标类型"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">指标类型</div></div><div class="info-2"><div class="info-item-1">指标类型从存储上来讲所有的监控指标都是相同的，但是在不同的场景下这些指标又有一些细微的差异。 例如，在 Node Exporter 返回的样本中指标 node_load1 反应的是当前系统的负载状态，随着时间的变化这个指标返回的样本数据是在不断变化的。而指标 node_cpu_seconds_total 所获取到的样本数据却不同，它是一个持续增大的值，因为其反应的是 CPU 的累计使用时间，从理论上讲只要系统不关机，这个值是会一直变大。 为了能够帮助用户理解和区分这些不同监控指标之间的差异，Prometheus 定义了 4 种不同的指标类型：Counter（计数器）、Gauge（仪表盘）、Histogram（直方图）、Summary（摘要）。 在 node-exporter（后面会详细讲解）返回的样本数据中，其注释中也包含了该样本的类型。例如： 123# HELP node_cpu_seconds_total Seconds the cpus spent in each mode.# TYPE node_cpu_seconds_total counternode_cpu_seco...</div></div></div></a><a class="pagination-related" href="/2025/09/11/Secret/" title="Secret"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">Secret</div></div><div class="info-2"><div class="info-item-1">Secret前文我们学习 ConfigMap 的时候，我们说 ConfigMap 这个资源对象是 Kubernetes 当中非常重要的一个资源对象，一般情况下 ConfigMap 是用来存储一些非安全的配置信息，如果涉及到一些安全相关的数据的话用 ConfigMap 就非常不妥了，因为 ConfigMap 是明文存储的，这个时候我们就需要用到另外一个资源对象了：Secret，Secret用来保存敏感信息，例如密码、OAuth 令牌和 ssh key 等等，将这些信息放在 Secret 中比放在 Pod 的定义中或者 Docker 镜像中要更加安全和灵活。 Secret 主要使用的有以下三种类型：  Opaque：base64 编码格式的 Secret，用来存储密码、密钥等；但数据也可以通过 base64 –decode 解码得到原始数据，所有加密性很弱。 kubernetes.io/dockercfg: ~/.dockercfg 文件的序列化形式 kubernetes.io/dockerconfigjson：用来存储私有docker registry的认证信息，~/.docker...</div></div></div></a><a class="pagination-related" href="/2025/09/11/PromQL%20%E5%9F%BA%E7%A1%80/" title="PromQL 基础"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">PromQL 基础</div></div><div class="info-2"><div class="info-item-1">PromQL 基础在继续深入学习 PromQL 查询细节之前，我们先来看看 PromQL 查询的一些理论基础。 嵌套结构与 SQL 查询语言（SELECT * FROM …）不同，PromQL 是一种嵌套的函数式语言，就是我们要把需要查找的数据描述成一组嵌套的表达式，每个表达式都会评估为一个中间值，每个中间值都会被用作它上层表达式中的参数，而查询的最外层表达式表示你可以在表格、图形中看到的最终返回值。比如下面的查询语句： 1234567891011histogram_quantile(  # 查询的根，最终结果表示一个近似分位数。  0.9,  # histogram_quantile() 的第一个参数，分位数的目标值  # histogram_quantile() 的第二个参数，聚合的直方图  sum by(le, method, path) (    # sum() 的参数，直方图过去5分钟每秒增量。    rate(      # rate() 的参数，过去5分钟的原始直方图序列      demo_api_request_duration_seconds_bucket&#...</div></div></div></a><a class="pagination-related" href="/2025/09/11/%E6%A6%82%E8%BF%B0/" title="容器运行时概述"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">容器运行时概述</div></div><div class="info-2"><div class="info-item-1">概述在学习 Containerd 之前我们有必要对 Docker 的发展历史做一个简单的回顾，因为这里面牵涉到的组件实战是有点多，有很多我们会经常听到，但是不清楚这些组件到底是干什么用的，比如 libcontainer、runc、containerd、CRI、OCI 等等。 Docker从 Docker 1.11 版本开始，Docker 容器运行就不是简单通过 Docker Daemon 来启动了，而是通过集成 containerd、runc 等多个组件来完成的。虽然 Docker Daemon 守护进程模块在不停的重构，但是基本功能和定位没有太大的变化，一直都是 CS 架构，守护进程负责和 Docker Client 端交互，并管理 Docker 镜像和容器。现在的架构中组件 containerd 就会负责集群节点上容器的生命周期管理，并向上为 Docker Daemon 提供 gRPC 接口。  当我们要创建一个容器的时候，现在 Docker Daemon 并不能直接帮我们创建了，而是请求 containerd 来创建一个容器，containerd 收到请求后，也并不会直接去...</div></div></div></a><a class="pagination-related" href="/2025/09/11/Longhorn/" title="Longhorn"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">Longhorn</div></div><div class="info-2"><div class="info-item-1">Longhorn前面我们学习了本地存储、NFS 共享存储，除了这些存储类型之外，还有一个块存储，同样为 Kubernetes 提供块存储的方案有很多，比如 Ceph RBD，今天我们为大家介绍的是 Rancher 开源的一款 Kubernetes 的云原生分布式块存储方案 - Longhorn。 使用 Longhorn，可以：  使用 Longhorn 卷作为 Kubernetes 集群中分布式有状态应用程序的持久存储 将你的块存储分区为 Longhorn 卷，以便你可以在有或没有云提供商的情况下使用 Kubernetes 卷 跨多个节点和数据中心复制块存储以提高可用性 将备份数据存储在 NFS 或 AWS S3 等外部存储中 创建跨集群灾难恢复卷，以便可以从第二个 Kubernetes 集群中的备份中快速恢复主 Kubernetes 集群中的数据 调度一个卷的快照，并将备份调度到 NFS 或 S3 兼容的二级存储 从备份还原卷 不中断持久卷的情况下升级 Longhorn  Longhorn 还带有独立的 UI，可以使用 Helm、kubectl 或 Rancher 应用程序目录...</div></div></div></a><a class="pagination-related" href="/2025/09/11/%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F/" title="服务质量"><div class="cover" style="background: var(--default-bg-color)"></div><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2025-09-11</div><div class="info-item-2">服务质量</div></div><div class="info-2"><div class="info-item-1">服务质量QoS 是 Quality of Service 的缩写，即服务质量，为了实现资源被有效调度和分配的同时提高资源利用率，Kubernetes 针对不同服务质量的预期，通过 QoS 来对 pod 进行服务质量管理，对于一个 pod 来说，服务质量体现在两个具体的指标：CPU 和内存。当节点上内存资源紧张时，Kubernetes 会根据预先设置的不同 QoS 类别进行相应处理。 资源限制如果未做过节点 nodeSelector、亲和性（node affinity）或 pod 亲和、反亲和性等高级调度策略设置，我们没有办法指定服务部署到指定节点上，这样就可能会造成 CPU 或内存等密集型的 pod 同时分配到相同节点上，造成资源竞争。另一方面，如果未对资源进行限制，一些关键的服务可能会因为资源竞争因 OOM 等原因被 kill 掉，或者被限制 CPU 使用。 我们知道对于每一个资源，container 可以指定具体的资源需求（requests）和限制（limits），requests 申请范围是0到节点的最大配置，而 limits 申请范围是 requests 到无限，即 0 ...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/butterfly-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">六一</div><div class="author-info-description"></div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">274</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">22</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">45</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Crane"><span class="toc-number">1.</span> <span class="toc-text">Crane</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9E%B6%E6%9E%84"><span class="toc-number">1.1.</span> <span class="toc-text">架构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%89%E8%A3%85"><span class="toc-number">1.2.</span> <span class="toc-text">安装</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%99%BA%E8%83%BD%E6%8E%A8%E8%8D%90"><span class="toc-number">1.3.</span> <span class="toc-text">智能推荐</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89%E6%8E%A8%E8%8D%90"><span class="toc-number">1.3.1.</span> <span class="toc-text">自定义推荐</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%99%BA%E8%83%BD%E8%B0%83%E5%BA%A6%E5%99%A8"><span class="toc-number">1.4.</span> <span class="toc-text">智能调度器</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8A%A8%E6%80%81%E8%B0%83%E5%BA%A6%E5%99%A8"><span class="toc-number">1.4.1.</span> <span class="toc-text">动态调度器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E6%8B%93%E6%89%91%E6%84%9F%E7%9F%A5%E8%B0%83%E5%BA%A6%E5%AF%B9-Pod-%E8%BF%9B%E8%A1%8C%E7%B2%BE%E7%BB%86%E5%8C%96%E8%B0%83%E5%BA%A6"><span class="toc-number">1.4.2.</span> <span class="toc-text">使用拓扑感知调度对 Pod 进行精细化调度</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E7%8E%B0%E5%9F%BA%E4%BA%8E%E6%B5%81%E9%87%8F%E9%A2%84%E6%B5%8B%E7%9A%84%E5%BC%B9%E6%80%A7"><span class="toc-number">1.5.</span> <span class="toc-text">实现基于流量预测的弹性</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8E%E8%87%AA%E5%AE%9A%E4%B9%89%E6%8C%87%E6%A0%87%E7%9A%84%E5%AE%B9%E5%99%A8%E5%BC%B9%E6%80%A7%E4%BC%B8%E7%BC%A9"><span class="toc-number">1.5.1.</span> <span class="toc-text">基于自定义指标的容器弹性伸缩</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E4%BA%8E%E6%B5%81%E9%87%8F%E9%A2%84%E6%B5%8B%E7%9A%84%E5%AE%B9%E5%99%A8%E5%BC%B9%E6%80%A7%E4%BC%B8%E7%BC%A9"><span class="toc-number">1.5.2.</span> <span class="toc-text">基于流量预测的容器弹性伸缩</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#QOS-%E5%A2%9E%E5%BC%BA%E4%B8%8E%E6%B7%B7%E9%83%A8"><span class="toc-number">1.6.</span> <span class="toc-text">QOS 增强与混部</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B9%B2%E6%89%B0%E6%A3%80%E6%B5%8B%E5%92%8C%E4%B8%BB%E5%8A%A8%E5%9B%9E%E9%81%BF"><span class="toc-number">1.6.1.</span> <span class="toc-text">干扰检测和主动回避</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%A2%84%E6%B5%8B%E7%AE%97%E6%B3%95%E5%A2%9E%E5%BC%BA%E7%9A%84%E5%8A%A8%E6%80%81%E8%B5%84%E6%BA%90%E8%B6%85%E5%8D%96"><span class="toc-number">1.6.2.</span> <span class="toc-text">预测算法增强的动态资源超卖</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">1.7.</span> <span class="toc-text">总结</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2026/02/27/hexo-beautify/" title="Hexo 博客美化笔记：从零搭建高颜值技术博客">Hexo 博客美化笔记：从零搭建高颜值技术博客</a><time datetime="2026-02-27T04:00:00.000Z" title="发表于 2026-02-27 12:00:00">2026-02-27</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/09/11/Jenkens-Blue%20Ocean%20%E6%8F%92%E4%BB%B6/" title="Jenkins Blue Ocean">Jenkins Blue Ocean</a><time datetime="2025-09-11T12:42:57.000Z" title="发表于 2025-09-11 20:42:57">2025-09-11</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/09/11/jenkins-jenkinsfile/" title="Jenkins Jenkinsfile">Jenkins Jenkinsfile</a><time datetime="2025-09-11T12:40:44.000Z" title="发表于 2025-09-11 20:40:44">2025-09-11</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/09/11/shell-trap/" title="Linux-trap">Linux-trap</a><time datetime="2025-09-11T12:40:44.000Z" title="发表于 2025-09-11 20:40:44">2025-09-11</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/09/11/shell-%E6%95%B0%E7%BB%84/" title="Shell-数组">Shell-数组</a><time datetime="2025-09-11T12:40:44.000Z" title="发表于 2025-09-11 20:40:44">2025-09-11</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By 六一</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 7.3.0</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.4</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.4"></script><script src="/js/main.js?v=5.5.4"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body></html>
